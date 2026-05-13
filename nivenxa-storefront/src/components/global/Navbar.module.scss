@@ -116,11 +116,13 @@
   top: 100%;
   left: 0;
   right: 0;
+  height: auto;
   background: rgba(245, 242, 235, 0.98);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-top: 1px solid rgba(122, 117, 94, 0.04);
-  padding-block: 1.5rem 3rem;
+  padding-top: 1.25rem;
+  padding-bottom: 48px;
   display: none;
 
   @include v.md { display: block; }
@@ -138,7 +140,7 @@
   display: flex;
   align-items: baseline;
   gap: 1.75rem;
-  padding-block: 0.9rem;
+  padding-block: 0.6rem;
   border-bottom: 1px solid rgba(122, 117, 94, 0.06);
   text-decoration: none;
 
@@ -163,11 +165,17 @@
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(122, 117, 94, 0.45);
+  color: rgba(122, 117, 94, 0.18);
   min-width: 1.5rem;
   padding-top: 0.4rem;
   transition: color 0.3s ease, opacity 0.3s ease;
   flex-shrink: 0;
+}
+
+.submenuLabelWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .submenuLabel {
@@ -177,6 +185,183 @@
   letter-spacing: 0.025em;
   line-height: 1.1;
   transition: color 0.32s ease, transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.submenuDescriptor {
+  font-family: var(--font-sans);
+  font-size: 0.575rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-olive);
+  opacity: 0;
+  transform: translateY(5px);
+  transition: opacity 0.3s ease, transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+  line-height: 1;
+  pointer-events: none;
+}
+
+.submenuDescriptorVisible {
+  opacity: 0.42;
+  transform: translateY(0);
+}
+
+// ─── Two-column submenu layout ────────────────────────────────────────────────
+.submenuCols {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.submenuCol {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+}
+
+// ─── Right panel (atmosphere + children) ─────────────────────────────────────
+.submenuRight {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  padding-left: clamp(2.5rem, 5vw, 5rem);
+  margin-left: clamp(1.5rem, 3vw, 3rem);
+  border-left: 1px solid rgba(122, 117, 94, 0.09);
+  min-width: 220px;
+}
+
+// ─── Atmospheric preview (hover imagery) ─────────────────────────────────────
+.submenuAtmosphere {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1.25rem;
+  width: 100%;
+  overflow: hidden;
+}
+
+.submenuAtmosphereGhost {
+  position: absolute;
+  bottom: -0.5rem;
+  right: -0.75rem;
+  font-family: var(--font-serif);
+  font-size: clamp(3.5rem, 7vw, 6.5rem);
+  letter-spacing: 0.1em;
+  color: var(--color-ink);
+  opacity: 0.045;
+  white-space: nowrap;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+.submenuAtmosphereFragment {
+  width: clamp(130px, 15vw, 188px);
+  aspect-ratio: 3 / 4;
+  margin-top: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  // Fabric weave texture overlay
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(
+        90deg,
+        transparent, transparent 6px,
+        rgba(255, 255, 255, 0.055) 6px, rgba(255, 255, 255, 0.055) 7px
+      ),
+      repeating-linear-gradient(
+        0deg,
+        transparent, transparent 9px,
+        rgba(0, 0, 0, 0.032) 9px, rgba(0, 0, 0, 0.032) 10px
+      );
+    pointer-events: none;
+  }
+}
+
+.submenuAtmosphereText {
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  font-weight: 400;
+  line-height: 1.9;
+  letter-spacing: 0.04em;
+  color: rgba(122, 117, 94, 0.38);
+  text-align: right;
+  max-width: 22ch;
+  white-space: pre-line;
+}
+
+// ─── Secondary flyout (children) panel ───────────────────────────────────────
+.submenuChildPanel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.submenuChildLabel {
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(122, 117, 94, 0.35);
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.25rem;
+  border-bottom: 1px solid rgba(122, 117, 94, 0.08);
+}
+
+.submenuChildLink {
+  display: flex;
+  align-items: baseline;
+  gap: 1.25rem;
+  padding-block: 0.875rem;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(122, 117, 94, 0.05);
+
+  &:last-child { border-bottom: none; }
+
+  &:hover .submenuChildLinkLabel {
+    color: var(--color-accent);
+    transform: translateX(0.3rem);
+  }
+
+  &:hover .submenuIndex { color: var(--color-accent); }
+}
+
+.submenuChildLinkLabel {
+  font-family: var(--font-serif);
+  font-size: clamp(1.25rem, 1.7vw, 1.625rem);
+  color: var(--color-ink);
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+  transition: color 0.32s ease, transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+// ─── Arrow indicator for parent submenu items ─────────────────────────────────
+.submenuArrow {
+  display: block;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-right: 1px solid currentColor;
+  border-top: 1px solid currentColor;
+  transform: rotate(45deg);
+  margin-left: auto;
+  opacity: 0.16;
+  flex-shrink: 0;
+  align-self: center;
+  transition: opacity 0.25s ease, color 0.25s ease;
+}
+
+// active state: hovered item label + index shift to accent
+.submenuLink.submenuLinkActive {
+  .submenuLabel { color: var(--color-accent); }
+  .submenuIndex { color: var(--color-accent); opacity: 1; }
+  .submenuArrow { opacity: 0.65; color: var(--color-accent); }
 }
 
 // ─── Nav actions (language + cart) ───────────────────────────────────────────
@@ -354,6 +539,47 @@
   text-decoration: none;
   padding-block: 0.625rem;
   border-bottom: 1px solid rgba(122, 117, 94, 0.07);
+  transition: color v.$transition-base;
+
+  &:hover { color: var(--color-accent); }
+  &:last-child { border-bottom: none; }
+}
+
+.mobileSubmenuTrigger {
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(122, 117, 94, 0.07);
+  padding-block: 0.625rem;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-family: var(--font-serif);
+  font-size: 1.125rem;
+  letter-spacing: 0.02em;
+  color: var(--color-ink);
+  transition: color v.$transition-base;
+
+  &:hover { color: var(--color-accent); }
+}
+
+.mobileSubSubmenu {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  padding: 0.25rem 0 0.25rem 1.25rem;
+}
+
+.mobileSubSubmenuLink {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 0.9375rem;
+  letter-spacing: 0.02em;
+  color: rgba(44, 44, 44, 0.65);
+  text-decoration: none;
+  padding-block: 0.5rem;
+  border-bottom: 1px solid rgba(122, 117, 94, 0.05);
   transition: color v.$transition-base;
 
   &:hover { color: var(--color-accent); }

@@ -1,0 +1,195 @@
+@use '../../../../styles/variables' as v;
+
+// ─── Page shell ───────────────────────────────────────────────────────────────
+.page {
+  padding-top: clamp(6rem, 10vw, 8rem);
+  padding-bottom: clamp(5rem, 10vw, 8rem);
+}
+
+// ─── Hero ─────────────────────────────────────────────────────────────────────
+.hero {
+  position: relative;
+  max-width: var(--max-width);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+  margin-bottom: clamp(4rem, 8vw, 6rem);
+  overflow: hidden;
+}
+
+// Background ghost word
+.heroGhost {
+  position: absolute;
+  top: -0.5rem;
+  right: -1.5rem;
+  font-family: var(--font-serif);
+  font-size: clamp(6rem, 18vw, 16rem);
+  letter-spacing: 0.06em;
+  color: var(--color-ink);
+  opacity: 0.038;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: var(--color-olive);
+  margin-bottom: 1.75rem;
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  line-height: 1.05;
+  color: var(--color-ink);
+  max-width: 18ch;
+  margin-bottom: clamp(2.5rem, 5vw, 4rem);
+}
+
+.introWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 38rem;
+}
+
+.intro {
+  font-family: var(--font-sans);
+  font-size: clamp(0.9375rem, 1.4vw, 1.0625rem);
+  line-height: 1.95;
+  color: var(--color-olive);
+}
+
+.heroDivider {
+  width: 3rem;
+  height: 1px;
+  background-color: var(--color-accent);
+  margin-top: clamp(2.5rem, 5vw, 4rem);
+  opacity: 0.6;
+}
+
+// ─── Numbered sections ────────────────────────────────────────────────────────
+.sections {
+  max-width: var(--max-width);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(3.5rem, 7vw, 5.5rem);
+}
+
+.section {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+
+  @include v.md {
+    grid-template-columns: 8rem 1fr;
+    gap: 3rem;
+    align-items: start;
+  }
+}
+
+.sectionMeta {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+
+  @include v.md {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.875rem;
+    padding-top: 0.4rem;
+  }
+}
+
+.sectionIndex {
+  font-family: var(--font-sans);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.sectionRule {
+  height: 1px;
+  background-color: rgba(122, 117, 94, 0.2);
+  flex: 1;
+
+  @include v.md {
+    width: 100%;
+    flex: none;
+  }
+}
+
+.sectionContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1.375rem;
+}
+
+.sectionTitle {
+  font-family: var(--font-serif);
+  font-size: clamp(1.625rem, 3vw, 2.25rem);
+  color: var(--color-ink);
+  line-height: 1.1;
+  margin-bottom: 0.5rem;
+}
+
+.body {
+  font-family: var(--font-sans);
+  font-size: clamp(0.9375rem, 1.35vw, 1.0625rem);
+  line-height: 1.95;
+  color: var(--color-olive);
+  max-width: 58ch;
+}
+
+// ─── Closing note ─────────────────────────────────────────────────────────────
+.closing {
+  max-width: var(--max-width);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+  margin-top: clamp(4rem, 8vw, 6rem);
+
+  @include v.md { padding-left: calc(var(--gutter) + 8rem + 3rem); }
+}
+
+.closingRule {
+  width: 3rem;
+  height: 1px;
+  background-color: rgba(122, 117, 94, 0.2);
+  margin-bottom: 1.75rem;
+}
+
+.closingLabel {
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgba(122, 117, 94, 0.45);
+  margin-bottom: 1.25rem;
+}
+
+.closingBody {
+  font-family: var(--font-sans);
+  font-size: clamp(0.9375rem, 1.35vw, 1.0625rem);
+  line-height: 1.85;
+  color: var(--color-olive);
+  max-width: 44ch;
+  margin-bottom: 0.75rem;
+}
+
+.closingBodyItalic {
+  font-family: var(--font-serif);
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  font-style: italic;
+  color: rgba(44, 44, 44, 0.55);
+  letter-spacing: 0.01em;
+}
