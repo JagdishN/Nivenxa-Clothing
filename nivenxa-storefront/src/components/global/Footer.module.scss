@@ -1,0 +1,84 @@
+@use '../../styles/variables' as v;
+
+.footer {
+  background-color: var(--color-olive);
+  color: var(--color-canvas);
+  margin-top: var(--section-y);
+  padding-block: clamp(3rem, 6vw, 5rem);
+  padding-inline: var(--gutter);
+}
+
+.inner {
+  max-width: var(--max-width);
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+
+  @include v.md { grid-template-columns: repeat(3, 1fr); gap: 3rem; }
+}
+
+.brand {}
+
+.logo {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  letter-spacing: 0.25em;
+  color: var(--color-canvas);
+  margin-bottom: 1rem;
+}
+
+.tagline {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.75;
+  color: rgba(245, 242, 235, 0.72);
+}
+
+.colTitle {
+  font-family: var(--font-sans);
+  font-size: 0.625rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgba(245, 242, 235, 0.45);
+  margin-bottom: 1.25rem;
+}
+
+.links {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.link {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  color: rgba(245, 242, 235, 0.72);
+  text-decoration: none;
+  transition: color v.$transition-base;
+
+  &:hover { color: var(--color-canvas); }
+}
+
+.bottom {
+  max-width: var(--max-width);
+  margin-inline: auto;
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(245, 242, 235, 0.14);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  justify-content: space-between;
+  align-items: flex-start;
+
+  @include v.md { flex-direction: row; align-items: center; }
+}
+
+.copy {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: rgba(245, 242, 235, 0.38);
+}

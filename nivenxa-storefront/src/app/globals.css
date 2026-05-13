@@ -1,0 +1,11 @@
+/* Tailwind v4 — keep this as .css so PostCSS can process @import before Sass */
+@import "tailwindcss";
+
+@theme inline {
+  --color-canvas:  #F5F2EB;
+  --color-ink:     #2C2C2C;
+  --color-accent:  #B1684F;
+  --color-olive:   #7A755E;
+  --font-serif: var(--font-playfair);
+  --font-sans:  var(--font-inter);
+}

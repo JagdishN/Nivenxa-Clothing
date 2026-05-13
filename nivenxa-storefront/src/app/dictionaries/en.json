@@ -1,0 +1,108 @@
+{
+  "nav": {
+    "shopAll": "Shop All",
+    "women": "Women's",
+    "kids": "Kids'",
+    "unisex": "Unisex",
+    "cart": "Cart",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  },
+  "hero": {
+    "eyebrow": "New Collection — SS 2025",
+    "titleLine1": "Crafted for",
+    "titleAccent": "Slow",
+    "titleLine2": "Comfort",
+    "body": "Heavyweight bio-washed essentials designed for elevated everyday living.",
+    "ctaShop": "Shop the Collection",
+    "ctaStory": "Our Story",
+    "scroll": "Scroll",
+    "block1Tag": "SS 2025",
+    "block1Caption": "Everyday Silhouette",
+    "block2Tag": "200–300 GSM",
+    "block2Caption": "Natural Comfort Fabrics",
+    "block3Tag": "Heritage"
+  },
+  "featured": {
+    "eyebrow": "Featured",
+    "heading": "The Edit",
+    "viewAll": "View All",
+    "newArrival": "New Arrival",
+    "addToCart": "Add to Cart"
+  },
+  "categories": {
+    "eyebrow": "Collections",
+    "heading": "Shop by Category",
+    "women": {
+      "index": "01",
+      "label": "Women's",
+      "title": "Women's Collections",
+      "body": "Relaxed lounge sets and premium Indo-Western comfortwear crafted for the modern Indian woman.",
+      "cta": "Shop Women's"
+    },
+    "kids": {
+      "index": "02",
+      "label": "Kids'",
+      "title": "Kids' Collections",
+      "body": "Premium co-ords, nightwear, and occasion sets for boys and girls. Soft fabrics, playful forms.",
+      "cta": "Shop Kids'"
+    },
+    "unisex": {
+      "index": "03",
+      "label": "Unisex",
+      "title": "Unisex Essentials",
+      "body": "Heavyweight cargo pants and oversized tees in 240–340 GSM bio-washed cotton. Built for movement, worn for life.",
+      "cta": "Shop Unisex"
+    }
+  },
+  "product": {
+    "addToCart": "Add to Cart"
+  },
+  "footer": {
+    "tagline": "Elevated Indian comfortwear crafted from natural bio-washed fabrics. Heritage in every thread.",
+    "collectionsHeading": "Collections",
+    "aboutHeading": "About",
+    "aboutLinks": {
+      "ourStory": "Our Story",
+      "craftsmanship": "Craftsmanship",
+      "sustainability": "Sustainability",
+      "contact": "Contact"
+    },
+    "copyright": "© 2025 NIVENXA. All rights reserved.",
+    "madeIn": "Made with intent in India."
+  },
+  "shop": {
+    "allEyebrow": "All Collections",
+    "allTitle": "Shop",
+    "womenEyebrow": "Women's Collections",
+    "womenTitle": "Women's",
+    "womenDescription": "Relaxed lounge sets and premium Indo-Western comfortwear for the modern Indian woman.",
+    "kidsEyebrow": "Kids' Collections",
+    "kidsTitle": "Kids'",
+    "kidsDescription": "Premium co-ords, nightwear, and occasion sets for boys and girls.",
+    "womenLoungeSetsEyebrow": "Women's Collection",
+    "womenLoungeSetsTitle": "Relaxed Lounge Sets",
+    "womenLoungeSetsDescription": "Cloud-soft co-ord sets in modal, French terry, and jersey knit. Designed for the unhurried day.",
+    "womenIndoWesternEyebrow": "Women's Collection",
+    "womenIndoWesternTitle": "Indo-Western Comfortwear",
+    "womenIndoWesternDescription": "Kurta sets, palazzo co-ords, and dhoti silhouettes in handloom and Chanderi cotton.",
+    "boysPremiumEyebrow": "Kids' Collection",
+    "boysPremiumTitle": "Boys Premium",
+    "boysPremiumDescription": "Structured track sets, canvas co-ords, and utility shorts in durable bio-washed fabrics.",
+    "girlsPremiumEyebrow": "Kids' Collection",
+    "girlsPremiumTitle": "Girls Premium",
+    "girlsPremiumDescription": "Gathered kurta sets, linen co-ords, and printed lounge sets in breathable natural fabrics.",
+    "kidsNightwearEyebrow": "Kids' Collection",
+    "kidsNightwearTitle": "Kids Unisex Nightwear",
+    "kidsNightwearDescription": "Supima cotton and jersey knit sleep sets. Gentle on skin, soft to touch, all-season comfort.",
+    "unisexEyebrow": "Unisex Collection",
+    "unisexTitle": "Unisex Essentials",
+    "unisexDescription": "Heavyweight cargo pants and oversized tees in 240–340 GSM bio-washed cotton. Built for movement, worn for life.",
+    "cargoPantsEyebrow": "Unisex Collection",
+    "cargoPantsTitle": "Cargo Pants",
+    "cargoPantsDescription": "Six-pocket utility cuts in 300–340 GSM bio-washed cotton. Built for movement, styled for the city.",
+    "overTeeShirtsEyebrow": "Unisex Collection",
+    "overTeeShirtsTitle": "Oversize Tee Shirts",
+    "overTeeShirtsDescription": "Boxy drop-shoulder silhouettes in 240–260 GSM combed cotton. The everyday statement piece."
+  }
+}

@@ -1,0 +1,161 @@
+@use '../../styles/variables' as v;
+
+.wrapper {
+  position: relative;
+}
+
+// ── Trigger ──────────────────────────────────────────────────────────────────
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  color: rgba(#7A755E, 0.5);
+  border-radius: 50%;
+  transition: color v.$transition-base, background-color v.$transition-base;
+
+  &:hover {
+    color: var(--color-ink);
+    background-color: rgba(#2C2C2C, 0.06);
+  }
+}
+
+.triggerOpen {
+  color: var(--color-accent);
+  background-color: rgba(#B1684F, 0.08);
+}
+
+// ── Backdrop ──────────────────────────────────────────────────────────────────
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: v.$z-nav + 9;
+  background: rgba(44,44,44,0.05);
+  pointer-events: all;
+}
+
+// ── Panel ─────────────────────────────────────────────────────────────────────
+.panel {
+  position: absolute;
+  top: calc(100% + 1.75rem);
+  right: -1rem;
+  z-index: v.$z-nav + 10;
+  width: 18.5rem;
+  background-color: var(--color-canvas);
+  border: 1px solid rgba(#7A755E, 0.22);
+  border-radius: 2px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.03);
+  padding: 1.5rem 2.625rem 1.375rem;
+}
+
+.panelHeading {
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-olive);
+  margin-bottom: 0.75rem;
+}
+
+.rule {
+  height: 1px;
+  background-color: rgba(44,44,44,0.08);
+  margin-bottom: 1rem;
+}
+
+// ── Sections ──────────────────────────────────────────────────────────────────
+.section {
+  // first section (English) has no extra spacing
+}
+
+.sectionSpaced {
+  margin-top: 1.125rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(44,44,44,0.08);
+}
+
+.sectionLabel {
+  font-family: var(--font-sans);
+  font-size: 0.57rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: rgba(#7A755E, 0.6);
+  margin-bottom: 0.625rem;
+}
+
+// ── List ──────────────────────────────────────────────────────────────────────
+.list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+// ── Locale buttons ────────────────────────────────────────────────────────────
+.list:hover .localeBtn:not(:hover) {
+  opacity: 0.38;
+}
+
+.localeBtn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  text-align: left;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  font-weight: 400;
+  line-height: 1.65;
+  color: var(--color-ink);
+  padding: 0.28rem 0;
+  opacity: 1;
+  transform: translateX(0);
+  transition:
+    color 0.28s ease,
+    opacity 0.22s ease,
+    transform 0.28s v.$ease-out-expo;
+
+  // Underline reveal
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 42%;
+    height: 1px;
+    background-color: var(--color-accent);
+    opacity: 0;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition:
+      transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+      opacity   0.45s ease;
+  }
+
+  &:hover {
+    color: var(--color-accent);
+    transform: translateX(2px);
+
+    &::after {
+      transform: scaleX(1);
+      opacity: 0.55;
+    }
+  }
+}
+
+.active {
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+.activeDot {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--color-accent);
+  flex-shrink: 0;
+}

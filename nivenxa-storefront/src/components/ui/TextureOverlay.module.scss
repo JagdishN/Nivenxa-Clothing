@@ -1,0 +1,23 @@
+@use '../../styles/variables' as v;
+
+.layer {
+  position: absolute;
+  inset: 0;
+  background-repeat: repeat;
+  pointer-events: none;
+  z-index: v.$z-raised;
+}
+
+.grain {
+  background-size: 300px 300px;
+  mix-blend-mode: overlay;
+}
+
+.weave {
+  background-size: 200px 200px;
+  mix-blend-mode: overlay;
+}
+
+.softLight {
+  mix-blend-mode: soft-light;
+}

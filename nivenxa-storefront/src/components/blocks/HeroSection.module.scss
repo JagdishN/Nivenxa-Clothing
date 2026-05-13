@@ -1,0 +1,261 @@
+@use '../../styles/variables' as v;
+
+.section {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  align-items: flex-end;
+  padding-top: 1.5rem;
+  padding-bottom: clamp(4rem, 8vw, 6rem);
+  padding-inline: var(--gutter);
+  overflow: hidden;
+  background-color: var(--color-canvas);
+
+  @include v.md  { padding-inline: clamp(2.5rem, 3.5vw, 4rem); }
+  @include v.xl  { padding-inline: clamp(3rem,   4vw,   5rem); }
+}
+
+// ─── Background gradient ──────────────────────────────────────────────────────
+.bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #EDE8DC 0%, #D9D4C4 45%, #CAC5B5 100%);
+}
+
+// ─── Right-side editorial blocks ─────────────────────────────────────────────
+.blocksWrap {
+  position: absolute;
+  top: 0; bottom: 0;
+  right: clamp(2.5rem, 3.5vw, 4rem);
+  width: 50%;
+  display: none;
+
+  @include v.md { display: block; }
+  @include v.lg { width: 48%; right: clamp(3rem, 4vw, 5rem); }
+}
+
+.block {
+  position: absolute;
+  overflow: hidden;
+
+  // Photographic vignette — base for all blocks
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.30) 100%);
+    pointer-events: none;
+  }
+}
+
+// ─── Block 1: Lifestyle crop ──────────────────────────────────────────────────
+// Warm skin-adjacent tonal gradient — suggests a close-up of draped fabric on a body
+.block1 {
+  top: 8%;
+  right: 12%;
+  width: clamp(10rem, 14vw, 13rem);
+  height: clamp(14rem, 19vw, 18rem);
+  background: linear-gradient(
+    175deg,
+    #DDD6C8 0%,
+    #C9BEAA 25%,
+    #BDAF97 55%,
+    #A89880 80%,
+    #9A8A71 100%
+  );
+
+  // Side-light rim to simulate natural photography
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.13) 0%,
+      transparent 40%
+    );
+    pointer-events: none;
+  }
+}
+
+// ─── Block 2: Fabric drape ────────────────────────────────────────────────────
+// CSS linen weave grid over warm stone gradient — simulates flat-lay fabric photography
+.block2 {
+  top: 28%;
+  right: 30%;
+  width: clamp(14rem, 19vw, 18rem);
+  height: clamp(18rem, 24vw, 24rem);
+  background-image:
+    // Warp threads (vertical)
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 5px,
+      rgba(255, 255, 255, 0.052) 5px,
+      rgba(255, 255, 255, 0.052) 6px
+    ),
+    // Weft threads (horizontal)
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 8px,
+      rgba(0, 0, 0, 0.035) 8px,
+      rgba(0, 0, 0, 0.035) 9px
+    ),
+    // Base cloth gradient — warm stone, soft directional light
+    linear-gradient(
+      155deg,
+      #E3DDD1 0%,
+      #D8D0C2 20%,
+      #CEC7B8 45%,
+      #C2BBA8 70%,
+      #B6B0A0 100%
+    );
+
+  // Top-left catch-light
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: radial-gradient(
+      ellipse at 25% 15%,
+      rgba(255, 255, 255, 0.20) 0%,
+      transparent 55%
+    );
+    pointer-events: none;
+  }
+}
+
+// ─── Block 3: Texture macro ───────────────────────────────────────────────────
+// Diamond crosshatch over deep olive — simulates close-up of knit/weave fabric
+.block3 {
+  bottom: 15%;
+  right: 10%;
+  width: clamp(8rem, 11vw, 10rem);
+  height: clamp(10rem, 14vw, 12rem);
+  background-image:
+    // Diagonal weave A
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 3px,
+      rgba(255, 255, 255, 0.065) 3px,
+      rgba(255, 255, 255, 0.065) 4px
+    ),
+    // Diagonal weave B
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 3px,
+      rgba(0, 0, 0, 0.075) 3px,
+      rgba(0, 0, 0, 0.075) 4px
+    ),
+    // Deep olive base
+    linear-gradient(
+      150deg,
+      #7A755E 0%,
+      #6D6852 35%,
+      #615C48 65%,
+      #565240 100%
+    );
+}
+
+// ─── Block editorial labels ────────────────────────────────────────────────────
+.blockMeta {
+  position: absolute;
+  bottom: 0.875rem;
+  left: 0.875rem;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.blockTag {
+  font-family: var(--font-sans);
+  font-size: 0.5rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: rgba(245, 242, 235, 0.65);
+}
+
+.blockCaption {
+  font-family: var(--font-serif);
+  font-size: 0.75rem;
+  font-style: italic;
+  color: rgba(245, 242, 235, 0.92);
+  line-height: 1.2;
+}
+
+// ─── Content ──────────────────────────────────────────────────────────────────
+.content {
+  position: relative;
+  max-width: var(--max-width);
+  margin-inline: auto;
+  width: 100%;
+  z-index: v.$z-overlay;
+}
+
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: var(--color-olive);
+  margin-bottom: 1.75rem;
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: clamp(2.8rem, 9vw, 8rem);
+  line-height: 0.9;
+  color: var(--color-ink);
+  max-width: 10ch;
+  margin-bottom: 2rem;
+
+  @include v.lg { margin-bottom: 2.5rem; }
+}
+
+.titleAccent {
+  color: var(--color-accent);
+}
+
+.body {
+  font-family: var(--font-sans);
+  font-size: clamp(0.875rem, 1.5vw, 1rem);
+  line-height: 2;
+  color: var(--color-olive);
+  max-width: 30rem;
+  margin-bottom: 2.5rem;
+}
+
+.ctas {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+// ─── Scroll indicator ────────────────────────────────────────────────────────
+.scrollIndicator {
+  position: absolute;
+  bottom: 2rem;
+  right: var(--gutter);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  z-index: v.$z-overlay;
+
+  @include v.md { display: flex; }
+}
+
+.scrollLine {
+  width: 0.5px;
+  height: 2.5rem;
+  background-color: var(--color-olive);
+  transform-origin: top;
+}
