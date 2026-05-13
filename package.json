@@ -1,1 +1,0 @@
-{"name":"nivenxa-storefront","version":"0.1.0","private":true,"scripts":{"build":"next build","dev":"next dev","start":"next start","lint":"next lint"},"devDependencies":{"autoprefixer":"^10.5.0","postcss":"^8.5.14","tailwindcss":"^4.3.0"},"dependencies":{"next":"^9.3.3"}}
