@@ -1,0 +1,57 @@
+@use '../../../styles/variables' as v;
+
+.page {
+  max-width: var(--max-width);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+  padding-top: clamp(6rem, 10vw, 8rem);
+  padding-bottom: var(--section-y);
+}
+
+.pageHeader {
+  margin-bottom: clamp(2.5rem, 5vw, 4rem);
+}
+
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: var(--color-olive);
+  margin-bottom: 0.75rem;
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: clamp(2.5rem, 7vw, 5.5rem);
+  color: var(--color-ink);
+  line-height: 1;
+}
+
+.description {
+  font-family: var(--font-sans);
+  font-size: clamp(0.875rem, 1.5vw, 1rem);
+  line-height: 2;
+  color: var(--color-olive);
+  max-width: 42ch;
+  margin-top: 1.25rem;
+}
+
+.divider {
+  width: 3rem;
+  height: 1px;
+  background-color: var(--color-accent);
+  margin-top: 1.5rem;
+}
+
+// ─── Product grid — responsive ────────────────────────────────────────────────
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem 1.5rem;
+
+  @include v.sm  { grid-template-columns: repeat(2, 1fr); }
+  @include v.lg  { grid-template-columns: repeat(3, 1fr); }
+  @include v.xl  { gap: 4rem 2rem; }
+}

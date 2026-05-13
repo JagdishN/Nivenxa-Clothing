@@ -1,0 +1,181 @@
+@use '../../styles/variables' as v;
+
+.section {
+  background-color: var(--color-ink);
+  padding-block: var(--section-y);
+  padding-inline: var(--gutter);
+}
+
+.inner {
+  max-width: var(--max-width);
+  margin-inline: auto;
+}
+
+// ─── Section header ───────────────────────────────────────────────────────────
+.sectionHeader {
+  text-align: center;
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: rgba(245, 242, 235, 0.42);
+  margin-bottom: 1rem;
+}
+
+.heading {
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  color: var(--color-canvas);
+}
+
+// ─── Two-column grid ─────────────────────────────────────────────────────────
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+
+  @include v.md { grid-template-columns: repeat(3, 1fr); }
+}
+
+// ─── Panel (shared) ──────────────────────────────────────────────────────────
+.panel {
+  position: relative;
+  overflow: hidden;
+  min-height: clamp(360px, 50vw, 520px);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.panelBg {
+  position: absolute;
+  inset: 0;
+  transition: transform 0.7s v.$ease-out-expo;
+
+  .panel:hover & {
+    transform: scale(1.03);
+  }
+}
+
+.panelFade {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 66%;
+  pointer-events: none;
+}
+
+.panelContent {
+  position: relative;
+  z-index: v.$z-overlay;
+}
+
+// ─── Women's panel ────────────────────────────────────────────────────────────
+.womenBg {
+  background: linear-gradient(160deg, #C49080 0%, #A87060 60%, #8A5548 100%);
+}
+
+.womenFade {
+  background: linear-gradient(to top, rgba(80, 38, 28, 0.80) 0%, transparent 100%);
+}
+
+.womenEyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.625rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgba(245, 242, 235, 0.58);
+  margin-bottom: 0.75rem;
+}
+
+.womenTitle {
+  font-family: var(--font-serif);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  color: var(--color-canvas);
+  margin-bottom: 1rem;
+}
+
+.womenBody {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.75;
+  color: rgba(245, 242, 235, 0.62);
+  max-width: 32ch;
+  margin-bottom: 1.5rem;
+}
+
+// ─── Unisex panel ────────────────────────────────────────────────────────────
+.unisexBg {
+  background: linear-gradient(160deg, #504C46 0%, #3A3732 60%, #2A2824 100%);
+}
+
+.unisexFade {
+  background: linear-gradient(to top, rgba(20, 18, 16, 0.88) 0%, transparent 100%);
+}
+
+.unisexEyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.625rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgba(245, 242, 235, 0.48);
+  margin-bottom: 0.75rem;
+}
+
+.unisexTitle {
+  font-family: var(--font-serif);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  color: var(--color-canvas);
+  margin-bottom: 1rem;
+}
+
+.unisexBody {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.75;
+  color: rgba(245, 242, 235, 0.60);
+  max-width: 32ch;
+  margin-bottom: 1.5rem;
+}
+
+// ─── Kids' panel ─────────────────────────────────────────────────────────────
+.kidsBg {
+  background: linear-gradient(160deg, #7A8A78 0%, #5E7060 60%, #485848 100%);
+}
+
+.kidsFade {
+  background: linear-gradient(to top, rgba(32, 42, 28, 0.75) 0%, transparent 100%);
+}
+
+.kidsEyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.625rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgba(245, 242, 235, 0.55);
+  margin-bottom: 0.75rem;
+}
+
+.kidsTitle {
+  font-family: var(--font-serif);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  color: var(--color-canvas);
+  margin-bottom: 1rem;
+}
+
+.kidsBody {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.75;
+  color: rgba(245, 242, 235, 0.70);
+  max-width: 32ch;
+  margin-bottom: 1.5rem;
+}

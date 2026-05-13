@@ -1,0 +1,92 @@
+@use '../../styles/variables' as v;
+
+.card {
+  display: flex;
+  flex-direction: column;
+}
+
+// ─── Image area ───────────────────────────────────────────────────────────────
+.imageWrap {
+  position: relative;
+  overflow: hidden;
+  background-color: #EAE6DD;
+}
+
+.imageWrapStd  { aspect-ratio: 3 / 4; }
+.imageWrapLarge { aspect-ratio: 2 / 3; }
+
+.imageFill {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+// gradient background set via CSS custom prop --gradient
+.gradient {
+  width: 100%;
+  height: 100%;
+  background: var(--gradient);
+}
+
+// ─── Hover: add-to-cart overlay ───────────────────────────────────────────────
+.addToCart {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  padding: 1rem;
+  background-color: rgba(44, 44, 44, 0.06);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transform: translateY(100%);
+  transition: transform 0.35s v.$ease-out-expo;
+
+  .card:hover & {
+    transform: translateY(0);
+  }
+}
+
+// ─── Colorway badge ───────────────────────────────────────────────────────────
+.badge {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  padding: 0.25rem 0.75rem;
+  background-color: rgba(245, 242, 235, 0.88);
+  font-family: var(--font-sans);
+  font-size: 0.625rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--color-ink);
+}
+
+// ─── Product info ─────────────────────────────────────────────────────────────
+.info {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.fabric {
+  font-family: var(--font-sans);
+  font-size: 0.625rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--color-olive);
+}
+
+.name {
+  font-family: var(--font-serif);
+  font-size: clamp(1rem, 1.5vw, 1.125rem);
+  line-height: 1.25;
+  color: var(--color-ink);
+}
+
+.price {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-ink);
+}
