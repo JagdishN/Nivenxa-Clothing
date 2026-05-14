@@ -34,3 +34,28 @@ $max-width: 80rem;   // 1280px
 $gutter-sm: 1rem;
 $gutter-md: 1.5rem;
 $gutter-lg: 2rem;
+
+// ─── Color base (for rgba() opacity variants) ────────────────────────────────
+$base-olive:    rgb(122, 117, 94);   // warm olive — borders, rules, muted labels
+$base-charcoal: rgb(44, 44, 44);    // dark charcoal — body text opacity variants
+$base-cream:    rgb(245, 242, 235);  // off-white cream — surface backgrounds
+
+// ─── Spacing tokens ──────────────────────────────────────────────────────────
+$space-page-top:     clamp(6rem, 10vw, 8rem);    // page padding-top
+$space-page-bot:     clamp(5rem, 10vw, 8rem);    // page padding-bottom
+$space-section:      clamp(4rem, 8vw, 6rem);     // hero margin-bottom / closing margin-top
+$space-divider:      clamp(2.5rem, 5vw, 4rem);   // heroDivider margin-top
+$space-subtitle:     clamp(2rem, 4vw, 3rem);     // subtitle margin-bottom
+$space-sections-gap: clamp(3.5rem, 7vw, 5.5rem); // sections flex gap
+$space-scroll-margin: clamp(7rem, 10vw, 9rem);   // section scroll-margin-top
+
+// ─── Hero note panel ─────────────────────────────────────────────────────────
+$heroNote-top:   clamp(13rem, 18vw, 16rem);  // consistent across all story pages
+$heroNote-width: clamp(12rem, 16vw, 14rem);
+
+// ─── Typography tokens ───────────────────────────────────────────────────────
+$fs-body:           clamp(0.9375rem, 1.35vw, 1.0625rem);  // body text, detail items
+$fs-intro:          clamp(0.9375rem, 1.4vw, 1.0625rem);   // intro paragraphs
+$fs-section-title:  clamp(1.625rem, 3vw, 2.25rem);        // numbered section h2
+$fs-closing-italic: clamp(1.1rem, 1.65vw, 1.4rem);        // closing italic coda
+$fs-ghost:          clamp(4rem, 12vw, 12rem);              // hero ghost watermark

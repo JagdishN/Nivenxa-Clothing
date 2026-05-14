@@ -28,11 +28,29 @@ const SECTIONS = [
   },
   {
     index: '03',
-    title: 'Slow Everyday Wear',
+    title: 'Worn Over Time',
     body: [
       'We believe clothing becomes more personal through repetition.',
       'The natural fading of washed cotton, the softening of fabric over time, and the quiet imperfections created through daily wear are all part of the garment\'s life.',
       'NIVENXA is designed for wardrobes built slowly — fewer pieces, worn more often, and kept longer.',
+    ],
+  },
+  {
+    index: '04',
+    title: 'Indian Rhythms',
+    body: [
+      'Our garments are shaped around the pace of contemporary Indian life — dense cities, shifting temperatures, long commutes, slower mornings, and movement throughout the day.',
+      'Rather than separating occasion wear from daily wear, we design clothing intended to transition naturally between routines, environments, and rhythms of use.',
+      'The result is clothing that feels grounded, adaptable, and familiar over time.',
+    ],
+  },
+  {
+    index: '05',
+    title: 'Made to Evolve',
+    body: [
+      'We believe garments should soften into the life of the wearer.',
+      'Washed fabrics relax gradually through movement, surfaces fade gently, and textures develop character through repeated use.',
+      'These changes are not flaws — they become part of the identity of the garment itself.',
     ],
   },
 ]
@@ -44,6 +62,16 @@ export default function MadeInIndiaPage() {
       {/* Hero */}
       <div className={styles.hero}>
         <span className={styles.heroGhost} aria-hidden>INDIA</span>
+        <div className={styles.heroNote}>
+          <span className={styles.heroNoteLabel}>India Notes</span>
+          <ul className={styles.heroNoteList}>
+            <li><a className={styles.heroNoteLink} href="#section-01">Everyday Climate</a></li>
+            <li><a className={styles.heroNoteLink} href="#section-02">Material & Process</a></li>
+            <li><a className={styles.heroNoteLink} href="#section-02">Worn Over Time</a></li>
+            <li><a className={styles.heroNoteLink} href="#section-04">Indian Rhythms</a></li>
+            <li><a className={styles.heroNoteLink} href="#section-05">Made to Evolve</a></li>
+          </ul>
+        </div>
         <AnimatedSection>
           <p className={styles.eyebrow}>Stories — Made in India</p>
           <h1 className={styles.title}>Designed for Contemporary<br />Indian Living</h1>
@@ -75,18 +103,20 @@ export default function MadeInIndiaPage() {
       {/* Numbered sections */}
       <div className={styles.sections}>
         {SECTIONS.map((section, i) => (
-          <AnimatedSection key={section.index} delay={i * 0.08} className={styles.section}>
-            <div className={styles.sectionMeta}>
-              <span className={styles.sectionIndex}>{section.index}</span>
-              <div className={styles.sectionRule} />
-            </div>
-            <div className={styles.sectionContent}>
-              <h2 className={styles.sectionTitle}>{section.title}</h2>
-              {section.body.map((para, j) => (
-                <p key={j} className={styles.body}>{para}</p>
-              ))}
-            </div>
-          </AnimatedSection>
+          <div key={section.index} id={`section-${section.index}`} className={styles.section}>
+            <AnimatedSection delay={i * 0.08} className={styles.sectionInner}>
+              <div className={styles.sectionMeta}>
+                <span className={styles.sectionIndex}>{section.index}</span>
+                <div className={styles.sectionRule} />
+              </div>
+              <div className={styles.sectionContent}>
+                <h2 className={styles.sectionTitle}>{section.title}</h2>
+                {section.body.map((para, j) => (
+                  <p key={j} className={styles.body}>{para}</p>
+                ))}
+              </div>
+            </AnimatedSection>
+          </div>
         ))}
       </div>
 

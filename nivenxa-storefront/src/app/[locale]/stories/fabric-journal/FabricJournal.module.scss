@@ -61,9 +61,14 @@
   margin: 0;
   padding: 0;
   list-style: none;
+}
 
-  li { margin-bottom: 0.55rem; }
-  li:last-child { margin-bottom: 0; }
+.heroNoteList li {
+  margin-bottom: 0.55rem;
+}
+
+.heroNoteList li:last-child {
+  margin-bottom: 0;
 }
 
 .heroNoteLink {
@@ -71,17 +76,18 @@
   color: rgba(v.$base-charcoal, 0.72);
   text-decoration: none;
   transition: color 0.3s ease, transform 0.3s ease;
+}
 
-  &:hover, &:focus-visible {
-    color: #2b2b2b;
-    transform: translateX(2px);
-    cursor: pointer;
-  }
+.heroNoteLink:hover,
+.heroNoteLink:focus-visible {
+  color: #2b2b2b;
+  transform: translateX(2px);
+  cursor: pointer;
+}
 
-  &:focus-visible {
-    outline: 1px solid rgba(v.$base-charcoal, 0.5);
-    outline-offset: 2px;
-  }
+.heroNoteLink:focus-visible {
+  outline: 1px solid rgba(v.$base-charcoal, 0.5);
+  outline-offset: 2px;
 }
 
 .eyebrow {
@@ -96,26 +102,18 @@
 
 .title {
   font-family: var(--font-serif);
-  font-size: clamp(3rem, 7vw, 6rem);
-  line-height: 1;
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  line-height: 1.05;
   color: var(--color-ink);
-  margin-bottom: 1rem;
-}
-
-.subtitle {
-  font-family: var(--font-serif);
-  font-size: clamp(1rem, 2vw, 1.375rem);
-  font-style: italic;
-  color: rgba(v.$base-charcoal, 0.5);
-  letter-spacing: 0.01em;
-  margin-bottom: v.$space-subtitle;
+  max-width: 18ch;
+  margin-bottom: v.$space-divider;
 }
 
 .introWrap {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  max-width: 38rem;
+  max-width: 41rem;
 }
 
 .intro {
@@ -169,7 +167,7 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 0.875rem;
-    padding-top: 0.4rem;
+    padding-top: 0.2rem;
   }
 }
 
@@ -180,6 +178,7 @@
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--color-accent);
+  opacity: 0.7;
   flex-shrink: 0;
 }
 
@@ -214,25 +213,6 @@
   line-height: 1.95;
   color: var(--color-olive);
   max-width: 58ch;
-}
-
-// ─── Detail list (section 03) ─────────────────────────────────────────────────
-.detailList {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  padding-left: 1rem;
-  border-left: 1px solid rgba(v.$base-olive, 0.18);
-  margin-top: 0.25rem;
-}
-
-.detailItem {
-  font-family: var(--font-serif);
-  font-size: v.$fs-body;
-  font-style: italic;
-  line-height: 1.8;
-  color: rgba(v.$base-charcoal, 0.55);
 }
 
 // ─── Closing note ─────────────────────────────────────────────────────────────

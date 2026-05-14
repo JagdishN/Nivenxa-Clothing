@@ -125,6 +125,15 @@
   color: var(--color-olive);
 }
 
+.introItalic {
+  font-family: var(--font-serif);
+  font-size: clamp(1rem, 1.6vw, 1.25rem);
+  font-style: italic;
+  color: rgba(v.$base-charcoal, 0.5);
+  letter-spacing: 0.01em;
+  line-height: 1.6;
+}
+
 .heroDivider {
   width: 3rem;
   height: 1px;
@@ -216,7 +225,7 @@
   max-width: 58ch;
 }
 
-// ─── Detail list (section 03) ─────────────────────────────────────────────────
+// ─── Detail list ──────────────────────────────────────────────────────────────
 .detailList {
   list-style: none;
   display: flex;

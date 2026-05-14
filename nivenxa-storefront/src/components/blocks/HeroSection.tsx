@@ -85,7 +85,9 @@ export default function HeroSection() {
           <Link href="/shop">
             <Button>{t('ctaShop')}</Button>
           </Link>
-          <Button variant="outline">{t('ctaStory')}</Button>
+          <Link href="/stories/our-story">
+            <Button variant="outline">{t('ctaStory')}</Button>
+          </Link>
         </motion.div>
       </div>
 

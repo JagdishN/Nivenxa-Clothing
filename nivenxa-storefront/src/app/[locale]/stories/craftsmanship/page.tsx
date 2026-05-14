@@ -60,6 +60,15 @@ export default function CraftsmanshipPage() {
       {/* Hero */}
       <div className={styles.hero}>
         <span className={styles.heroGhost} aria-hidden>CRAFT</span>
+        <div className={styles.heroNote}>
+          <span className={styles.heroNoteLabel}>Craft Notes</span>
+          <ul className={styles.heroNoteList}>
+            <li><a className={styles.heroNoteLink} href="#section-01">Fabric First</a></li>
+            <li><a className={styles.heroNoteLink} href="#section-02">Constructed with Restraint</a></li>
+            <li><a className={styles.heroNoteLink} href="#section-03">Made by Skilled Hands</a></li>
+            <li><a className={styles.heroNoteLink} href="#section-04">Designed to Endure</a></li>
+          </ul>
+        </div>
         <AnimatedSection>
           <p className={styles.eyebrow}>Stories — Craftsmanship</p>
           <h1 className={styles.title}>Craftsmanship</h1>
@@ -91,25 +100,27 @@ export default function CraftsmanshipPage() {
       {/* Numbered sections */}
       <div className={styles.sections}>
         {SECTIONS.map((section, i) => (
-          <AnimatedSection key={section.index} delay={i * 0.08} className={styles.section}>
-            <div className={styles.sectionMeta}>
-              <span className={styles.sectionIndex}>{section.index}</span>
-              <div className={styles.sectionRule} />
-            </div>
-            <div className={styles.sectionContent}>
-              <h2 className={styles.sectionTitle}>{section.title}</h2>
-              {section.body.map((para, j) => (
-                <p key={j} className={styles.body}>{para}</p>
-              ))}
-              {'list' in section && section.list && (
-                <ul className={styles.detailList}>
-                  {section.list.map((item, j) => (
-                    <li key={j} className={styles.detailItem}>{item}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </AnimatedSection>
+          <div key={section.index} id={`section-${section.index}`} className={styles.section}>
+            <AnimatedSection delay={i * 0.08} className={styles.sectionInner}>
+              <div className={styles.sectionMeta}>
+                <span className={styles.sectionIndex}>{section.index}</span>
+                <div className={styles.sectionRule} />
+              </div>
+              <div className={styles.sectionContent}>
+                <h2 className={styles.sectionTitle}>{section.title}</h2>
+                {section.body.map((para, j) => (
+                  <p key={j} className={styles.body}>{para}</p>
+                ))}
+                {'list' in section && section.list && (
+                  <ul className={styles.detailList}>
+                    {section.list.map((item, j) => (
+                      <li key={j} className={styles.detailItem}>{item}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </AnimatedSection>
+          </div>
         ))}
       </div>
 

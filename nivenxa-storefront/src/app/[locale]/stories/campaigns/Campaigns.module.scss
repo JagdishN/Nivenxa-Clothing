@@ -109,6 +109,7 @@
   color: rgba(v.$base-charcoal, 0.5);
   letter-spacing: 0.01em;
   margin-bottom: v.$space-subtitle;
+  max-width: 36ch;
 }
 
 .introWrap {
@@ -123,6 +124,15 @@
   font-size: v.$fs-intro;
   line-height: 1.95;
   color: var(--color-olive);
+}
+
+.introItalic {
+  font-family: var(--font-serif);
+  font-size: clamp(1rem, 1.6vw, 1.25rem);
+  font-style: italic;
+  color: rgba(v.$base-charcoal, 0.5);
+  letter-spacing: 0.01em;
+  line-height: 1.6;
 }
 
 .heroDivider {
@@ -216,7 +226,7 @@
   max-width: 58ch;
 }
 
-// ─── Detail list (section 03) ─────────────────────────────────────────────────
+// ─── Detail list ──────────────────────────────────────────────────────────────
 .detailList {
   list-style: none;
   display: flex;

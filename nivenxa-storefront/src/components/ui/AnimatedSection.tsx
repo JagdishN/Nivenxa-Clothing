@@ -1,6 +1,7 @@
 'use client'
 import { motion, useInView } from 'framer-motion'
 import { useRef } from 'react'
+import { EASE_OUT_EXPO, DURATION } from '@/lib/motion'
 
 interface AnimatedSectionProps {
   children: React.ReactNode
@@ -21,7 +22,7 @@ export default function AnimatedSection({
       ref={ref}
       initial={{ opacity: 0, y: 36 }}
       animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 36 }}
-      transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1], delay }}
+      transition={{ duration: DURATION.lg, ease: EASE_OUT_EXPO, delay }}
       className={className}
     >
       {children}

@@ -121,14 +121,16 @@
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-top: 1px solid rgba(122, 117, 94, 0.04);
-  padding-top: 1.25rem;
-  padding-bottom: 48px;
+  padding-top: 0.75rem;
+  padding-bottom: 20px;
   display: none;
 
   @include v.md { display: block; }
 }
 
 .submenuInner {
+  position: relative;
+  overflow: hidden;
   max-width: var(--max-width);
   margin-inline: auto;
   padding-inline: var(--gutter);
@@ -140,7 +142,7 @@
   display: flex;
   align-items: baseline;
   gap: 1.75rem;
-  padding-block: 0.6rem;
+  padding-block: 0.4rem;
   border-bottom: 1px solid rgba(122, 117, 94, 0.06);
   text-decoration: none;
 
@@ -217,49 +219,92 @@
   display: flex;
   flex-direction: column;
   flex: 0 0 auto;
+  min-width: clamp(20rem, 32vw, 36rem);
+}
+
+// ─── Middle editorial preview column ─────────────────────────────────────────
+.submenuMiddle {
+  flex: 0 0 auto;
+  width: clamp(22rem, 28vw, 30rem);
+  padding-inline: clamp(1.25rem, 2.5vw, 2.5rem);
+  border-left: 1px solid rgba(122, 117, 94, 0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding-top: 1rem;
+}
+
+.submenuEditorialBody {
+  font-family: var(--font-serif);
+  font-size: clamp(0.875rem, 1.15vw, 1rem);
+  font-style: italic;
+  line-height: 1.8;
+  color: rgba(44, 44, 44, 0.55);
+  max-width: 26ch;
+
+  & + & { margin-top: 0.875rem; }
+}
+
+.submenuEditorialTags {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  margin-top: 1.25rem;
+  border-top: 1px solid rgba(122, 117, 94, 0.08);
+}
+
+.submenuEditorialTag {
+  font-family: var(--font-sans);
+  font-size: 0.55rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: rgba(122, 117, 94, 0.42);
 }
 
 // ─── Right panel (atmosphere + children) ─────────────────────────────────────
 .submenuRight {
   flex: 1;
   display: flex;
-  align-items: flex-start;
-  padding-left: clamp(2.5rem, 5vw, 5rem);
-  margin-left: clamp(1.5rem, 3vw, 3rem);
-  border-left: 1px solid rgba(122, 117, 94, 0.09);
-  min-width: 220px;
+  align-items: center;
+  padding-left: clamp(1.5rem, 3vw, 3rem);
+  margin-left: clamp(1rem, 2vw, 2rem);
+  border-left: 1px solid rgba(122, 117, 94, 0.05);
+  min-width: 180px;
 }
 
 // ─── Atmospheric preview (hover imagery) ─────────────────────────────────────
 .submenuAtmosphere {
-  position: relative;
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 1.25rem;
+  align-items: center;
+  justify-content: flex-end;
   width: 100%;
-  overflow: hidden;
 }
 
+// Ghost watermark — anchored at 68% left, behind the image zone
 .submenuAtmosphereGhost {
   position: absolute;
-  bottom: -0.5rem;
-  right: -0.75rem;
+  top: 50%;
+  left: 68%;
+  transform: translateY(-50%);
   font-family: var(--font-serif);
-  font-size: clamp(3.5rem, 7vw, 6.5rem);
-  letter-spacing: 0.1em;
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
+  letter-spacing: 0.14em;
   color: var(--color-ink);
-  opacity: 0.045;
+  opacity: 0.1;
   white-space: nowrap;
   line-height: 1;
   pointer-events: none;
   user-select: none;
+  z-index: 0;
 }
 
 .submenuAtmosphereFragment {
-  width: clamp(130px, 15vw, 188px);
+  width: clamp(175px, 22vw, 250px);
   aspect-ratio: 3 / 4;
-  margin-top: 1.5rem;
+  margin-top: 0.25rem;
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
@@ -319,7 +364,7 @@
   display: flex;
   align-items: baseline;
   gap: 1.25rem;
-  padding-block: 0.875rem;
+  padding-block: 0.6rem;
   text-decoration: none;
   border-bottom: 1px solid rgba(122, 117, 94, 0.05);
 
@@ -357,11 +402,11 @@
   transition: opacity 0.25s ease, color 0.25s ease;
 }
 
-// active state: hovered item label + index shift to accent
+// active state: hovered item — softer clay tone
 .submenuLink.submenuLinkActive {
-  .submenuLabel { color: var(--color-accent); }
-  .submenuIndex { color: var(--color-accent); opacity: 1; }
-  .submenuArrow { opacity: 0.65; color: var(--color-accent); }
+  .submenuLabel { color: rgba(177, 104, 79, 0.65); }
+  .submenuIndex { color: rgba(177, 104, 79, 0.65); opacity: 1; }
+  .submenuArrow { opacity: 0.5; color: rgba(177, 104, 79, 0.65); }
 }
 
 // ─── Nav actions (language + cart) ───────────────────────────────────────────

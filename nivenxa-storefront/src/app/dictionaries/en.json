@@ -41,15 +41,15 @@
       "cta": "Shop Women's"
     },
     "kids": {
-      "index": "02",
-      "label": "Kids'",
-      "title": "Kids' Collections",
+      "index": "03",
+      "label": "Youth Studio",
+      "title": "Youth Studio",
       "body": "Premium co-ords, nightwear, and occasion sets for boys and girls. Soft fabrics, playful forms.",
-      "cta": "Shop Kids'"
+      "cta": "Shop Youth Studio"
     },
     "unisex": {
-      "index": "03",
-      "label": "Unisex",
+      "index": "02",
+      "label": "Unisex Essentials",
       "title": "Unisex Essentials",
       "body": "Heavyweight cargo pants and oversized tees in 240–340 GSM bio-washed cotton. Built for movement, worn for life.",
       "cta": "Shop Unisex"

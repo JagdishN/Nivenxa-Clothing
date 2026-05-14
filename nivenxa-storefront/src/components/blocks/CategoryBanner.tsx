@@ -35,22 +35,6 @@ export default function CategoryBanner() {
 
           <AnimatedSection delay={0.2}>
             <div className={styles.panel}>
-              <div className={`${styles.panelBg} ${styles.kidsBg}`} />
-              <TextureOverlay opacity={0.65} soft />
-              <div className={`${styles.panelFade} ${styles.kidsFade}`} />
-              <div className={styles.panelContent}>
-                <p className={styles.kidsEyebrow}>{t('kids.index')} — {t('kids.label')}</p>
-                <h3 className={styles.kidsTitle}>{t('kids.title')}</h3>
-                <p className={styles.kidsBody}>{t('kids.body')}</p>
-                <Link href="/shop/kids">
-                  <Button>{t('kids.cta')}</Button>
-                </Link>
-              </div>
-            </div>
-          </AnimatedSection>
-
-          <AnimatedSection delay={0.3}>
-            <div className={styles.panel}>
               <div className={`${styles.panelBg} ${styles.unisexBg}`} />
               <TextureOverlay opacity={0.9} soft />
               <div className={`${styles.panelFade} ${styles.unisexFade}`} />
@@ -60,6 +44,22 @@ export default function CategoryBanner() {
                 <p className={styles.unisexBody}>{t('unisex.body')}</p>
                 <Link href="/shop/unisex">
                   <Button>{t('unisex.cta')}</Button>
+                </Link>
+              </div>
+            </div>
+          </AnimatedSection>
+
+          <AnimatedSection delay={0.3}>
+            <div className={styles.panel}>
+              <div className={`${styles.panelBg} ${styles.kidsBg}`} />
+              <TextureOverlay opacity={0.65} soft />
+              <div className={`${styles.panelFade} ${styles.kidsFade}`} />
+              <div className={styles.panelContent}>
+                <p className={styles.kidsEyebrow}>{t('kids.index')} — {t('kids.label')}</p>
+                <h3 className={styles.kidsTitle}>{t('kids.title')}</h3>
+                <p className={styles.kidsBody}>{t('kids.body')}</p>
+                <Link href="/shop/kids">
+                  <Button>{t('kids.cta')}</Button>
                 </Link>
               </div>
             </div>
