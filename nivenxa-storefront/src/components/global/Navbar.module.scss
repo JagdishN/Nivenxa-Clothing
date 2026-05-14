@@ -418,6 +418,23 @@
   @include v.md { display: flex; }
 }
 
+// ─── Auth buttons ─────────────────────────────────────────────────────────────
+.authLink {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-ink);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color v.$transition-base;
+
+  &:hover { color: var(--color-accent); }
+}
+
 // ─── Cart button ──────────────────────────────────────────────────────────────
 .cartBtn {
   font-family: var(--font-sans);

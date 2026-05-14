@@ -1,0 +1,55 @@
+@use '../../styles/variables' as v;
+
+// ─── Container ────────────────────────────────────────────────────────────────
+.container {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  pointer-events: none;
+  align-items: flex-end;
+}
+
+// ─── Individual toast ─────────────────────────────────────────────────────────
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.875rem 1.25rem;
+  min-width: 220px;
+  max-width: 320px;
+  pointer-events: all;
+  cursor: pointer;
+  user-select: none;
+}
+
+// ─── Colour variants ──────────────────────────────────────────────────────────
+.success {
+  background-color: rgba(v.$base-olive, 0.92);
+}
+
+.error {
+  background-color: rgba(160, 100, 72, 0.92);
+}
+
+// ─── Dot indicator ────────────────────────────────────────────────────────────
+.dot {
+  flex-shrink: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: rgba(245, 242, 235, 0.65);
+  margin-top: 0.2rem;
+}
+
+// ─── Message ──────────────────────────────────────────────────────────────────
+.message {
+  font-family: var(--font-sans);
+  font-size: 0.725rem;
+  line-height: 1.55;
+  letter-spacing: 0.01em;
+  color: rgba(245, 242, 235, 0.95);
+}

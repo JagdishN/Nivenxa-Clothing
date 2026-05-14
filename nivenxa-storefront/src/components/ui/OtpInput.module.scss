@@ -1,0 +1,34 @@
+@use '../../styles/variables' as v;
+
+.wrap {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.cell {
+  width: 2.25rem;
+  height: 2.75rem;
+  background: rgba(v.$base-cream, 0.45);
+  border: 1px solid rgba(v.$base-charcoal, 0.18);
+  outline: none;
+  text-align: center;
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: var(--color-ink);
+  caret-color: var(--color-accent);
+  -webkit-appearance: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+
+  &::placeholder { color: rgba(v.$base-charcoal, 0.15); }
+
+  &:focus {
+    border-color: rgba(v.$base-olive, 0.55);
+    background: transparent;
+  }
+
+  &:not(:placeholder-shown) {
+    border-color: rgba(v.$base-charcoal, 0.3);
+  }
+}
