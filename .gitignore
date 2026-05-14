@@ -12,6 +12,9 @@ node_modules/
 # Vercel
 .vercel
 
+# Netlify
+.netlify
+
 # Misc
 .DS_Store
 *.pem
