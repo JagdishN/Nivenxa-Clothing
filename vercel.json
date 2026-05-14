@@ -1,0 +1,6 @@
+{
+  "rootDirectory": "nivenxa-storefront",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install --legacy-peer-deps"
+}

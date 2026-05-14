@@ -9,6 +9,9 @@ node_modules/
 # Environment
 .env*
 
+# Vercel
+.vercel
+
 # Misc
 .DS_Store
 *.pem
