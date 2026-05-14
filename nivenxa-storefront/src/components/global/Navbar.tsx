@@ -6,6 +6,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import LanguageSwitcher from './LanguageSwitcher'
 import { NAV_ITEMS } from '@/data/navigation'
 import { EASE_OUT_EXPO, DURATION } from '@/lib/motion'
+import { useAuth } from '@/context/AuthContext'
+import SignInDrawer from './SignInDrawer'
 import styles from './Navbar.module.scss'
 
 export default function Navbar() {
@@ -17,6 +19,8 @@ export default function Navbar() {
   const [mobileExpanded, setMobileExpanded]       = useState<string | null>(null)
   const [mobileSubExpanded, setMobileSubExpanded] = useState<string | null>(null)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { customer, loading, logout } = useAuth()
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24)
@@ -88,6 +92,22 @@ export default function Navbar() {
 
           <div className={styles.navActions}>
             <LanguageSwitcher />
+            {!loading && (
+              customer ? (
+                <>
+                  <Link href="/account" className={styles.authLink}>
+                    {customer.firstName || 'Account'}
+                  </Link>
+                  <button className={styles.authLink} onClick={() => logout()}>
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <button className={styles.authLink} onClick={() => setDrawerOpen(true)}>
+                  Account
+                </button>
+              )
+            )}
             <button className={styles.cartBtn}>{t('cart')} (0)</button>
           </div>
 
@@ -246,6 +266,8 @@ export default function Navbar() {
           )}
         </AnimatePresence>
       </header>
+
+      <SignInDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
       {/* Mobile menu */}
       <nav

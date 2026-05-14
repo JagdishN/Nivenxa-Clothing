@@ -4,6 +4,9 @@ import { notFound } from 'next/navigation'
 import { routing } from '@/i18n/routing'
 import Navbar from '@/components/global/Navbar'
 import Footer from '@/components/global/Footer'
+import { AuthProvider } from '@/context/AuthContext'
+import { CartProvider } from '@/context/CartContext'
+import { ToastProvider } from '@/context/ToastContext'
 
 const RTL_LOCALES = ['ar']
 
@@ -30,9 +33,15 @@ export default async function LocaleLayout({
   return (
     <div lang={locale} dir={dir}>
       <NextIntlClientProvider messages={messages}>
-        <Navbar />
-        <main>{children}</main>
-        <Footer />
+        <ToastProvider>
+          <AuthProvider>
+            <CartProvider>
+              <Navbar />
+              <main>{children}</main>
+              <Footer />
+            </CartProvider>
+          </AuthProvider>
+        </ToastProvider>
       </NextIntlClientProvider>
     </div>
   )

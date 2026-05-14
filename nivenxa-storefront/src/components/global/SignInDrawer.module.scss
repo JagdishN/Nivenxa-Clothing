@@ -1,0 +1,298 @@
+@use '../../styles/variables' as v;
+
+// ─── Taller variant for register (5 fields) ──────────────────────────────────
+.drawerTall {
+  height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+// ─── Invisible click-outside target ──────────────────────────────────────────
+.backdropClick {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+}
+
+// ─── Drawer panel ─────────────────────────────────────────────────────────────
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: clamp(500px, 62vh, 580px);
+  overflow: hidden;
+  width: clamp(300px, 32vw, 380px);
+  background-color: #EDE8DC;
+  z-index: 100;
+  padding-block: 1.75rem 3rem;
+  padding-inline: 36px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -8px 0 32px rgba(v.$base-charcoal, 0.1);
+  border-left: 1px solid rgba(v.$base-olive, 0.12);
+}
+
+// ─── Close button ─────────────────────────────────────────────────────────────
+.close {
+  position: absolute;
+  top: 1.1rem;
+  right: 1.5rem;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  color: rgba(v.$base-charcoal, 0.3);
+  cursor: pointer;
+  line-height: 1;
+  padding: 0.2rem;
+  transition: color 0.2s ease;
+
+  &:hover { color: var(--color-ink); }
+}
+
+// ─── Header ───────────────────────────────────────────────────────────────────
+.header {
+  margin-top: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.575rem;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(v.$base-olive, 0.6);
+  margin-bottom: 0.6rem;
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.5rem, 2.5vw, 1.875rem);
+  line-height: 1.02;
+  color: var(--color-ink);
+  margin-bottom: 0.6rem;
+}
+
+.subtitle {
+  font-family: var(--font-sans);
+  font-size: 0.775rem;
+  line-height: 1.6;
+  color: rgba(v.$base-charcoal, 0.4);
+  max-width: 28ch;
+}
+
+// ─── Form ─────────────────────────────────────────────────────────────────────
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+// Tighter gap for register (5 fields)
+.formDense {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+// First name / Last name side by side
+.nameRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.form,
+.formDense {
+  margin-top: 0.5rem;
+}
+
+.label {
+  font-family: var(--font-sans);
+  font-size: 0.575rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(v.$base-charcoal, 0.65);
+}
+
+.input {
+  width: 100%;
+  padding: 0.4rem 0;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  color: var(--color-ink);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(v.$base-charcoal, 0.4);
+  outline: none;
+  transition: border-color 0.25s ease;
+  -webkit-appearance: none;
+
+  &::placeholder { color: rgba(v.$base-charcoal, 0.35); }
+  &:focus        { border-bottom-color: rgba(v.$base-charcoal, 0.6); }
+}
+
+// ─── Required indicator ───────────────────────────────────────────────────────
+.required {
+  color: rgba(160, 100, 72, 0.75);
+  margin-left: 0.1rem;
+  font-style: normal;
+}
+
+// ─── Field-level error ────────────────────────────────────────────────────────
+.fieldError {
+  font-family: var(--font-sans);
+  font-size: 0.625rem;
+  color: rgba(152, 88, 62, 0.78);
+  letter-spacing: 0.02em;
+  margin-top: 0.1rem;
+}
+
+// ─── Input error state ────────────────────────────────────────────────────────
+.inputError {
+  border-bottom-color: rgba(152, 88, 62, 0.45) !important;
+}
+
+.errorMsg {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: rgba(152, 88, 62, 0.78);
+  margin-top: -0.4rem;
+}
+
+// ─── Clay submit button ───────────────────────────────────────────────────────
+.submitBtn {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(245, 242, 235, 0.95);
+  background-color: rgba(160, 100, 72, 0.72);
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.25s ease, background-color 0.25s ease;
+
+  &:hover:not(:disabled) {
+    opacity: 0.88;
+    background-color: rgba(160, 100, 72, 0.82);
+  }
+
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+// ─── Back link ────────────────────────────────────────────────────────────────
+.backLink {
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(v.$base-charcoal, 0.45);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0 0;
+  margin-bottom: 0.5rem;
+  transition: color 0.2s ease;
+
+  &:hover { color: var(--color-ink); }
+}
+
+// ─── Resend row ───────────────────────────────────────────────────────────────
+.resendRow {
+  display: flex;
+  align-items: center;
+  margin-top: -0.25rem;
+}
+
+.timerText {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  color: rgba(v.$base-charcoal, 0.38);
+  letter-spacing: 0.02em;
+}
+
+.resendBtn {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: rgba(v.$base-charcoal, 0.6);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  letter-spacing: 0.04em;
+  transition: color 0.2s ease;
+
+  &:hover { color: var(--color-ink); }
+}
+
+// ─── Forgot password ─────────────────────────────────────────────────────────
+.forgotLink {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  color: rgba(v.$base-charcoal, 0.55);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  letter-spacing: 0.02em;
+  align-self: flex-start;
+  text-decoration: none;
+  transition: color 0.25s ease;
+
+  &:hover {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+// ─── Create account ───────────────────────────────────────────────────────────
+.createAccount {
+  padding-top: 1.25rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.createAccountText {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  color: rgba(v.$base-charcoal, 0.35);
+  letter-spacing: 0.02em;
+}
+
+.createAccountLink {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--color-ink);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+  transition: color 0.25s ease;
+
+  &:hover {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
