@@ -9,6 +9,12 @@ node_modules/
 # Environment
 .env*
 
+# Vercel
+.vercel
+
+# Netlify
+.netlify
+
 # Misc
 .DS_Store
 *.pem
