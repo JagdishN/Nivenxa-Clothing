@@ -1,0 +1,859 @@
+@use '../../../../styles/variables' as v;
+
+$ink:   #1F1B3A;
+$olive: rgb(122, 117, 94);
+$gold:  rgba(180, 158, 110, 0.85);
+$cream: #F5F2EB;
+$ice:   #F9F7F2;
+$px:    clamp(1.5rem, 5vw, 4.5rem);  // horizontal gutter
+
+// ─── Page ────────────────────────────────────────────────────────────────────
+.page {
+  background: $ice;
+  color: $ink;
+  overflow-x: hidden;
+  // Start below the fixed Navbar (≈72px)
+  padding-top: 0;
+}
+
+// ─── Persistent back button ───────────────────────────────────────────────────
+.backButton {
+  position: fixed;
+  top: 5rem;
+  left: clamp(1rem, 2.5vw, 2rem);
+  z-index: 90;
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: rgba(44, 44, 44, 0.45);
+  transition: color 0.25s ease;
+
+  &:hover { color: rgba(44, 44, 44, 0.85); }
+}
+
+// ─── 9. Side nav — animated active indicator ──────────────────────────────────
+.sideNav {
+  position: fixed;
+  right: clamp(1.25rem, 2.5vw, 2.5rem);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  @include v.max-lg { display: none; }
+}
+
+.sideNavItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.2rem 0;
+}
+
+.sideNavDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: $ink;
+  flex-shrink: 0;
+  display: block;
+}
+
+.sideNavLabel {
+  font-family: var(--font-sans);
+  font-size: 0.52rem;
+  text-transform: uppercase;
+  color: $ink;
+  white-space: nowrap;
+  display: block;
+}
+
+.sideNavActive .sideNavLabel {
+  font-weight: 600;
+}
+
+// ─── BIG — Hero ──────────────────────────────────────────────────────────────
+.hero {
+  position: relative;
+  height: 100svh;
+  min-height: 580px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.heroImageWrap {
+  position: absolute;
+  inset: 0;
+}
+
+.heroImage {
+  object-fit: contain;
+  object-position: center 15%;
+  mix-blend-mode: multiply;
+  background: linear-gradient(180deg, #e8e4dc 0%, #dedad2 100%);
+}
+
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.15) 45%, transparent 70%),
+    radial-gradient(ellipse 70% 60% at 50% 100%, rgba(0,0,0,0.35), transparent);
+}
+
+.heroContent {
+  position: relative;
+  z-index: 2;
+  padding: 0 $px clamp(2.5rem, 5vw, 4rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  max-width: 720px;
+}
+
+.heroBack {
+  font-family: var(--font-sans);
+  font-size: 0.58rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(249, 247, 242, 0.45);
+  text-decoration: none;
+  margin-bottom: 0.5rem;
+  transition: color 0.25s ease;
+  align-self: flex-start;
+
+  &:hover { color: rgba(249, 247, 242, 0.85); }
+}
+
+.heroStatus {
+  font-family: var(--font-sans);
+  font-size: 0.5rem;
+  font-weight: 400;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: rgba(214, 168, 95, 0.82);
+}
+
+.heroName {
+  font-family: var(--font-serif);
+  font-size: clamp(2.2rem, 6vw, 5rem);
+  font-weight: 400;
+  line-height: 1.06;
+  color: rgba(249, 247, 242, 0.95);
+  letter-spacing: -0.025em;
+  margin: 0;
+}
+
+.heroMeta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.heroFabricTag {
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(249, 247, 242, 0.48);
+}
+
+.heroDrapeTag {
+  @extend .heroFabricTag;
+  color: rgba(249, 247, 242, 0.3);
+
+  &::before { content: '·'; margin-right: 1rem; opacity: 0.4; }
+}
+
+.heroFooter {
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.heroPrice {
+  font-family: var(--font-sans);
+  font-size: clamp(0.95rem, 1.5vw, 1.15rem);
+  color: rgba(249, 247, 242, 0.65);
+  letter-spacing: 0.04em;
+}
+
+.addToWardrobeBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.78rem 1.85rem;
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(20, 18, 14, 0.92);
+  background: rgba(249, 247, 242, 0.92);
+  border: none;
+  cursor: pointer;
+  transition: background 0.28s ease, gap 0.28s ease;
+
+  &:hover { background: rgba(249, 247, 242, 1); gap: 0.9rem; }
+}
+
+.ctaArrow {
+  display: inline-block;
+  transition: transform 0.28s v.$ease-out-expo;
+  .addToWardrobeBtn:hover & { transform: translateX(3px); }
+}
+
+.scrollCue {
+  position: absolute;
+  bottom: 1.75rem;
+  right: $px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.scrollLine {
+  display: block;
+  width: 1px;
+  height: 32px;
+  background: linear-gradient(to bottom, rgba(249,247,242,0.45), transparent);
+}
+
+// ─── QUICK — Technical strip ──────────────────────────────────────────────────
+.techStrip {
+  background: $ink;
+  padding: clamp(1.25rem, 2.5vw, 2rem) $px;
+}
+
+.techStripInner {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0;
+  border-left: 1px solid rgba(249, 247, 242, 0.06);
+}
+
+.techCell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.1rem 1.5rem;
+  border-right: 1px solid rgba(249, 247, 242, 0.06);
+}
+
+.techKey {
+  font-family: var(--font-sans);
+  font-size: 0.5rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(214, 168, 95, 0.6);
+  text-transform: capitalize;
+}
+
+.techVal {
+  font-family: var(--font-sans);
+  font-size: clamp(0.78rem, 1.1vw, 0.9rem);
+  color: rgba(249, 247, 242, 0.62);
+  line-height: 1.4;
+}
+
+// ─── MEDIUM — Garment Specification ──────────────────────────────────────────
+.specSection {
+  padding: clamp(3.5rem, 7vw, 6rem) $px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.specInner {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2rem, 4vw, 3rem);
+}
+
+.specHeader {}
+
+.specEyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.55rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba($ink, 0.32);
+  margin-bottom: 0.85rem;
+}
+
+.specTitle {
+  font-family: var(--font-serif);
+  font-size: clamp(1.6rem, 3vw, 2.5rem);
+  font-weight: 400;
+  color: $ink;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.85rem;
+}
+
+.specBody {
+  font-family: var(--font-sans);
+  font-size: clamp(0.875rem, 1.3vw, 1rem);
+  line-height: 1.85;
+  color: rgba($ink, 0.52);
+  max-width: 640px;
+}
+
+// DNA compact strip — 4 cols
+.dnaStrip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  border-top: 1px solid rgba($ink, 0.08);
+}
+
+.dnaCell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.1rem 1.5rem 1.1rem 0;
+  border-right: 1px solid rgba($ink, 0.06);
+  padding-right: 1.5rem;
+
+  &:last-child { border-right: none; }
+}
+
+.dnaCellAttr {
+  font-family: var(--font-sans);
+  font-size: 0.52rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba($ink, 0.3);
+}
+
+.dnaCellVal {
+  font-family: var(--font-sans);
+  font-size: clamp(0.78rem, 1.1vw, 0.9rem);
+  color: rgba($ink, 0.72);
+  line-height: 1.45;
+}
+
+// Detail chips
+.detailChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.detailChip {
+  font-family: var(--font-sans);
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  color: rgba($ink, 0.55);
+  padding: 0.28rem 0.75rem;
+  border: 1px solid rgba($ink, 0.1);
+  background: rgba($ink, 0.025);
+}
+
+// Expandable detail
+.specExpand {
+  border-top: 1px solid rgba($ink, 0.07);
+  padding-top: 0.75rem;
+}
+
+.specExpandToggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 0.56rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba($ink, 0.35);
+  cursor: pointer;
+  transition: color 0.22s ease;
+
+  &:hover { color: rgba($ink, 0.65); }
+}
+
+.specExpandIcon {
+  display: inline-block;
+  transition: transform 0.3s v.$ease-out-expo;
+}
+
+.specExpandIconOpen { transform: rotate(180deg); }
+
+.specExpandContent {
+  overflow: hidden;
+  margin-top: 1rem;
+}
+
+.specExpandRow {
+  display: grid;
+  grid-template-columns: 9rem 1fr;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid rgba($ink, 0.05);
+  gap: 1rem;
+
+  &:last-child { border-bottom: none; }
+}
+
+.specExpandKey {
+  font-family: var(--font-sans);
+  font-size: 0.56rem;
+  letter-spacing: 0.18em;
+  color: rgba($ink, 0.3);
+  text-transform: capitalize;
+}
+
+.specExpandVal {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: rgba($ink, 0.7);
+}
+
+// ─── BIG — Fit Philosophy ─────────────────────────────────────────────────────
+.fitSection {
+  overflow: hidden;
+}
+
+.fitGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  min-height: 70vh;
+
+  @include v.lg { grid-template-columns: 55fr 45fr; }
+}
+
+.fitImageWrap {
+  position: relative;
+  min-height: 50vh;
+  cursor: zoom-in;
+  overflow: hidden;
+
+  @include v.lg { min-height: 70vh; }
+}
+
+.fitImage {
+  object-fit: contain;
+  object-position: center;
+  mix-blend-mode: multiply;
+  background: $cream;
+  transition: transform 0.7s v.$ease-out-expo;
+
+  .fitImageWrap:hover & { transform: scale(1.02); }
+}
+
+.fitImageLabel {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  font-family: var(--font-sans);
+  font-size: 0.52rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba($ink, 0.35);
+}
+
+.fitText {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(3rem, 6vw, 5rem) $px;
+  background: $ice;
+}
+
+.fitEyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.55rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba($ink, 0.3);
+  margin-bottom: 1.25rem;
+}
+
+.fitHeading {
+  font-family: var(--font-serif);
+  font-size: clamp(1.75rem, 3vw, 2.75rem);
+  font-weight: 400;
+  color: $ink;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.1rem;
+}
+
+.fitBody {
+  font-family: var(--font-sans);
+  font-size: clamp(0.9375rem, 1.3vw, 1.0625rem);
+  line-height: 1.95;
+  color: rgba($ink, 0.55);
+  margin-bottom: 1.75rem;
+}
+
+.fitSpecRows {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid rgba($ink, 0.07);
+}
+
+.fitSpecRow {
+  display: grid;
+  grid-template-columns: 8rem 1fr;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid rgba($ink, 0.05);
+
+  &:last-child { border-bottom: none; }
+}
+
+.fitSpecAttr {
+  font-family: var(--font-sans);
+  font-size: 0.56rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba($ink, 0.28);
+}
+
+.fitSpecVal {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: rgba($ink, 0.68);
+}
+
+// ─── BIG — Lifestyle Editorial ────────────────────────────────────────────────
+.lifestyleSection {
+  background: $ink;
+  overflow: hidden;
+}
+
+.lifestyleInner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: clamp(3.5rem, 7vw, 6rem) $px;
+}
+
+.lifestyleHeader {
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.lifestyleEyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.55rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(214, 168, 95, 0.6);
+}
+
+.lifestyleGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(0.75rem, 1.5vw, 1rem);
+
+  @include v.lg { grid-template-columns: 3fr 2fr; }
+}
+
+.lifestyleMain {
+  position: relative;
+  min-height: 55vh;
+  overflow: hidden;
+  cursor: zoom-in;
+
+  @include v.lg { min-height: 65vh; }
+}
+
+.lifestyleImg {
+  object-fit: contain;
+  mix-blend-mode: multiply;
+  transition: transform 0.7s v.$ease-out-expo;
+
+  .lifestyleMain:hover &,
+  .lifestyleDetail:hover & { transform: scale(1.02); }
+}
+
+.lifestyleOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 55%);
+  display: flex;
+  align-items: flex-end;
+  padding: 1.5rem;
+}
+
+.lifestyleCaption {
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(249, 247, 242, 0.5);
+}
+
+.lifestyleSide {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: clamp(0.75rem, 1.5vw, 1rem);
+}
+
+.lifestyleDetail {
+  position: relative;
+  overflow: hidden;
+  cursor: zoom-in;
+  background: rgba(249, 247, 242, 0.03);
+  min-height: 30vh;
+}
+
+.lifestyleDetailLabel {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  font-family: var(--font-sans);
+  font-size: 0.5rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(249, 247, 242, 0.3);
+}
+
+.lifestyleTextCard {
+  padding: clamp(1.5rem, 3vw, 2.25rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-height: 140px;
+}
+
+.lifestyleTextCardLabel {
+  font-family: var(--font-sans);
+  font-size: 0.5rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(249, 247, 242, 0.4);
+}
+
+.lifestyleTextCardVal {
+  font-family: var(--font-serif);
+  font-size: clamp(1.1rem, 1.8vw, 1.45rem);
+  font-weight: 400;
+  color: rgba(249, 247, 242, 0.75);
+  letter-spacing: -0.01em;
+}
+
+.lifestyleDesignedFor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-top: 0.25rem;
+}
+
+.lifestyleDesignedItem {
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  color: rgba(249, 247, 242, 0.38);
+  letter-spacing: 0.04em;
+}
+
+// ─── QUICK — Color + Care inline strip ───────────────────────────────────────
+.quickStrip {
+  padding: clamp(2.5rem, 5vw, 4rem) $px;
+  border-top: 1px solid rgba($ink, 0.07);
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.quickStripInner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(2rem, 4vw, 3rem);
+
+  @include v.md { grid-template-columns: 1fr 1fr; gap: clamp(3rem, 6vw, 5rem); }
+}
+
+.colorBlock {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+}
+
+.colorSwatch {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 0.2rem;
+}
+
+.colorLabel {
+  font-family: var(--font-sans);
+  font-size: 0.52rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba($ink, 0.3);
+  margin-bottom: 0.3rem;
+}
+
+.colorShade {
+  font-family: var(--font-serif);
+  font-size: clamp(1.1rem, 1.8vw, 1.35rem);
+  font-weight: 400;
+  color: $ink;
+  letter-spacing: -0.01em;
+  margin-bottom: 0.4rem;
+}
+
+.colorDesc {
+  font-family: var(--font-sans);
+  font-size: clamp(0.825rem, 1.1vw, 0.9rem);
+  line-height: 1.8;
+  color: rgba($ink, 0.5);
+}
+
+.careBlock {}
+
+.careLabel {
+  font-family: var(--font-sans);
+  font-size: 0.52rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba($ink, 0.3);
+  margin-bottom: 0.6rem;
+}
+
+.careText {
+  font-family: var(--font-sans);
+  font-size: clamp(0.825rem, 1.1vw, 0.9rem);
+  line-height: 1.85;
+  color: rgba($ink, 0.52);
+}
+
+// ─── STRONG — Styled With + CTA ──────────────────────────────────────────────
+.endSection {
+  padding: clamp(4rem, 8vw, 7rem) $px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.styledWith {
+  margin-bottom: clamp(3rem, 6vw, 5rem);
+}
+
+.styledWithEyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.55rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba($ink, 0.3);
+  margin-bottom: 1.5rem;
+}
+
+.styledWithGrid {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid rgba($ink, 0.08);
+}
+
+.styledWithItem {
+  display: flex;
+  align-items: baseline;
+  gap: 1.1rem;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid rgba($ink, 0.055);
+
+  &:last-child { border-bottom: none; }
+}
+
+.styledWithIndex {
+  font-family: var(--font-sans);
+  font-size: 0.52rem;
+  letter-spacing: 0.22em;
+  color: rgba($olive, 0.65);
+  flex-shrink: 0;
+}
+
+.styledWithText {
+  font-family: var(--font-sans);
+  font-size: clamp(0.9375rem, 1.4vw, 1.05rem);
+  color: rgba($ink, 0.72);
+}
+
+.whyBlock {
+  padding: clamp(2rem, 4vw, 3rem) 0;
+  border-top: 1px solid rgba($ink, 0.06);
+  margin-bottom: clamp(2rem, 4vw, 3.5rem);
+}
+
+.whyText {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(1.1rem, 2vw, 1.5rem);
+  line-height: 1.65;
+  color: rgba($ink, 0.45);
+  max-width: 560px;
+}
+
+.finalCta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  padding-top: clamp(1.5rem, 3vw, 2.5rem);
+  border-top: 1px solid rgba($ink, 0.08);
+}
+
+.finalCtaLeft { display: flex; flex-direction: column; gap: 0.2rem; }
+
+.finalCtaName {
+  font-family: var(--font-serif);
+  font-size: clamp(1.1rem, 2vw, 1.5rem);
+  color: $ink;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.finalCtaPrice {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  color: rgba($ink, 0.5);
+  margin: 0;
+  letter-spacing: 0.04em;
+}
+
+// ─── Lightbox ─────────────────────────────────────────────────────────────────
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+}
+
+.lightboxInner {
+  position: relative;
+  width: min(88vw, 680px);
+  aspect-ratio: 3 / 4;
+  cursor: default;
+}
+
+.lightboxImg { object-fit: contain; }
+
+.lightboxClose {
+  position: absolute;
+  top: -2.75rem;
+  right: 0;
+  background: none;
+  border: none;
+  color: rgba(249, 247, 242, 0.55);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+
+  &:hover { color: rgba(249, 247, 242, 1); }
+}

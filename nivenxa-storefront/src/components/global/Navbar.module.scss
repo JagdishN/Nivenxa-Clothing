@@ -50,13 +50,19 @@
   list-style: none;
   align-items: center;
   gap: 3rem;
+  // Quiet spacing transition — items breathe apart on hover
+  transition: gap 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &:hover { gap: 3.25rem; }
 
   @include v.md { display: flex; }
 }
 
+// Non-hovered siblings dim with eased opacity
 .navLinks:hover .navItem:not(:hover) .navLink,
 .navLinks:hover .navItem:not(:hover) .navLinkBtn {
-  opacity: 0.38;
+  opacity: 0.32;
+  letter-spacing: 0.12em;
 }
 
 .navItem {
@@ -74,31 +80,37 @@
   color: var(--color-ink);
   text-decoration: none;
   opacity: 1;
-  transition: color 0.3s ease, opacity 0.25s ease;
+  // Luxury motion: letter-spacing eases on hover for typographic breathing
+  transition:
+    color         0.45s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity       0.4s  cubic-bezier(0.16, 1, 0.3, 1),
+    letter-spacing 0.5s  cubic-bezier(0.16, 1, 0.3, 1);
 
+  // Underline — draws from left, slow and precise
   &::after {
     content: '';
     position: absolute;
-    bottom: -3px;
+    bottom: -4px;
     left: 0;
     width: 100%;
-    height: 1px;
-    background-color: var(--color-accent);
+    height: 0.5px;
+    background: linear-gradient(90deg, var(--color-accent), rgba(122,117,94,0.3));
     opacity: 0;
     transform: scaleX(0);
     transform-origin: left;
     transition:
-      transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-      opacity   0.35s ease;
+      transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+      opacity   0.45s ease;
   }
 
   &:hover,
   &.navLinkActive {
     color: var(--color-accent);
+    letter-spacing: 0.17em;
 
     &::after {
       transform: scaleX(1);
-      opacity: 0.5;
+      opacity: 0.45;
     }
   }
 }

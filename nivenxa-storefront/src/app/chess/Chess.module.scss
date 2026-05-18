@@ -1,0 +1,477 @@
+@use '../../styles/variables' as v;
+
+// ─── Design tokens ────────────────────────────────────────────────────────────
+$purple:      #5B2E91;
+$lavender-bg: #E9D7F7;
+$deep:        #1F1B3A;
+$gold:        #D6A85F;
+$rose:        #E8BFD4;
+$ice:         #F4EEFA;
+$blue:        #3A8DFF;
+$bronze:      #8C5A2B;
+$white-soft:  #FAF8FC;
+$gray-lilac:  #B7AFC7;
+$purple-deep: #4B247A;
+
+// ─── Page shell ───────────────────────────────────────────────────────────────
+.page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left,     rgba(91, 46, 145, 0.08),  transparent 30%),
+    radial-gradient(circle at bottom right, rgba(214, 168, 95, 0.06), transparent 30%),
+    radial-gradient(circle at top right,    rgba(232, 191, 212, 0.10), transparent 40%),
+    radial-gradient(circle at bottom left,  rgba(91, 46, 145, 0.07),  transparent 35%),
+    #F4EEFA;
+  position: relative;
+  overflow: hidden;
+}
+
+// ─── Background orbs ─────────────────────────────────────────────────────────
+.orb1 {
+  position: absolute;
+  top: -180px;
+  left: -120px;
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba($purple, 0.22) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.orb2 {
+  position: absolute;
+  bottom: -200px;
+  right: -140px;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba($rose, 0.3) 0%, transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+// ─── Hero section ────────────────────────────────────────────────────────────
+.hero {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: clamp(2rem, 5vw, 5rem);
+  padding: clamp(6rem, 10vw, 9rem) clamp(1.5rem, 6vw, 5rem) clamp(4rem, 7vw, 6rem);
+  max-width: 1400px;
+  margin: 0 auto;
+
+  @include v.max-lg {
+    flex-direction: column;
+    text-align: center;
+    padding-top: clamp(5rem, 9vw, 7rem);
+  }
+}
+
+// ─── Hero left column ────────────────────────────────────────────────────────
+.heroContent {
+  flex: 0 0 auto;
+  max-width: 520px;
+  width: 100%;
+
+  @include v.max-lg {
+    max-width: 100%;
+  }
+}
+
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: clamp(0.6rem, 1vw, 0.7rem);
+  font-weight: 700;
+  letter-spacing: 0.38em;
+  text-transform: uppercase;
+  color: $purple;
+  margin-bottom: clamp(0.75rem, 2vw, 1rem);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 24px;
+    height: 2px;
+    background: $gold;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  @include v.max-lg {
+    justify-content: center;
+  }
+}
+
+.heading {
+  font-family: var(--font-serif);
+  font-size: clamp(2.4rem, 5.5vw, 4.2rem);
+  font-weight: 400;
+  line-height: 1.12;
+  color: $deep;
+  margin-bottom: clamp(1.25rem, 3vw, 1.75rem);
+  letter-spacing: -0.02em;
+}
+
+.headingAccent {
+  background: linear-gradient(135deg, $purple 0%, $gold 60%, $bronze 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: block;
+}
+
+.subtext {
+  font-family: var(--font-sans);
+  font-size: clamp(0.95rem, 1.5vw, 1.08rem);
+  line-height: 1.8;
+  color: rgba($deep, 0.68);
+  margin-bottom: clamp(2.25rem, 5vw, 3rem);
+  max-width: 440px;
+
+  @include v.max-lg {
+    max-width: 100%;
+    margin-inline: auto;
+  }
+}
+
+// ─── CTA row ─────────────────────────────────────────────────────────────────
+.ctaRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: clamp(2rem, 4.5vw, 2.75rem);
+  flex-wrap: wrap;
+
+  @include v.max-lg {
+    justify-content: center;
+  }
+}
+
+// ─── Register button (premium) ───────────────────────────────────────────────
+.registerBtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  border-radius: 9999px;
+  padding: 0;
+  overflow: hidden;
+  background: linear-gradient(135deg, #5B2E91 0%, #7B4BC4 45%, #D6A85F 100%);
+  border: 1.5px solid rgba($gold, 0.5);
+  box-shadow:
+    0 10px 30px rgba(91, 46, 145, 0.22);
+  transition:
+    box-shadow 0.3s ease,
+    transform 0.25s ease,
+    border-color 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 8px 32px rgba($purple, 0.55),
+      0 0 24px rgba($gold, 0.25);
+    border-color: rgba($gold, 0.85);
+
+    .registerBtnGlow {
+      opacity: 1;
+    }
+
+    .registerBtnInner {
+      color: #fff;
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.registerBtnInner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 2rem;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.registerBtnGlow {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba($gold, 0.25) 0%, rgba($blue, 0.1) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.btnIcon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+// ─── Outline button ───────────────────────────────────────────────────────────
+.outlineBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.875rem 1.75rem;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $purple;
+  text-decoration: none;
+  border: 1.5px solid rgba($purple, 0.4);
+  border-radius: 9999px;
+  background: transparent;
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease,
+    transform 0.25s ease;
+
+  &:hover {
+    background: rgba($purple, 0.08);
+    border-color: $purple;
+    transform: translateY(-2px);
+  }
+}
+
+// ─── Trust badges ─────────────────────────────────────────────────────────────
+.badges {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+
+  @include v.max-lg {
+    justify-content: center;
+  }
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba($deep, 0.6);
+  padding: 0.35rem 0.85rem;
+  background: rgba($ice, 0.7);
+  border: 1px solid rgba($purple, 0.15);
+  border-radius: 9999px;
+  backdrop-filter: blur(8px);
+}
+
+.badgeIcon {
+  font-size: 0.85rem;
+}
+
+.badgeDot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba($purple, 0.3);
+  flex-shrink: 0;
+
+  @include v.max-lg {
+    display: none;
+  }
+}
+
+// ─── Board wrapper ─────────────────────────────────────────────────────────────
+.boardWrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 920px;
+  margin-inline: auto;
+}
+
+.boardGlow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(
+    circle,
+    rgba(123, 75, 196, 0.16) 0%,
+    rgba(214, 168, 95, 0.08) 35%,
+    transparent 70%
+  );
+  filter: blur(40px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.boardImg {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 32px 80px rgba(91, 46, 145, 0.4));
+}
+
+.boardReflection {
+  position: absolute;
+  bottom: -18px;
+  left: 10%;
+  width: 80%;
+  height: 28px;
+  background: linear-gradient(to bottom, rgba($purple, 0.18), transparent);
+  border-radius: 50%;
+  filter: blur(10px);
+  pointer-events: none;
+}
+
+// ─── Feature cards ────────────────────────────────────────────────────────────
+.features {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(1rem, 2.5vw, 1.5rem);
+  padding: 0 clamp(1.5rem, 6vw, 5rem) clamp(4rem, 7vw, 6rem);
+  max-width: 1400px;
+  margin: 0 auto;
+
+  @include v.max-lg {
+    grid-template-columns: 1fr;
+    max-width: 480px;
+  }
+}
+
+.card {
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 1.25rem;
+  padding: clamp(1.5rem, 3vw, 2rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  box-shadow:
+    0 10px 40px rgba(91, 46, 145, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+  cursor: default;
+
+  &:hover {
+    box-shadow:
+      0 18px 56px rgba(91, 46, 145, 0.14),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    border-color: rgba(255, 255, 255, 0.55);
+  }
+}
+
+.cardIcon {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.cardIconGold {
+  color: $gold;
+}
+
+.cardIconPurple {
+  color: $purple;
+}
+
+.cardIconBlue {
+  color: $blue;
+}
+
+.cardTitle {
+  font-family: var(--font-serif);
+  font-size: clamp(1.05rem, 1.8vw, 1.25rem);
+  font-weight: 400;
+  color: $deep;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.cardDesc {
+  font-family: var(--font-sans);
+  font-size: clamp(0.85rem, 1.2vw, 0.95rem);
+  line-height: 1.75;
+  color: rgba($deep, 0.6);
+  margin: 0;
+}
+
+// ─── CTA Banner ───────────────────────────────────────────────────────────────
+.ctaBanner {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  background: linear-gradient(135deg, $purple 0%, $purple-deep 40%, $deep 100%);
+  margin: 0 clamp(1.5rem, 6vw, 5rem) clamp(4rem, 7vw, 6rem);
+  border-radius: 2rem;
+  border: 1px solid rgba($gold, 0.3);
+  box-shadow: 0 16px 64px rgba($deep, 0.3);
+  max-width: 1400px;
+  margin-inline: auto;
+  width: calc(100% - clamp(3rem, 12vw, 10rem));
+  padding: clamp(3rem, 6vw, 5rem) clamp(1.5rem, 5vw, 4rem);
+}
+
+.ctaBannerInner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+.ctaBannerTitle {
+  font-family: var(--font-serif);
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-weight: 400;
+  color: $white-soft;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.ctaBannerSub {
+  font-family: var(--font-sans);
+  font-size: clamp(0.9rem, 1.4vw, 1.05rem);
+  color: rgba($white-soft, 0.65);
+  margin: 0;
+  max-width: 480px;
+}
+
+.ctaBannerOrb {
+  position: absolute;
+  top: -40%;
+  right: -10%;
+  width: 480px;
+  height: 480px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba($gold, 0.12) 0%, transparent 65%);
+  pointer-events: none;
+}

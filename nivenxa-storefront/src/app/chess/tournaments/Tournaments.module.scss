@@ -1,0 +1,535 @@
+@use '../../../styles/variables' as v;
+
+$purple: #5B2E91;
+$purple-light: #7B4BC4;
+$deep: #1F1B3A;
+$gold: #D6A85F;
+$rose: #E8BFD4;
+$ice: #F4EEFA;
+$white: #FAF8FC;
+$muted: #B7AFC7;
+$blue: #3A8DFF;
+$gold-deep: #7C5621;
+$blue-deep: #1F5EBA;
+$rose-deep: #8E4F6F;
+$gold-soft: #FFE39A;
+
+.page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba($purple, 0.09), transparent 34%),
+    radial-gradient(circle at bottom right, rgba($gold, 0.08), transparent 32%),
+    $ice;
+  color: $deep;
+  padding-bottom: clamp(4rem, 8vw, 6rem);
+}
+
+.backBar {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 1.5rem clamp(1rem, 4vw, 3rem) 0;
+}
+
+.backLink {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba($deep, 0.5);
+  text-decoration: none;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: $purple;
+  }
+}
+
+.hero {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: clamp(4rem, 8vw, 7rem) clamp(1rem, 4vw, 3rem) clamp(2.5rem, 5vw, 4rem);
+}
+
+.eyebrow,
+.groupLabel {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: $gold;
+  margin: 0 0 1rem;
+}
+
+.heading {
+  max-width: 850px;
+  font-family: var(--font-serif);
+  font-size: clamp(2.6rem, 6vw, 5rem);
+  font-weight: 400;
+  line-height: 1.06;
+  color: $deep;
+  letter-spacing: -0.02em;
+  margin: 0 0 1.5rem;
+}
+
+.subtext {
+  max-width: 680px;
+  font-family: var(--font-sans);
+  font-size: clamp(0.98rem, 1.4vw, 1.12rem);
+  line-height: 1.8;
+  color: rgba($deep, 0.65);
+  margin: 0;
+}
+
+.heroActions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.archiveLink,
+.registerLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.archiveLink {
+  padding: 0.85rem 1.35rem;
+  color: $purple;
+  border: 1px solid rgba($purple, 0.24);
+  background: rgba($white, 0.62);
+
+  &:hover {
+    border-color: rgba($purple, 0.46);
+    transform: translateY(-2px);
+  }
+}
+
+.groups {
+  display: grid;
+  gap: clamp(2.5rem, 5vw, 4rem);
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 4vw, 3rem);
+}
+
+.emptyState {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: clamp(2rem, 5vw, 4rem) clamp(1rem, 4vw, 3rem);
+}
+
+.emptyText {
+  max-width: 34rem;
+  font-family: var(--font-sans);
+  font-size: 0.98rem;
+  line-height: 1.8;
+  color: rgba($deep, 0.62);
+  margin: 1rem 0 0;
+}
+
+.group {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.groupEmpty {
+  border: 1px solid rgba($purple, 0.12);
+  border-radius: 0.75rem;
+  background: rgba($white, 0.76);
+  box-shadow: 0 18px 60px rgba($purple, 0.07);
+  padding: clamp(1.25rem, 3vw, 2rem);
+
+  p {
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: rgba($deep, 0.62);
+    margin: 0;
+  }
+}
+
+.groupHeader {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid rgba($purple, 0.14);
+  padding-bottom: 1rem;
+}
+
+.groupTitle {
+  font-family: var(--font-serif);
+  font-size: clamp(1.7rem, 3vw, 2.4rem);
+  font-weight: 400;
+  color: $deep;
+  margin: 0;
+}
+
+.tableShell {
+  overflow-x: auto;
+  border: 1px solid rgba($purple, 0.12);
+  border-radius: 0.75rem;
+  background: rgba($white, 0.76);
+  box-shadow: 0 18px 60px rgba($purple, 0.09);
+}
+
+.table {
+  width: 100%;
+  min-width: 1320px;
+  border-collapse: collapse;
+  font-family: var(--font-sans);
+
+  th {
+    padding: 1rem 0.85rem;
+    text-align: left;
+    font-size: 0.66rem;
+    line-height: 1.35;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba($deep, 0.55);
+    background: rgba($purple, 0.05);
+    border-bottom: 1px solid rgba($purple, 0.12);
+    white-space: nowrap;
+  }
+
+  td {
+    position: relative;
+    padding: 1rem 0.85rem;
+    font-size: 0.86rem;
+    line-height: 1.5;
+    color: rgba($deep, 0.78);
+    border-bottom: 1px solid rgba($purple, 0.08);
+    vertical-align: middle;
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+}
+
+.tournamentLink {
+  display: inline-flex;
+  color: $deep;
+  font-weight: 800;
+  text-decoration: none;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: $purple;
+  }
+}
+
+.source,
+.verified,
+.mutedValue {
+  display: block;
+  margin-top: 0.28rem;
+  font-size: 0.72rem;
+  color: rgba($deep, 0.48);
+}
+
+.verified {
+  color: $purple;
+  font-weight: 800;
+}
+
+.typePill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.85rem;
+  border-radius: 999px;
+  padding: 0 0.72rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.typeInternational {
+  color: $gold-deep;
+  background: rgba($gold, 0.22);
+  border: 1px solid rgba($gold, 0.38);
+}
+
+.typeNational {
+  color: $purple;
+  background: rgba($purple, 0.11);
+  border: 1px solid rgba($purple, 0.18);
+}
+
+.typeState {
+  color: $blue-deep;
+  background: rgba($blue, 0.1);
+  border: 1px solid rgba($blue, 0.2);
+}
+
+.typeClub {
+  color: $rose-deep;
+  background: rgba($rose, 0.22);
+  border: 1px solid rgba($rose, 0.34);
+}
+
+.typeAcademy {
+  color: $deep;
+  background: rgba($muted, 0.2);
+  border: 1px solid rgba($muted, 0.36);
+}
+
+.mapLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba($deep, 0.78);
+  text-decoration: none;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+
+  &:hover {
+    color: $purple;
+    transform: translateY(-1px);
+    opacity: 0.84;
+  }
+}
+
+.mapIcon {
+  display: block;
+  width: 3rem;
+  height: 3rem;
+  object-fit: cover;
+  border-radius: 999px;
+}
+
+.playerIcon {
+  display: block;
+  width: 3rem;
+  height: 3rem;
+  object-fit: cover;
+  border-radius: 999px;
+}
+
+.playerPreview {
+  position: relative;
+}
+
+.playerPreviewButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.86;
+    transform: translateY(-1px);
+  }
+}
+
+.playerPanel {
+  position: absolute;
+  z-index: 4;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  display: grid;
+  gap: 0.75rem;
+  width: min(32rem, calc(100vw - 2rem));
+  padding: 1rem;
+  border-radius: 1.15rem;
+  border: 1px solid rgba($gold, 0.28);
+  background:
+    radial-gradient(circle at top right, rgba($gold, 0.16), transparent 34%),
+    linear-gradient(135deg, rgba($deep, 0.98), rgba($purple, 0.96));
+  box-shadow:
+    0 24px 70px rgba($deep, 0.28),
+    0 0 0 1px rgba($white, 0.08) inset;
+}
+
+.playerPanelTitle {
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba($gold, 0.82);
+  margin: 0 0 0.1rem;
+}
+
+.playerCard {
+  display: grid;
+  grid-template-columns: 3.6rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.9rem;
+  min-height: 4.75rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba($gold, 0.35);
+  background:
+    linear-gradient(90deg, rgba($purple, 0.96), rgba($rose, 0.28)),
+    rgba($purple, 0.88);
+  box-shadow:
+    0 12px 28px rgba($purple, 0.24),
+    0 0 0 1px rgba($white, 0.06) inset;
+}
+
+.playerAvatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 999px;
+  border: 2px solid rgba($gold, 0.9);
+  background:
+    radial-gradient(circle at 35% 30%, rgba($white, 0.35), transparent 28%),
+    linear-gradient(135deg, $purple-light, $deep);
+  box-shadow: 0 0 0 3px rgba($purple, 0.5);
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  font-weight: 700;
+  color: $white;
+}
+
+.playerBody {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.playerTopLine {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.playerName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-serif);
+  font-size: clamp(1.05rem, 2vw, 1.45rem);
+  font-weight: 800;
+  color: $white;
+  text-shadow: 0 2px 0 rgba($deep, 0.45);
+}
+
+.playerRating {
+  font-family: var(--font-serif);
+  font-size: clamp(1rem, 1.8vw, 1.3rem);
+  font-weight: 800;
+  color: $gold-soft;
+  text-shadow: 0 1px 0 rgba($deep, 0.5);
+}
+
+.playerMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba($white, 0.76);
+}
+
+.playerTitle {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.45rem;
+  padding: 0 0.48rem;
+  border-radius: 999px;
+  background: rgba($gold, 0.92);
+  color: $deep;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.registerLink {
+  padding: 0.68rem 0.95rem;
+  color: $white;
+  background: linear-gradient(135deg, $purple 0%, $purple-light 58%, $gold 145%);
+  box-shadow: 0 8px 24px rgba($purple, 0.22);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba($purple, 0.32);
+  }
+}
+
+@include v.max-lg {
+  .tableShell {
+    overflow: visible;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .table {
+    min-width: 0;
+
+    thead {
+      display: none;
+    }
+
+    tbody,
+    tr,
+    td {
+      display: block;
+      width: 100%;
+    }
+
+    tr {
+      margin-bottom: 1rem;
+      border: 1px solid rgba($purple, 0.12);
+      border-radius: 0.75rem;
+      background: rgba($white, 0.8);
+      box-shadow: 0 12px 38px rgba($purple, 0.08);
+      overflow: hidden;
+    }
+
+    td {
+      display: grid;
+      grid-template-columns: minmax(7rem, 34%) 1fr;
+      gap: 1rem;
+      padding: 0.85rem 1rem;
+
+      &::before {
+        content: attr(data-label);
+        font-size: 0.66rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba($deep, 0.48);
+      }
+    }
+  }
+
+  .playerPanel {
+    left: 0;
+    right: auto;
+  }
+}
+
+@include v.max-sm {
+  .groupHeader {
+    display: block;
+  }
+
+  .table td {
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+  }
+}

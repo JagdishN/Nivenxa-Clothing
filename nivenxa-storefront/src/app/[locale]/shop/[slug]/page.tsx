@@ -73,6 +73,35 @@ export default async function ShopCategoryPage({
           </AnimatedSection>
         ))}
       </div>
+
+      {/* 12. Product Story section */}
+      <AnimatedSection className={styles.productStory}>
+        <p className={styles.storyEyebrow}>GARMENT PHILOSOPHY</p>
+        <h2 className={styles.storyHeading}>Designed for Everyday Movement</h2>
+        <div className={styles.storyGrid}>
+          <div className={styles.storyCard}>
+            <p className={styles.storyCardLabel}>Fit Philosophy</p>
+            <h3 className={styles.storyCardTitle}>Relaxed Utility</h3>
+            <p className={styles.storyCardBody}>
+              Every NIVENXA garment is cut for real movement. Structured enough to hold form, relaxed enough to move freely — from morning to evening, city to terrain.
+            </p>
+          </div>
+          <div className={styles.storyCard}>
+            <p className={styles.storyCardLabel}>Fabric Philosophy</p>
+            <h3 className={styles.storyCardTitle}>Material Intelligence</h3>
+            <p className={styles.storyCardBody}>
+              We select fabrics for weight, hand-feel, and longevity. Bio-washed, stonewashed, and enzyme-treated finishes are chosen to improve with every wear — not degrade.
+            </p>
+          </div>
+          <div className={styles.storyCard}>
+            <p className={styles.storyCardLabel}>Wash Philosophy</p>
+            <h3 className={styles.storyCardTitle}>Pre-Treated Finish</h3>
+            <p className={styles.storyCardBody}>
+              Our wash treatments are applied before the garment reaches you. The result: immediate softness, dimensional stability, and a lived-in quality from day one.
+            </p>
+          </div>
+        </div>
+      </AnimatedSection>
     </div>
   )
 }

@@ -1,0 +1,169 @@
+// ─── Fullscreen cinematic overlay ────────────────────────────────────────────
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  overflow: hidden;
+  background: #0c0b09;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+
+// ─── Garment image (fills viewport, zooms slowly) ─────────────────────────────
+.imageWrap {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+
+.image {
+  object-fit: contain;            // show full garment, no crop
+  object-position: center 20%;
+  mix-blend-mode: multiply;       // removes white PNG background in dark context
+  filter: saturate(0.88) brightness(0.92);
+}
+
+.fallbackGradient {
+  position: absolute;
+  inset: 0;
+}
+
+// ─── Vignette — radial darkening frame ───────────────────────────────────────
+.vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 80% at 50% 45%, transparent 35%, rgba(0,0,0,0.72) 100%),
+    linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+// ─── Film grain overlay ────────────────────────────────────────────────────────
+.grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23f)' opacity='0.15'/%3E%3C/svg%3E");
+  background-size: 220px 220px;
+  mix-blend-mode: overlay;
+}
+
+// ─── Atmosphere glow — product tone bleeds from below ─────────────────────────
+.atmosphereGlow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+// ─── Scene container ──────────────────────────────────────────────────────────
+.scenes {
+  position: relative;
+  z-index: 10;
+  padding: 0 clamp(2rem, 6vw, 5rem) clamp(4rem, 8vw, 6rem);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.55rem;
+  max-width: min(640px, 85vw);
+}
+
+// ─── Scene base ───────────────────────────────────────────────────────────────
+.scene {
+  display: block;
+  will-change: opacity, transform, filter;
+}
+
+// Scene 1 — cinematic tag (small uppercase label)
+.sceneTag {
+  font-family: var(--font-sans);
+  font-size: clamp(0.58rem, 0.9vw, 0.7rem);
+  font-weight: 400;
+  letter-spacing: 0.38em;
+  text-transform: uppercase;
+  color: rgba(214, 168, 95, 0.82);   // muted gold
+  margin-bottom: 0.4rem;
+}
+
+// Scene 2 — fabric weight (primary headline)
+.sceneFabric {
+  font-family: var(--font-serif);
+  font-size: clamp(1.8rem, 4vw, 3.5rem);
+  font-weight: 400;
+  color: rgba(249, 247, 242, 0.92);
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+}
+
+// Scene 3 — descriptive body
+.sceneBody {
+  font-family: var(--font-sans);
+  font-size: clamp(0.85rem, 1.2vw, 1rem);
+  line-height: 1.75;
+  color: rgba(249, 247, 242, 0.45);
+  max-width: 42ch;
+  margin-top: 0.25rem;
+}
+
+// Scene 4 — fit/structure label
+.sceneFit {
+  font-family: var(--font-sans);
+  font-size: clamp(0.6rem, 0.9vw, 0.72rem);
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(249, 247, 242, 0.32);
+  margin-top: 0.5rem;
+}
+
+// Scene 5 — CTA
+.sceneCta {
+  margin-top: 1.5rem;
+}
+
+.exploreBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.82rem 2rem;
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(24, 20, 14, 0.9);
+  background: rgba(249, 247, 242, 0.92);
+  border: none;
+  cursor: pointer;
+  transition: background 0.28s ease, gap 0.3s ease;
+
+  &:hover {
+    background: rgba(249, 247, 242, 1);
+    gap: 1rem;
+  }
+}
+
+.exploreBtnArrow {
+  display: inline-block;
+  transition: transform 0.3s ease;
+
+  .exploreBtn:hover & { transform: translateX(4px); }
+}
+
+// ─── Skip button ──────────────────────────────────────────────────────────────
+.skip {
+  position: absolute;
+  top: 1.75rem;
+  right: 2rem;
+  z-index: 10;
+  background: none;
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(249, 247, 242, 0.28);
+  cursor: pointer;
+  transition: color 0.25s ease;
+
+  &:hover { color: rgba(249, 247, 242, 0.65); }
+}

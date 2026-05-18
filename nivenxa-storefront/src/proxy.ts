@@ -1,31 +1,18 @@
 import createMiddleware from 'next-intl/middleware'
 import { routing } from './i18n/routing'
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 const intlMiddleware = createMiddleware(routing)
 
-export default function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl
-
-  // Determine if the path is a locale root (e.g. /en, /hi, /)
-  const localeRootPattern = new RegExp(
-    `^/(${routing.locales.join('|')})?/?$`
-  )
-
-  if (!localeRootPattern.test(pathname)) {
-    // Extract locale from the path if present, fallback to default
-    const localeMatch = pathname.match(
-      new RegExp(`^/(${routing.locales.join('|')})(/|$)`)
-    )
-    const locale = localeMatch ? localeMatch[1] : routing.defaultLocale
-    const url = request.nextUrl.clone()
-    url.pathname = `/${locale}`
-    return NextResponse.redirect(url)
-  }
-
+// Next.js 16 requires the named export `proxy` (middleware.ts is deprecated).
+export function proxy(request: NextRequest) {
   return intlMiddleware(request)
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)'],
+  matcher: [
+    // Run on every path except Next.js internals, static files,
+    // and non-locale app segments: /chess, /ventures (and sub-paths).
+    '/((?!_next|_vercel|chess|ventures|.*\..*).*)',
+  ],
 }
