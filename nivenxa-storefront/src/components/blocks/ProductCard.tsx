@@ -3,9 +3,9 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/routing'
 import type { Product, ProductStatus } from '@/types'
 import TextureOverlay from '../ui/TextureOverlay'
-import CinematicEntry from './CinematicEntry'
 import styles from './ProductCard.module.scss'
 
 interface ProductCardProps {
@@ -25,8 +25,6 @@ export default function ProductCard({ product, large = false }: ProductCardProps
   const [hovered, setHovered]     = useState(false)
   const [lensPos, setLensPos]     = useState({ x: 50, y: 50 })
   const [showDNA, setShowDNA]     = useState(false)
-  const [cinematic, setCinematic] = useState(false)
-
   const front    = product.images?.find((i) => i.view === 'front') ?? product.images?.[0]
   const back     = product.images?.find((i) => i.view === 'back')  ?? product.images?.[1]
   const activeImg = hovered && back ? back : front
@@ -44,7 +42,6 @@ export default function ProductCard({ product, large = false }: ProductCardProps
   }
 
   return (
-    <>
     <div
       className={[styles.card, large ? styles.cardLarge : ''].filter(Boolean).join(' ')}
       style={{ '--atmosphere': product.atmosphereColor ?? 'transparent' } as React.CSSProperties}
@@ -120,8 +117,8 @@ export default function ProductCard({ product, large = false }: ProductCardProps
           </div>
         )}
 
-        {/* 9. Fabric close-up lens */}
-        {hovered && (
+        {/* 9. Fabric close-up lens — only when a real image exists to zoom into */}
+        {hovered && hasImages && (
           <div
             className={styles.fabricLens}
             style={{ left: `${lensPos.x}%`, top: `${lensPos.y}%` }}
@@ -137,21 +134,22 @@ export default function ProductCard({ product, large = false }: ProductCardProps
           </div>
         )}
 
-        {/* 7. "Explore Piece →" — triggers cinematic entry */}
+        {/* 7. "Explore Piece →" — navigates to product story */}
         <motion.div
           className={styles.exploreCta}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: hovered ? 1 : 0, y: hovered ? 0 : 8 }}
           transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
         >
-          <button
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <Link
+            href={`/shop/${product.category}/${product.colorway.toLowerCase().replace(/\s+/g, '-')}` as any}
             className={styles.exploreCtaLink}
             tabIndex={hovered ? 0 : -1}
-            onClick={(e) => { e.stopPropagation(); setCinematic(true) }}
           >
             Explore Piece
             <span className={styles.exploreArrow}>→</span>
-          </button>
+          </Link>
         </motion.div>
 
         {/* 1. Ghost luxury Add to Cart — appears on hover only */}
@@ -238,16 +236,5 @@ export default function ProductCard({ product, large = false }: ProductCardProps
         )}
       </div>
     </div>
-
-    {/* Cinematic entry portal — mounts over entire page */}
-    <AnimatePresence>
-      {cinematic && (
-        <CinematicEntry
-          product={product}
-          onDismiss={() => setCinematic(false)}
-        />
-      )}
-    </AnimatePresence>
-    </>
   )
 }

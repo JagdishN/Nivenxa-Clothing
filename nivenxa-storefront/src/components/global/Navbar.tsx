@@ -7,6 +7,7 @@ import LanguageSwitcher from './LanguageSwitcher'
 import { NAV_ITEMS } from '@/data/navigation'
 import { EASE_OUT_EXPO, DURATION } from '@/lib/motion'
 import { useAuth } from '@/context/AuthContext'
+import { useCart } from '@/context/CartContext'
 import SignInDrawer from './SignInDrawer'
 import styles from './Navbar.module.scss'
 
@@ -20,6 +21,8 @@ export default function Navbar() {
   const [mobileSubExpanded, setMobileSubExpanded] = useState<string | null>(null)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { customer, loading, logout } = useAuth()
+  const { cart, bagCount } = useCart()
+  const cartTotal = (cart?.totalQuantity ?? 0) + bagCount
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   useEffect(() => {
@@ -108,7 +111,21 @@ export default function Navbar() {
                 </button>
               )
             )}
-            <button className={styles.cartBtn}>{t('cart')} (0)</button>
+            <button className={styles.cartBtn}>
+              {t('cart')}{' '}
+              (<AnimatePresence mode="popLayout" initial={false}>
+                <motion.span
+                  key={cartTotal}
+                  initial={{ opacity: 0, scale: 0.6 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.6 }}
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                  style={{ display: 'inline-block' }}
+                >
+                  {cartTotal}
+                </motion.span>
+              </AnimatePresence>)
+            </button>
           </div>
 
           <button
@@ -364,7 +381,21 @@ export default function Navbar() {
             </li>
           ))}
           <li>
-            <span className={styles.mobileNavLink}>{t('cart')} (0)</span>
+            <span className={styles.mobileNavLink}>
+              {t('cart')}{' '}
+              (<AnimatePresence mode="popLayout" initial={false}>
+                <motion.span
+                  key={cartTotal}
+                  initial={{ opacity: 0, scale: 0.6 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.6 }}
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                  style={{ display: 'inline-block' }}
+                >
+                  {cartTotal}
+                </motion.span>
+              </AnimatePresence>)
+            </span>
           </li>
           <li className={styles.mobileLangItem}>
             <LanguageSwitcher />

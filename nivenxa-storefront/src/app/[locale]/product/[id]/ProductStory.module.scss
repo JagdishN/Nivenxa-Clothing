@@ -5,822 +5,720 @@ $olive: rgb(122, 117, 94);
 $gold:  rgba(180, 158, 110, 0.85);
 $cream: #F5F2EB;
 $ice:   #F9F7F2;
-$px:    clamp(1.5rem, 5vw, 4.5rem);  // horizontal gutter
+$px:    clamp(1.5rem, 5vw, 4.5rem);
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 .page {
   background: $ice;
   color: $ink;
-  overflow-x: hidden;
-  // Start below the fixed Navbar (≈72px)
-  padding-top: 0;
+  padding-top: clamp(6rem, 9vh, 8rem); // space below fixed Navbar + breathing room
 }
 
-// ─── Persistent back button ───────────────────────────────────────────────────
+// ─── Back button ─────────────────────────────────────────────────────────────
 .backButton {
   position: fixed;
   top: 5rem;
   left: clamp(1rem, 2.5vw, 2rem);
   z-index: 90;
   font-family: var(--font-sans);
-  font-size: 0.6rem;
-  letter-spacing: 0.16em;
+  font-size: 0.48rem;
+  letter-spacing: 0.3em;
   text-transform: uppercase;
   text-decoration: none;
-  color: rgba(44, 44, 44, 0.45);
+  color: rgba(180, 158, 110, 0.72);
   transition: color 0.25s ease;
 
-  &:hover { color: rgba(44, 44, 44, 0.85); }
+  &:hover { color: rgba(180, 158, 110, 1); }
 }
 
-// ─── 9. Side nav — animated active indicator ──────────────────────────────────
-.sideNav {
-  position: fixed;
-  right: clamp(1.25rem, 2.5vw, 2.5rem);
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 80;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+// ─── 1. HERO — 3-panel editorial ─────────────────────────────────────────────
+.hero {
+  display: grid;
+  grid-template-columns: 26fr 48fr 26fr;
+  height: 82svh;
+  min-height: 600px;
+  max-height: 920px;
+  overflow: hidden;
+  background: $ice;
 
-  @include v.max-lg { display: none; }
+  @include v.max-lg {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+    height: auto;
+    min-height: unset;
+  }
 }
 
-.sideNavItem {
+// ─── Left copy panel ──────────────────────────────────────────────────────────
+.heroLeft {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.2rem 0;
+  padding: clamp(2rem, 4vw, 3rem) clamp(1.5rem, 3vw, 2.5rem);
+  border-right: 1px solid rgba($ink, 0.07);
+  background: $ice;
+  overflow: hidden;   // hero clips — no second scroll container
+
+  @include v.max-lg { order: 2; padding: 2rem $px; overflow: visible; }
 }
 
-.sideNavDot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: $ink;
-  flex-shrink: 0;
-  display: block;
-}
-
-.sideNavLabel {
-  font-family: var(--font-sans);
-  font-size: 0.52rem;
-  text-transform: uppercase;
-  color: $ink;
-  white-space: nowrap;
-  display: block;
-}
-
-.sideNavActive .sideNavLabel {
-  font-weight: 600;
-}
-
-// ─── BIG — Hero ──────────────────────────────────────────────────────────────
-.hero {
-  position: relative;
-  height: 100svh;
-  min-height: 580px;
-  overflow: hidden;
+.heroLeftInner {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  gap: 1.1rem;
+  width: 100%;
 }
 
-.heroImageWrap {
-  position: absolute;
-  inset: 0;
-}
-
-.heroImage {
-  object-fit: contain;
-  object-position: center 15%;
-  mix-blend-mode: multiply;
-  background: linear-gradient(180deg, #e8e4dc 0%, #dedad2 100%);
-}
-
-.heroOverlay {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.15) 45%, transparent 70%),
-    radial-gradient(ellipse 70% 60% at 50% 100%, rgba(0,0,0,0.35), transparent);
-}
-
-.heroContent {
-  position: relative;
-  z-index: 2;
-  padding: 0 $px clamp(2.5rem, 5vw, 4rem);
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-  max-width: 720px;
-}
-
-.heroBack {
+.heroCollection {
+  display: block;
   font-family: var(--font-sans);
-  font-size: 0.58rem;
-  letter-spacing: 0.18em;
+  font-size: 0.48rem;
+  letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: rgba(249, 247, 242, 0.45);
-  text-decoration: none;
-  margin-bottom: 0.5rem;
-  transition: color 0.25s ease;
-  align-self: flex-start;
-
-  &:hover { color: rgba(249, 247, 242, 0.85); }
-}
-
-.heroStatus {
-  font-family: var(--font-sans);
-  font-size: 0.5rem;
-  font-weight: 400;
-  letter-spacing: 0.34em;
-  text-transform: uppercase;
-  color: rgba(214, 168, 95, 0.82);
+  color: rgba(180, 158, 110, 0.65);
 }
 
 .heroName {
   font-family: var(--font-serif);
-  font-size: clamp(2.2rem, 6vw, 5rem);
+  font-size: clamp(1.1rem, 2vw, 1.75rem);
   font-weight: 400;
-  line-height: 1.06;
-  color: rgba(249, 247, 242, 0.95);
-  letter-spacing: -0.025em;
+  line-height: 1.2;
+  color: $ink;
+  letter-spacing: -0.02em;
   margin: 0;
 }
 
-.heroMeta {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.heroFabricTag {
+.heroDescriptor {
   font-family: var(--font-sans);
-  font-size: 0.6rem;
-  letter-spacing: 0.24em;
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(249, 247, 242, 0.48);
-}
-
-.heroDrapeTag {
-  @extend .heroFabricTag;
-  color: rgba(249, 247, 242, 0.3);
-
-  &::before { content: '·'; margin-right: 1rem; opacity: 0.4; }
-}
-
-.heroFooter {
-  display: flex;
-  align-items: center;
-  gap: 1.75rem;
-  flex-wrap: wrap;
-  margin-top: 0.5rem;
+  color: rgba($ink, 0.35);
+  margin-top: -0.4rem;
 }
 
 .heroPrice {
   font-family: var(--font-sans);
-  font-size: clamp(0.95rem, 1.5vw, 1.15rem);
-  color: rgba(249, 247, 242, 0.65);
+  font-size: clamp(0.88rem, 1.2vw, 1rem);
+  color: rgba($ink, 0.6);
   letter-spacing: 0.04em;
 }
 
+// ─── Colour + Size selectors ──────────────────────────────────────────────────
+.heroColors {}
+.heroSizes  {}
+
+.heroSelectorLabel {
+  font-family: var(--font-sans);
+  font-size: 0.45rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba($ink, 0.28);
+  margin-bottom: 0.55rem;
+}
+
+// Fabric swatch cards
+.heroColorSwatches {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.heroColorSwatch {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+  opacity: 0.42;
+  transition: opacity 0.25s ease;
+
+  &:hover { opacity: 0.75; }
+}
+
+.heroColorSwatchActive {
+  opacity: 1 !important;
+}
+
+.heroSwatchTexture {
+  display: block;
+  width: 36px;
+  height: 22px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  border: 1px solid rgba($ink, 0.08);
+}
+
+.heroSwatchName {
+  font-family: var(--font-sans);
+  font-size: 0.58rem;
+  color: rgba($ink, 0.65);
+  letter-spacing: 0.04em;
+}
+
+// Size grid
+.heroSizeGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.heroSizeBtn {
+  font-family: var(--font-sans);
+  font-size: 0.55rem;
+  letter-spacing: 0.08em;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid rgba($ink, 0.12);
+  background: transparent;
+  color: rgba($ink, 0.5);
+  cursor: pointer;
+  transition: border-color 0.22s ease, color 0.22s ease,
+              background 0.22s ease, transform 0.14s ease;
+
+  &:hover { border-color: rgba($ink, 0.28); color: rgba($ink, 0.78); }
+  &:active { transform: scale(0.94); }
+}
+
+.heroSizeBtnActive {
+  border-color: $ink !important;
+  color: $ink !important;
+  background: rgba($ink, 0.04);
+}
+
+@keyframes sizeNudgePulse {
+  0%   { box-shadow: 0 0 0 0 rgba(180, 158, 110, 0.45); border-color: rgba(180, 158, 110, 0.65); }
+  60%  { box-shadow: 0 0 0 5px rgba(180, 158, 110, 0);  border-color: rgba(180, 158, 110, 0.65); }
+  100% { box-shadow: 0 0 0 0 rgba(180, 158, 110, 0);    border-color: rgba(180, 158, 110, 0.4);  }
+}
+
+.heroSizeGridNudge .heroSizeBtn {
+  border-color: rgba(180, 158, 110, 0.4);
+  color: rgba(180, 158, 110, 0.8);
+  animation: sizeNudgePulse 0.7s ease-out forwards;
+}
+
+@keyframes bagBreathe {
+  0%, 100% { opacity: 1;   }
+  50%       { opacity: 0.7; }
+}
+
+// CTA — link style with animated underline
 .addToWardrobeBtn {
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
-  padding: 0.78rem 1.85rem;
+  gap: 0.5rem;
+  padding: 0;
   font-family: var(--font-sans);
-  font-size: 0.6rem;
-  font-weight: 500;
-  letter-spacing: 0.22em;
+  font-size: 0.48rem;
+  font-weight: 400;
+  letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: rgba(20, 18, 14, 0.92);
-  background: rgba(249, 247, 242, 0.92);
+  color: rgba(180, 158, 110, 0.72);
+  background: none;
   border: none;
   cursor: pointer;
-  transition: background 0.28s ease, gap 0.28s ease;
+  position: relative;
+  transition: color 0.25s ease;
+  animation: bagBreathe 2.8s ease-in-out infinite;
 
-  &:hover { background: rgba(249, 247, 242, 1); gap: 0.9rem; }
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: rgba(180, 158, 110, 0.72);
+    transition: width 0.35s v.$ease-out-expo;
+  }
+
+  &:hover {
+    color: rgba(180, 158, 110, 1);
+    &::after { width: 100%; background: rgba(180, 158, 110, 1); }
+  }
 }
 
 .ctaArrow {
   display: inline-block;
-  transition: transform 0.28s v.$ease-out-expo;
-  .addToWardrobeBtn:hover & { transform: translateX(3px); }
-}
-
-.scrollCue {
-  position: absolute;
-  bottom: 1.75rem;
-  right: $px;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.scrollLine {
-  display: block;
-  width: 1px;
-  height: 32px;
-  background: linear-gradient(to bottom, rgba(249,247,242,0.45), transparent);
-}
-
-// ─── QUICK — Technical strip ──────────────────────────────────────────────────
-.techStrip {
-  background: $ink;
-  padding: clamp(1.25rem, 2.5vw, 2rem) $px;
-}
-
-.techStripInner {
-  max-width: 1280px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 0;
-  border-left: 1px solid rgba(249, 247, 242, 0.06);
-}
-
-.techCell {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  padding: 1.1rem 1.5rem;
-  border-right: 1px solid rgba(249, 247, 242, 0.06);
-}
-
-.techKey {
-  font-family: var(--font-sans);
-  font-size: 0.5rem;
-  letter-spacing: 0.26em;
-  text-transform: uppercase;
-  color: rgba(214, 168, 95, 0.6);
-  text-transform: capitalize;
-}
-
-.techVal {
-  font-family: var(--font-sans);
-  font-size: clamp(0.78rem, 1.1vw, 0.9rem);
-  color: rgba(249, 247, 242, 0.62);
-  line-height: 1.4;
-}
-
-// ─── MEDIUM — Garment Specification ──────────────────────────────────────────
-.specSection {
-  padding: clamp(3.5rem, 7vw, 6rem) $px;
-  max-width: 1280px;
-  margin: 0 auto;
-}
-
-.specInner {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(2rem, 4vw, 3rem);
-}
-
-.specHeader {}
-
-.specEyebrow {
-  font-family: var(--font-sans);
-  font-size: 0.55rem;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: rgba($ink, 0.32);
-  margin-bottom: 0.85rem;
-}
-
-.specTitle {
-  font-family: var(--font-serif);
-  font-size: clamp(1.6rem, 3vw, 2.5rem);
-  font-weight: 400;
-  color: $ink;
-  letter-spacing: -0.02em;
-  margin-bottom: 0.85rem;
-}
-
-.specBody {
-  font-family: var(--font-sans);
-  font-size: clamp(0.875rem, 1.3vw, 1rem);
-  line-height: 1.85;
-  color: rgba($ink, 0.52);
-  max-width: 640px;
-}
-
-// DNA compact strip — 4 cols
-.dnaStrip {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  border-top: 1px solid rgba($ink, 0.08);
-}
-
-.dnaCell {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  padding: 1.1rem 1.5rem 1.1rem 0;
-  border-right: 1px solid rgba($ink, 0.06);
-  padding-right: 1.5rem;
-
-  &:last-child { border-right: none; }
-}
-
-.dnaCellAttr {
-  font-family: var(--font-sans);
-  font-size: 0.52rem;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: rgba($ink, 0.3);
-}
-
-.dnaCellVal {
-  font-family: var(--font-sans);
-  font-size: clamp(0.78rem, 1.1vw, 0.9rem);
-  color: rgba($ink, 0.72);
-  line-height: 1.45;
-}
-
-// Detail chips
-.detailChips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-.detailChip {
-  font-family: var(--font-sans);
-  font-size: 0.58rem;
-  letter-spacing: 0.1em;
-  color: rgba($ink, 0.55);
-  padding: 0.28rem 0.75rem;
-  border: 1px solid rgba($ink, 0.1);
-  background: rgba($ink, 0.025);
-}
-
-// Expandable detail
-.specExpand {
-  border-top: 1px solid rgba($ink, 0.07);
-  padding-top: 0.75rem;
-}
-
-.specExpandToggle {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: none;
-  border: none;
-  font-family: var(--font-sans);
-  font-size: 0.56rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: rgba($ink, 0.35);
-  cursor: pointer;
-  transition: color 0.22s ease;
-
-  &:hover { color: rgba($ink, 0.65); }
-}
-
-.specExpandIcon {
-  display: inline-block;
   transition: transform 0.3s v.$ease-out-expo;
+  .addToWardrobeBtn:hover & { transform: translateX(5px); }
 }
 
-.specExpandIconOpen { transform: rotate(180deg); }
-
-.specExpandContent {
+// ─── Center — main image ──────────────────────────────────────────────────────
+.heroCenter {
+  position: relative;
   overflow: hidden;
-  margin-top: 1rem;
+  background: linear-gradient(180deg, #e8e4dc 0%, #dedad2 100%);
+  cursor: zoom-in;
+
+  // Zoom hint badge — appears on hover
+  &::after {
+    content: '⊕';
+    position: absolute;
+    bottom: 1.25rem;
+    right: 1.25rem;
+    z-index: 10;
+    font-size: 1.1rem;
+    color: rgba($ink, 0.35);
+    opacity: 0;
+    transition: opacity 0.28s ease;
+    pointer-events: none;
+    line-height: 1;
+  }
+
+  &:hover::after { opacity: 1; }
+
+  @include v.max-lg { order: 1; min-height: 60vw; }
 }
 
-.specExpandRow {
+.heroCenterImage {
+  object-fit: contain;
+  object-position: center 8%;
+  mix-blend-mode: multiply;
+}
+
+// ─── Right — secondary views stacked ─────────────────────────────────────────
+.heroRight {
   display: grid;
-  grid-template-columns: 9rem 1fr;
-  padding: 0.55rem 0;
+  grid-template-rows: 1fr 1fr;
+  border-left: 1px solid rgba($ink, 0.07);
+  overflow: hidden;
+
+  @include v.max-lg { display: none; }
+}
+
+.heroRightSlot {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, #dedad2 0%, #d4cfc7 100%);
   border-bottom: 1px solid rgba($ink, 0.05);
-  gap: 1rem;
+  cursor: zoom-in;
 
   &:last-child { border-bottom: none; }
+  &:hover .heroRightImage { transform: scale(1.05); }
+
+  // Zoom hint
+  &::after {
+    content: '⊕';
+    position: absolute;
+    bottom: 0.65rem;
+    right: 0.65rem;
+    z-index: 10;
+    font-size: 0.75rem;
+    color: rgba($ink, 0.3);
+    opacity: 0;
+    transition: opacity 0.28s ease;
+    pointer-events: none;
+    line-height: 1;
+  }
+
+  &:hover::after { opacity: 1; }
 }
 
-.specExpandKey {
-  font-family: var(--font-sans);
-  font-size: 0.56rem;
-  letter-spacing: 0.18em;
-  color: rgba($ink, 0.3);
-  text-transform: capitalize;
-}
-
-.specExpandVal {
-  font-family: var(--font-sans);
-  font-size: 0.82rem;
-  color: rgba($ink, 0.7);
-}
-
-// ─── BIG — Fit Philosophy ─────────────────────────────────────────────────────
-.fitSection {
-  overflow: hidden;
-}
-
-.fitGrid {
-  display: grid;
-  grid-template-columns: 1fr;
-  min-height: 70vh;
-
-  @include v.lg { grid-template-columns: 55fr 45fr; }
-}
-
-.fitImageWrap {
-  position: relative;
-  min-height: 50vh;
-  cursor: zoom-in;
-  overflow: hidden;
-
-  @include v.lg { min-height: 70vh; }
-}
-
-.fitImage {
+.heroRightImage {
   object-fit: contain;
   object-position: center;
   mix-blend-mode: multiply;
-  background: $cream;
   transition: transform 0.7s v.$ease-out-expo;
-
-  .fitImageWrap:hover & { transform: scale(1.02); }
 }
 
-.fitImageLabel {
+.heroViewLabel {
   position: absolute;
-  bottom: 1rem;
-  left: 1rem;
+  bottom: 0.65rem;
+  left: 0.65rem;
+  z-index: 2;
   font-family: var(--font-sans);
-  font-size: 0.52rem;
-  letter-spacing: 0.2em;
+  font-size: 0.38rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba($ink, 0.35);
+  color: rgba($ink, 0.22);
+  pointer-events: none;
 }
 
-.fitText {
+// ─── 2. EDITORIAL PRODUCT COMPOSITION ────────────────────────────────────────
+.composeSection {
+  max-width: 1320px;
+  margin-right: auto;
+  margin-left: 0;
+  padding: clamp(2rem, 4vw, 3.5rem) $px clamp(2rem, 4vw, 3.5rem) clamp(1rem, 3vw, 2rem);
+}
+
+.composeGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(3rem, 6vw, 5rem);
+  align-items: start;
+
+  @include v.lg { grid-template-columns: 55fr 45fr; gap: 0; }
+}
+
+.composeLeft {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: clamp(3rem, 6vw, 5rem) $px;
-  background: $ice;
+
+  @include v.lg {
+    padding-left: clamp(1rem, 2vw, 1.75rem);
+    padding-right: clamp(2rem, 4vw, 3.5rem);
+    margin-top: -0.55rem; // close the optical gap — left block was sitting slightly lower
+  }
 }
 
-.fitEyebrow {
+// ── Editorial text block (top-aligned, no image above) ──────────────────────
+.composeStory {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.composeStoryLabel {
   font-family: var(--font-sans);
-  font-size: 0.55rem;
-  letter-spacing: 0.3em;
+  font-size: 0.5rem;
+  letter-spacing: 0.32em;
   text-transform: uppercase;
-  color: rgba($ink, 0.3);
+  color: rgba($ink, 0.32);
+}
+
+.composeStoryText {
+  font-family: var(--font-sans);
+  font-size: clamp(0.82rem, 1.05vw, 0.92rem);
+  line-height: 1.55;
+  color: rgba($ink, 0.52);
+  max-width: 480px;
+}
+
+// Right sticky panel
+.composeRight {}
+
+.composeSticky {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.5rem, 3vw, 2rem);
+  position: relative;
+
+  @include v.lg {
+    position: sticky;
+    top: clamp(5rem, 8vh, 7rem);
+    padding-left: clamp(2.5rem, 5vw, 4rem);
+
+    // Shorter divider — 58% height, centered vertically
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 21%;
+      height: 58%;
+      width: 1px;
+      background: rgba($ink, 0.07);
+    }
+  }
+}
+
+.specPanel {}
+
+.specPanelEyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.5rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(180, 158, 110, 0.42);
   margin-bottom: 1.25rem;
 }
 
-.fitHeading {
+.specPanelHero {
   font-family: var(--font-serif);
-  font-size: clamp(1.75rem, 3vw, 2.75rem);
+  font-size: clamp(1rem, 1.4vw, 1.2rem);
   font-weight: 400;
-  color: $ink;
-  letter-spacing: -0.02em;
-  margin-bottom: 1.1rem;
+  color: rgba($ink, 0.85);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  margin: 0.6rem 0 1rem;
 }
 
-.fitBody {
+// Inline spec line: "Plain weave / medium-soft hand feel / enzyme softened"
+.specPanelInline {
   font-family: var(--font-sans);
-  font-size: clamp(0.9375rem, 1.3vw, 1.0625rem);
-  line-height: 1.95;
-  color: rgba($ink, 0.55);
-  margin-bottom: 1.75rem;
+  font-size: clamp(0.68rem, 0.9vw, 0.76rem);
+  color: rgba($ink, 0.52);
+  letter-spacing: 0.02em;
+  line-height: 1.6;
+  border-top: 1px solid rgba($ink, 0.07);
+  padding-top: 0.75rem;
+  margin-top: 0.1rem;
 }
 
-.fitSpecRows {
+// Wrapper keeping label + strip together
+.detailBlock {
   display: flex;
   flex-direction: column;
-  border-top: 1px solid rgba($ink, 0.07);
+  gap: 0.25rem;
 }
 
-.fitSpecRow {
-  display: grid;
-  grid-template-columns: 8rem 1fr;
-  padding: 0.6rem 0;
-  border-bottom: 1px solid rgba($ink, 0.05);
-
-  &:last-child { border-bottom: none; }
-}
-
-.fitSpecAttr {
+// "Construction Details" eyebrow
+.constructionLabel {
   font-family: var(--font-sans);
-  font-size: 0.56rem;
-  letter-spacing: 0.2em;
+  font-size: 0.45rem;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
   color: rgba($ink, 0.28);
+  margin-bottom: 0.1rem;
 }
 
-.fitSpecVal {
+// Inline construction detail system with · separators
+.detailInline {
   font-family: var(--font-sans);
-  font-size: 0.82rem;
-  color: rgba($ink, 0.68);
+  font-size: clamp(0.68rem, 0.88vw, 0.76rem);
+  color: rgba($ink, 0.55);
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+
+  & + & { margin-top: 0.3rem; }
 }
 
-// ─── BIG — Lifestyle Editorial ────────────────────────────────────────────────
+.detailInlineItem {
+  &:not(:last-child)::after {
+    content: ' · ';
+    color: rgba($ink, 0.2);
+    font-size: 0.9em;
+  }
+}
+
+// ─── 3. LIFESTYLE / CAMPAIGN ──────────────────────────────────────────────────
 .lifestyleSection {
-  background: $ink;
+  background: $ice;
   overflow: hidden;
+  margin-top: clamp(2rem, 4vw, 3.5rem);
 }
 
 .lifestyleInner {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: clamp(3.5rem, 7vw, 6rem) $px;
-}
-
-.lifestyleHeader {
-  margin-bottom: clamp(2rem, 4vw, 3rem);
-}
-
-.lifestyleEyebrow {
-  font-family: var(--font-sans);
-  font-size: 0.55rem;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: rgba(214, 168, 95, 0.6);
+  max-width: 1440px;
+  margin-right: auto;
+  margin-left: 0;
+  padding: clamp(1.5rem, 3vw, 2.5rem) clamp(1rem, 2.5vw, 2rem) clamp(1.5rem, 3vw, 2.5rem) clamp(0.75rem, 2vw, 1.5rem);
 }
 
 .lifestyleGrid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: clamp(0.75rem, 1.5vw, 1rem);
+  gap: clamp(1rem, 2vw, 1.5rem);
+  align-items: start;
 
-  @include v.lg { grid-template-columns: 3fr 2fr; }
+  @include v.lg { grid-template-columns: 3fr 2fr 1.4fr; gap: clamp(0.75rem, 1.5vw, 1.25rem); }
 }
 
-.lifestyleMain {
+.lifestyleSideWrap {
   position: relative;
-  min-height: 55vh;
+  min-height: 60vh;
   overflow: hidden;
   cursor: zoom-in;
+  background: $cream;
 
-  @include v.lg { min-height: 65vh; }
+  @include v.lg { min-height: 75vh; }
+
+  &:hover .lifestyleImg { transform: scale(1.06); }
+}
+
+.lifestyleDetailWrap {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  min-height: 60vh;
+  overflow: hidden;
+  cursor: zoom-in;
+  background: $cream;
+
+  &:hover .lifestyleImg { transform: scale(1.06); }
+}
+
+// Dedicated right editorial column
+.lifestyleEditorialCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding-left: 0;
+  margin-top: -0.5rem;
 }
 
 .lifestyleImg {
   object-fit: contain;
   mix-blend-mode: multiply;
   transition: transform 0.7s v.$ease-out-expo;
-
-  .lifestyleMain:hover &,
-  .lifestyleDetail:hover & { transform: scale(1.02); }
 }
 
-.lifestyleOverlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 55%);
-  display: flex;
-  align-items: flex-end;
-  padding: 1.5rem;
-}
-
-.lifestyleCaption {
-  font-family: var(--font-sans);
-  font-size: 0.6rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: rgba(249, 247, 242, 0.5);
-}
-
-.lifestyleSide {
-  display: grid;
-  grid-template-rows: 1fr auto;
-  gap: clamp(0.75rem, 1.5vw, 1rem);
-}
-
-.lifestyleDetail {
-  position: relative;
-  overflow: hidden;
-  cursor: zoom-in;
-  background: rgba(249, 247, 242, 0.03);
-  min-height: 30vh;
-}
-
-.lifestyleDetailLabel {
-  position: absolute;
-  bottom: 0.75rem;
-  left: 0.75rem;
-  font-family: var(--font-sans);
-  font-size: 0.5rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: rgba(249, 247, 242, 0.3);
-}
-
-.lifestyleTextCard {
-  padding: clamp(1.5rem, 3vw, 2.25rem);
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  min-height: 140px;
-}
-
-.lifestyleTextCardLabel {
-  font-family: var(--font-sans);
-  font-size: 0.5rem;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: rgba(249, 247, 242, 0.4);
-}
-
-.lifestyleTextCardVal {
-  font-family: var(--font-serif);
-  font-size: clamp(1.1rem, 1.8vw, 1.45rem);
-  font-weight: 400;
-  color: rgba(249, 247, 242, 0.75);
-  letter-spacing: -0.01em;
-}
-
-.lifestyleDesignedFor {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  margin-top: 0.25rem;
-}
-
-.lifestyleDesignedItem {
-  font-family: var(--font-sans);
-  font-size: 0.62rem;
-  color: rgba(249, 247, 242, 0.38);
-  letter-spacing: 0.04em;
-}
-
-// ─── QUICK — Color + Care inline strip ───────────────────────────────────────
-.quickStrip {
-  padding: clamp(2.5rem, 5vw, 4rem) $px;
+.lifestyleStatement {
+  margin-top: 2.5rem;
+  padding: 0.75rem 0;
   border-top: 1px solid rgba($ink, 0.07);
-  max-width: 1280px;
-  margin: 0 auto;
+  border-bottom: 1px solid rgba($ink, 0.07);
 }
 
-.quickStripInner {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: clamp(2rem, 4vw, 3rem);
-
-  @include v.md { grid-template-columns: 1fr 1fr; gap: clamp(3rem, 6vw, 5rem); }
-}
-
-.colorBlock {
-  display: flex;
-  align-items: flex-start;
-  gap: 1.25rem;
-}
-
-.colorSwatch {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  margin-top: 0.2rem;
-}
-
-.colorLabel {
-  font-family: var(--font-sans);
-  font-size: 0.52rem;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: rgba($ink, 0.3);
-  margin-bottom: 0.3rem;
-}
-
-.colorShade {
-  font-family: var(--font-serif);
-  font-size: clamp(1.1rem, 1.8vw, 1.35rem);
-  font-weight: 400;
-  color: $ink;
-  letter-spacing: -0.01em;
-  margin-bottom: 0.4rem;
-}
-
-.colorDesc {
-  font-family: var(--font-sans);
-  font-size: clamp(0.825rem, 1.1vw, 0.9rem);
-  line-height: 1.8;
-  color: rgba($ink, 0.5);
-}
-
-.careBlock {}
-
-.careLabel {
-  font-family: var(--font-sans);
-  font-size: 0.52rem;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: rgba($ink, 0.3);
-  margin-bottom: 0.6rem;
-}
-
-.careText {
-  font-family: var(--font-sans);
-  font-size: clamp(0.825rem, 1.1vw, 0.9rem);
-  line-height: 1.85;
-  color: rgba($ink, 0.52);
-}
-
-// ─── STRONG — Styled With + CTA ──────────────────────────────────────────────
-.endSection {
-  padding: clamp(4rem, 8vw, 7rem) $px;
-  max-width: 1280px;
-  margin: 0 auto;
-}
-
-.styledWith {
-  margin-bottom: clamp(3rem, 6vw, 5rem);
-}
-
-.styledWithEyebrow {
-  font-family: var(--font-sans);
-  font-size: 0.55rem;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: rgba($ink, 0.3);
-  margin-bottom: 1.5rem;
-}
-
-.styledWithGrid {
-  display: flex;
-  flex-direction: column;
-  border-top: 1px solid rgba($ink, 0.08);
-}
-
-.styledWithItem {
-  display: flex;
-  align-items: baseline;
-  gap: 1.1rem;
-  padding: 0.9rem 0;
-  border-bottom: 1px solid rgba($ink, 0.055);
-
-  &:last-child { border-bottom: none; }
-}
-
-.styledWithIndex {
-  font-family: var(--font-sans);
-  font-size: 0.52rem;
-  letter-spacing: 0.22em;
-  color: rgba($olive, 0.65);
-  flex-shrink: 0;
-}
-
-.styledWithText {
-  font-family: var(--font-sans);
-  font-size: clamp(0.9375rem, 1.4vw, 1.05rem);
-  color: rgba($ink, 0.72);
-}
-
-.whyBlock {
-  padding: clamp(2rem, 4vw, 3rem) 0;
-  border-top: 1px solid rgba($ink, 0.06);
-  margin-bottom: clamp(2rem, 4vw, 3.5rem);
-}
-
-.whyText {
+.lifestyleStatementText {
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: clamp(1.1rem, 2vw, 1.5rem);
-  line-height: 1.65;
+  font-size: clamp(0.85rem, 1.2vw, 1rem);
   color: rgba($ink, 0.45);
-  max-width: 560px;
+  line-height: 1.55;
+  margin: 0;
 }
 
-.finalCta {
+.lifestyleEditorial {
+  padding: 0.75rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.lifestyleEditorialLabel {
+  font-family: var(--font-sans);
+  font-size: 0.48rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba($ink, 0.18);
+}
+
+.lifestyleEditorialList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.lifestyleEditorialItem {
+  font-family: var(--font-sans);
+  font-size: clamp(0.72rem, 0.9vw, 0.8rem);
+  font-weight: 400;
+  color: rgba($ink, 0.58);
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+
+  &::before {
+    content: '–';
+    margin-right: 0.5rem;
+    color: rgba($ink, 0.25);
+  }
+}
+
+// ─── 4. RELATED PRODUCTS ──────────────────────────────────────────────────────
+.relatedSection {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: clamp(1.5rem, 3vw, 2.5rem) $px 0.5rem;
+}
+
+.relatedHeader {
+  margin-bottom: clamp(0.75rem, 1.5vw, 1rem);
+}
+
+.relatedEyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.52rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba($ink, 0.3);
+}
+
+.relatedGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(1.5rem, 3vw, 2rem);
+
+  @include v.md { grid-template-columns: repeat(3, 1fr); }
+}
+
+.relatedCard {
+  display: flex;
+  flex-direction: column;
+}
+
+.relatedCardLink {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  gap: 1rem;
+
+  &:hover .relatedCardImg { transform: scale(1.03); }
+}
+
+.relatedCardImageWrap {
+  position: relative;
+  aspect-ratio: 5 / 6;
+  max-height: 300px;
+  overflow: hidden;
+  background: $cream;
+}
+
+.relatedCardImg {
+  object-fit: contain;
+  object-position: center;
+  mix-blend-mode: multiply;
+  transition: transform 0.6s v.$ease-out-expo;
+}
+
+.relatedCardInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0 0.1rem;
+}
+
+.relatedCardName {
+  font-family: var(--font-serif);
+  font-size: clamp(1rem, 1.4vw, 1.15rem);
+  font-weight: 400;
+  color: $ink;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.relatedCardPrice {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: rgba($ink, 0.45);
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.relatedCardCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+  font-family: var(--font-sans);
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba($ink, 0.38);
+  transition: gap 0.28s ease, color 0.28s ease;
+
+  .relatedCardLink:hover & { gap: 0.6rem; color: rgba($ink, 0.65); }
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+.toast {
+  position: fixed;
+  top: 92px;
+  right: 40px;
+  z-index: 400;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  padding-top: clamp(1.5rem, 3vw, 2.5rem);
-  border-top: 1px solid rgba($ink, 0.08);
-}
-
-.finalCtaLeft { display: flex; flex-direction: column; gap: 0.2rem; }
-
-.finalCtaName {
-  font-family: var(--font-serif);
-  font-size: clamp(1.1rem, 2vw, 1.5rem);
-  color: $ink;
-  margin: 0;
-  letter-spacing: -0.01em;
-}
-
-.finalCtaPrice {
+  max-width: fit-content;
+  height: 38px;
+  padding-inline: 18px;
+  background: rgba(245, 241, 234, 0.88);
+  color: #1f1f1f;
+  border: 1px solid rgba(20, 20, 20, 0.035);
+  border-radius: 12px;
+  backdrop-filter: blur(14px);
   font-family: var(--font-sans);
-  font-size: 0.9rem;
-  color: rgba($ink, 0.5);
-  margin: 0;
-  letter-spacing: 0.04em;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 // ─── Lightbox ─────────────────────────────────────────────────────────────────
@@ -828,32 +726,36 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);  // horizontal gutter
   position: fixed;
   inset: 0;
   z-index: 300;
-  background: rgba(0, 0, 0, 0.88);
+  background: rgba($ink, 0.88);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: zoom-out;
+  backdrop-filter: blur(6px);
 }
 
 .lightboxInner {
   position: relative;
-  width: min(88vw, 680px);
+  width: min(88vw, 960px);
   aspect-ratio: 3 / 4;
   cursor: default;
 }
 
-.lightboxImg { object-fit: contain; }
+.lightboxImg {
+  object-fit: contain;
+}
 
 .lightboxClose {
   position: absolute;
-  top: -2.75rem;
+  top: -2.5rem;
   right: 0;
   background: none;
   border: none;
-  color: rgba(249, 247, 242, 0.55);
-  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 1.1rem;
   cursor: pointer;
+  line-height: 1;
   transition: color 0.2s ease;
 
-  &:hover { color: rgba(249, 247, 242, 1); }
+  &:hover { color: #fff; }
 }

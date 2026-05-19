@@ -13,19 +13,24 @@ import type { ShopifyCart } from '@/types/shopify'
 const CART_ID_KEY = 'nivenxa_cart_id'
 
 interface CartContextValue {
-  cart:       ShopifyCart | null
-  loading:    boolean
-  addItem:    (merchandiseId: string, quantity?: number) => Promise<void>
-  updateItem: (lineId: string, quantity: number) => Promise<void>
-  removeItem: (lineId: string) => Promise<void>
-  clearCart:  () => void
+  cart:        ShopifyCart | null
+  loading:     boolean
+  bagCount:    number   // local UI counter (pre-Shopify / mock products)
+  bumpLocal:   () => void
+  addItem:     (merchandiseId: string, quantity?: number) => Promise<void>
+  updateItem:  (lineId: string, quantity: number) => Promise<void>
+  removeItem:  (lineId: string) => Promise<void>
+  clearCart:   () => void
 }
 
 const CartContext = createContext<CartContextValue | null>(null)
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [cart,    setCart]    = useState<ShopifyCart | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [cart,     setCart]    = useState<ShopifyCart | null>(null)
+  const [loading,  setLoading] = useState(true)
+  const [bagCount, setBagCount] = useState(0)
+
+  const bumpLocal = useCallback(() => setBagCount((n) => n + 1), [])
 
   // Restore cart from localStorage on mount
   useEffect(() => {
@@ -90,7 +95,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <CartContext.Provider value={{ cart, loading, addItem, updateItem, removeItem, clearCart }}>
+    <CartContext.Provider value={{ cart, loading, bagCount, bumpLocal, addItem, updateItem, removeItem, clearCart }}>
       {children}
     </CartContext.Provider>
   )
