@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:dev": "cross-env NEXT_PUBLIC_APP_ENV=development next build",
+    "build:prod": "cross-env NEXT_PUBLIC_APP_ENV=production next build",
     "start": "next start",
     "lint": "eslint",
     "deploy": "next build && gh-pages -d out"
@@ -13,7 +15,7 @@
   "dependencies": {
     "framer-motion": "^11.0.0",
     "next": "16.2.6",
-    "next-intl": "^3.26.3",
+    "next-intl": "^4.12.0",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
@@ -22,6 +24,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "gh-pages": "^6.3.0",
