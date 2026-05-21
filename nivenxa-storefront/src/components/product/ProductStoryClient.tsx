@@ -6,6 +6,7 @@ import { Link, useRouter } from '@/i18n/routing'
 import type { Product } from '@/types'
 import { useCart } from '@/context/CartContext'
 import { useAuth } from '@/context/AuthContext'
+import ProductFocusViewer from './ProductFocusViewer'
 import styles from '@/app/[locale]/product/[id]/ProductStory.module.scss'
 
 const toColorSlug = (colorway: string) => colorway.toLowerCase().replace(/\s+/g, '-')
@@ -34,7 +35,13 @@ interface Props {
 export default function ProductStoryClient({ product, variants, related }: Props) {
   const [selected, setSelected]         = useState<Product>(product)
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
-  const [lightboxImg, setLightboxImg]   = useState<string | null>(null)
+  const [viewerOpen, setViewerOpen]         = useState(false)
+  const [viewerInitialView, setViewerInitialView] = useState<string>('front')
+
+  const openViewer = useCallback((view: string) => {
+    setViewerInitialView(view)
+    setViewerOpen(true)
+  }, [])
   const [toast, setToast]               = useState<string | null>(null)
   const [nudgeSizes, setNudgeSizes]     = useState(false)
   const toastTimer                      = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -50,10 +57,12 @@ export default function ProductStoryClient({ product, variants, related }: Props
   }, [])
 
   // All images derive from selected color variant
-  const front     = selected.images?.find((i) => i.view === 'front')   ?? selected.images?.[0]
-  const back      = selected.images?.find((i) => i.view === 'back')    ?? selected.images?.[1]
-  const side      = selected.images?.find((i) => i.view === 'side')    ?? selected.images?.[2]
-  const detailImg = selected.images?.find((i) => i.view === 'details') ?? selected.images?.[3]
+  const front        = selected.images?.find((i) => i.view === 'front')     ?? selected.images?.[0]
+  const back         = selected.images?.find((i) => i.view === 'back')      ?? selected.images?.[1]
+  const side         = selected.images?.find((i) => i.view === 'side')      ?? selected.images?.[2]
+  const detailImg    = selected.images?.find((i) => i.view === 'details')   ?? selected.images?.[3]
+  const lifestyleImg = selected.images?.find((i) => i.view === 'lifestyle') ?? detailImg
+  const walkingImg   = selected.images?.find((i) => i.view === 'walking')   ?? lifestyleImg
   const spec      = selected.fabricStory?.spec
 
   const specValues: string[] = spec
@@ -161,7 +170,7 @@ export default function ProductStoryClient({ product, variants, related }: Props
         {/* ── CENTER: main product image ───────────────────────────────── */}
         <div
           className={styles.heroCenter}
-          onClick={() => front && setLightboxImg(front.src)}
+          onClick={() => selected.images?.length && openViewer('front')}
         >
           <AnimatePresence mode="wait">
             <motion.div
@@ -191,7 +200,7 @@ export default function ProductStoryClient({ product, variants, related }: Props
         {/* ── RIGHT: secondary views ──────────────────────────────────── */}
         <div className={styles.heroRight}>
           {back && (
-            <div className={styles.heroRightSlot} onClick={() => setLightboxImg(back.src)}>
+            <div className={styles.heroRightSlot} onClick={() => openViewer('back')}>
               <AnimatePresence mode="wait">
                 <motion.div
                   key={`back-${selected.id}`}
@@ -213,11 +222,11 @@ export default function ProductStoryClient({ product, variants, related }: Props
               <span className={styles.heroViewLabel}>Back</span>
             </div>
           )}
-          {detailImg && (
-            <div className={styles.heroRightSlot} onClick={() => setLightboxImg(detailImg.src)}>
+          {walkingImg && (
+            <div className={styles.heroRightSlot} onClick={() => openViewer('walking')}>
               <AnimatePresence mode="wait">
                 <motion.div
-                  key={`detail-${selected.id}`}
+                  key={`walking-${selected.id}`}
                   style={{ position: 'absolute', inset: 0 }}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -225,15 +234,15 @@ export default function ProductStoryClient({ product, variants, related }: Props
                   transition={{ duration: 0.55 }}
                 >
                   <Image
-                    src={detailImg.src}
-                    alt={`${selected.name} — detail`}
+                    src={walkingImg.src}
+                    alt={`${selected.name} — walking`}
                     fill
                     sizes="26vw"
                     className={styles.heroRightImage}
                   />
                 </motion.div>
               </AnimatePresence>
-              <span className={styles.heroViewLabel}>Detail</span>
+              <span className={styles.heroViewLabel}>Walking</span>
             </div>
           )}
         </div>
@@ -313,7 +322,7 @@ export default function ProductStoryClient({ product, variants, related }: Props
                   fill
                   sizes="(max-width:768px) 90vw, 50vw"
                   className={styles.lifestyleImg}
-                  onClick={() => setLightboxImg(side.src)}
+                  onClick={() => openViewer('side')}
                 />
               </motion.div>
             )}
@@ -327,7 +336,7 @@ export default function ProductStoryClient({ product, variants, related }: Props
                   fill
                   sizes="(max-width:768px) 90vw, 25vw"
                   className={styles.lifestyleImg}
-                  onClick={() => setLightboxImg(detailImg.src)}
+                  onClick={() => openViewer('lifestyle')}
                 />
               </motion.div>
             )}
@@ -409,25 +418,17 @@ export default function ProductStoryClient({ product, variants, related }: Props
         )}
       </AnimatePresence>
 
-      {/* ── Lightbox ──────────────────────────────────────────────────────── */}
+      {/* ── Focus Viewer ─────────────────────────────────────────────────── */}
       <AnimatePresence>
-        {lightboxImg && (
-          <motion.div
-            className={styles.lightbox}
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.28 }}
-            onClick={() => setLightboxImg(null)}
-          >
-            <motion.div
-              className={styles.lightboxInner}
-              initial={{ scale: 0.96 }} animate={{ scale: 1 }} exit={{ scale: 0.96 }}
-              transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Image src={lightboxImg} alt={selected.name} fill className={styles.lightboxImg} />
-              <button className={styles.lightboxClose} onClick={() => setLightboxImg(null)}>✕</button>
-            </motion.div>
-          </motion.div>
+        {viewerOpen && selected.images && selected.images.length > 0 && (
+          <ProductFocusViewer
+            product={selected}
+            variants={variants}
+            images={selected.images}
+            initialView={viewerInitialView}
+            onClose={() => setViewerOpen(false)}
+            onVariantChange={handleColorChange}
+          />
         )}
       </AnimatePresence>
 

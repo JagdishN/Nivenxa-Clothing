@@ -2,6 +2,9 @@
 export interface ProductImage {
   src:  string   // path relative to /public
   view: 'front' | 'back' | 'side' | 'details'
+     | 'lifestyle' | 'walking' | 'pocket-depth-phone'
+     | 'pocket-slash' | 'pocket-cargo-side' | 'pocket-back-patch'
+     | 'pocket-closure' | 'pocket-depth' | 'pocket-flap'
 }
 
 export type ProductStatus =
