@@ -327,12 +327,12 @@ export default function ProductStoryClient({ product, variants, related }: Props
               </motion.div>
             )}
 
-            {/* Col 2 — detail photo */}
-            {detailImg && (
+            {/* Col 2 — lifestyle photo */}
+            {lifestyleImg && (
               <motion.div className={styles.lifestyleDetailWrap} {...IN_VIEW(0.1)}>
                 <Image
-                  src={detailImg.src}
-                  alt={`${selected.name} — fabric detail`}
+                  src={lifestyleImg.src}
+                  alt={`${selected.name} — lifestyle`}
                   fill
                   sizes="(max-width:768px) 90vw, 25vw"
                   className={styles.lifestyleImg}
