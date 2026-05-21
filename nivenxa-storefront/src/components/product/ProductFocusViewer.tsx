@@ -16,7 +16,7 @@ interface Section {
 const VIEW_META: Record<string, { title: string; body: string; scale: number; y: string }> = {
   front:              { title: 'Full Silhouette',       body: 'The complete form — silhouette, proportion, and how the garment falls from shoulder to hem.',        scale: 1.0,  y: '0%' },
   back:               { title: 'Complete Look',          body: 'Every angle considered. How this piece resolves — from front silhouette to back construction.',       scale: 1.0,  y: '0%' },
-  side:               { title: 'Movement & Form',        body: 'How the silhouette moves in space. Ease, drape, and the architecture of unrestricted everyday wear.', scale: 1.0,  y: '0%' },
+  side:               { title: 'Movement & Form',        body: 'How the silhouette moves in space. Ease, drape, and the architecture of unrestricted everyday wear.', scale: 1.0,  y: '-3%' },
   details:            { title: 'Weave & Surface',        body: 'Macro surface character. The grain of the cloth, its finish — the identity of the fabric up close.',  scale: 1.35, y: '0%' },
   lifestyle:          { title: 'Lifestyle',              body: 'Styled and worn. The garment in context — how it lives outside the studio.',                          scale: 1.0,  y: '0%' },
   walking:            { title: 'In Motion',              body: 'How the silhouette moves. Drape, ease, and the flow of unrestricted everyday wear.',                  scale: 1.0,  y: '0%' },
