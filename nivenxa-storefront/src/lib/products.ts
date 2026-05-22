@@ -436,7 +436,6 @@ export const products: Product[] = [
       { src: '/cargos/sandbeige/cargo-sand-beige-life-style.png',           view: 'lifestyle'         },
       { src: '/cargos/sandbeige/cargo-sand-beige-walking.png',              view: 'walking'           },
       { src: '/cargos/sandbeige/cargo-sand-beige_front_slash_pockets.png',  view: 'pocket-slash'      },
-      { src: '/cargos/sandbeige/cargo-sand-beige_side_cargo_pockets.png',   view: 'pocket-cargo-side' },
       { src: '/cargos/sandbeige/cargo-sand-beige_back_patch_pockets.png',   view: 'pocket-back-patch' },
       { src: '/cargos/sandbeige/cargo-sand-beige_pocket_closure.png',       view: 'pocket-closure'    },
       { src: '/cargos/sandbeige/cargo-sand-beige_pocket_depth.png',         view: 'pocket-depth'      },
