@@ -274,7 +274,7 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
 .heroCenter {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(180deg, #e8e4dc 0%, #dedad2 100%);
+  background: linear-gradient(180deg, #e2e0db 0%, #d6d4ce 100%);
   cursor: zoom-in;
 
   // Zoom hint badge — appears on hover
@@ -301,6 +301,7 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
   object-fit: contain;
   object-position: center 8%;
   mix-blend-mode: multiply;
+  filter: drop-shadow(0 22px 18px rgba(40, 30, 16, 0.13));
 }
 
 // ─── Right — secondary views stacked ─────────────────────────────────────────
@@ -471,7 +472,7 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
 .specPanelInline {
   font-family: var(--font-sans);
   font-size: clamp(0.68rem, 0.9vw, 0.76rem);
-  color: rgba($ink, 0.52);
+  color: rgba($ink, 0.65);
   letter-spacing: 0.02em;
   line-height: 1.6;
   border-top: 1px solid rgba($ink, 0.07);
@@ -492,7 +493,7 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
   font-size: 0.45rem;
   letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: rgba($ink, 0.28);
+  color: rgba($ink, 0.42);
   margin-bottom: 0.1rem;
 }
 
@@ -500,7 +501,7 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
 .detailInline {
   font-family: var(--font-sans);
   font-size: clamp(0.68rem, 0.88vw, 0.76rem);
-  color: rgba($ink, 0.55);
+  color: rgba($ink, 0.68);
   line-height: 1.35;
   letter-spacing: 0.01em;
 

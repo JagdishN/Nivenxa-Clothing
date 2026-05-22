@@ -434,14 +434,12 @@ export const products: Product[] = [
       { src: '/cargos/sandbeige/cargo-sand-beige-back.png',                 view: 'back'              },
       { src: '/cargos/sandbeige/cargo-sand-beige-side.png',                 view: 'side'              },
       { src: '/cargos/sandbeige/cargo-sand-beige-life-style.png',           view: 'lifestyle'         },
-      { src: '/cargos/sandbeige/cargo-sand-beige-details.png',             view: 'details'           },
       { src: '/cargos/sandbeige/cargo-sand-beige-walking.png',              view: 'walking'           },
       { src: '/cargos/sandbeige/cargo-sand-beige_front_slash_pockets.png',  view: 'pocket-slash'      },
       { src: '/cargos/sandbeige/cargo-sand-beige_side_cargo_pockets.png',   view: 'pocket-cargo-side' },
       { src: '/cargos/sandbeige/cargo-sand-beige_back_patch_pockets.png',   view: 'pocket-back-patch' },
       { src: '/cargos/sandbeige/cargo-sand-beige_pocket_closure.png',       view: 'pocket-closure'    },
       { src: '/cargos/sandbeige/cargo-sand-beige_pocket_depth.png',         view: 'pocket-depth'      },
-      { src: '/cargos/sandbeige/cargo-sand-beige_pocket_flap_detail.png',   view: 'pocket-flap'       },
     ],
   },
   {
@@ -563,7 +561,7 @@ export const products: Product[] = [
     description: 'A deep navy cargo in 320 GSM bio-washed cotton twill. Structured silhouette, refined utility.',
     fabric: '320 GSM Bio-Washed Cotton Twill',
     colorway: 'Navy Blue',
-    gradient: 'linear-gradient(160deg, #2E3A52 0%, #1C2840 100%)',
+    gradient: 'linear-gradient(160deg, #252F42 0%, #141C2E 100%)',
     status: 'NEW SEASON',
     atmosphereColor: 'rgba(30, 40, 64, 0.22)',
     fabricStory: {
