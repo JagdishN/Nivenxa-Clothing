@@ -82,7 +82,7 @@ export default function ChessPage() {
         >
           <div className={styles.boardGlow} aria-hidden="true" />
           <Image
-            src="/chess-board.png"
+            src="/images/Chess/chess-board.png"
             alt="Nivenxa premium 3D chess board with pieces and timer"
             width={900}
             height={675}

@@ -1,5 +1,6 @@
 @use '../../styles/variables' as v;
 
+// ─── Section shell ────────────────────────────────────────────────────────────
 .section {
   max-width: var(--max-width);
   margin-inline: auto;
@@ -33,63 +34,347 @@
   color: var(--color-ink);
 }
 
-// ─── Asymmetric editorial grid ────────────────────────────────────────────────
-.grid {
+.viewAllLink {
+  font-family: var(--font-sans);
+  font-size: 0.58rem;
+  font-weight: 400;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(44, 44, 44, 0.45);
+  text-decoration: none;
+  transition: color 0.3s ease;
+  white-space: nowrap;
+
+  &:hover { color: rgba(44, 44, 44, 0.88); }
+}
+
+// ─── Divider between editorial rows ──────────────────────────────────────────
+.rowDivider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(44, 44, 44, 0.08) 20%,
+    rgba(44, 44, 44, 0.08) 80%,
+    transparent 100%
+  );
+  margin-block: clamp(3rem, 6vw, 5rem);
+}
+
+// ─── Three-column editorial grid ──────────────────────────────────────────────
+.editorial {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 2.5rem;
+  gap: 1.75rem;
 
   @include v.md {
-    grid-template-columns: 5fr 7fr;
+    grid-template-columns: 5fr 3.5fr 4fr;
+    gap: 2.5rem;
+    align-items: start;
   }
 }
 
-.heroCol { }
+// ─── Image columns ────────────────────────────────────────────────────────────
+.leftImg,
+.centerImg {
+  // AnimatedSection wrapper — let imgWrap control sizing
+}
 
-.rightCol {
+.centerImg {
+  @include v.md {
+    padding-top: 3.5rem; // editorial downward offset
+  }
+}
+
+// ─── Image wrapper (Link) — drives aspect ratio, contains Next Image ──────────
+.imgWrap {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  background: linear-gradient(180deg, #f9f7f2 0%, #f4f1ea 100%);
+  overflow: hidden;
+  text-decoration: none;
+}
+
+.leftImg .imgWrap {
+  @include v.md { aspect-ratio: 2 / 3; width: 90%; }
+}
+
+.centerImg .imgWrap {
+  @include v.md { aspect-ratio: 3 / 4; }
+}
+
+.productImg {
+  object-fit: cover;
+  object-position: center top;
+  mix-blend-mode: multiply;
+  transition: transform 0.7s v.$ease-out-expo;
+
+  .imgWrap:hover & { transform: scale(1.03); }
+}
+
+.lifestyleImg {
+  object-fit: cover;
+  object-position: center center;
+  transition: transform 0.7s v.$ease-out-expo;
+
+  .imgWrap:hover & { transform: scale(1.04); }
+}
+
+// ─── Right editorial info column ──────────────────────────────────────────────
+.infoCol {
   display: flex;
   flex-direction: column;
-  gap: 2.5rem;
+  gap: 0;
+
+  @include v.md {
+    padding-top: clamp(1.75rem, 3vw, 2.5rem);
+  }
 }
 
-.twoUp {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2.5rem;
+// Concept label (e.g. "Everyday Uniform") — larger, serif feel
+.infoConceptLabel {
+  font-family: var(--font-serif);
+  font-size: clamp(0.85rem, 1.4vw, 1.1rem);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: rgba(122, 117, 94, 0.75);
+  margin-bottom: 0.6rem;
+  font-style: italic;
 }
 
-// ─── Banner card (full-width olive strip) ────────────────────────────────────
-.bannerCard {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 2rem;
-  background-color: var(--color-olive);
-  gap: 1.5rem;
-  flex-wrap: wrap;
-
-  @include v.lg { padding: 2.5rem; }
-}
-
-.bannerEyebrow {
+// Status (e.g. NIVENXA ESSENTIAL)
+.infoStatus {
   font-family: var(--font-sans);
-  font-size: 0.625rem;
-  font-weight: 500;
+  font-size: 0.48rem;
+  font-weight: 400;
+  letter-spacing: 0.3em;
   text-transform: uppercase;
-  letter-spacing: 0.2em;
-  color: rgba(245, 242, 235, 0.48);
+  color: rgba(180, 158, 110, 0.72);
   margin-bottom: 0.5rem;
 }
 
-.bannerName {
-  font-family: var(--font-serif);
-  font-size: clamp(1.25rem, 2.5vw, 1.75rem);
-  color: var(--color-canvas);
-  margin-bottom: 0.25rem;
+// Fabric label (e.g. ENZYME-WASHED COTTON)
+.infoFabricLabel {
+  font-family: var(--font-sans);
+  font-size: 0.56rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.26em;
+  color: rgba(122, 117, 94, 0.7);
+  margin-bottom: 0.9rem;
+  transition: color 0.4s ease;
 }
 
-.bannerMeta {
+// Product name with Nivenxa measurement lines
+.infoNameWrap {
+  position: relative;
+  padding: 0.65rem 0;
+  margin-bottom: 0.3rem;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      rgba(44, 44, 44, 0.12) 0%,
+      rgba(44, 44, 44, 0.06) 60%,
+      transparent 100%
+    );
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40%;
+    height: 1px;
+    background: rgba(44, 44, 44, 0.07);
+  }
+}
+
+.infoName {
+  font-family: var(--font-serif);
+  font-size: clamp(1.1rem, 2vw, 1.5rem);
+  line-height: 1.22;
+  color: rgba(44, 44, 44, 0.88);
+  margin: 0;
+}
+
+.infoPrice {
   font-family: var(--font-sans);
   font-size: 0.8125rem;
-  color: rgba(245, 242, 235, 0.65);
+  font-weight: 500;
+  color: rgba(44, 44, 44, 0.58);
+  margin-bottom: 1.1rem;
+  letter-spacing: 0.02em;
+}
+
+// Fabric story lines
+.infoFabricLines {
+  margin-bottom: 1.2rem;
+}
+
+.infoFabricLine {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  line-height: 1.75;
+  color: rgba(44, 44, 44, 0.42);
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+// Garment philosophy block (◇ bullet points)
+.infoPhilosophy {
+  margin-bottom: 1.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(44, 44, 44, 0.055);
+}
+
+.infoPhilosophyHeading {
+  font-family: var(--font-sans);
+  font-size: 0.52rem;
+  font-weight: 400;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(180, 158, 110, 0.8);
+  margin-bottom: 0.85rem;
+}
+
+.infoPhilosophyLine {
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  font-weight: 400;
+  line-height: 1;
+  color: rgba(44, 44, 44, 0.38);
+  letter-spacing: 0.01em;
+  margin: 0;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid rgba(44, 44, 44, 0.04);
+
+  &:last-child { border-bottom: none; }
+}
+
+// Fabric intelligence badges
+.infoBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-bottom: 1.5rem;
+}
+
+.infoBadge {
+  display: inline-block;
+  padding: 0.22rem 0.7rem;
+  font-family: var(--font-sans);
+  font-size: 0.56rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(122, 117, 94, 0.72);
+  border: 1px solid rgba(122, 117, 94, 0.18);
+  background: rgba(249, 247, 242, 0.7);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+// Product DNA
+.infoDna {
+  margin-bottom: 2rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(44, 44, 44, 0.055);
+}
+
+.infoDnaLabel {
+  font-family: var(--font-sans);
+  font-size: 0.52rem;
+  font-weight: 400;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(180, 158, 110, 0.8);
+  margin-bottom: 0.65rem;
+}
+
+.infoDnaTable {
+  display: flex;
+  flex-direction: column;
+}
+
+.infoDnaRow {
+  display: grid;
+  grid-template-columns: 5rem 1fr;
+  gap: 0.5rem;
+  align-items: baseline;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid rgba(44, 44, 44, 0.04);
+
+  &:last-child { border-bottom: none; }
+}
+
+.infoDnaAttr {
+  font-family: var(--font-sans);
+  font-size: 0.53rem;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(44, 44, 44, 0.28);
+  white-space: nowrap;
+}
+
+.infoDnaVal {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: rgba(44, 44, 44, 0.72);
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+}
+
+// Explore CTA link
+.infoCta {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--font-sans);
+  font-size: 0.52rem;
+  font-weight: 400;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(44, 44, 44, 0.55);
+  text-decoration: none;
+  position: relative;
+  width: fit-content;
+  transition: color 0.3s ease;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0%;
+    height: 1px;
+    background: rgba(44, 44, 44, 0.3);
+    transition: width 0.5s v.$ease-out-expo;
+  }
+
+  &:hover {
+    color: rgba(44, 44, 44, 0.88);
+    &::after { width: 100%; }
+  }
+}
+
+.infoCtaArrow {
+  opacity: 0.5;
+  transition: transform 0.4s v.$ease-out-expo, opacity 0.4s ease;
+
+  .infoCta:hover & {
+    transform: translateX(4px);
+    opacity: 1;
+  }
 }

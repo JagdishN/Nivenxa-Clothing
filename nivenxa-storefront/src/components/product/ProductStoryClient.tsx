@@ -6,6 +6,7 @@ import { Link, useRouter } from '@/i18n/routing'
 import type { Product } from '@/types'
 import { useCart } from '@/context/CartContext'
 import { useAuth } from '@/context/AuthContext'
+import { useCurrency } from '@/context/CurrencyContext'
 import ProductFocusViewer from './ProductFocusViewer'
 import styles from '@/app/[locale]/product/[id]/ProductStory.module.scss'
 
@@ -25,6 +26,28 @@ const IN_VIEW = (delay = 0) => ({
 })
 
 const SIZES = ['S', 'M', 'L', 'XL']
+
+const TEE_PHILOSOPHY = [
+  'Relaxed drop-shoulder structure',
+  'Premium-weight combed cotton',
+  'Muted everyday tones',
+  'Soft lived-in texture',
+  'Designed for repeat wear',
+]
+
+const TEE_HERO_DETAILS = [
+  'Relaxed drop-shoulder fit',
+  'Premium combed cotton',
+  'Soft washed finish',
+  'Designed for repeat wear',
+]
+
+const CARGO_HERO_DETAILS = [
+  'Six-pocket utility silhouette',
+  '300–340 GSM bio-washed cotton',
+  'Reinforced stress points',
+  'Built for everyday movement',
+]
 
 interface Props {
   product:  Product
@@ -49,6 +72,7 @@ export default function ProductStoryClient({ product, variants, related }: Props
   const router = useRouter()
   const { bumpLocal } = useCart()
   const { customer } = useAuth()
+  const { formatPrice } = useCurrency()
 
   const showToast = useCallback((msg: string) => {
     setToast(msg)
@@ -63,13 +87,15 @@ export default function ProductStoryClient({ product, variants, related }: Props
   const detailImg    = selected.images?.find((i) => i.view === 'details')   ?? selected.images?.[3]
   const lifestyleImg = selected.images?.find((i) => i.view === 'lifestyle') ?? detailImg
   const walkingImg   = selected.images?.find((i) => i.view === 'walking')   ?? lifestyleImg
+  const isTee     = selected.category === 'over-tee-shirts'
+  const isCargo   = selected.category === 'cargo-pants'
   const spec      = selected.fabricStory?.spec
 
   const specValues: string[] = spec
     ? (Object.values(spec).filter(Boolean) as string[])
     : selected.dna
       ? [selected.dna.fabric, selected.dna.structure, selected.dna.finish, selected.dna.movement,
-         ...(selected.dna.climate ? [selected.dna.climate] : [])]
+         ...(selected.dna.climate ? [selected.dna.climate] : [])].filter((v): v is string => v !== undefined)
       : []
 
   const handleColorChange = useCallback((variant: Product) => {
@@ -108,7 +134,7 @@ export default function ProductStoryClient({ product, variants, related }: Props
             )}
 
             <motion.p className={styles.heroPrice} {...FADE_UP(0.34)}>
-              ₹{selected.price.toLocaleString('en-IN')}
+              {formatPrice(selected.price)}
             </motion.p>
 
             {/* Color variant selector */}
@@ -144,7 +170,18 @@ export default function ProductStoryClient({ product, variants, related }: Props
               </div>
             </motion.div>
 
-            <motion.div {...FADE_UP(0.52)}>
+            {(isTee || isCargo) && (
+              <motion.div className={styles.heroEditorialBlock} {...FADE_UP(0.50)}>
+                {(isTee ? TEE_HERO_DETAILS : CARGO_HERO_DETAILS).map((line) => (
+                  <p key={line} className={styles.heroEditorialLine}>
+                    <span className={styles.heroEditorialDiamond}>◇</span>
+                    {line}
+                  </p>
+                ))}
+              </motion.div>
+            )}
+
+            <motion.div {...FADE_UP(0.56)}>
               <button
                 className={styles.addToWardrobeBtn}
                 onClick={() => {
@@ -160,7 +197,11 @@ export default function ProductStoryClient({ product, variants, related }: Props
                   }
                 }}
               >
-                Add to Bag <span className={styles.ctaArrow}>→</span>
+                Add to Bag
+                <svg className={styles.ctaArrow} width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+                  <path d="M4 4.5C4 3.12 5.12 2 6.5 2S9 3.12 9 4.5" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round"/>
+                  <rect x="2" y="4.5" width="9" height="7" rx="1" stroke="currentColor" strokeWidth="0.9"/>
+                </svg>
               </button>
             </motion.div>
 
@@ -188,7 +229,7 @@ export default function ProductStoryClient({ product, variants, related }: Props
                   fill
                   priority
                   sizes="(max-width:768px) 100vw, 48vw"
-                  className={styles.heroCenterImage}
+                  className={`${styles.heroCenterImage}${selected.colorway === 'Dust Sage' ? ` ${styles.heroCenterImageDustSage}` : ''}`}
                 />
               ) : (
                 <div style={{ background: selected.gradient, position: 'absolute', inset: 0 }} />
@@ -215,7 +256,7 @@ export default function ProductStoryClient({ product, variants, related }: Props
                     alt={`${selected.name} — back view`}
                     fill
                     sizes="26vw"
-                    className={styles.heroRightImage}
+                    className={`${styles.heroRightImage}${selected.colorway === 'Dust Sage' ? ` ${styles.heroRightImageDustSage}` : ''}`}
                   />
                 </motion.div>
               </AnimatePresence>
@@ -348,15 +389,30 @@ export default function ProductStoryClient({ product, variants, related }: Props
                   <p className={styles.lifestyleStatementText}>{selected.dna.movement}</p>
                 </div>
               )}
-              {selected.dna?.climate && (
-                <p className={styles.lifestyleEditorialLabel}>{selected.dna.climate}</p>
-              )}
-              {selected.designedFor && (
-                <ul className={styles.lifestyleEditorialList}>
-                  {selected.designedFor.map((d) => (
-                    <li key={d} className={styles.lifestyleEditorialItem}>{d}</li>
+
+              {isTee ? (
+                <div className={styles.lifestylePhilosophyBlock}>
+                  <p className={styles.lifestylePhilosophyLabel}>GARMENT PHILOSOPHY</p>
+                  {TEE_PHILOSOPHY.map((line) => (
+                    <p key={line} className={styles.lifestylePhilosophyLine}>
+                      <span className={styles.lifestylePhilosophyDiamond}>◇</span>
+                      {line}
+                    </p>
                   ))}
-                </ul>
+                </div>
+              ) : (
+                <>
+                  {selected.dna?.climate && (
+                    <p className={styles.lifestyleEditorialLabel}>{selected.dna.climate}</p>
+                  )}
+                  {selected.designedFor && (
+                    <ul className={styles.lifestyleEditorialList}>
+                      {selected.designedFor.map((d) => (
+                        <li key={d} className={styles.lifestyleEditorialItem}>{d}</li>
+                      ))}
+                    </ul>
+                  )}
+                </>
               )}
             </motion.div>
 
@@ -392,7 +448,7 @@ export default function ProductStoryClient({ product, variants, related }: Props
                     </div>
                     <div className={styles.relatedCardInfo}>
                       <p className={styles.relatedCardName}>{p.name}</p>
-                      <p className={styles.relatedCardPrice}>₹{p.price.toLocaleString('en-IN')}</p>
+                      <p className={styles.relatedCardPrice}>{formatPrice(p.price)}</p>
                       <span className={styles.relatedCardCta}>View →</span>
                     </div>
                   </Link>

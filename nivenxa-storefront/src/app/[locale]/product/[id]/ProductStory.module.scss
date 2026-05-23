@@ -89,10 +89,10 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
 
 .heroDescriptor {
   font-family: var(--font-sans);
-  font-size: 0.55rem;
-  letter-spacing: 0.2em;
+  font-size: 0.52rem;
+  letter-spacing: 0.26em;
   text-transform: uppercase;
-  color: rgba($ink, 0.35);
+  color: rgba($ink, 0.28);
   margin-top: -0.4rem;
 }
 
@@ -101,18 +101,19 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
   font-size: clamp(0.88rem, 1.2vw, 1rem);
   color: rgba($ink, 0.6);
   letter-spacing: 0.04em;
+  margin-bottom: 0.4rem;
 }
 
 // ─── Colour + Size selectors ──────────────────────────────────────────────────
 .heroColors {}
-.heroSizes  {}
+.heroSizes  { margin-top: 0.45rem; }
 
 .heroSelectorLabel {
   font-family: var(--font-sans);
-  font-size: 0.45rem;
-  letter-spacing: 0.25em;
+  font-size: 0.44rem;
+  letter-spacing: 0.32em;
   text-transform: uppercase;
-  color: rgba($ink, 0.28);
+  color: rgba($ink, 0.22);
   margin-bottom: 0.55rem;
 }
 
@@ -120,7 +121,7 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
 .heroColorSwatches {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.25rem;
   align-items: flex-start;
 }
 
@@ -211,6 +212,37 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
   background: rgba($ink, 0.04);
 }
 
+// ─── Hero left editorial info block ──────────────────────────────────────────
+.heroEditorialBlock {
+  margin-top: 0.35rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid rgba($ink, 0.06);
+  display: flex;
+  flex-direction: column;
+}
+
+.heroEditorialLine {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  font-family: var(--font-sans);
+  font-size: 0.45rem;
+  font-weight: 400;
+  line-height: 1;
+  color: rgba($ink, 0.30);
+  letter-spacing: 0.1em;
+  padding: 0.46rem 0;
+  border-bottom: 1px solid rgba($ink, 0.04);
+
+  &:last-child { border-bottom: none; }
+}
+
+.heroEditorialDiamond {
+  font-size: 0.38rem;
+  color: rgba($olive, 0.5);
+  flex-shrink: 0;
+}
+
 @keyframes sizeNudgePulse {
   0%   { box-shadow: 0 0 0 0 rgba(180, 158, 110, 0.45); border-color: rgba(180, 158, 110, 0.65); }
   60%  { box-shadow: 0 0 0 5px rgba(180, 158, 110, 0);  border-color: rgba(180, 158, 110, 0.65); }
@@ -228,7 +260,7 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
   50%       { opacity: 0.7; }
 }
 
-// CTA — link style with animated underline
+// CTA — link style with persistent underline
 .addToWardrobeBtn {
   display: inline-flex;
   align-items: center;
@@ -239,35 +271,38 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
   font-weight: 400;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: rgba(180, 158, 110, 0.72);
+  color: rgba(180, 158, 110, 0.88);
   background: none;
   border: none;
   cursor: pointer;
   position: relative;
   transition: color 0.25s ease;
-  animation: bagBreathe 2.8s ease-in-out infinite;
 
   &::after {
     content: '';
     position: absolute;
     bottom: -2px;
     left: 0;
-    width: 0;
+    width: 100%;
     height: 1px;
-    background: rgba(180, 158, 110, 0.72);
-    transition: width 0.35s v.$ease-out-expo;
+    background: rgba(180, 158, 110, 0.88);
+    opacity: 0.32;
+    transition: opacity 0.3s ease;
   }
 
   &:hover {
     color: rgba(180, 158, 110, 1);
-    &::after { width: 100%; background: rgba(180, 158, 110, 1); }
+    &::after { opacity: 1; }
   }
 }
 
 .ctaArrow {
-  display: inline-block;
-  transition: transform 0.3s v.$ease-out-expo;
-  .addToWardrobeBtn:hover & { transform: translateX(5px); }
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition: transform 0.3s v.$ease-out-expo, opacity 0.3s ease;
+  opacity: 0.75;
+  .addToWardrobeBtn:hover & { transform: scale(1.18); opacity: 1; }
 }
 
 // ─── Center — main image ──────────────────────────────────────────────────────
@@ -298,10 +333,15 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
 }
 
 .heroCenterImage {
-  object-fit: contain;
-  object-position: center 8%;
+  object-fit: cover;
+  object-position: center top;
   mix-blend-mode: multiply;
   filter: drop-shadow(0 22px 18px rgba(40, 30, 16, 0.13));
+}
+
+// Dust Sage front image sits high in the crop — pull anchor down to show full hem
+.heroCenterImageDustSage {
+  object-position: center 45%;
 }
 
 // ─── Right — secondary views stacked ─────────────────────────────────────────
@@ -322,7 +362,7 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
   cursor: zoom-in;
 
   &:last-child { border-bottom: none; }
-  &:hover .heroRightImage { transform: scale(1.05); }
+  &:hover .heroRightImage { transform: scale(0.97); }
 
   // Zoom hint
   &::after {
@@ -344,10 +384,17 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
 }
 
 .heroRightImage {
-  object-fit: contain;
-  object-position: center;
+  object-fit: cover;
+  object-position: center top;
   mix-blend-mode: multiply;
+  transform: scale(0.94);
+  transform-origin: top center;
   transition: transform 0.7s v.$ease-out-expo;
+}
+
+// Dust Sage back view sits high — shift crop anchor down to show full hem
+.heroRightImageDustSage {
+  object-position: center 40%;
 }
 
 .heroViewLabel {
@@ -549,17 +596,29 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
   @include v.lg { min-height: 75vh; }
 
   &:hover .lifestyleImg { transform: scale(1.06); }
+
+  .lifestyleImg {
+    object-fit: cover;
+    object-position: center top;
+  }
 }
 
 .lifestyleDetailWrap {
   position: relative;
   aspect-ratio: 4 / 5;
-  min-height: 60vh;
+  min-height: 48vh;
   overflow: hidden;
   cursor: zoom-in;
   background: $cream;
 
   &:hover .lifestyleImg { transform: scale(1.06); }
+
+  .lifestyleImg {
+    object-fit: cover;
+    object-position: center top;
+    mix-blend-mode: normal;
+    filter: brightness(1.10) contrast(0.88) saturate(0.94);
+  }
 }
 
 // Dedicated right editorial column
@@ -598,6 +657,44 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+// ─── Tee garment philosophy block ─────────────────────────────────────────────
+.lifestylePhilosophyBlock {
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.lifestylePhilosophyLabel {
+  font-family: var(--font-sans);
+  font-size: 0.52rem;
+  font-weight: 400;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba($olive, 0.85);
+  margin-bottom: 0.9rem;
+}
+
+.lifestylePhilosophyLine {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  font-family: var(--font-sans);
+  font-size: clamp(0.72rem, 0.9vw, 0.8rem);
+  font-weight: 400;
+  line-height: 1.85;
+  color: rgba($ink, 0.6);
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+.lifestylePhilosophyDiamond {
+  font-size: 0.48rem;
+  color: rgba($olive, 0.65);
+  flex-shrink: 0;
+  position: relative;
+  top: -0.05em;
 }
 
 .lifestyleEditorialLabel {
@@ -688,15 +785,14 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
 
 .relatedCardImageWrap {
   position: relative;
-  aspect-ratio: 5 / 6;
-  max-height: 300px;
+  aspect-ratio: 3 / 4;
   overflow: hidden;
   background: $cream;
 }
 
 .relatedCardImg {
-  object-fit: contain;
-  object-position: center;
+  object-fit: cover;
+  object-position: center top;
   mix-blend-mode: multiply;
   transition: transform 0.6s v.$ease-out-expo;
 }

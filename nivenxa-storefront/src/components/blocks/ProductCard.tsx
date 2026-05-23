@@ -1,11 +1,12 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/routing'
 import type { Product, ProductStatus } from '@/types'
 import TextureOverlay from '../ui/TextureOverlay'
+import { useCurrency } from '@/context/CurrencyContext'
 import styles from './ProductCard.module.scss'
 
 interface ProductCardProps {
@@ -15,6 +16,7 @@ interface ProductCardProps {
 
 const STATUS_CLASS: Record<ProductStatus, string> = {
   'NIVENXA ESSENTIAL': styles.statusEssential,
+  'CORE ESSENTIAL':    styles.statusEssential,
   'NEW SEASON':        styles.statusNew,
   'LIMITED RUN':       styles.statusLimited,
   'ARCHIVE WASH':      styles.statusArchive,
@@ -22,12 +24,35 @@ const STATUS_CLASS: Record<ProductStatus, string> = {
 
 export default function ProductCard({ product, large = false }: ProductCardProps) {
   const t = useTranslations('product')
+  const { formatPrice } = useCurrency()
   const [hovered, setHovered]     = useState(false)
   const [lensPos, setLensPos]     = useState({ x: 50, y: 50 })
   const [showDNA, setShowDNA]     = useState(false)
-  const front    = product.images?.find((i) => i.view === 'front') ?? product.images?.[0]
-  const back     = product.images?.find((i) => i.view === 'back')  ?? product.images?.[1]
-  const activeImg = hovered && back ? back : front
+  const [isMobile, setIsMobile]   = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)')
+    setIsMobile(mq.matches)
+    const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+
+  const sideProfile = product.images?.find((i) => i.view === 'side-profile')
+  const walking     = product.images?.find((i) => i.view === 'walking')
+  const lifestyle   = product.images?.find((i) => i.view === 'lifestyle')
+
+  const primary =
+    product.category === 'over-tee-shirts' && walking
+      ? walking
+      : product.category === 'cargo-pants' && lifestyle
+      ? lifestyle
+      : isMobile && sideProfile
+      ? sideProfile
+      : (product.images?.find((i) => i.view === 'front') ?? product.images?.[0])
+
+  const back    = product.images?.find((i) => i.view === 'back') ?? product.images?.[1]
+  const activeImg = hovered && back ? back : primary
 
   const hasImages  = Boolean(activeImg)
   const hasMulti   = (product.images?.length ?? 0) > 1
@@ -55,6 +80,15 @@ export default function ProductCard({ product, large = false }: ProductCardProps
       {/* ── Image zone ─────────────────────────────────────────────────────── */}
       <div className={large ? `${styles.imageWrap} ${styles.imageWrapLarge}` : `${styles.imageWrap} ${styles.imageWrapStd}`}>
 
+        {/* Full-area link — sits below badges and add-to-cart (z-index 2) */}
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <Link
+          href={`/shop/${product.category}/${product.colorway.toLowerCase().replace(/\s+/g, '-')}` as any}
+          className={styles.imageLink}
+          aria-label={`View ${product.name}`}
+          tabIndex={0}
+        />
+
         {/* 6. Cinematic gradient shift on hover */}
         <div
           className={styles.atmosphereShift}
@@ -79,7 +113,7 @@ export default function ProductCard({ product, large = false }: ProductCardProps
                   alt={`${product.name} — ${activeImg!.view}`}
                   fill
                   sizes="(max-width: 768px) 100vw, 33vw"
-                  className={styles.productImage}
+                  className={`${styles.productImage}${activeImg!.view === 'back' ? ` ${styles.productImageBack}` : ''}`}
                 />
                 {/* 2. Fabric texture grain over real photos at 3% */}
                 <TextureOverlay opacity={0.03} />
@@ -134,24 +168,6 @@ export default function ProductCard({ product, large = false }: ProductCardProps
           </div>
         )}
 
-        {/* 7. "Explore Piece →" — navigates to product story */}
-        <motion.div
-          className={styles.exploreCta}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: hovered ? 1 : 0, y: hovered ? 0 : 8 }}
-          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-        >
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          <Link
-            href={`/shop/${product.category}/${product.colorway.toLowerCase().replace(/\s+/g, '-')}` as any}
-            className={styles.exploreCtaLink}
-            tabIndex={hovered ? 0 : -1}
-          >
-            Explore Piece
-            <span className={styles.exploreArrow}>→</span>
-          </Link>
-        </motion.div>
-
         {/* 1. Ghost luxury Add to Cart — appears on hover only */}
         <div className={styles.addToCart}>
           <button className={styles.addToCartBtn}>
@@ -159,7 +175,7 @@ export default function ProductCard({ product, large = false }: ProductCardProps
             <span className={styles.ctaArrow}>→</span>
           </button>
         </div>
-      </div>
+      </div>  {/* ── /imageWrap ── */}
 
       {/* ── Info zone ──────────────────────────────────────────────────────── */}
       <div className={styles.info}>
@@ -173,7 +189,7 @@ export default function ProductCard({ product, large = false }: ProductCardProps
               animate={{ opacity: hovered ? 1 : 0, height: hovered ? 'auto' : 0 }}
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             >
-              {product.fabricStory.lines.map((line) => (
+              {product.fabricStory.lines?.map((line) => (
                 <p key={line} className={styles.fabricLine}>{line}</p>
               ))}
             </motion.div>
@@ -186,7 +202,7 @@ export default function ProductCard({ product, large = false }: ProductCardProps
         <div className={styles.nameWrap}>
           <h3 className={styles.name}>{product.name}</h3>
         </div>
-        <p className={styles.price}>₹{product.price.toLocaleString('en-IN')}</p>
+        <p className={styles.price}>{formatPrice(product.price)}</p>
 
         {/* 2. Fabric intelligence badges */}
         {product.badges && product.badges.length > 0 && (

@@ -28,7 +28,7 @@
     "heading": "The Edit",
     "viewAll": "View All",
     "newArrival": "New Arrival",
-    "addToCart": "Add to Cart"
+    "addToCart": "Add to Bag"
   },
   "categories": {
     "eyebrow": "Collections",
@@ -56,7 +56,7 @@
     }
   },
   "product": {
-    "addToCart": "Add to Cart"
+    "addToCart": "Add to Bag"
   },
   "footer": {
     "tagline": "Elevated Indian comfortwear crafted from natural bio-washed fabrics. Heritage in every thread.",

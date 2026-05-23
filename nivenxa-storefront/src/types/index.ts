@@ -1,7 +1,7 @@
 // Local UI product shape (used by mock data and ProductCard)
 export interface ProductImage {
   src:  string   // path relative to /public
-  view: 'front' | 'back' | 'side' | 'details'
+  view: 'front' | 'back' | 'side' | 'side-profile' | 'details'
      | 'lifestyle' | 'walking' | 'pocket-depth-phone'
      | 'pocket-slash' | 'pocket-cargo-side' | 'pocket-back-patch'
      | 'pocket-closure' | 'pocket-depth' | 'pocket-flap'
@@ -9,16 +9,19 @@ export interface ProductImage {
 
 export type ProductStatus =
   | 'NIVENXA ESSENTIAL'
+  | 'CORE ESSENTIAL'
   | 'NEW SEASON'
   | 'LIMITED RUN'
   | 'ARCHIVE WASH'
 
 export interface ProductDNA {
-  fabric:    string
-  structure: string
-  finish:    string
-  movement:  string
-  climate?:  string
+  fabric:     string
+  structure?: string
+  finish:     string
+  movement:   string
+  climate?:   string
+  fit?:       string
+  drape?:     string
 }
 
 export interface ProductFabricSpec {
@@ -34,7 +37,7 @@ export interface Product {
   name:            string
   price:           number
   category:        'women-lounge-sets' | 'women-indo-western' | 'boys-premium' | 'girls-premium' | 'kids-nightwear' | 'cargo-pants' | 'over-tee-shirts'
-  gender:          'women' | 'kids' | 'unisex'
+  gender:          'women' | 'men' | 'kids' | 'unisex'
   description:     string
   fabric:          string
   colorway:        string
@@ -44,7 +47,7 @@ export interface Product {
   defaultColor?:   string
   featured?:       boolean
   status?:         ProductStatus
-  fabricStory?:    { label: string; body: string; spec?: ProductFabricSpec; lines?: string[] }
+  fabricStory?:    { label: string; body?: string; spec?: ProductFabricSpec; lines?: string[] }
   badges?:         string[]
   dna?:            ProductDNA
   atmosphereColor?: string
