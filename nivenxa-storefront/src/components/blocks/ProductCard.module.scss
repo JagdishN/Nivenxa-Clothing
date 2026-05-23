@@ -37,6 +37,14 @@
   .card:hover & { opacity: 1; }
 }
 
+// ─── Full-area image link overlay ────────────────────────────────────────────
+.imageLink {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  cursor: pointer;
+}
+
 // ─── Image area ───────────────────────────────────────────────────────────────
 .imageWrap {
   position: relative;
@@ -105,10 +113,16 @@
 
 .productImage {
   object-fit: cover;
-  // Dissolves the PNG's white/grey background into the warm card surface.
-  // White pixels multiply to transparent; the garment colour is unaffected.
+  object-position: center top;
   mix-blend-mode: multiply;
 }
+
+// Back-view PNGs have inconsistent internal padding — contain shows the full garment
+// against the matching cream card background without unpredictable cropping
+// .productImageBack {
+//   // object-fit: contain;
+//   // object-position: center 18%;
+// }
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
 .status {
@@ -186,47 +200,6 @@
   inset: 0;
   background-size: 500%;
   filter: contrast(1.12) saturate(1.08);
-}
-
-// ─── 7. "Explore Piece →" floating CTA ───────────────────────────────────────
-.exploreCta {
-  position: absolute;
-  bottom: 4rem;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 4;
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.42rem 1rem;
-  font-family: var(--font-sans);
-  font-size: 0.58rem;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: rgba(245, 242, 235, 0.88);
-  background: rgba(24, 22, 18, 0.65);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(245, 242, 235, 0.12);
-  white-space: nowrap;
-  pointer-events: none; // container is pointer-events:none; link inside is clickable
-}
-
-// The actual anchor inside the CTA — inherits all visual styles from parent
-.exploreCtaLink {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  color: inherit;
-  text-decoration: none;
-  pointer-events: auto; // re-enable on the link itself
-}
-
-.exploreArrow {
-  display: inline-block;
-  transition: transform 0.3s v.$ease-out-expo;
-  .card:hover & { transform: translateX(4px); }
 }
 
 // ─── 1. Ghost luxury Add to Cart — hover only ────────────────────────────────

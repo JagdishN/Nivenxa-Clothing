@@ -7,6 +7,7 @@ import Footer from '@/components/global/Footer'
 import { AuthProvider } from '@/context/AuthContext'
 import { CartProvider } from '@/context/CartContext'
 import { ToastProvider } from '@/context/ToastContext'
+import { CurrencyProvider } from '@/context/CurrencyContext'
 
 const RTL_LOCALES = ['ar']
 
@@ -33,15 +34,17 @@ export default async function LocaleLayout({
   return (
     <div lang={locale} dir={dir}>
       <NextIntlClientProvider messages={messages}>
-        <ToastProvider>
-          <AuthProvider>
-            <CartProvider>
-              <Navbar />
-              <main>{children}</main>
-              <Footer />
-            </CartProvider>
-          </AuthProvider>
-        </ToastProvider>
+        <CurrencyProvider>
+          <ToastProvider>
+            <AuthProvider>
+              <CartProvider>
+                <Navbar />
+                <main>{children}</main>
+                <Footer />
+              </CartProvider>
+            </AuthProvider>
+          </ToastProvider>
+        </CurrencyProvider>
       </NextIntlClientProvider>
     </div>
   )

@@ -69,7 +69,7 @@ function PlayerPreview({ tournament }: { tournament: ChessTournament }) {
         onClick={() => setOpen((current) => !current)}
       >
         <Image
-          src="/player-preview.png"
+          src="/images/Chess/player-preview.png"
           alt=""
           width={72}
           height={72}
@@ -120,7 +120,7 @@ function LocationLink({ tournament }: { tournament: ChessTournament }) {
       title={tournament.location.label}
     >
       <Image
-        src="/map.png"
+        src="/images/Shared/map.png"
         alt=""
         width={72}
         height={72}
