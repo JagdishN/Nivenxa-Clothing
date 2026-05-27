@@ -1,7 +1,7 @@
 // Local UI product shape (used by mock data and ProductCard)
 export interface ProductImage {
   src:  string   // path relative to /public
-  view: 'front' | 'back' | 'side' | 'side-profile' | 'details'
+  view: 'front' | 'back' | 'side' | 'side-profile' | 'details' | 'fabric-details'
      | 'lifestyle' | 'walking' | 'pocket-depth-phone'
      | 'pocket-slash' | 'pocket-cargo-side' | 'pocket-back-patch'
      | 'pocket-closure' | 'pocket-depth' | 'pocket-flap'

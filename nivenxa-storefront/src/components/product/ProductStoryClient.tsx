@@ -84,11 +84,16 @@ export default function ProductStoryClient({ product, variants, related }: Props
   const front        = selected.images?.find((i) => i.view === 'front')     ?? selected.images?.[0]
   const back         = selected.images?.find((i) => i.view === 'back')      ?? selected.images?.[1]
   const side         = selected.images?.find((i) => i.view === 'side')      ?? selected.images?.[2]
-  const detailImg    = selected.images?.find((i) => i.view === 'details')   ?? selected.images?.[3]
+  const detailImg    = selected.images?.find((i) => i.view === 'fabric-details')
+                    ?? selected.images?.find((i) => i.view === 'details')
+                    ?? selected.images?.[3]
   const lifestyleImg = selected.images?.find((i) => i.view === 'lifestyle') ?? detailImg
   const walkingImg   = selected.images?.find((i) => i.view === 'walking')   ?? lifestyleImg
   const isTee     = selected.category === 'over-tee-shirts'
   const isCargo   = selected.category === 'cargo-pants'
+  const isPortraitTeeFlatLay = isTee && ['Desert Clay', 'Dust Sage', 'Dried Basil'].includes(selected.colorway)
+  const isInsetTeeFlatLay = isTee && ['Desert Clay'].includes(selected.colorway)
+  const isLandscapeTeeFlatLay = isTee && !isPortraitTeeFlatLay
   const spec      = selected.fabricStory?.spec
 
   const specValues: string[] = spec
@@ -111,7 +116,7 @@ export default function ProductStoryClient({ product, variants, related }: Props
       <Link href={`/shop/${selected.category}` as any} className={styles.backButton}>← Collection</Link>
 
       {/* ══ 1. HERO — 3-panel editorial ═══════════════════════════════════ */}
-      <section className={styles.hero}>
+      <section className={`${styles.hero}${isTee ? ` ${styles.heroTee}` : ''}`}>
 
         {/* ── LEFT: copy panel ────────────────────────────────────────── */}
         <div className={styles.heroLeft}>
@@ -123,12 +128,18 @@ export default function ProductStoryClient({ product, variants, related }: Props
               </motion.span>
             )}
 
+            {/* Dominant product title / subtle colorway subtitle */}
             <motion.h1 className={styles.heroName} {...FADE_UP(0.2)}>
-              {selected.name}
+              {selected.name.split(' / ')[0]}
             </motion.h1>
+            {selected.name.includes(' / ') && (
+              <motion.p className={styles.heroColorName} {...FADE_UP(0.26)}>
+                {selected.name.split(' / ')[1]}
+              </motion.p>
+            )}
 
             {selected.fabricStory?.label && (
-              <motion.p className={styles.heroDescriptor} {...FADE_UP(0.28)}>
+              <motion.p className={styles.heroDescriptor} {...FADE_UP(0.3)}>
                 {selected.fabricStory.label}
               </motion.p>
             )}
@@ -209,9 +220,10 @@ export default function ProductStoryClient({ product, variants, related }: Props
         </div>
 
         {/* ── CENTER: main product image ───────────────────────────────── */}
+        {/* Tee: walking first panel; all others: front */}
         <div
           className={styles.heroCenter}
-          onClick={() => selected.images?.length && openViewer('front')}
+          onClick={() => selected.images?.length && openViewer(isTee ? 'walking' : 'front')}
         >
           <AnimatePresence mode="wait">
             <motion.div
@@ -222,69 +234,171 @@ export default function ProductStoryClient({ product, variants, related }: Props
               exit={{ opacity: 0 }}
               transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
             >
-              {front ? (
+              {isTee && walkingImg ? (
+                <Image
+                  src={walkingImg.src}
+                  alt={selected.name}
+                  fill
+                  priority
+                  sizes="(max-width:768px) 100vw, 24vw"
+                  className={styles.heroCenterImage}
+                />
+              ) : front ? (
                 <Image
                   src={front.src}
                   alt={selected.name}
                   fill
                   priority
                   sizes="(max-width:768px) 100vw, 48vw"
-                  className={`${styles.heroCenterImage}${selected.colorway === 'Dust Sage' ? ` ${styles.heroCenterImageDustSage}` : ''}`}
+                  className={styles.heroCenterImage}
                 />
               ) : (
                 <div style={{ background: selected.gradient, position: 'absolute', inset: 0 }} />
               )}
             </motion.div>
           </AnimatePresence>
+          {isTee && <span className={styles.heroViewLabel}>Walking</span>}
         </div>
 
         {/* ── RIGHT: secondary views ──────────────────────────────────── */}
+        {/* Tee: [walking=center] [front] [back] — slots render front then back */}
         <div className={styles.heroRight}>
-          {back && (
-            <div className={styles.heroRightSlot} onClick={() => openViewer('back')}>
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={`back-${selected.id}`}
-                  style={{ position: 'absolute', inset: 0 }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.55 }}
-                >
-                  <Image
-                    src={back.src}
-                    alt={`${selected.name} — back view`}
-                    fill
-                    sizes="26vw"
-                    className={`${styles.heroRightImage}${selected.colorway === 'Dust Sage' ? ` ${styles.heroRightImageDustSage}` : ''}`}
-                  />
-                </motion.div>
-              </AnimatePresence>
-              <span className={styles.heroViewLabel}>Back</span>
-            </div>
-          )}
-          {walkingImg && (
-            <div className={styles.heroRightSlot} onClick={() => openViewer('walking')}>
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={`walking-${selected.id}`}
-                  style={{ position: 'absolute', inset: 0 }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.55 }}
-                >
-                  <Image
-                    src={walkingImg.src}
-                    alt={`${selected.name} — walking`}
-                    fill
-                    sizes="26vw"
-                    className={styles.heroRightImage}
-                  />
-                </motion.div>
-              </AnimatePresence>
-              <span className={styles.heroViewLabel}>Walking</span>
-            </div>
+          {isTee ? (
+            <>
+              {front && (
+                <div className={styles.heroRightSlot} onClick={() => openViewer('front')}>
+                  {/* Product image — top cell */}
+                  <div className={styles.heroRightTop}>
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={`front-${selected.id}`}
+                        style={{ position: 'absolute', inset: 0 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.55 }}
+                      >
+                        <Image
+                          src={front.src}
+                          alt={`${selected.name} — front view`}
+                          fill
+                          sizes="24vw"
+                          className={`${styles.heroRightImage}${isPortraitTeeFlatLay ? ` ${styles.heroRightImageTeePortrait}` : ''}${isInsetTeeFlatLay ? ` ${styles.heroRightImageTeeInset}` : ''}${isLandscapeTeeFlatLay ? ` ${styles.heroRightImageTeeLandscape}` : ''}`}
+                        />
+                      </motion.div>
+                    </AnimatePresence>
+                    <span className={styles.heroViewLabel}>Front</span>
+                  </div>
+                  {/* Fabric detail strip — bottom cell */}
+                  {detailImg && (
+                    <div
+                      className={styles.heroDetailStrip}
+                      onClick={(e) => { e.stopPropagation(); openViewer('details') }}
+                    >
+                      <Image
+                        src={detailImg.src}
+                        alt={`${selected.name} — fabric detail`}
+                        fill
+                        sizes="(max-width:768px) 50vw, 12vw"
+                        className={styles.heroDetailStripImg}
+                      />
+                      <span className={styles.heroViewLabel}>Detail</span>
+                    </div>
+                  )}
+                </div>
+              )}
+              {back && (
+                <div className={styles.heroRightSlot} onClick={() => openViewer('back')}>
+                  {/* Product image — top cell */}
+                  <div className={styles.heroRightTop}>
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={`back-${selected.id}`}
+                        style={{ position: 'absolute', inset: 0 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.55 }}
+                      >
+                        <Image
+                          src={back.src}
+                          alt={`${selected.name} — back view`}
+                          fill
+                          sizes="24vw"
+                          className={`${styles.heroRightImage}${isPortraitTeeFlatLay ? ` ${styles.heroRightImageTeePortrait}` : ''}${isInsetTeeFlatLay ? ` ${styles.heroRightImageTeeInset}` : ''}${isLandscapeTeeFlatLay ? ` ${styles.heroRightImageTeeLandscape}` : ''}`}
+                        />
+                      </motion.div>
+                    </AnimatePresence>
+                    <span className={styles.heroViewLabel}>Back</span>
+                  </div>
+                  {/* Fabric detail strip — bottom cell */}
+                  {detailImg && (
+                    <div
+                      className={styles.heroDetailStrip}
+                      onClick={(e) => { e.stopPropagation(); openViewer('details') }}
+                    >
+                      <Image
+                        src={detailImg.src}
+                        alt={`${selected.name} — fabric detail`}
+                        fill
+                        sizes="(max-width:768px) 50vw, 12vw"
+                        className={styles.heroDetailStripImg}
+                      />
+                      <span className={styles.heroViewLabel}>Detail</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              {back && (
+                <div className={styles.heroRightSlot} onClick={() => openViewer('back')}>
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={`back-${selected.id}`}
+                      style={{ position: 'absolute', inset: 0 }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.55 }}
+                    >
+                      <Image
+                        src={back.src}
+                        alt={`${selected.name} — back view`}
+                        fill
+                        sizes="26vw"
+                        className={styles.heroRightImage}
+                      />
+                    </motion.div>
+                  </AnimatePresence>
+                  <span className={styles.heroViewLabel}>Back</span>
+                </div>
+              )}
+              {walkingImg && (
+                <div className={styles.heroRightSlot} onClick={() => openViewer('walking')}>
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={`walking-${selected.id}`}
+                      style={{ position: 'absolute', inset: 0 }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.55 }}
+                    >
+                      <Image
+                        src={walkingImg.src}
+                        alt={`${selected.name} — walking`}
+                        fill
+                        sizes="26vw"
+                        className={styles.heroRightImage}
+                      />
+                    </motion.div>
+                  </AnimatePresence>
+                  <span className={styles.heroViewLabel}>Walking</span>
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -343,6 +457,7 @@ export default function ProductStoryClient({ product, variants, related }: Props
                   </motion.div>
                 )
               })()}
+
             </div>
           </div>
 

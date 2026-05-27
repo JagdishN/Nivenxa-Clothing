@@ -9,6 +9,7 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 .page {
+  position: relative;
   background: $ice;
   color: $ink;
   padding-top: clamp(6rem, 9vh, 8rem); // space below fixed Navbar + breathing room
@@ -25,10 +26,20 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
   letter-spacing: 0.3em;
   text-transform: uppercase;
   text-decoration: none;
-  color: rgba(180, 158, 110, 0.72);
-  transition: color 0.25s ease;
+  color: rgba($ink, 0.62);
+  background: rgba($ice, 0.9);
+  border: 1px solid rgba($ink, 0.06);
+  border-radius: 2px;
+  padding: 0.38rem 0.58rem;
+  box-shadow: 0 10px 24px rgba(31, 27, 58, 0.05);
+  backdrop-filter: blur(10px);
+  transition: color 0.25s ease, background 0.25s ease, border-color 0.25s ease;
 
-  &:hover { color: rgba(180, 158, 110, 1); }
+  &:hover {
+    color: rgba($ink, 0.82);
+    background: rgba($ice, 0.98);
+    border-color: rgba($ink, 0.1);
+  }
 }
 
 // ─── 1. HERO — 3-panel editorial ─────────────────────────────────────────────
@@ -87,6 +98,16 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
   margin: 0;
 }
 
+// Colorway subtitle — secondary/subtle; pulled tight under the dominant title
+.heroColorName {
+  font-family: var(--font-sans);
+  font-size: clamp(0.66rem, 0.88vw, 0.76rem);
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  color: rgba($ink, 0.38);
+  margin-top: -0.55rem;
+}
+
 .heroDescriptor {
   font-family: var(--font-sans);
   font-size: 0.52rem;
@@ -98,10 +119,11 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
 
 .heroPrice {
   font-family: var(--font-sans);
-  font-size: clamp(0.88rem, 1.2vw, 1rem);
-  color: rgba($ink, 0.6);
-  letter-spacing: 0.04em;
-  margin-bottom: 0.4rem;
+  font-size: clamp(0.72rem, 0.9vw, 0.8rem);
+  font-weight: 300;
+  color: rgba($ink, 0.42);
+  letter-spacing: 0.14em;
+  margin-bottom: 0.55rem;
 }
 
 // ─── Colour + Size selectors ──────────────────────────────────────────────────
@@ -121,7 +143,7 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
 .heroColorSwatches {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.4rem;
   align-items: flex-start;
 }
 
@@ -149,17 +171,24 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
   opacity: 1 !important;
 
   .heroSwatchTexture {
-    box-shadow: 0 0 0 2px rgba($ink, 0.42);
+    box-shadow:
+      0 0 0 2px rgba($ink, 0.42),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.07);
   }
 }
 
 .heroSwatchTexture {
   display: block;
-  width: 44px;
-  height: 26px;
-  border-radius: 2px;
+  width: 48px;
+  height: 30px;
+  border-radius: 7px;        // organic rounded-square
   flex-shrink: 0;
-  border: 1px solid rgba($ink, 0.08);
+  border: 1px solid rgba($ink, 0.14);   // soft visible border
+  // Inset highlights simulate fabric weave depth
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.07);
   transition: box-shadow 0.25s ease;
 }
 
@@ -228,10 +257,10 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
   font-family: var(--font-sans);
   font-size: 0.45rem;
   font-weight: 400;
-  line-height: 1;
+  line-height: 1.55;
   color: rgba($ink, 0.30);
   letter-spacing: 0.1em;
-  padding: 0.46rem 0;
+  padding: 0.58rem 0;
   border-bottom: 1px solid rgba($ink, 0.04);
 
   &:last-child { border-bottom: none; }
@@ -260,12 +289,12 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
   50%       { opacity: 0.7; }
 }
 
-// CTA — link style with persistent underline
+// CTA — terracotta underline grows on hover; soft charcoal fill expands behind text
 .addToWardrobeBtn {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0;
+  padding: 0.35rem 0;
   font-family: var(--font-sans);
   font-size: 0.48rem;
   font-weight: 400;
@@ -276,23 +305,39 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
   border: none;
   cursor: pointer;
   position: relative;
-  transition: color 0.25s ease;
+  border-radius: 2px;
+  transition: color 0.3s ease;
 
+  // Soft charcoal fill — scales in from left on hover
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 -0.6rem;
+    background: rgba($ink, 0.045);
+    border-radius: 3px;
+    transform: scaleX(0.15);
+    transform-origin: left center;
+    opacity: 0;
+    transition: transform 0.42s v.$ease-out-expo, opacity 0.22s ease;
+  }
+
+  // Terracotta underline — grows from left edge to full width
   &::after {
     content: '';
     position: absolute;
-    bottom: -2px;
+    bottom: 0;
     left: 0;
-    width: 100%;
+    width: 0%;
     height: 1px;
-    background: rgba(180, 158, 110, 0.88);
-    opacity: 0.32;
-    transition: opacity 0.3s ease;
+    background: rgba(180, 158, 110, 0.9);
+    transition: width 0.45s v.$ease-out-expo;
   }
 
   &:hover {
-    color: rgba(180, 158, 110, 1);
-    &::after { opacity: 1; }
+    color: rgba($ink, 0.7);
+
+    &::before { transform: scaleX(1); opacity: 1; }
+    &::after  { width: 100%; }
   }
 }
 
@@ -337,11 +382,6 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
   object-position: center top;
   mix-blend-mode: multiply;
   filter: drop-shadow(0 22px 18px rgba(40, 30, 16, 0.13));
-}
-
-// Dust Sage front image sits high in the crop — pull anchor down to show full hem
-.heroCenterImageDustSage {
-  object-position: center 45%;
 }
 
 // ─── Right — secondary views stacked ─────────────────────────────────────────
@@ -392,11 +432,6 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
   transition: transform 0.7s v.$ease-out-expo;
 }
 
-// Dust Sage back view sits high — shift crop anchor down to show full hem
-.heroRightImageDustSage {
-  object-position: center 40%;
-}
-
 .heroViewLabel {
   position: absolute;
   bottom: 0.75rem;
@@ -414,6 +449,141 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
   opacity: 0;
   transform: translateY(3px);
   transition: opacity 0.28s ease, transform 0.28s ease;
+}
+
+// ─── Tee: 3 equal-width image panels ─────────────────────────────────────────
+// Replaces 26/48/26 with 26/24/24/24 — heroRight becomes display:contents so
+// its two child slots are placed directly into the 4-column grid track.
+.heroTee {
+  grid-template-columns: 26fr 24fr 24fr 24fr;
+
+  .heroLeft {
+    align-items: flex-start;
+    padding-top: clamp(1.25rem, 2.2vh, 2rem);
+    padding-bottom: clamp(1rem, 2vh, 1.5rem);
+  }
+
+  .heroLeftInner {
+    gap: clamp(0.62rem, 1.05vh, 0.9rem);
+  }
+
+  .heroName {
+    font-size: clamp(1.18rem, 1.75vw, 1.62rem);
+    line-height: 1.12;
+  }
+
+  .heroColorName {
+    margin-top: -0.32rem;
+  }
+
+  .heroDescriptor {
+    margin-top: -0.2rem;
+  }
+
+  .heroPrice {
+    margin-bottom: 0.2rem;
+  }
+
+  .heroRight {
+    display: contents;  // slots become direct grid children — inherits hero height
+  }
+
+  // Each right slot is now a 2-row column: top = product image, bottom = fabric detail strip
+  .heroRightSlot {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) minmax(180px, 0.82fr);
+    overflow: hidden;
+    border-bottom: none;
+    border-left: 1px solid rgba($ink, 0.07); // column separator (was on heroRight)
+    cursor: default;               // individual cells own their own cursors
+  }
+
+  .heroCenterImage {
+    object-position: center 45%;
+  }
+
+  // Front & back product flat-lays must show the full garment — use contain, not cover.
+  // The cream/ice panel background acts as the breathing room around the tee.
+  .heroRightImage {
+    object-fit: contain;
+    object-position: center 40%;
+    transform: none;       // no inset scale — contain already frames the garment cleanly
+    transition: none;
+  }
+
+  .heroRightImageTeePortrait {
+    object-fit: cover;
+    object-position: center center;
+    transform: none;
+  }
+
+  .heroRightImageTeeInset {
+    transform: scale(1.24);
+  }
+
+  .heroRightImageTeeLandscape {
+    object-fit: contain;
+    object-position: center center;
+    transform: scale(1.08);
+  }
+
+  // Disable the cover-era hover zoom for product shots
+  .heroRightSlot:hover .heroRightImage {
+    transform: none;
+  }
+
+  .heroRightSlot:hover .heroRightImageTeePortrait {
+    transform: none;
+  }
+
+  .heroRightSlot:hover .heroRightImageTeeInset {
+    transform: scale(1.24);
+  }
+
+  .heroRightSlot:hover .heroRightImageTeeLandscape {
+    transform: scale(1.08);
+  }
+
+  // Reveal the "Walking" label on center panel hover (mirrors right-slot behaviour)
+  .heroCenter:hover .heroViewLabel {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ─── Tee hero: product image top cell ────────────────────────────────────────
+// Provides the positioned context for the absolute fill image (replaces the slot
+// itself as the stacking context when the slot becomes a grid container).
+.heroRightTop {
+  position: relative;
+  overflow: hidden;
+  cursor: zoom-in;
+
+  &:hover .heroRightImage { transform: none; }  // keep flat-lay still; no zoom
+  &:hover .heroRightImageTeePortrait { transform: none; }
+  &:hover .heroRightImageTeeInset { transform: scale(1.24); }
+  &:hover .heroRightImageTeeLandscape { transform: scale(1.08); }
+  &:hover .heroViewLabel  { opacity: 1; transform: translateY(0); }
+}
+
+// ─── Tee hero: fabric detail strip (bottom cell) ─────────────────────────────
+// Fills the empty lower third previously left by object-fit:contain on the product shot.
+.heroDetailStrip {
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid rgba($ink, 0.07);
+  cursor: zoom-in;
+  background: linear-gradient(180deg, #dedad2 0%, #d4cfc7 100%);
+
+  &:hover .heroDetailStripImg { transform: scale(1.04); }
+  &:hover .heroViewLabel      { opacity: 1; transform: translateY(0); }
+}
+
+.heroDetailStripImg {
+  object-fit: cover;
+  object-position: center;
+  mix-blend-mode: multiply;
+  transition: transform 0.7s v.$ease-out-expo;
 }
 
 // ─── 2. EDITORIAL PRODUCT COMPOSITION ────────────────────────────────────────
