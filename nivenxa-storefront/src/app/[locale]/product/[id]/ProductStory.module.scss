@@ -88,12 +88,15 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
 }
 
 .heroCollection {
-  display: block;
+  display: inline-block;
   font-family: var(--font-sans);
-  font-size: 0.48rem;
-  letter-spacing: 0.3em;
+  font-size: 0.44rem;
+  font-weight: 500;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: rgba(180, 158, 110, 0.65);
+  color: #A0694A;             // warm clay-terracotta — intentional, not an afterthought
+  border-left: 2px solid rgba(160, 105, 74, 0.5);
+  padding-left: 0.5rem;
 }
 
 .heroName {
@@ -131,12 +134,44 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
   font-weight: 300;
   color: rgba($ink, 0.42);
   letter-spacing: 0.14em;
-  margin-bottom: 0.2rem;   // was 0.55rem
+  margin-bottom: 0;
+}
+
+.heroPriceNote {
+  font-family: var(--font-sans);
+  font-size: 0.42rem;
+  letter-spacing: 0.08em;
+  color: rgba($ink, 0.30);
+  margin-top: 0.18rem;
+  margin-bottom: 0.1rem;
 }
 
 // ─── Colour + Size selectors ──────────────────────────────────────────────────
 .heroColors {}
 .heroSizes  { margin-top: 0.25rem; }
+
+// Expand/collapse toggle shown when colorways exceed the preview limit
+.heroColorsToggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 0.42rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba($ink, 0.36);
+  padding: 0;
+  margin-top: 0.3rem;
+  text-decoration: underline;
+  text-decoration-color: rgba($ink, 0.14);
+  text-underline-offset: 3px;
+  transition: color 0.2s ease, text-decoration-color 0.2s ease;
+
+  &:hover {
+    color: rgba($ink, 0.62);
+    text-decoration-color: rgba($ink, 0.35);
+  }
+}
 
 .heroSelectorLabel {
   font-family: var(--font-sans);
@@ -176,15 +211,18 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
   opacity: 1 !important;
 
   .heroSwatchTexture {
+    // 2px ring in warm clay-brown with a 3px air gap — standard premium swatch pattern
+    outline: 2px solid #8B6650;
+    outline-offset: 3px;
     box-shadow:
-      0 0 0 2px rgba($ink, 0.42),
       inset 0 1px 0 rgba(255, 255, 255, 0.18),
       inset 0 -1px 0 rgba(0, 0, 0, 0.07);
   }
 
   .heroSwatchName {
     opacity: 1;
-    color: rgba($ink, 0.72);
+    color: rgba($ink, 0.78);
+    font-weight: 500;   // slightly bolder — reinforces active state
   }
 }
 
@@ -206,16 +244,17 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
   position: static;       // was: absolute + translateY — now inline below chip
   white-space: nowrap;
   font-family: var(--font-sans);
-  font-size: 0.37rem;
-  letter-spacing: 0.12em;
+  font-size: 0.5rem;      // was 0.37rem — minimum legible size (renders ~11px)
+  font-weight: 400;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba($ink, 0.42);
+  color: #888;            // was rgba($ink, 0.42) ~#bbb — clearly readable mid-grey
   background: none;
   border: none;
   padding: 0;
   pointer-events: none;
-  opacity: 1;             // always visible
-  transition: color 0.2s ease, opacity 0.2s ease;
+  opacity: 1;
+  transition: color 0.2s ease;
 }
 
 // Size grid
@@ -242,9 +281,10 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
 }
 
 .heroSizeBtnActive {
+  background: $ink !important;          // solid dark fill — unmistakable selected state
   border-color: $ink !important;
-  color: $ink !important;
-  background: rgba($ink, 0.04);
+  color: $ice !important;               // cream text on dark — high contrast
+  font-weight: 500;
 }
 
 // ─── Hero left editorial info block ──────────────────────────────────────────
@@ -259,23 +299,25 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
 .heroEditorialLine {
   display: flex;
   align-items: baseline;
-  gap: 0.45rem;
+  gap: 0.5rem;
   font-family: var(--font-sans);
-  font-size: 0.45rem;
+  font-size: 0.5rem;          // was 0.45rem — more legible
   font-weight: 400;
   line-height: 1.55;
-  color: rgba($ink, 0.30);
-  letter-spacing: 0.1em;
-  padding: 0.38rem 0;      // was 0.58rem — reduces total block height by ~0.8rem
-  border-bottom: 1px solid rgba($ink, 0.04);
+  color: rgba($ink, 0.52);    // was 0.30 — enough contrast to read clearly
+  letter-spacing: 0.08em;
+  padding: 0.38rem 0;
+  border-bottom: 1px solid rgba($ink, 0.06);
 
   &:last-child { border-bottom: none; }
 }
 
 .heroEditorialDiamond {
-  font-size: 0.38rem;
-  color: rgba($olive, 0.5);
+  font-size: 0.5rem;          // was 0.38rem — matches line text size
+  font-weight: 300;
+  color: rgba($olive, 0.72);  // was 0.5 — clearly visible
   flex-shrink: 0;
+  letter-spacing: 0;
 }
 
 @keyframes sizeNudgePulse {
@@ -290,70 +332,54 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
   animation: sizeNudgePulse 0.7s ease-out forwards;
 }
 
-@keyframes bagBreathe {
-  0%, 100% { opacity: 1;   }
-  50%       { opacity: 0.7; }
-}
-
-// CTA — terracotta underline grows on hover; soft charcoal fill expands behind text
+// CTA — solid dark fill, full panel width, cream text
 .addToWardrobeBtn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.35rem 0;
+  justify-content: center;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
   font-family: var(--font-sans);
-  font-size: 0.48rem;
+  font-size: 0.52rem;
   font-weight: 400;
-  letter-spacing: 0.3em;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: rgba(180, 158, 110, 0.88);
-  background: none;
+  color: rgba($ice, 0.92);
+  background: $ink;
   border: none;
+  border-radius: 3px;
   cursor: pointer;
   position: relative;
-  border-radius: 2px;
-  transition: color 0.3s ease;
+  overflow: hidden;
+  transition: background 0.28s ease, color 0.28s ease, transform 0.18s ease;
 
-  // Soft charcoal fill — scales in from left on hover
+  // Subtle sheen that sweeps across on hover
   &::before {
     content: '';
     position: absolute;
-    inset: 0 -0.6rem;
-    background: rgba($ink, 0.045);
-    border-radius: 3px;
-    transform: scaleX(0.15);
-    transform-origin: left center;
-    opacity: 0;
-    transition: transform 0.42s v.$ease-out-expo, opacity 0.22s ease;
-  }
-
-  // Terracotta underline — grows from left edge to full width
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 0%;
-    height: 1px;
-    background: rgba(180, 158, 110, 0.9);
-    transition: width 0.45s v.$ease-out-expo;
+    inset: 0;
+    background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.07) 50%, transparent 60%);
+    transform: translateX(-100%);
+    transition: transform 0.55s v.$ease-out-expo;
   }
 
   &:hover {
-    color: rgba($ink, 0.7);
-
-    &::before { transform: scaleX(1); opacity: 1; }
-    &::after  { width: 100%; }
+    background: rgba($ink, 0.84);
+    color: $ice;
+    &::before { transform: translateX(100%); }
   }
+
+  &:active { transform: scale(0.985); }
 }
 
 .ctaArrow {
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
+  opacity: 0.72;
   transition: transform 0.3s v.$ease-out-expo, opacity 0.3s ease;
-  opacity: 0.75;
-  .addToWardrobeBtn:hover & { transform: scale(1.18); opacity: 1; }
+  .addToWardrobeBtn:hover & { transform: translateX(3px); opacity: 1; }
 }
 
 // ─── Center — main image ──────────────────────────────────────────────────────
@@ -781,7 +807,7 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
 
   .lifestyleImg {
     object-fit: cover;
-    object-position: center top;
+    object-position: center 35%;    // was center top — shows full garment length incl. hem
   }
 }
 
@@ -877,6 +903,15 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
   flex-shrink: 0;
   position: relative;
   top: -0.05em;
+}
+
+// Care block — appears below philosophy, same styling with a top rule separator
+.lifestyleCareBlock {
+  padding-top: 1rem;
+  margin-top: 0.75rem;
+  border-top: 1px solid rgba($ink, 0.07);
+  display: flex;
+  flex-direction: column;
 }
 
 .lifestyleEditorialLabel {
@@ -993,6 +1028,19 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
   color: $ink;
   letter-spacing: -0.01em;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+// Colourway on a second line in lighter weight — cleaner than the slash treatment
+.relatedCardColorway {
+  font-family: var(--font-sans);
+  font-size: clamp(0.65rem, 0.82vw, 0.72rem);
+  font-weight: 300;
+  color: rgba($ink, 0.36);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
 }
 
 .relatedCardPrice {
@@ -1013,9 +1061,16 @@ $px:    clamp(1.5rem, 5vw, 4.5rem);
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: rgba($ink, 0.38);
-  transition: gap 0.28s ease, color 0.28s ease;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  padding-bottom: 1px;
+  transition: gap 0.28s ease, color 0.28s ease, border-color 0.28s ease;
 
-  .relatedCardLink:hover & { gap: 0.6rem; color: rgba($ink, 0.65); }
+  .relatedCardLink:hover & {
+    gap: 0.6rem;
+    color: rgba($ink, 0.65);
+    border-bottom-color: rgba($ink, 0.28);   // subtle underline on hover
+  }
 }
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
