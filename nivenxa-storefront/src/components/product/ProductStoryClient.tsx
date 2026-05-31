@@ -13,19 +13,20 @@ import styles from '@/app/[locale]/product/[id]/ProductStory.module.scss'
 const toColorSlug = (colorway: string) => colorway.toLowerCase().replace(/\s+/g, '-')
 
 const FADE_UP = (delay = 0) => ({
-  initial: { opacity: 0, y: 14, filter: 'blur(4px)' },
+  initial: { opacity: 0, y: 14, filter: 'blur(2px)' },
   animate: { opacity: 1, y: 0,  filter: 'blur(0px)' },
-  transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1], delay },
+  transition: { duration: 0.72, ease: [0.22, 1, 0.36, 1], delay },
 })
 
 const IN_VIEW = (delay = 0) => ({
-  initial: { opacity: 0, y: 16, filter: 'blur(3px)' },
+  initial: { opacity: 0, y: 16, filter: 'blur(2px)' },
   whileInView: { opacity: 1, y: 0,  filter: 'blur(0px)' },
   viewport: { once: true, margin: '-60px' },
-  transition: { duration: 1.0, ease: [0.22, 1, 0.36, 1], delay },
+  transition: { duration: 0.85, ease: [0.22, 1, 0.36, 1], delay },
 })
 
 const SIZES = ['S', 'M', 'L', 'XL']
+const COLOR_PREVIEW_LIMIT = 5   // show 5 swatches; "+N more" reveals the rest
 
 const TEE_PHILOSOPHY = [
   'Relaxed drop-shoulder structure',
@@ -33,6 +34,14 @@ const TEE_PHILOSOPHY = [
   'Muted everyday tones',
   'Soft lived-in texture',
   'Designed for repeat wear',
+  'Garment-washed for softness',
+  'Colour integrity through every wash',
+]
+
+const TEE_CARE = [
+  'Machine wash cold, gentle cycle',
+  'Do not bleach or wring',
+  'Hang to dry · colours stay true',
 ]
 
 const TEE_HERO_DETAILS = [
@@ -60,6 +69,7 @@ export default function ProductStoryClient({ product, variants, related }: Props
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
   const [viewerOpen, setViewerOpen]         = useState(false)
   const [viewerInitialView, setViewerInitialView] = useState<string>('front')
+  const [showAllColors, setShowAllColors]   = useState(false)
 
   const openViewer = useCallback((view: string) => {
     setViewerInitialView(view)
@@ -95,6 +105,22 @@ export default function ProductStoryClient({ product, variants, related }: Props
   const isInsetTeeFlatLay = isTee && ['Desert Clay'].includes(selected.colorway)
   const isLandscapeTeeFlatLay = isTee && !isPortraitTeeFlatLay
   const spec      = selected.fabricStory?.spec
+
+  // Garment Philosophy lines — every product type uses the same layout
+  const philosophyLines: string[] = isTee
+    ? TEE_PHILOSOPHY
+    : selected.details?.length
+      ? selected.details
+      : selected.fabricStory?.lines?.length
+        ? selected.fabricStory.lines
+        : selected.badges ?? []
+
+  // Care lines — parse the care string into short bullets
+  const careLines: string[] = isTee
+    ? TEE_CARE
+    : selected.care
+      ? selected.care.split(/\.\s+/).map(s => s.replace(/\.+$/, '').trim()).filter(Boolean)
+      : []
 
   const specValues: string[] = spec
     ? (Object.values(spec).filter(Boolean) as string[])
@@ -138,22 +164,19 @@ export default function ProductStoryClient({ product, variants, related }: Props
               </motion.p>
             )}
 
-            {selected.fabricStory?.label && (
-              <motion.p className={styles.heroDescriptor} {...FADE_UP(0.3)}>
-                {selected.fabricStory.label}
-              </motion.p>
-            )}
-
             <motion.p className={styles.heroPrice} {...FADE_UP(0.34)}>
               {formatPrice(selected.price)}
             </motion.p>
+            <motion.p className={styles.heroPriceNote} {...FADE_UP(0.36)}>
+              Incl. all taxes · Free delivery above ₹999
+            </motion.p>
 
-            {/* Color variant selector */}
+            {/* Color variant selector — capped at COLOR_PREVIEW_LIMIT with expand toggle */}
             {variants.length > 1 && (
               <motion.div className={styles.heroColors} {...FADE_UP(0.4)}>
                 <p className={styles.heroSelectorLabel}>Available tones</p>
                 <div className={styles.heroColorSwatches}>
-                  {variants.map((v) => (
+                  {(showAllColors ? variants : variants.slice(0, COLOR_PREVIEW_LIMIT)).map((v) => (
                     <button
                       key={v.id}
                       className={`${styles.heroColorSwatch} ${v.id === selected.id ? styles.heroColorSwatchActive : ''}`}
@@ -164,6 +187,16 @@ export default function ProductStoryClient({ product, variants, related }: Props
                     </button>
                   ))}
                 </div>
+                {variants.length > COLOR_PREVIEW_LIMIT && (
+                  <button
+                    className={styles.heroColorsToggle}
+                    onClick={() => setShowAllColors((s) => !s)}
+                  >
+                    {showAllColors
+                      ? 'Show less'
+                      : `+ ${variants.length - COLOR_PREVIEW_LIMIT} more`}
+                  </button>
+                )}
               </motion.div>
             )}
 
@@ -181,11 +214,23 @@ export default function ProductStoryClient({ product, variants, related }: Props
               </div>
             </motion.div>
 
-            {(isTee || isCargo) && (
+            {selected.fabricStory && (
               <motion.div className={styles.heroEditorialBlock} {...FADE_UP(0.50)}>
-                {(isTee ? TEE_HERO_DETAILS : CARGO_HERO_DETAILS).map((line) => (
+                {/* Fabric label as first bullet — universal across all product types */}
+                {selected.fabricStory.label && (
+                  <p className={styles.heroEditorialLine}>
+                    <span className={styles.heroEditorialDiamond}>—</span>
+                    {selected.fabricStory.label}
+                  </p>
+                )}
+                {(isTee
+                  ? TEE_HERO_DETAILS
+                  : isCargo
+                    ? CARGO_HERO_DETAILS
+                    : (selected.fabricStory.lines ?? [])
+                ).map((line) => (
                   <p key={line} className={styles.heroEditorialLine}>
-                    <span className={styles.heroEditorialDiamond}>◇</span>
+                    <span className={styles.heroEditorialDiamond}>—</span>
                     {line}
                   </p>
                 ))}
@@ -505,29 +550,27 @@ export default function ProductStoryClient({ product, variants, related }: Props
                 </div>
               )}
 
-              {isTee ? (
+              {philosophyLines.length > 0 && (
                 <div className={styles.lifestylePhilosophyBlock}>
-                  <p className={styles.lifestylePhilosophyLabel}>GARMENT PHILOSOPHY</p>
-                  {TEE_PHILOSOPHY.map((line) => (
+                  <p className={styles.lifestylePhilosophyLabel}>Garment Philosophy</p>
+                  {philosophyLines.map((line) => (
                     <p key={line} className={styles.lifestylePhilosophyLine}>
                       <span className={styles.lifestylePhilosophyDiamond}>◇</span>
                       {line}
                     </p>
                   ))}
                 </div>
-              ) : (
-                <>
-                  {selected.dna?.climate && (
-                    <p className={styles.lifestyleEditorialLabel}>{selected.dna.climate}</p>
-                  )}
-                  {selected.designedFor && (
-                    <ul className={styles.lifestyleEditorialList}>
-                      {selected.designedFor.map((d) => (
-                        <li key={d} className={styles.lifestyleEditorialItem}>{d}</li>
-                      ))}
-                    </ul>
-                  )}
-                </>
+              )}
+              {careLines.length > 0 && (
+                <div className={styles.lifestyleCareBlock}>
+                  <p className={styles.lifestylePhilosophyLabel}>Care</p>
+                  {careLines.map((line) => (
+                    <p key={line} className={styles.lifestylePhilosophyLine}>
+                      <span className={styles.lifestylePhilosophyDiamond}>◇</span>
+                      {line}
+                    </p>
+                  ))}
+                </div>
               )}
             </motion.div>
 
@@ -562,7 +605,14 @@ export default function ProductStoryClient({ product, variants, related }: Props
                       )}
                     </div>
                     <div className={styles.relatedCardInfo}>
-                      <p className={styles.relatedCardName}>{p.name}</p>
+                      <p className={styles.relatedCardName}>
+                        {p.name.split(' / ')[0]}
+                        {p.name.includes(' / ') && (
+                          <span className={styles.relatedCardColorway}>
+                            {p.name.split(' / ')[1]}
+                          </span>
+                        )}
+                      </p>
                       <p className={styles.relatedCardPrice}>{formatPrice(p.price)}</p>
                       <span className={styles.relatedCardCta}>View →</span>
                     </div>

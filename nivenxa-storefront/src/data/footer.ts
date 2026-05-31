@@ -1,8 +1,14 @@
 export const COLLECTIONS = [
-  { label: "Women's",    href: '/shop/women'  },
-  { label: 'Youth Studio', href: '/shop/kids' },
-  { label: 'Unisex',    href: '/shop/unisex'  },
-  { label: 'Shop All',  href: '/shop'          },
+  { label: "Men's",       href: '/shop/men'    },
+  { label: "Women's",    href: '/shop/women'   },
+  { label: 'Youth Studio', href: '/shop/kids'  },
+  { label: 'Unisex',    href: '/shop/unisex'   },
+  { label: 'Shop All',  href: '/shop'           },
+] as const
+
+export const SOCIAL = [
+  { label: 'Instagram', href: 'https://instagram.com/nivenxa', external: true },
+  { label: 'YouTube',   href: 'https://youtube.com/@nivenxa',  external: true },
 ] as const
 
 export const STORIES = [

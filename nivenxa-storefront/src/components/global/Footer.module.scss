@@ -16,10 +16,15 @@
   gap: 2.5rem;
 
   @include v.md { grid-template-columns: 2fr 1fr 1fr; gap: 3rem; align-items: start; }
+  @include v.lg { grid-template-columns: 1.8fr 1fr 1fr 1.6fr; gap: clamp(2rem, 4vw, 3.5rem); }
 }
 
 // ─── Left: brand ──────────────────────────────────────────────────────────────
-.brand {}
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
 
 .logo {
   font-family: var(--font-serif);
@@ -36,6 +41,106 @@
   line-height: 1.85;
   color: rgba(245, 242, 235, 0.58);
   max-width: 24ch;
+}
+
+// Social links row
+.social {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.socialLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(245, 242, 235, 0.48);
+  text-decoration: none;
+  transition: color v.$transition-base;
+
+  svg { flex-shrink: 0; opacity: 0.72; transition: opacity v.$transition-base; }
+
+  &:hover {
+    color: var(--color-canvas);
+    svg { opacity: 1; }
+  }
+}
+
+// ─── Newsletter column ────────────────────────────────────────────────────────
+.newsletterCol {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.newsletterNote {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  line-height: 1.7;
+  color: rgba(245, 242, 235, 0.42);
+  max-width: 28ch;
+}
+
+.newsletterForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  @include v.md { flex-direction: row; }
+}
+
+.newsletterInput {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: var(--color-canvas);
+  background: rgba(245, 242, 235, 0.07);
+  border: 1px solid rgba(245, 242, 235, 0.14);
+  border-radius: 2px;
+  padding: 0.55rem 0.75rem;
+  outline: none;
+  transition: border-color v.$transition-base, background v.$transition-base;
+
+  &::placeholder { color: rgba(245, 242, 235, 0.28); }
+  &:focus {
+    border-color: rgba(245, 242, 235, 0.35);
+    background: rgba(245, 242, 235, 0.10);
+  }
+}
+
+.newsletterBtn {
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-canvas);
+  background: rgba(245, 242, 235, 0.10);
+  border: 1px solid rgba(245, 242, 235, 0.22);
+  border-radius: 2px;
+  padding: 0.55rem 1rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background v.$transition-base, border-color v.$transition-base;
+
+  &:hover {
+    background: rgba(245, 242, 235, 0.18);
+    border-color: rgba(245, 242, 235, 0.38);
+  }
+}
+
+.newsletterThanks {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: rgba(245, 242, 235, 0.52);
+  font-style: italic;
 }
 
 // ─── Centre / Right: link columns ─────────────────────────────────────────────
