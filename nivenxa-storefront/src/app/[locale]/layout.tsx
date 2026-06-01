@@ -3,7 +3,6 @@ import { getMessages } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { routing } from '@/i18n/routing'
 import Navbar from '@/components/global/Navbar'
-import Footer from '@/components/global/Footer'
 import { AuthProvider } from '@/context/AuthContext'
 import { CartProvider } from '@/context/CartContext'
 import { ToastProvider } from '@/context/ToastContext'
@@ -40,7 +39,6 @@ export default async function LocaleLayout({
               <CartProvider>
                 <Navbar />
                 <main>{children}</main>
-                <Footer />
               </CartProvider>
             </AuthProvider>
           </ToastProvider>

@@ -8,6 +8,24 @@
   --color-accent:  #B1684F;   // sun-baked terracotta — CTAs
   --color-olive:   #7A755E;   // muted warm olive — footer, borders, labels
 
+  // ── Header height tokens ───────────────────────────────────────────────────
+  // Matches Navbar.module.scss: padding-block 1.75rem default, 1.125rem scrolled
+  --nivenxa-header-default: 80px;
+  --nivenxa-header-compact: 60px;
+  --nivenxa-header-height:  var(--nivenxa-header-default);
+  // --nivenxa-header-height is overridden via :has() when header is compact (see below)
+
+  // ── Product detail page tokens (Shopify-ready) ─────────────────────────────
+  --nivenxa-bg-primary:   #F2EDE6;
+  --nivenxa-bg-secondary: #EDEAE4;
+  --nivenxa-text-primary: #1A1A1A;
+  --nivenxa-text-muted:   #888888;
+  --nivenxa-text-hint:    #BBBBBB;
+  --nivenxa-border:       rgba(0, 0, 0, 0.10);
+  --nivenxa-border-light: rgba(0, 0, 0, 0.06);
+  --nivenxa-cta-bg:       #1A1A1A;
+  --nivenxa-cta-text:     #FFFFFF;
+
   // Typography — Noto Sans covers Indian scripts as fallback
   --font-serif: var(--font-playfair), var(--font-noto-sans), serif;
   --font-sans:  var(--font-inter), var(--font-noto-sans), sans-serif;
@@ -106,4 +124,27 @@ button {
 ::selection {
   background-color: var(--color-accent);
   color: var(--color-canvas);
+}
+
+// ─── Header compact state — auto-update layout token via CSS :has() ──────────
+// Navbar.module.scss applies a CSS-module class containing "scrolled" on
+// the <header> element when the user has scrolled down.
+// CSS Modules hashes the name (e.g. Navbar_scrolled__KpBwN), so we match
+// by substring to stay hash-agnostic. CSS :has() is supported in all modern
+// browsers (Chrome 105+, Safari 15.4+, Firefox 121+).
+:root:has(header[class*="scrolled"]) {
+  --nivenxa-header-height: var(--nivenxa-header-compact);
+}
+
+// ─── Layout — normal document flow ───────────────────────────────────────────
+// 3-column sticky layout (ProductPage) uses position: sticky on col 1 and col 2.
+// html/body must scroll naturally — no overflow: hidden locks.
+
+html,
+body {
+  overflow: auto;
+}
+
+body > div > main {
+  overflow: visible;
 }

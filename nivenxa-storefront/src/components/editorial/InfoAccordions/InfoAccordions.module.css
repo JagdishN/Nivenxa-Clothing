@@ -1,0 +1,85 @@
+.section {
+  background: var(--nivenxa-bg-secondary);
+}
+
+.row {
+  padding: 0;
+  border-bottom: 0.5px solid var(--nivenxa-border);
+}
+
+.lastRow {
+  border-bottom: none;
+}
+
+.trigger {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 32px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  color: var(--nivenxa-text-primary);
+  text-align: left;
+}
+
+.trigger:hover {
+  color: var(--nivenxa-text-muted);
+}
+
+.triggerLabel {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  color: inherit;
+}
+
+.chevron {
+  font-size: 16px;
+  color: var(--nivenxa-text-muted);
+  transition: transform 200ms ease;
+  flex-shrink: 0;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+/* Animated panel */
+.content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 280ms ease;
+}
+
+.contentOpen {
+  max-height: 400px;
+}
+
+.contentInner {
+  padding: 0 32px 20px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--nivenxa-text-muted);
+}
+
+/* Table styles inside content (size guide) */
+.contentInner table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.contentInner th,
+.contentInner td {
+  padding: 6px 0;
+  text-align: left;
+  border-bottom: 0.5px solid var(--nivenxa-border-light);
+}
+
+.contentInner tr:last-child td {
+  border-bottom: none;
+}

@@ -1,0 +1,132 @@
+.section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 40px 32px;
+  background: var(--nivenxa-bg-secondary);
+  gap: 0;
+}
+
+.col {
+  padding: 0 24px;
+}
+
+/* Column divider */
+.col:first-child {
+  border-right: 0.5px solid var(--nivenxa-border);
+  padding-left: 0;
+}
+
+.col:last-child {
+  padding-right: 0;
+}
+
+.colTitle {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-muted);
+  margin-bottom: 16px;
+}
+
+/* Spec rows */
+.specList {
+  display: flex;
+  flex-direction: column;
+}
+
+.specRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 9px 0;
+  border-bottom: 0.5px solid var(--nivenxa-border-light);
+}
+
+.lastRow {
+  border-bottom: none;
+}
+
+.specKey {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  color: var(--nivenxa-text-muted);
+}
+
+.specValue {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--nivenxa-text-primary);
+  text-align: right;
+}
+
+/* Fit bars */
+.fitList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.fitRow {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.fitLabel {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  color: var(--nivenxa-text-muted);
+}
+
+.barTrack {
+  width: 72px;
+  height: 2px;
+  background: rgba(0, 0, 0, 0.10);
+  border-radius: 1px;
+  position: relative;
+}
+
+.barFill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 2px;
+  background: var(--nivenxa-text-primary);
+  border-radius: 1px;
+}
+
+.fitDescriptor {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 11px;
+  color: var(--nivenxa-text-muted);
+  text-align: right;
+  min-width: 52px;
+}
+
+.modelNote {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 12px;
+  color: var(--nivenxa-text-muted);
+  font-style: italic;
+  margin-top: 14px;
+  line-height: 1.6;
+}
+
+/* Stack on mobile */
+@media (max-width: 1023px) {
+  .section {
+    grid-template-columns: 1fr;
+  }
+
+  .col:first-child {
+    border-right: none;
+    border-bottom: 0.5px solid var(--nivenxa-border);
+    padding-left: 0;
+    padding-bottom: 32px;
+    margin-bottom: 32px;
+  }
+}

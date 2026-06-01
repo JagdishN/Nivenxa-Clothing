@@ -38,6 +38,13 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html className={`${playfair.variable} ${inter.variable} ${notoSans.variable}`}>
+      <head>
+        {/* Tabler Icons — outline icon font used by product detail components */}
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"
+        />
+      </head>
       <body>{children}</body>
     </html>
   )

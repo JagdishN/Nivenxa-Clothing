@@ -9,3 +9,48 @@
   --font-serif: var(--font-playfair);
   --font-sans:  var(--font-inter);
 }
+
+/* ── NIVENXA design tokens ───────────────────────────────────────────────────
+   globals.scss (loaded after this file) also defines these inside :root.
+   These here serve as the baseline; globals.scss values take precedence.       */
+:root {
+  --nivenxa-bg-primary:   #F2EDE6;
+  --nivenxa-bg-secondary: #EDEAE4;
+  --nivenxa-text-primary: #1A1A1A;
+  --nivenxa-text-muted:   #888888;
+  --nivenxa-text-hint:    #BBBBBB;
+  --nivenxa-border:       rgba(0, 0, 0, 0.10);
+  --nivenxa-border-light: rgba(0, 0, 0, 0.06);
+  --nivenxa-cta-bg:       #1A1A1A;
+  --nivenxa-cta-text:     #FFFFFF;
+  --nivenxa-header-height: 41px;
+  /* Measure actual header height with:
+     document.querySelector('nav, header').getBoundingClientRect().height
+     and update this value to match exactly. */
+}
+
+/* ── Root height chain ───────────────────────────────────────────────────────
+   #__next / #root selectors are kept for safety but Next.js App Router
+   renders directly into <body> — the actual chain is html → body → main.    */
+html,
+body {
+  height: 100%;
+  overflow: auto;
+}
+
+#__next,
+#root {
+  height: 100%;
+}
+
+/* ── Normal document flow — 3-column sticky layout needs no height constraint on main */
+
+/* ── Hide scrollbars globally ────────────────────────────────────────────── */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}

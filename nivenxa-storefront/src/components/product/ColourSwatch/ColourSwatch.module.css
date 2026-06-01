@@ -1,0 +1,100 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Selected colour name above grid */
+.activeName {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--nivenxa-text-primary);
+  min-height: 18px;
+  margin: 0;
+}
+
+/* Swatch grid — wraps naturally */
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+/* Each colour tile — button reset + column layout */
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  /* outline space reserved for active ring */
+  outline: 1.5px solid transparent;
+  outline-offset: 0;
+  border-radius: 0;
+}
+
+.tile:focus-visible {
+  outline: 2px solid var(--nivenxa-text-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* The colour rectangle */
+.swatch {
+  display: block;
+  width: 44px;
+  height: 30px;
+  border-radius: 3px;
+  /* Universal subtle inset border — invisible on dark swatches,
+     provides a visible edge on light colours (Warm Ivory, Sand, etc.)
+     that would otherwise vanish against the cream page background. */
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.15);
+}
+
+/* Active state — offset outline ring on the swatch only */
+.tileActive .swatch {
+  outline: 1.5px solid var(--nivenxa-text-primary);
+  outline-offset: 3px;
+}
+
+/* Label below active swatch only — no truncation needed since only one shows */
+.tileLabel {
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: var(--nivenxa-text-primary);
+  white-space: nowrap;
+  text-align: left;
+}
+
+/* More button — inline in grid, matches swatch height */
+.moreBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  padding: 0 10px;
+  background: none;
+  border: 0.5px solid var(--nivenxa-border);
+  border-radius: 3px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--nivenxa-text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  /* sits in the grid row alongside tiles, aligned to swatch top */
+  align-self: flex-start;
+  margin-top: 0;
+}
+
+.moreBtn:hover {
+  border-color: var(--nivenxa-text-primary);
+  color: var(--nivenxa-text-primary);
+}
+
+/* No mobile overrides needed —
+   flex-wrap handles all screen widths naturally */
