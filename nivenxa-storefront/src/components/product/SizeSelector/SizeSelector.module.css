@@ -25,9 +25,9 @@
 
 /* Active */
 .active {
-  background: var(--nivenxa-text-primary) !important;
-  color: #fff !important;
-  border-color: var(--nivenxa-text-primary) !important;
+  background: var(--nivenxa-cta-forest) !important;
+  color: var(--nivenxa-cta-forest-text) !important;
+  border-color: var(--nivenxa-cta-forest) !important;
 }
 
 /* Unavailable */

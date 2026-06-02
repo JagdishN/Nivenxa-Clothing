@@ -89,10 +89,11 @@ function EditorialRow({
           <p className={styles.infoStatus}>{product.status}</p>
         ) : null}
 
-        {/* Fabric / philosophy label */}
-        {hasPhilosophy && philosophyLabel ? (
+        {/* Fabric / philosophy label — skip philosophyLabel here when conceptLabel
+            is already shown above (avoids the duplicate GARMENT PHILOSOPHY heading) */}
+        {!conceptLabel && hasPhilosophy && philosophyLabel ? (
           <p className={styles.infoFabricLabel}>{philosophyLabel}</p>
-        ) : product.fabricStory ? (
+        ) : !hasPhilosophy && product.fabricStory ? (
           <p className={styles.infoFabricLabel}>{product.fabricStory.label}</p>
         ) : null}
 
@@ -192,7 +193,7 @@ export default function FeaturedProducts() {
         product={featuredTee}
         primaryView="walking"
         delay={0.1}
-        conceptLabel="Everyday Uniform"
+        conceptLabel="THE EVERYDAY EDIT"
         philosophyLabel="GARMENT PHILOSOPHY"
         philosophyLines={[
           'Relaxed drop-shoulder structure',

@@ -53,13 +53,20 @@
   /* Universal subtle inset border — invisible on dark swatches,
      provides a visible edge on light colours (Warm Ivory, Sand, etc.)
      that would otherwise vanish against the cream page background. */
-  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.15);
+  outline: 1px solid rgba(0, 0, 0, 0.15);
+  outline-offset: 0;
 }
 
 /* Active state — offset outline ring on the swatch only */
 .tileActive .swatch {
   outline: 1.5px solid var(--nivenxa-text-primary);
   outline-offset: 3px;
+}
+
+/* Active swatch label is already shown in .activeName above the grid.
+   Hide the duplicate label that appears below the active tile. */
+.tileActive .tileLabel {
+  display: none;
 }
 
 /* Label below active swatch only — no truncation needed since only one shows */

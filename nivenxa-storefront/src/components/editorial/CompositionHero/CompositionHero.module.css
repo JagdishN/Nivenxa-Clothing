@@ -1,7 +1,19 @@
 .section {
-  padding: 56px 32px;
+  padding: 100px 32px 56px;
   background: var(--nivenxa-bg-secondary);
   text-align: center;
+}
+
+/* Narrow centred column — ~48% on desktop, full on mobile */
+.inner {
+  max-width: 48%;
+  margin-inline: auto;
+}
+
+@media (max-width: 1023px) {
+  .inner {
+    max-width: 100%;
+  }
 }
 
 .eyebrow {

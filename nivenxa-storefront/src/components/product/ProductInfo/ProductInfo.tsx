@@ -1,4 +1,6 @@
 'use client'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from '@/i18n/routing'
 import type { Product, ProductColour } from '@/types/product'
 import ColourSwatch from '../ColourSwatch/ColourSwatch'
@@ -26,6 +28,30 @@ export default function ProductInfo({
   swatchExpanded,
   onSwatchExpandedChange,
 }: Props) {
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false)
+  const closeRef = useRef<HTMLButtonElement>(null)
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (sizeGuideOpen) {
+      document.body.style.overflow = 'hidden'
+      closeRef.current?.focus()
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [sizeGuideOpen])
+
+  // Close on Escape key
+  useEffect(() => {
+    if (!sizeGuideOpen) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setSizeGuideOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [sizeGuideOpen])
+
+  const sizeGuideAccordion = product.accordions?.find(a => a.title.toLowerCase().includes('size'))
+
   const isDisabled =
     !selectedSize ||
     !activeColour.available ||
@@ -41,8 +67,8 @@ export default function ProductInfo({
     <div className={styles.panel}>
       {/* 1. Breadcrumb */}
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-      <Link href={`/shop/${product.handle}` as any} className={styles.breadcrumb}>
-        ← COLLECTION
+      <Link href={`/shop/${product.collectionSlug ?? product.handle}` as any} className={styles.breadcrumb}>
+        ← {product.collectionName ?? 'COLLECTION'}
       </Link>
 
       {/* 2. Badge */}
@@ -81,7 +107,11 @@ export default function ProductInfo({
         sizeUnit={product.sizeUnit}
         onSelect={onSizeChange}
       />
-      <button type="button" className={styles.sizeGuide}>
+      <button
+        type="button"
+        className={styles.sizeGuide}
+        onClick={() => setSizeGuideOpen(true)}
+      >
         Size guide →
       </button>
 
@@ -104,6 +134,43 @@ export default function ProductInfo({
       >
         {ctaLabel}
       </button>
+
+      {/* Size guide modal — portalled to <body> to escape sticky/overflow stacking contexts */}
+      {sizeGuideOpen && createPortal(
+        <div
+          className={styles.modalOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Size guide"
+          onClick={() => setSizeGuideOpen(false)}
+        >
+          <div
+            className={styles.modalCard}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className={styles.modalHeader}>
+              <p className={styles.modalTitle}>SIZE GUIDE</p>
+              <button
+                ref={closeRef}
+                type="button"
+                className={styles.modalClose}
+                onClick={() => setSizeGuideOpen(false)}
+                aria-label="Close size guide"
+              >
+                ✕
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              {sizeGuideAccordion ? (
+                <div dangerouslySetInnerHTML={{ __html: sizeGuideAccordion.content }} />
+              ) : (
+                <p className={styles.modalEmpty}>Size guide not available for this product.</p>
+              )}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   )
 }

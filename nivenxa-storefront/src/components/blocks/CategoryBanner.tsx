@@ -27,7 +27,7 @@ export default function CategoryBanner() {
                 <h3 className={styles.womenTitle}>{t('women.title')}</h3>
                 <p className={styles.womenBody}>{t('women.body')}</p>
                 <Link href="/shop/women">
-                  <Button>{t('women.cta')}</Button>
+                  <Button className={styles.categoryBtn}>{t('women.cta')}</Button>
                 </Link>
               </div>
             </div>
@@ -43,7 +43,7 @@ export default function CategoryBanner() {
                 <h3 className={styles.unisexTitle}>{t('unisex.title')}</h3>
                 <p className={styles.unisexBody}>{t('unisex.body')}</p>
                 <Link href="/shop/unisex">
-                  <Button>{t('unisex.cta')}</Button>
+                  <Button className={styles.categoryBtn}>{t('unisex.cta')}</Button>
                 </Link>
               </div>
             </div>
@@ -59,7 +59,7 @@ export default function CategoryBanner() {
                 <h3 className={styles.kidsTitle}>{t('kids.title')}</h3>
                 <p className={styles.kidsBody}>{t('kids.body')}</p>
                 <Link href="/shop/kids">
-                  <Button>{t('kids.cta')}</Button>
+                  <Button className={styles.categoryBtn}>{t('kids.cta')}</Button>
                 </Link>
               </div>
             </div>

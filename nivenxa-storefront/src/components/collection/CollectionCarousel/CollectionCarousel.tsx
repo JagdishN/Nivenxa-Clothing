@@ -51,7 +51,7 @@ export default function CollectionCarousel({ items, currentProductId }: Props) {
   return (
     <section className={styles.section}>
       <div className={styles.header}>
-        <p className={styles.sectionLabel}>ALSO FROM THE COLLECTION</p>
+        <p className={styles.sectionLabel}>MORE TONES</p>
         <div className={styles.arrows}>
           <button
             type="button"

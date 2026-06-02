@@ -11,6 +11,7 @@
   width: 100%;
   height: calc(100dvh - var(--nivenxa-header-height));
   object-fit: cover;
+  object-position: center top;
   scroll-snap-align: start;
   scroll-snap-stop: always;
   background-color: var(--nivenxa-bg-primary);

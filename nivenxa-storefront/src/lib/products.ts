@@ -31,7 +31,7 @@ export const products: Product[] = [
     gender: 'women',
     description: 'Muted sage French terry lounge set. Elastic-waist jogger, oversized pullover, everyday ease.',
     fabric: '220 GSM French Terry',
-    colorway: 'Sage Mist',
+    colorway: 'Dust Sage',
     gradient: 'linear-gradient(160deg, #B5B9AE 0%, #9EA39A 100%)',
     status: 'NEW SEASON',
     atmosphereColor: 'rgba(158, 163, 154, 0.2)',
@@ -48,9 +48,9 @@ export const products: Product[] = [
     price: 2999,
     category: 'women-lounge-sets',
     gender: 'women',
-    description: 'Dusty blush jersey knit set for slow mornings. Relaxed fit, minimal seaming, studio-to-street.',
+    description: 'Dusty rose jersey knit set for slow mornings. Relaxed fit, minimal seaming, studio-to-street.',
     fabric: '200 GSM Jersey Knit',
-    colorway: 'Dusty Blush',
+    colorway: 'Dusty Rose',
     gradient: 'linear-gradient(160deg, #DEC0B8 0%, #C9A9A0 100%)',
     status: 'CORE ESSENTIAL',
     atmosphereColor: 'rgba(222, 192, 184, 0.25)',
@@ -1206,6 +1206,39 @@ export const products: Product[] = [
     ],
   },
 
+  // ─── Oversized Tee — Mushroom Taupe ──────────────────────────────────────────
+  // NOTE: Images pending upload to public/images/Men/OversizedTee's/MUSHROOM TAUPE/
+  {
+    id: 'tee-mushroom-taupe',
+    name: 'Oversized Tee / Mushroom Taupe',
+    price: 1999,
+    category: 'over-tee-shirts',
+    gender: 'unisex',
+    description: 'Warm mushroom taupe — a muted mid-earth tone between latte and greige. Quiet, versatile, effortless.',
+    fabric: '240 GSM Combed Cotton Jersey',
+    colorway: 'Mushroom Taupe',
+    gradient: 'linear-gradient(160deg, #B8A898 0%, #A89888 100%)',
+    status: 'NEW SEASON',
+    atmosphereColor: 'rgba(168, 152, 136, 0.22)',
+    fabricStory: {
+      label: 'COMBED COTTON JERSEY',
+      lines: ['Warm mushroom earth tone.', 'Pantone 17-1210 TCX.', 'Between latte and greige.'],
+    },
+    badges: ['Combed Cotton', 'Drop Shoulder', 'Muted Earth'],
+    dna: { fabric: '240 GSM Combed Cotton Jersey', structure: 'Boxy Oversized', finish: 'Bio-Enzyme Washed', movement: 'Everyday Uniform' },
+    images: [
+      { src: '/images/Men/OversizedTee%27s/MUSHROOM%20TAUPE/front_studio_view.webp', view: 'front'          },
+      { src: '/images/Men/OversizedTee%27s/MUSHROOM%20TAUPE/back_studio_view.webp',  view: 'back'           },
+      { src: '/images/Men/OversizedTee%27s/MUSHROOM%20TAUPE/side_studio_view.webp',  view: 'side'           },
+      { src: '/images/Men/OversizedTee%27s/MUSHROOM%20TAUPE/walking_view.webp',      view: 'walking'        },
+      { src: '/images/Men/OversizedTee%27s/MUSHROOM%20TAUPE/front_view.webp',        view: 'front-casual'   },
+      { src: '/images/Men/OversizedTee%27s/MUSHROOM%20TAUPE/back_view.webp',         view: 'back-casual'    },
+      { src: '/images/Men/OversizedTee%27s/MUSHROOM%20TAUPE/side_view.webp',         view: 'side-casual'    },
+      { src: '/images/Men/OversizedTee%27s/MUSHROOM%20TAUPE/pocket_view.webp',       view: 'details'        },
+      { src: '/images/Men/OversizedTee%27s/MUSHROOM%20TAUPE/fabric_details.webp',    view: 'fabric-details' },
+    ],
+  },
+
   // ─── Oversized Tee — Desert Clay ─────────────────────────────────────────────
   {
     id: 'tee-desert-clay',
@@ -1216,7 +1249,7 @@ export const products: Product[] = [
     description: 'Sun-warmed desert clay — neither sand nor ochre, but a precise in-between. Made for unhurried days.',
     fabric: '240 GSM Combed Cotton Jersey',
     colorway: 'Desert Clay',
-    gradient: 'linear-gradient(160deg, #D08A5C 0%, #C47A4E 100%)',
+    gradient: 'linear-gradient(160deg, #C87E52 0%, #C47A4E 100%)',
     status: 'NEW SEASON',
     atmosphereColor: 'rgba(196, 122, 78, 0.2)',
     fabricStory: {

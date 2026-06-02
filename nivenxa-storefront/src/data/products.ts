@@ -101,21 +101,21 @@ const teeSlugs: TeeConfig[] = [
     pocket:    'pocket_view.webp',
     fabric:    'fabric_details.webp',
   },
-  // ── 4. MUSHROOM TAUPE — hidden until images are uploaded ──────────────────
-  // Uncomment when public/images/Men/OversizedTee's/MUSHROOM TAUPE/ is ready.
-  // {
-  //   slug: 'mushroom-taupe', hex: 'A89888', textHex: 'FFFFFF', label: 'Mushroom Taupe',
-  //   folder: "Men/OversizedTee's/MUSHROOM TAUPE",
-  //   front:     'front_studio_view.webp',
-  //   back:      'back_studio_view.webp',
-  //   side:      'side_studio_view.webp',
-  //   walk:      'walking_view.webp',
-  //   frontView: 'front_view.webp',
-  //   backView:  'back_view.webp',
-  //   sideView:  'side_view.webp',
-  //   pocket:    'pocket_view.webp',
-  //   fabric:    'fabric_details.webp',
-  // },
+  // ── 4. MUSHROOM TAUPE ─────────────────────────────────────────────────────
+  // NOTE: Upload images to public/images/Men/OversizedTee's/MUSHROOM TAUPE/ to activate gallery.
+  {
+    slug: 'mushroom-taupe', hex: 'A89888', textHex: 'FFFFFF', label: 'Mushroom Taupe',
+    folder: "Men/OversizedTee's/MUSHROOM TAUPE",
+    front:     'front_studio_view.webp',
+    back:      'back_studio_view.webp',
+    side:      'side_studio_view.webp',
+    walk:      'walking_view.webp',
+    frontView: 'front_view.webp',
+    backView:  'back_view.webp',
+    sideView:  'side_view.webp',
+    pocket:    'pocket_view.webp',
+    fabric:    'fabric_details.webp',
+  },
   // ── 5. MINERAL BROWN ──────────────────────────────────────────────────────
   {
     slug: 'mineral-brown', hex: '8B7355', textHex: 'FFFFFF', label: 'Mineral Brown',
@@ -245,6 +245,8 @@ const oversizedTee: Product = {
   name: 'Oversized Tee',
   category: 'Oversized Tee',
   handle: 'over-tee-shirts',
+  collectionName: "Men's Essentials",
+  collectionSlug: 'mens-essentials',
   badge: 'New Season',
   compositionQuote:
     'Dense 240 GSM combed cotton jersey in a warm desert clay tone — neither sand nor ochre, but a precise in-between. A quiet neutral built for a minimal wardrobe.',
@@ -281,6 +283,7 @@ const oversizedTee: Product = {
     { key: 'Weight',       value: '240 GSM'               },
     { key: 'Construction', value: 'Single Jersey Knit'    },
     { key: 'Finish',       value: 'Bio-enzyme washed'     },
+    { key: 'Dye Method',   value: 'Garment dyed'          },
     { key: 'Fit',          value: 'Relaxed drop-shoulder' },
     { key: 'Silhouette',   value: 'Boxy oversized'        },
     { key: 'Pocket',       value: 'Single chest patch'    },
@@ -301,8 +304,8 @@ const oversizedTee: Product = {
         'Single jersey knit. Yarn-dyed. Soft washed finish. No synthetic blends.',
     },
     {
-      value: 'Bio',
-      unit: 'Enzyme washed',
+      value: 'Bio-enzyme',
+      unit: 'Washed finish',
       description:
         'Soft lived-in texture from first wear. Improves with washing, not against it.',
     },
@@ -317,7 +320,7 @@ const oversizedTee: Product = {
   ],
 
   care: [
-    { icon: 'wash',      label: 'Machine wash cold 30°C gentle'    },
+    { icon: 'wash',      label: 'Machine wash 30°C gentle'         },
     { icon: 'sun-off',   label: 'Dry in shade, not direct sun'      },
     { icon: 'flame-off', label: 'Cool iron reverse side only'       },
     { icon: 'ban',       label: 'Do not bleach or dry clean'        },
@@ -399,6 +402,8 @@ const cargoPants: Product = {
   name: 'Unisex Cargo Pants',
   category: 'Cargo Pants',
   handle: 'cargo-pants',
+  collectionName: 'Unisex',
+  collectionSlug: 'unisex',
   badge: null,
   compositionQuote:
     '300 GSM cotton canvas cut for utility and ease — six functional pockets, a relaxed straight leg, and a weight that moves with you rather than against you. Built for the city, made for the day.',

@@ -32,16 +32,18 @@
 // ─── Logo ─────────────────────────────────────────────────────────────────────
 .logo {
   font-family: var(--font-serif);
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   letter-spacing: 0.25em;
   color: var(--color-ink);
   text-decoration: none;
+  outline: none;
+  border: none;
   transition: color v.$transition-base;
   flex-shrink: 0;
 
   &:hover { color: var(--color-accent); }
 
-  @include v.lg { font-size: 1.6rem; }
+  @include v.lg { font-size: 1.7rem; }
 }
 
 // ─── Desktop nav items ────────────────────────────────────────────────────────

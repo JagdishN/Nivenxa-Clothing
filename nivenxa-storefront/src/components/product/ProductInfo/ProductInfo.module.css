@@ -10,6 +10,7 @@
     top: 0;
     height: 100vh;
     overflow: visible;
+    padding-top: 40px; /* extra clearance from navbar bottom */
   }
 }
 
@@ -19,7 +20,7 @@
   height: 48px;
   border-radius: 0;
   border: none;
-  margin-top: 8rem;
+  margin-top: 24px;
   background: var(--nivenxa-cta-bg);
   color: var(--nivenxa-cta-text);
   font-family: system-ui, -apple-system, sans-serif;
@@ -155,5 +156,72 @@
   font-family: system-ui, -apple-system, sans-serif;
   font-size: 13px;
   line-height: 1.65;
+  color: var(--nivenxa-text-muted);
+}
+
+/* ── Size guide modal ── */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.modalCard {
+  background: var(--nivenxa-bg-primary);
+  width: 100%;
+  max-width: 480px;
+  border-radius: 2px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 0.5px solid var(--nivenxa-border);
+  flex-shrink: 0;
+}
+
+.modalTitle {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  color: var(--nivenxa-text-primary);
+}
+
+.modalClose {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: var(--nivenxa-text-muted);
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  transition: color 150ms ease;
+}
+
+.modalClose:hover {
+  color: var(--nivenxa-text-primary);
+}
+
+.modalBody {
+  padding: 24px;
+  overflow-y: auto;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: var(--nivenxa-text-primary);
+}
+
+.modalEmpty {
+  font-size: 13px;
   color: var(--nivenxa-text-muted);
 }

@@ -104,6 +104,11 @@ export default function HeroSection() {
           transition={{ repeat: Infinity, duration: 2.4, ease: 'easeInOut' }}
         />
       </motion.div>
+
+      {/* Scroll cue — chevron bounce at horizontal centre */}
+      <div className={styles.scrollCue} aria-hidden="true">
+        <i className="ti ti-chevron-down" />
+      </div>
     </section>
   )
 }

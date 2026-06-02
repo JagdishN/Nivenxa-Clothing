@@ -1,0 +1,311 @@
+.section {
+  background: var(--nivenxa-bg-primary);
+}
+
+.sectionIntro {
+  padding: 4rem 2.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-muted);
+  margin-bottom: 8px;
+}
+
+.sectionTitle {
+  font-family: Georgia, serif;
+  font-size: 36px;
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--nivenxa-text-primary);
+}
+
+.sectionTitle em { font-style: italic; }
+
+.sectionMeta {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+.editCount {
+  font-size: 11px;
+  color: var(--nivenxa-text-muted);
+  letter-spacing: 0.06em;
+}
+
+.viewAll {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-primary);
+  text-decoration: none;
+  border-bottom: 0.5px solid var(--nivenxa-text-primary);
+  padding-bottom: 2px;
+}
+
+.editRows {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.editRow {
+  display: grid;
+  gap: 3px;
+  min-height: 480px;
+}
+
+.imageLeft  { grid-template-columns: 55fr 45fr; }
+.imageRight { grid-template-columns: 45fr 55fr; }
+
+/* ── Image panel ─────────────────────────────────────────── */
+
+.heroPanel {
+  position: relative;
+  overflow: hidden;
+  min-height: 480px;
+}
+
+.heroImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+/* Fabric placeholder (products not yet live) */
+.fabricPlaceholder {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  padding: 24px;
+}
+
+.placeholderContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.placeholderLabel {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.35);
+}
+
+.placeholderProduct {
+  font-family: Georgia, serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.45);
+  font-style: italic;
+}
+
+.placeholderSeason {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.25);
+  margin-top: 2px;
+}
+
+/* Ghost row number */
+.ghostNum {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  font-family: Georgia, serif;
+  font-size: 96px;
+  line-height: 1;
+  font-weight: 400;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Bottom overlay on image panel for product name + price */
+.heroContent {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.35) 0%,
+    transparent 100%
+  );
+}
+
+.heroEditName {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 4px;
+}
+
+.heroProductName {
+  font-family: Georgia, serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: #FFFFFF;
+}
+
+.heroPrice {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* ── Info panel ─────────────────────────────────────────── */
+
+.infoPanel {
+  background: var(--nivenxa-bg-secondary);
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 480px;
+}
+
+.infoTop {}
+.infoBottom {}
+
+.editLabel {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-muted);
+  margin-bottom: 12px;
+}
+
+.productName {
+  font-family: Georgia, serif;
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--nivenxa-text-primary);
+  margin-bottom: 8px;
+}
+
+.tagline {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--nivenxa-text-muted);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.specTable {
+  border-top: 0.5px solid var(--nivenxa-border);
+  padding-top: 14px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.specRow {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 0.5px solid var(--nivenxa-border-light);
+  font-size: 11px;
+}
+
+.specRow:last-child { border-bottom: none; }
+
+.specLabel {
+  color: var(--nivenxa-text-muted);
+  letter-spacing: 0.04em;
+}
+
+.specValue {
+  color: var(--nivenxa-text-primary);
+  font-weight: 500;
+}
+
+/* Swatch strip */
+.swatchStrip {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 2px;
+  outline: 0.5px solid rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
+}
+
+.swatchActive {
+  outline: 1.5px solid var(--nivenxa-text-primary);
+  outline-offset: 2px;
+}
+
+/* Explore CTA */
+.exploreCta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  background: var(--nivenxa-cta-forest);
+  color: var(--nivenxa-cta-forest-text);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 12px 20px;
+  border-radius: 4px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.exploreCta:hover { opacity: 0.88; }
+
+/* ── MOBILE ──────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .sectionIntro {
+    padding: 2.5rem 1.25rem 1.5rem;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .sectionTitle { font-size: 26px; }
+
+  .imageLeft,
+  .imageRight {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  /* On mobile, image-right rows flip so image comes first */
+  .imageRight .heroPanel { order: -1; }
+
+  .heroPanel { min-height: 320px; }
+  .infoPanel { min-height: auto; }
+  .ghostNum  { font-size: 64px; }
+}

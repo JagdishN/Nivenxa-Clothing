@@ -8,9 +8,11 @@ interface Props {
 export default function CompositionHero({ category, compositionQuote }: Props) {
   return (
     <section className={styles.section}>
-      <p className={styles.eyebrow}>COMPOSITION</p>
-      <h2 className={styles.title}>{category}</h2>
-      <blockquote className={styles.quote}>{compositionQuote}</blockquote>
+      <div className={styles.inner}>
+        <p className={styles.eyebrow}>COMPOSITION</p>
+        <h2 className={styles.title}>{category}</h2>
+        <blockquote className={styles.quote}>{compositionQuote}</blockquote>
+      </div>
     </section>
   )
 }

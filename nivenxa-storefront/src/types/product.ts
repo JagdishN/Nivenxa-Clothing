@@ -97,6 +97,8 @@ export interface Product {
   care: CareInstruction[]
   accordions: AccordionItem[]
   collectionItems: CollectionItem[]
+  collectionName?: string   // e.g. "Men's Essentials" — shown in breadcrumb
+  collectionSlug?: string   // e.g. "mens-essentials" — used in breadcrumb href
 }
 
 /*

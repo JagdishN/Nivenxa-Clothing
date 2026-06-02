@@ -9,7 +9,16 @@
   --font-serif: var(--font-playfair);
   --font-sans:  var(--font-inter);
 }
+html,
+body {
+  height: 100%;
+  overflow: auto;
+}
 
+#__next,
+#root {
+  height: 100%;
+}
 /* ── NIVENXA design tokens ───────────────────────────────────────────────────
    globals.scss (loaded after this file) also defines these inside :root.
    These here serve as the baseline; globals.scss values take precedence.       */
@@ -21,36 +30,56 @@
   --nivenxa-text-hint:    #BBBBBB;
   --nivenxa-border:       rgba(0, 0, 0, 0.10);
   --nivenxa-border-light: rgba(0, 0, 0, 0.06);
-  --nivenxa-cta-bg:       #1A1A1A;
-  --nivenxa-cta-text:     #FFFFFF;
+  --nivenxa-cta-bg:            #1C2E1E;
+  --nivenxa-cta-text:          #FFFFFF;
+  --nivenxa-cta-forest:        #1C2E1E;
+  --nivenxa-cta-forest-text:   #FFFFFF;
+  --nivenxa-cta-terracotta:    #C47A4E;
+  --nivenxa-cta-terra-text:    #FFFFFF;
+  /* ── CTA colour system ──────────────────────────
+     Hero / brand actions   → --nivenxa-cta-terracotta
+     Product / edit actions → --nivenxa-cta-forest
+     Disabled state         → keep existing grey
+     Never use #1A1A1A for buttons.
+  ─────────────────────────────────────────────── */
   --nivenxa-header-height: 41px;
   /* Measure actual header height with:
      document.querySelector('nav, header').getBoundingClientRect().height
      and update this value to match exactly. */
 }
 
-/* ── Root height chain ───────────────────────────────────────────────────────
-   #__next / #root selectors are kept for safety but Next.js App Router
-   renders directly into <body> — the actual chain is html → body → main.    */
-html,
-body {
-  height: 100%;
-  overflow: auto;
+/* ── Normal document flow ────────────────────────────────────────────────────
+   html and body grow to their content height (height: auto, the default).
+   The viewport is the natural scroll container — window.scrollY works,
+   trackpad momentum works, IntersectionObserver works.
+   overflow: auto on body is harmless with auto height (nothing overflows).  */
+
+/* ── Scrollbar styling ───────────────────────────────────────────────────────
+   Track margin-top pushes the scrollbar down so it starts below the fixed
+   navbar and never overlaps it.
+   Firefox: scrollbar-color only — margin-top on track is not supported,
+   so a small overlap remains there (acceptable).                              */
+
+::-webkit-scrollbar {
+  width: 6px;
 }
 
-#__next,
-#root {
-  height: 100%;
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-/* ── Normal document flow — 3-column sticky layout needs no height constraint on main */
-
-/* ── Hide scrollbars globally ────────────────────────────────────────────── */
-* {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 4px;
 }
 
-*::-webkit-scrollbar {
-  display: none;
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.30);
 }
+
+/* Firefox */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.18) transparent;
+}
+
