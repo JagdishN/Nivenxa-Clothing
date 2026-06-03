@@ -6,7 +6,7 @@ export default function NewsletterSignup() {
   const [email, setEmail]         = useState('')
   const [submitted, setSubmitted] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (email.trim()) setSubmitted(true)
   }
@@ -30,7 +30,7 @@ export default function NewsletterSignup() {
         className={styles.newsletterInput}
         autoComplete="email"
       />
-      <button type="submit" className={styles.newsletterBtn}>Subscribe</button>
+      <button type="submit" className={styles.newsletterBtn}>Send My Way</button>
     </form>
   )
 }

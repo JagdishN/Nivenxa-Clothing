@@ -63,6 +63,27 @@
   }
 }
 
+// Product image inside panelBg — cover, top-anchored
+.panelImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+
+// Youth Studio placeholder label
+.comingSoon {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 12px;
+  font-family: var(--font-sans);
+}
+
 .panelFade {
   position: absolute;
   bottom: 0; left: 0; right: 0;

@@ -22,7 +22,7 @@ export interface ProductImage {
   colourSlug: string
   // SHOPIFY TODO: type is derived from altText convention:
   // Format: "{Product Name} — {imageType} — {colourSlug}"
-  // Example: "Oversized Tee — studio-front — desert-clay"
+  // Example: "Heavyweight Pocket Tee — studio-front — raw-oat"
   // Set this in Shopify admin for every product image before going live.
 }
 
@@ -46,8 +46,9 @@ export interface FitBar {
 }
 
 export interface ProductSpec {
-  key: string
+  label: string        // was 'key' — renamed for clarity
   value: string
+  group?: string       // optional — when present, specs are rendered in grouped layout
 }
 
 export interface CareInstruction {
@@ -56,7 +57,7 @@ export interface CareInstruction {
 }
 
 export interface FabricPillar {
-  value: string        // e.g. '240' | '100%' | 'Bio'
+  value: string        // e.g. '240' | '100%' | 'Garment'
   unit: string
   description: string
 }
@@ -74,6 +75,19 @@ export interface CollectionItem {
   price: number
   currency: string
   images: ProductImage[]
+}
+
+export interface ColourPairing {
+  colourSlug: string
+  colourName: string
+  hex: string
+}
+
+export interface StyledWith {
+  productHandle: string
+  productName: string
+  price: string
+  pairings: Record<string, ColourPairing>
 }
 
 export interface Product {
@@ -99,6 +113,7 @@ export interface Product {
   collectionItems: CollectionItem[]
   collectionName?: string   // e.g. "Men's Essentials" — shown in breadcrumb
   collectionSlug?: string   // e.g. "mens-essentials" — used in breadcrumb href
+  styledWith?: StyledWith   // optional cross-sell pairing, colour-aware
 }
 
 /*
@@ -118,4 +133,5 @@ export interface Product {
     model_note        → modelNote
     care_instructions → care            (JSON array)
     accordions        → accordions      (JSON array)
+    styled_with       → styledWith      (JSON object)
 */

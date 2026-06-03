@@ -5,6 +5,7 @@ import { Link } from '@/i18n/routing'
 import type { Product, ProductColour } from '@/types/product'
 import ColourSwatch from '../ColourSwatch/ColourSwatch'
 import SizeSelector from '../SizeSelector/SizeSelector'
+import StyledWithBlock from '../StyledWith/StyledWith'
 import styles from './ProductInfo.module.css'
 
 interface Props {
@@ -60,34 +61,30 @@ export default function ProductInfo({
   const ctaLabel = !activeColour.available
     ? 'OUT OF STOCK'
     : !selectedSize
-    ? 'SELECT A SIZE'
+    ? 'Choose Your Size'
     : 'ADD TO BAG'
 
   return (
     <div className={styles.panel}>
-      {/* 1. Breadcrumb */}
+
+      {/* 1. Breadcrumb — above title, anchors context */}
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <Link href={`/shop/${product.collectionSlug ?? product.handle}` as any} className={styles.breadcrumb}>
         ← {product.collectionName ?? 'COLLECTION'}
       </Link>
 
-      {/* 2. Badge */}
-      {product.badge && (
-        <p className={styles.badge}>{product.badge}</p>
-      )}
-
-      {/* 3. Product name */}
+      {/* 2. Product title */}
       <h1 className={styles.title}>{product.name}</h1>
 
-      {/* 4. Price */}
+      {/* 3. Price */}
       <p className={styles.price}>
         {product.currency}{product.price.toLocaleString('en-IN')}
       </p>
 
-      {/* 5. Trust line */}
+      {/* 4. Trust line */}
       <p className={styles.trustLine}>{product.trustLine}</p>
 
-      {/* 6. Colour selector — overflow + activeName handled inside ColourSwatch */}
+      {/* 5. Colour selector */}
       <p className={styles.sectionLabel}>AVAILABLE TONES</p>
       <ColourSwatch
         colours={product.colours}
@@ -97,7 +94,7 @@ export default function ProductInfo({
         onExpandedChange={onSwatchExpandedChange}
       />
 
-      {/* 8. Size selector */}
+      {/* 6. Size selector */}
       <p className={styles.sectionLabel}>
         {product.sizeUnit ? product.sizeUnit.toUpperCase() : 'SIZE'}
       </p>
@@ -115,7 +112,7 @@ export default function ProductInfo({
         Size guide →
       </button>
 
-      {/* 9. Feature bullets */}
+      {/* 7. Feature bullets */}
       <ul className={styles.bullets}>
         {product.featureBullets.map(bullet => (
           <li key={bullet} className={styles.bullet}>
@@ -124,7 +121,7 @@ export default function ProductInfo({
         ))}
       </ul>
 
-      {/* 10. CTA */}
+      {/* 8. CTA */}
       <button
         type="button"
         className={styles.cta}
@@ -134,6 +131,17 @@ export default function ProductInfo({
       >
         {ctaLabel}
       </button>
+
+      {/* 9. Styled With — colour-aware cross-sell */}
+      {product.styledWith && (
+        <>
+          <div className={styles.styledWithDivider} />
+          <StyledWithBlock
+            styledWith={product.styledWith}
+            activeColourSlug={activeColour.slug}
+          />
+        </>
+      )}
 
       {/* Size guide modal — portalled to <body> to escape sticky/overflow stacking contexts */}
       {sizeGuideOpen && createPortal(

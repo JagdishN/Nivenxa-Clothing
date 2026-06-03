@@ -17,6 +17,7 @@ export default function CategoryBanner() {
         </AnimatedSection>
 
         <div className={styles.grid}>
+          {/* Women's — no product image yet; keep terracotta fallback */}
           <AnimatedSection delay={0.1}>
             <div className={styles.panel}>
               <div className={`${styles.panelBg} ${styles.womenBg}`} />
@@ -33,10 +34,18 @@ export default function CategoryBanner() {
             </div>
           </AnimatedSection>
 
+          {/* Unisex — cargo dark-olive studio-front */}
           <AnimatedSection delay={0.2}>
             <div className={styles.panel}>
-              <div className={`${styles.panelBg} ${styles.unisexBg}`} />
-              <TextureOverlay opacity={0.9} soft />
+              <div className={`${styles.panelBg} ${styles.unisexBg}`}>
+                <img
+                  src="/images/Unisex/cargos/darkolive/front_view.png"
+                  alt=""
+                  className={styles.panelImg}
+                  aria-hidden="true"
+                />
+              </div>
+              <TextureOverlay opacity={0.55} soft />
               <div className={`${styles.panelFade} ${styles.unisexFade}`} />
               <div className={styles.panelContent}>
                 <p className={styles.unisexEyebrow}>{t('unisex.index')} — {t('unisex.label')}</p>
@@ -49,6 +58,7 @@ export default function CategoryBanner() {
             </div>
           </AnimatedSection>
 
+          {/* Youth Studio — keep sage background; add "Coming SS 2026" */}
           <AnimatedSection delay={0.3}>
             <div className={styles.panel}>
               <div className={`${styles.panelBg} ${styles.kidsBg}`} />
@@ -61,6 +71,7 @@ export default function CategoryBanner() {
                 <Link href="/shop/kids">
                   <Button className={styles.categoryBtn}>{t('kids.cta')}</Button>
                 </Link>
+                <p className={styles.comingSoon}>Coming SS 2026</p>
               </div>
             </div>
           </AnimatedSection>

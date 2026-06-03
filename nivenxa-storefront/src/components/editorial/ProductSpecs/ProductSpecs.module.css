@@ -31,6 +31,26 @@
   margin-bottom: 16px;
 }
 
+/* Spec groups */
+.specGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.groupHeading {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-muted);
+  padding: 14px 0 6px;
+  border-bottom: 0.5px solid var(--nivenxa-border);
+  margin-bottom: 0;
+}
+
+.groupHeadingFirst {
+  padding-top: 0;
+}
+
 /* Spec rows */
 .specList {
   display: flex;
@@ -61,6 +81,22 @@
   font-weight: 500;
   color: var(--nivenxa-text-primary);
   text-align: right;
+}
+
+/* Fit axis labels row */
+.fitAxisRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 0.5px solid var(--nivenxa-border-light);
+}
+
+.fitAxisLabel {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-hint);
 }
 
 /* Fit bars */

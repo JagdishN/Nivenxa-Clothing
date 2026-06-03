@@ -19,19 +19,18 @@ export function getPrimaryImage(images: ProductImage[]): ProductImage {
 export function getGalleryImages(images: ProductImage[]): ProductImage[] {
   // Display order — first slot is always the sticky hero (studio-front);
   // the scrolling stack (slice(1)) follows:
-  //   studio-back → studio-side → walking →
-  //   front → back → side (non-studio on-location poses) →
-  //   editorial → detail (pocket, fabric…)
+  //   walking → studio-back → studio-side → detail (pocket) →
+  //   front → back → side (non-studio on-location poses) → editorial
   const order: ImageType[] = [
     'studio-front',
+    'walking',
     'studio-back',
     'studio-side',
-    'walking',
+    'detail',
     'front',
     'back',
     'side',
     'editorial',
-    'detail',
   ]
   return [...images].sort((a, b) => {
     const ai = order.indexOf(a.type)

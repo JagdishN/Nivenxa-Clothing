@@ -38,7 +38,7 @@ function localImg(
 
 // ─── Tee image config ─────────────────────────────────────────────────────────
 // Each entry maps a colour slug to the exact filenames on disk.
-// Filenames can differ between colours (capitalisation, typos) — mapped precisely.
+// Folder paths reference physical directory names — unchanged by slug renames.
 
 interface TeeConfig {
   slug: string
@@ -46,123 +46,48 @@ interface TeeConfig {
   textHex: string
   label: string
   folder: string
-  front: string        // studio front view  → studio-front (sticky hero)
-  back: string         // studio back view   → studio-back
-  side: string         // studio side view   → studio-side
-  walk: string         // walking / motion   → walking
-  edit?: string        // lifestyle shot     → editorial (optional — not all colours have it)
-  frontView?: string   // non-studio front   → front   (optional — richer shoots only)
-  backView?: string    // non-studio back    → back
-  sideView?: string    // non-studio side    → side
-  pocket: string       // detail close-up    → detail
-  fabric: string       // fabric close-up    → detail
+  front: string     // front_studio_view.webp  → studio-front (sticky hero)
+  back: string      // back_studio_view.webp   → studio-back
+  side: string      // side_studio_view.webp   → studio-side
+  walk: string      // walking_view.webp       → walking
+  fabric: string    // fabric_close_up.webp    → detail (last in stack)
+}
+
+// All 6 colours share identical filenames — confirmed on disk 2025-06-03.
+const COMMON_FILES = {
+  front:  'front_studio_view.webp',
+  back:   'back_studio_view.webp',
+  side:   'side_studio_view.webp',
+  walk:   'walking_view.webp',
+  fabric: 'fabric_close_up.webp',
 }
 
 const teeSlugs: TeeConfig[] = [
   // ── 1. DEFAULT COLOUR (first = default on product page) ───────────────────
-  {
-    slug: 'oat-beige',    hex: 'D4C5A9', textHex: '333333', label: 'Oat Beige',
-    folder: "Men/OversizedTee's/OAT BEIGE",   // all-caps on disk
-    front:     'front_studio_view.webp',       // studio-front → sticky hero
-    back:      'back_studio_view.webp',        // studio-back
-    side:      'side_studio_view.webp',        // studio-side
-    walk:      'walking_view.webp',            // walking
-    frontView: 'font_view.webp',              // non-studio front pose (typo "font" on disk)
-    backView:  'back_view.webp',              // non-studio back pose
-    sideView:  'side_view.webp',              // non-studio side pose
-    pocket:    'pocket_view.webp',            // detail
-    fabric:    'fabric_close_up.webp',        // detail
-  },
-  // ── 2. WARM IVORY ─────────────────────────────────────────────────────────
-  {
-    slug: 'warm-ivory',   hex: 'F0EBE0', textHex: '333333', label: 'Warm Ivory',
-    folder: "Men/OversizedTee's/WARM IVORY",
-    front:     'front_studio_view.webp',
-    back:      'back_studio_view.webp',
-    side:      'side_studio_view.webp',
-    walk:      'walking_view.webp',
-    frontView: 'front_view.webp',
-    backView:  'back_view.webp',
-    sideView:  'side_view.webp',
-    pocket:    'pocket_view.webp',
-    fabric:    'fabric_deatils.webp',         // typo on disk: "deatils" not "details"
-  },
-  // ── 3. CHARCOAL EARTH ─────────────────────────────────────────────────────
-  {
-    slug: 'charcoal-earth', hex: '5C5248', textHex: 'FFFFFF', label: 'Charcoal Earth',
-    folder: "Men/OversizedTee's/CHARCOAL EARTH",
-    front:     'front_studio_view.webp',
-    back:      'back_studio_view.webp',
-    side:      'side_studio_view.webp',
-    walk:      'walking_view.webp',
-    frontView: 'front_view.webp',
-    backView:  'back_view.webp',
-    sideView:  'side_view.webp',
-    pocket:    'pocket_view.webp',
-    fabric:    'fabric_details.webp',
-  },
-  // ── 4. MUSHROOM TAUPE ─────────────────────────────────────────────────────
-  // NOTE: Upload images to public/images/Men/OversizedTee's/MUSHROOM TAUPE/ to activate gallery.
-  {
-    slug: 'mushroom-taupe', hex: 'A89888', textHex: 'FFFFFF', label: 'Mushroom Taupe',
-    folder: "Men/OversizedTee's/MUSHROOM TAUPE",
-    front:     'front_studio_view.webp',
-    back:      'back_studio_view.webp',
-    side:      'side_studio_view.webp',
-    walk:      'walking_view.webp',
-    frontView: 'front_view.webp',
-    backView:  'back_view.webp',
-    sideView:  'side_view.webp',
-    pocket:    'pocket_view.webp',
-    fabric:    'fabric_details.webp',
-  },
-  // ── 5. MINERAL BROWN ──────────────────────────────────────────────────────
-  {
-    slug: 'mineral-brown', hex: '8B7355', textHex: 'FFFFFF', label: 'Mineral Brown',
-    folder: "Men/OversizedTee's/MINERAL BROWN",
-    front:     'front_studio_view.webp',
-    back:      'back_studio_view.webp',
-    side:      'side_studio_view.webp',
-    walk:      'walking_view.webp',
-    frontView: 'front_view.webp',
-    backView:  'back_view.webp',
-    sideView:  'side_view.webp',
-    pocket:    'pocket_view.webp',
-    fabric:    'fabric_details.webp',
-  },
-  // ── 5. DESERT CLAY ────────────────────────────────────────────────────────
-  {
-    slug: 'desert-clay',  hex: 'C47A4E', textHex: 'FFFFFF', label: 'Desert Clay',
-    folder: "Men/OversizedTee's/DESERT CLAY",  // all-caps on disk (new webp images)
-    front:     'front_studio_view.webp',
-    back:      'back_studio_view.webp',
-    side:      'side_studio_view.webp',
-    walk:      'walking_view.webp',
-    frontView: 'front_view.webp',
-    backView:  'back_view.webp',
-    sideView:  'side_view.webp',
-    pocket:    'pocket_view.webp',
-    fabric:    'fabric_detail.webp',          // singular "detail" on disk (no trailing s)
-  },
+  { slug: 'raw-oat',   hex: 'D4C5A9', textHex: '333333', label: 'Raw Oat',   folder: "Men/OversizedTee's/OAT BEIGE",      ...COMMON_FILES },
+  // ── 2. BONE ───────────────────────────────────────────────────────────────
+  { slug: 'bone',      hex: 'F0EBE0', textHex: '333333', label: 'Bone',      folder: "Men/OversizedTee's/WARM IVORY",     ...COMMON_FILES },
+  // ── 3. ESPRESSO ───────────────────────────────────────────────────────────
+  { slug: 'espresso',  hex: '5C5248', textHex: 'FFFFFF', label: 'Espresso',  folder: "Men/OversizedTee's/CHARCOAL EARTH", ...COMMON_FILES },
+  // ── 4. MUSHROOM ───────────────────────────────────────────────────────────
+  { slug: 'mushroom',  hex: 'A89888', textHex: 'FFFFFF', label: 'Mushroom',  folder: "Men/OversizedTee's/MUSHROOM TAUPE", ...COMMON_FILES },
+  // ── 5. EARTH ──────────────────────────────────────────────────────────────
+  { slug: 'earth',     hex: '8B7355', textHex: 'FFFFFF', label: 'Earth',     folder: "Men/OversizedTee's/MINERAL BROWN",  ...COMMON_FILES },
+  // ── 6. RED EARTH ──────────────────────────────────────────────────────────
+  { slug: 'red-earth', hex: 'C47A4E', textHex: 'FFFFFF', label: 'Red Earth', folder: "Men/OversizedTee's/DESERT CLAY",    ...COMMON_FILES },
 ]
 
 function buildTeeImages(c: TeeConfig): ProductImage[] {
-  const imgs: ProductImage[] = [
-    localImg(`tee-${c.slug}-sf`, c.folder, c.front, 'studio-front', 'Oversized Tee', c.slug),
-    localImg(`tee-${c.slug}-sb`, c.folder, c.back,  'studio-back',  'Oversized Tee', c.slug),
-    localImg(`tee-${c.slug}-ss`, c.folder, c.side,  'studio-side',  'Oversized Tee', c.slug),
-    localImg(`tee-${c.slug}-wk`, c.folder, c.walk,  'walking',      'Oversized Tee', c.slug),
+  // Gallery layout:
+  //   Col 2 (sticky hero) → studio-front
+  //   Col 3 stack         → walking · studio-back · studio-side · fabric close-up
+  return [
+    localImg(`tee-${c.slug}-sf`, c.folder, c.front,  'studio-front', 'Heavyweight Pocket Tee', c.slug),
+    localImg(`tee-${c.slug}-wk`, c.folder, c.walk,   'walking',      'Heavyweight Pocket Tee', c.slug),
+    localImg(`tee-${c.slug}-sb`, c.folder, c.back,   'studio-back',  'Heavyweight Pocket Tee', c.slug),
+    localImg(`tee-${c.slug}-ss`, c.folder, c.side,   'studio-side',  'Heavyweight Pocket Tee', c.slug),
+    localImg(`tee-${c.slug}-fc`, c.folder, c.fabric, 'detail',       'Heavyweight Pocket Tee', c.slug),
   ]
-  // Optional editorial / lifestyle shot
-  if (c.edit)      imgs.push(localImg(`tee-${c.slug}-ed`, c.folder, c.edit,      'editorial', 'Oversized Tee', c.slug))
-  // Optional non-studio on-location poses (front / back / side)
-  if (c.frontView) imgs.push(localImg(`tee-${c.slug}-fv`, c.folder, c.frontView, 'front',     'Oversized Tee', c.slug))
-  if (c.backView)  imgs.push(localImg(`tee-${c.slug}-bv`, c.folder, c.backView,  'back',      'Oversized Tee', c.slug))
-  if (c.sideView)  imgs.push(localImg(`tee-${c.slug}-sv`, c.folder, c.sideView,  'side',      'Oversized Tee', c.slug))
-  // Detail close-ups (always present)
-  imgs.push(localImg(`tee-${c.slug}-d1`, c.folder, c.pocket, 'detail', 'Oversized Tee', c.slug))
-  imgs.push(localImg(`tee-${c.slug}-d2`, c.folder, c.fabric, 'detail', 'Oversized Tee', c.slug))
-  return imgs
 }
 
 // ─── Cargo image config ───────────────────────────────────────────────────────
@@ -239,17 +164,17 @@ function buildCargoImages(c: CargoConfig): ProductImage[] {
   ]
 }
 
-// ─── Product 1: Oversized Tee ─────────────────────────────────────────────────
+// ─── Product 1: Heavyweight Pocket Tee ────────────────────────────────────────
 const oversizedTee: Product = {
   id: 'prod-001',
-  name: 'Oversized Tee',
+  name: 'Heavyweight Pocket Tee',
   category: 'Oversized Tee',
   handle: 'over-tee-shirts',
   collectionName: "Men's Essentials",
   collectionSlug: 'mens-essentials',
   badge: 'New Season',
   compositionQuote:
-    'Dense 240 GSM combed cotton jersey in a warm desert clay tone — neither sand nor ochre, but a precise in-between. A quiet neutral built for a minimal wardrobe.',
+    'Dense 240 GSM combed cotton jersey — midweight, structured, and soft to touch. Bio-enzyme washed for a lived-in softness from first wear — improves with every wash. A quiet neutral built for a minimal wardrobe.',
   price: 1999,
   currency: '₹',
   trustLine: 'Inclusive of all taxes · Free delivery above ₹999',
@@ -279,15 +204,15 @@ const oversizedTee: Product = {
   ],
 
   specs: [
-    { key: 'Fabric',       value: '100% Combed Cotton'    },
-    { key: 'Weight',       value: '240 GSM'               },
-    { key: 'Construction', value: 'Single Jersey Knit'    },
-    { key: 'Finish',       value: 'Bio-enzyme washed'     },
-    { key: 'Dye Method',   value: 'Garment dyed'          },
-    { key: 'Fit',          value: 'Relaxed drop-shoulder' },
-    { key: 'Silhouette',   value: 'Boxy oversized'        },
-    { key: 'Pocket',       value: 'Single chest patch'    },
-    { key: 'Country',      value: 'Made in India'         },
+    { group: 'Material',     label: 'Fabric',     value: '100% Combed Cotton' },
+    { group: 'Material',     label: 'Weight',      value: '240 GSM'            },
+    { group: 'Material',     label: 'Knit',        value: 'Single Jersey'      },
+    { group: 'Construction', label: 'Fit',         value: 'Drop-shoulder'      },
+    { group: 'Construction', label: 'Silhouette',  value: 'Boxy oversized'     },
+    { group: 'Construction', label: 'Pocket',      value: 'Chest patch'        },
+    { group: 'Production',   label: 'Finish',      value: 'Garment dyed'       },
+    { group: 'Production',   label: 'Wash',        value: 'Bio-enzyme'         },
+    { group: 'Production',   label: 'Origin',      value: 'Made in India'      },
   ],
 
   fabricPillars: [
@@ -304,10 +229,10 @@ const oversizedTee: Product = {
         'Single jersey knit. Yarn-dyed. Soft washed finish. No synthetic blends.',
     },
     {
-      value: 'Bio-enzyme',
-      unit: 'Washed finish',
+      value: 'Garment',
+      unit: 'Dyed finish',
       description:
-        'Soft lived-in texture from first wear. Improves with washing, not against it.',
+        'Dyed after construction for depth and consistency. Colour evolves subtly with every wash.',
     },
   ],
 
@@ -341,59 +266,75 @@ const oversizedTee: Product = {
       title: 'Size guide',
       content: `<table style="width:100%;border-collapse:collapse;font-size:13px">
   <thead><tr>
-    <th style="text-align:left;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.10)">Size</th>
-    <th style="text-align:left;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.10)">Chest (in)</th>
-    <th style="text-align:left;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.10)">Length (in)</th>
+    <th style="text-align:left;padding:6px 4px 6px 0;border-bottom:1px solid rgba(0,0,0,0.10)">Size</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Chest (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Shoulder (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Sleeve (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Length (in)</th>
   </tr></thead>
   <tbody>
-    <tr><td style="padding:6px 0">S</td><td>38–40</td><td>28</td></tr>
-    <tr><td style="padding:6px 0">M</td><td>40–42</td><td>29</td></tr>
-    <tr><td style="padding:6px 0">L</td><td>42–44</td><td>30</td></tr>
-    <tr><td style="padding:6px 0">XL</td><td>44–46</td><td>31</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">S</td><td style="padding:6px 4px">38–40</td><td style="padding:6px 4px">17.5</td><td style="padding:6px 4px">8.5</td><td style="padding:6px 4px">28</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">M</td><td style="padding:6px 4px">40–42</td><td style="padding:6px 4px">18.5</td><td style="padding:6px 4px">9</td><td style="padding:6px 4px">29</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">L</td><td style="padding:6px 4px">42–44</td><td style="padding:6px 4px">19.5</td><td style="padding:6px 4px">9.5</td><td style="padding:6px 4px">30</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">XL</td><td style="padding:6px 4px">44–46</td><td style="padding:6px 4px">20.5</td><td style="padding:6px 4px">10</td><td style="padding:6px 4px">31</td></tr>
   </tbody>
 </table>`,
     },
   ],
 
-  // Cross-sell items — 3 of the other 4 tee colours (oat-beige is the default/current page)
+  // Cross-sell items — 3 of the other 5 tee colours (raw-oat is the default/current page)
   collectionItems: [
     {
       id: 'col-tee-001',
-      slug: 'over-tee-shirts/warm-ivory',
-      name: 'Oversized Tee',
-      colourLabel: 'Warm Ivory',
+      slug: 'over-tee-shirts/bone',
+      name: 'Heavyweight Pocket Tee',
+      colourLabel: 'Bone',
       price: 1999,
       currency: '₹',
       images: [
-        localImg('col-tee-001-sf', "Men/OversizedTee's/WARM IVORY", 'front_studio_view.webp', 'studio-front', 'Oversized Tee', 'warm-ivory'),
-        localImg('col-tee-001-wk', "Men/OversizedTee's/WARM IVORY", 'walking_view.webp',      'walking',      'Oversized Tee', 'warm-ivory'),
+        localImg('col-tee-001-sf', "Men/OversizedTee's/WARM IVORY", 'front_studio_view.webp', 'studio-front', 'Heavyweight Pocket Tee', 'bone'),
+        localImg('col-tee-001-wk', "Men/OversizedTee's/WARM IVORY", 'walking_view.webp',      'walking',      'Heavyweight Pocket Tee', 'bone'),
       ],
     },
     {
       id: 'col-tee-002',
-      slug: 'over-tee-shirts/charcoal-earth',
-      name: 'Oversized Tee',
-      colourLabel: 'Charcoal Earth',
+      slug: 'over-tee-shirts/espresso',
+      name: 'Heavyweight Pocket Tee',
+      colourLabel: 'Espresso',
       price: 1999,
       currency: '₹',
       images: [
-        localImg('col-tee-002-sf', "Men/OversizedTee's/CHARCOAL EARTH", 'front_studio_view.webp', 'studio-front', 'Oversized Tee', 'charcoal-earth'),
-        localImg('col-tee-002-wk', "Men/OversizedTee's/CHARCOAL EARTH", 'walking_view.webp',      'walking',      'Oversized Tee', 'charcoal-earth'),
+        localImg('col-tee-002-sf', "Men/OversizedTee's/CHARCOAL EARTH", 'front_studio_view.webp', 'studio-front', 'Heavyweight Pocket Tee', 'espresso'),
+        localImg('col-tee-002-wk', "Men/OversizedTee's/CHARCOAL EARTH", 'walking_view.webp',      'walking',      'Heavyweight Pocket Tee', 'espresso'),
       ],
     },
     {
       id: 'col-tee-003',
-      slug: 'over-tee-shirts/desert-clay',
-      name: 'Oversized Tee',
-      colourLabel: 'Desert Clay',
+      slug: 'over-tee-shirts/red-earth',
+      name: 'Heavyweight Pocket Tee',
+      colourLabel: 'Red Earth',
       price: 1999,
       currency: '₹',
       images: [
-        localImg('col-tee-003-sf', "Men/OversizedTee's/DESERT CLAY", 'front_studio_view.webp', 'studio-front', 'Oversized Tee', 'desert-clay'),
-        localImg('col-tee-003-wk', "Men/OversizedTee's/DESERT CLAY", 'walking_view.webp',      'walking',      'Oversized Tee', 'desert-clay'),
+        localImg('col-tee-003-sf', "Men/OversizedTee's/DESERT CLAY", 'front_studio_view.webp', 'studio-front', 'Heavyweight Pocket Tee', 'red-earth'),
+        localImg('col-tee-003-wk', "Men/OversizedTee's/DESERT CLAY", 'walking_view.webp',      'walking',      'Heavyweight Pocket Tee', 'red-earth'),
       ],
     },
   ],
+
+  styledWith: {
+    productHandle: 'cargo-pants',
+    productName: 'Cargo Pant',
+    price: '₹3,499',
+    pairings: {
+      'raw-oat':   { colourSlug: 'dark-olive',    colourName: 'Dark Olive',    hex: '#4A5240' },
+      'bone':      { colourSlug: 'charcoal-grey',  colourName: 'Charcoal Grey', hex: '#6B7280' },
+      'espresso':  { colourSlug: 'stone-beige',    colourName: 'Stone Beige',   hex: '#C8B89A' },
+      'mushroom':  { colourSlug: 'dark-olive',     colourName: 'Dark Olive',    hex: '#4A5240' },
+      'earth':     { colourSlug: 'jet-black',      colourName: 'Jet Black',     hex: '#1A1A1A' },
+      'red-earth': { colourSlug: 'stone-beige',    colourName: 'Stone Beige',   hex: '#C8B89A' },
+    },
+  },
 }
 
 // ─── Product 2: Unisex Cargo Pants ────────────────────────────────────────────
@@ -438,14 +379,14 @@ const cargoPants: Product = {
   ],
 
   specs: [
-    { key: 'Fabric',       value: '100% Cotton Canvas'   },
-    { key: 'Weight',       value: '300 GSM'              },
-    { key: 'Construction', value: 'Twill Weave'          },
-    { key: 'Finish',       value: 'Garment washed'       },
-    { key: 'Fit',          value: 'Relaxed straight leg' },
-    { key: 'Pockets',      value: '6 fully functional'   },
-    { key: 'Waistband',    value: 'Elastic with drawcord'},
-    { key: 'Country',      value: 'Made in India'        },
+    { label: 'Fabric',       value: '100% Cotton Canvas'    },
+    { label: 'Weight',       value: '300 GSM'               },
+    { label: 'Construction', value: 'Twill Weave'           },
+    { label: 'Finish',       value: 'Garment washed'        },
+    { label: 'Fit',          value: 'Relaxed straight leg'  },
+    { label: 'Pockets',      value: '6 fully functional'    },
+    { label: 'Waistband',    value: 'Elastic with drawcord' },
+    { label: 'Country',      value: 'Made in India'         },
   ],
 
   fabricPillars: [
@@ -543,6 +484,18 @@ const cargoPants: Product = {
       ],
     },
   ],
+
+  styledWith: {
+    productHandle: 'over-tee-shirts',
+    productName: 'Heavyweight Pocket Tee',
+    price: '₹1,999',
+    pairings: {
+      'dark-olive':    { colourSlug: 'raw-oat',  colourName: 'Raw Oat',  hex: '#D8C9B0' },
+      'charcoal-grey': { colourSlug: 'bone',     colourName: 'Bone',     hex: '#F0EBE0' },
+      'stone-beige':   { colourSlug: 'espresso', colourName: 'Espresso', hex: '#5C5248' },
+      'jet-black':     { colourSlug: 'earth',    colourName: 'Earth',    hex: '#8B7355' },
+    },
+  },
 }
 
 // ─── Exported array ────────────────────────────────────────────────────────────

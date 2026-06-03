@@ -21,24 +21,45 @@ export default function HeroSection() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
       >
-        <div className={`${styles.block} ${styles.block1}`}>
-          <TextureOverlay opacity={0.9} />
+        {/* Block 1 — fabric close-up (detail image, oat-beige) */}
+        <div className={`${styles.block} ${styles.block1}`} style={{ backgroundColor: '#C8B89A' }}>
+          <img
+            src="/images/Men/OversizedTee's/OAT%20BEIGE/fabric_close_up.webp"
+            alt=""
+            className={styles.blockImg}
+            aria-hidden="true"
+          />
+          <TextureOverlay opacity={0.5} />
           <div className={styles.blockMeta}>
             <span className={styles.blockTag}>{t('block1Tag')}</span>
             <span className={styles.blockCaption}>{t('block1Caption')}</span>
           </div>
         </div>
 
-        <div className={`${styles.block} ${styles.block2}`}>
-          <TextureOverlay opacity={0.85} />
+        {/* Block 2 — studio-side (oat-beige) */}
+        <div className={`${styles.block} ${styles.block2}`} style={{ backgroundColor: '#8B9E7A' }}>
+          <img
+            src="/images/Men/OversizedTee's/OAT%20BEIGE/side_studio_view.webp"
+            alt=""
+            className={styles.blockImg}
+            aria-hidden="true"
+          />
+          <TextureOverlay opacity={0.4} />
           <div className={styles.blockMeta}>
             <span className={styles.blockTag}>{t('block2Tag')}</span>
             <span className={styles.blockCaption}>{t('block2Caption')}</span>
           </div>
         </div>
 
-        <div className={`${styles.block} ${styles.block3}`}>
-          <TextureOverlay opacity={0.7} />
+        {/* Block 3 — cargo dark-olive studio-front */}
+        <div className={`${styles.block} ${styles.block3}`} style={{ backgroundColor: '#4A5240' }}>
+          <img
+            src="/images/Unisex/cargos/darkolive/front_view.png"
+            alt=""
+            className={styles.blockImg}
+            aria-hidden="true"
+          />
+          <TextureOverlay opacity={0.35} />
           <div className={styles.blockMeta}>
             <span className={styles.blockTag}>{t('block3Tag')}</span>
           </div>
@@ -82,7 +103,7 @@ export default function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.5 }}
         >
-          <Link href="/shop">
+          <Link href="/shop/over-tee-shirts/raw-oat">
             <Button>{t('ctaShop')}</Button>
           </Link>
           <Link href="/stories/our-story">

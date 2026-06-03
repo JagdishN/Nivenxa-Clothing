@@ -1,0 +1,224 @@
+/* ── Section ───────────────────────────────────────────────── */
+
+.section {
+  background: var(--nivenxa-bg-primary);
+  padding: 4rem 2.5rem 3rem;
+}
+
+/* ── Header ────────────────────────────────────────────────── */
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 2.5rem;
+}
+
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-muted);
+  margin-bottom: 8px;
+}
+
+.sectionTitle {
+  font-family: Georgia, serif;
+  font-size: 36px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--nivenxa-text-primary);
+  line-height: 1.1;
+}
+
+.allStoriesLink {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-primary);
+  text-decoration: none;
+  border-bottom: 0.5px solid var(--nivenxa-text-primary);
+  padding-bottom: 2px;
+  white-space: nowrap;
+}
+
+/* ── Featured story ────────────────────────────────────────── */
+
+.featured {
+  display: grid;
+  grid-template-columns: 60fr 40fr;
+  gap: 0;
+  margin-bottom: 3px;
+  text-decoration: none;
+  min-height: 420px;
+}
+
+.featured:hover .featuredCta {
+  border-bottom-color: var(--nivenxa-text-primary);
+}
+
+.featuredImage {
+  position: relative;
+  overflow: hidden;
+  background: #D8C9B0;
+  min-height: 420px;
+}
+
+.featuredImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.featuredContent {
+  background: var(--nivenxa-bg-secondary);
+  padding: 40px 36px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+}
+
+.featuredEyebrow {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-muted);
+}
+
+.featuredTitle {
+  font-family: Georgia, serif;
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--nivenxa-text-primary);
+}
+
+.featuredPreview {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--nivenxa-text-muted);
+  line-height: 1.7;
+  max-width: 360px;
+}
+
+.featuredMeta {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-hint);
+}
+
+.featuredCta {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-primary);
+  border-bottom: 0.5px solid transparent;
+  padding-bottom: 2px;
+  display: inline-block;
+  width: fit-content;
+  transition: border-color 0.2s ease;
+}
+
+/* ── Smaller cards ─────────────────────────────────────────── */
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+  margin-top: 3px;
+}
+
+.card {
+  background: var(--nivenxa-bg-secondary);
+  padding: 24px 20px;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1.5px solid var(--nivenxa-border);
+}
+
+.card:hover {
+  border-top-color: var(--nivenxa-text-primary);
+}
+
+.cardNumber {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--nivenxa-text-hint);
+}
+
+.cardTitle {
+  font-family: Georgia, serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--nivenxa-text-primary);
+  line-height: 1.2;
+}
+
+.cardPreview {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--nivenxa-text-muted);
+  line-height: 1.5;
+  flex: 1;
+}
+
+.cardMeta {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-hint);
+  margin-top: auto;
+}
+
+/* ── Mobile ────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .section {
+    padding: 2.5rem 1.25rem 2rem;
+  }
+
+  .sectionHeader {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .sectionTitle {
+    font-size: 26px;
+  }
+
+  .featured {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .featuredImage {
+    min-height: 280px;
+  }
+
+  .featuredContent {
+    padding: 24px 20px;
+  }
+
+  .featuredTitle {
+    font-size: 24px;
+  }
+
+  .cardGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .cardGrid {
+    grid-template-columns: 1fr;
+  }
+}

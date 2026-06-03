@@ -50,68 +50,46 @@
   }
 }
 
-// ─── Block 1: Lifestyle crop ──────────────────────────────────────────────────
-// Flat warm-stone tone — mid-point of original warm skin palette
+// ─── Block 1: Fabric close-up ─────────────────────────────────────────────────
+// Real image: fabric_close_up.webp (oat-beige)
+// Fallback background-color set inline in TSX: #C8B89A
 .block1 {
   top: 8%;
   right: 12%;
   width: clamp(10rem, 14vw, 13rem);
   height: clamp(14rem, 19vw, 18rem);
-  background-color: #BDAF97;  // flat mid-tone, no gradient
 }
 
-// ─── Block 2: Fabric drape ────────────────────────────────────────────────────
-// CSS linen weave grid over flat warm stone — simulates flat-lay fabric photography
+// ─── Block 2: Studio-side ────────────────────────────────────────────────────
+// Real image: side_studio_view.webp (oat-beige)
+// Fallback background-color set inline in TSX: #8B9E7A
 .block2 {
   top: 28%;
   right: 30%;
   width: clamp(14rem, 19vw, 18rem);
   height: clamp(18rem, 24vw, 24rem);
-  background-color: #CEC7B8;  // flat base cloth tone — no gradient
-  background-image:
-    // Warp threads (vertical) — functional texture simulation
-    repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 5px,
-      rgba(255, 255, 255, 0.052) 5px,
-      rgba(255, 255, 255, 0.052) 6px
-    ),
-    // Weft threads (horizontal) — functional texture simulation
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 8px,
-      rgba(0, 0, 0, 0.035) 8px,
-      rgba(0, 0, 0, 0.035) 9px
-    );
 }
 
-// ─── Block 3: Texture macro ───────────────────────────────────────────────────
-// Diamond crosshatch over flat deep olive — simulates close-up of knit/weave fabric
+// ─── Block 3: Cargo studio-front ─────────────────────────────────────────────
+// Real image: front_view.png (cargo dark-olive)
+// Fallback background-color set inline in TSX: #4A5240
 .block3 {
   bottom: 15%;
   right: 10%;
   width: clamp(8rem, 11vw, 10rem);
   height: clamp(10rem, 14vw, 12rem);
-  background-color: #6D6852;  // flat deep olive — no gradient
-  background-image:
-    // Diagonal weave A — functional texture simulation
-    repeating-linear-gradient(
-      45deg,
-      transparent,
-      transparent 3px,
-      rgba(255, 255, 255, 0.065) 3px,
-      rgba(255, 255, 255, 0.065) 4px
-    ),
-    // Diagonal weave B — functional texture simulation
-    repeating-linear-gradient(
-      -45deg,
-      transparent,
-      transparent 3px,
-      rgba(0, 0, 0, 0.075) 3px,
-      rgba(0, 0, 0, 0.075) 4px
-    );
+}
+
+// ─── Block image ──────────────────────────────────────────────────────────────
+.blockImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  z-index: 1;
 }
 
 // ─── Block editorial labels ────────────────────────────────────────────────────

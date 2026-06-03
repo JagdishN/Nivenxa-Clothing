@@ -42,11 +42,11 @@
 .breadcrumb {
   font-family: system-ui, -apple-system, sans-serif;
   font-size: 11px;
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--nivenxa-text-muted);
   text-decoration: none;
   margin-bottom: 16px;
+  display: block;
 }
 
 .breadcrumb:hover {
@@ -157,6 +157,13 @@
   font-size: 13px;
   line-height: 1.65;
   color: var(--nivenxa-text-muted);
+}
+
+/* ── Styled With divider ── */
+.styledWithDivider {
+  height: 0.5px;
+  background: var(--nivenxa-border);
+  margin: 16px 0 0;
 }
 
 /* ── Size guide modal ── */
