@@ -338,6 +338,18 @@ const oversizedTee: Product = {
       'red-earth': { colourSlug: 'stone-beige',    colourName: 'Stone Beige',   hex: '#C8B89A' },
     },
   },
+
+  editorial: {
+    quote:
+      '240 GSM combed cotton jersey — bio-enzyme washed for a lived-in softness from first wear.',
+    specs: [
+      { label: 'Fabric',  value: '100% Combed Cotton' },
+      { label: 'Weight',  value: '240 GSM'            },
+      { label: 'Fit',     value: 'Drop-shoulder'      },
+      { label: 'Wash',    value: 'Bio-enzyme'         },
+      { label: 'Origin',  value: 'Made in India'      },
+    ],
+  },
 }
 
 // ─── Product 2: Unisex Cargo Pants ────────────────────────────────────────────
@@ -501,6 +513,18 @@ const cargoPants: Product = {
       'stone-beige':   { colourSlug: 'espresso', colourName: 'Espresso', hex: '#5C5248' },
       'jet-black':     { colourSlug: 'earth',    colourName: 'Earth',    hex: '#8B7355' },
     },
+  },
+
+  editorial: {
+    quote:
+      '300 GSM enzyme-washed canvas. Six-pocket utility silhouette. Built for movement, worn for life.',
+    specs: [
+      { label: 'Fabric',  value: '300 GSM Canvas'  },
+      { label: 'Pockets', value: 'Six utility'      },
+      { label: 'Fit',     value: 'Relaxed straight' },
+      { label: 'Wash',    value: 'Enzyme softened'  },
+      { label: 'Origin',  value: 'Made in India'    },
+    ],
   },
 }
 

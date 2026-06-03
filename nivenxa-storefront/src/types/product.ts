@@ -91,6 +91,16 @@ export interface StyledWith {
   pairings: Record<string, ColourPairing>
 }
 
+export interface EditorialSpec {
+  label: string
+  value: string
+}
+
+export interface ProductEditorial {
+  quote?: string
+  specs?: EditorialSpec[]
+}
+
 export interface Product {
   id: string
   name: string
@@ -114,7 +124,8 @@ export interface Product {
   collectionItems: CollectionItem[]
   collectionName?: string   // e.g. "Men's Essentials" — shown in breadcrumb
   collectionSlug?: string   // e.g. "mens-essentials" — used in breadcrumb href
-  styledWith?: StyledWith   // optional cross-sell pairing, colour-aware
+  styledWith?: StyledWith         // optional cross-sell pairing, colour-aware
+  editorial?: ProductEditorial    // optional editorial data for zoom overlay panel
 }
 
 /*

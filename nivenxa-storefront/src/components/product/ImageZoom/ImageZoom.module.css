@@ -1,0 +1,372 @@
+/* ── OVERLAY ──────────────────────────────────────── */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 1000;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+.modal {
+  display: grid;
+  grid-template-columns: 80px 1fr 300px;
+  width: 100vw;
+  max-width: 100vw;
+  height: 100vh;
+  background: var(--nivenxa-bg-primary);
+  position: relative;
+  overflow: hidden;
+  gap: 0;
+  padding: 0;
+}
+
+/* ── CLOSE ────────────────────────────────────────── */
+
+.closeBtn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  background: rgba(0, 0, 0, 0.08);
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  color: var(--nivenxa-text-primary);
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.closeBtn:hover {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+/* ── THUMBNAIL COLUMN ─────────────────────────────── */
+
+.thumbCol {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 3px;
+  background: var(--nivenxa-bg-secondary);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.thumbCol::-webkit-scrollbar {
+  display: none;
+}
+
+.thumb {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  overflow: hidden;
+  flex-shrink: 0;
+  outline: 1.5px solid transparent;
+  outline-offset: -1.5px;
+  padding: 0;
+}
+
+.thumbActive {
+  outline-color: var(--nivenxa-text-primary);
+}
+
+.thumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+
+/* ── IMAGE COLUMN ─────────────────────────────────── */
+
+.imageCol {
+  position: relative;
+  overflow: hidden;
+  background: var(--nivenxa-bg-secondary);
+  width: 100%;
+  height: 100vh;
+  display: block;
+}
+
+.mainImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  transition: opacity 0.15s ease, transform 0.25s ease;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Fade-out transition between images */
+.transitioning {
+  opacity: 0;
+}
+
+.zoomHint {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.35);
+  background: rgba(255, 255, 255, 0.8);
+  padding: 4px 10px;
+  border-radius: 3px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.scrollHint {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
+
+.navBtn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--nivenxa-text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+
+.navPrev { left: 14px; }
+.navNext { right: 14px; }
+
+.navBtn:hover { background: #FFFFFF; }
+
+.counter {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.7);
+  padding: 3px 10px;
+  border-radius: 3px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* ── EDITORIAL COLUMN ─────────────────────────────── */
+
+.editCol {
+  display: flex;
+  flex-direction: column;
+  padding: 32px 24px 24px;
+  background: var(--nivenxa-bg-secondary);
+  border-left: 0.5px solid var(--nivenxa-border);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.editCol::-webkit-scrollbar {
+  display: none;
+}
+
+.editEyebrow {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-muted);
+  margin-bottom: 10px;
+  display: block;
+}
+
+.editTitle {
+  font-family: Georgia, serif;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--nivenxa-text-primary);
+  margin-bottom: 10px;
+  margin-top: 0;
+}
+
+.editQuote {
+  font-family: Georgia, serif;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--nivenxa-text-muted);
+  line-height: 1.7;
+  margin-bottom: 16px;
+  margin-top: 0;
+}
+
+.editDivider {
+  height: 0.5px;
+  background: var(--nivenxa-border);
+  margin-bottom: 14px;
+  flex-shrink: 0;
+}
+
+.editSpecs {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.specRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  padding: 5px 0;
+  border-bottom: 0.5px solid var(--nivenxa-border-light);
+}
+
+.specRow:last-child {
+  border-bottom: none;
+}
+
+.specLabel {
+  color: var(--nivenxa-text-muted);
+}
+
+.specValue {
+  font-weight: 500;
+  color: var(--nivenxa-text-primary);
+}
+
+/* ── COLOUR SWITCHER ──────────────────────────────── */
+
+.colourSwitcher {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 0;
+  border-top: 0.5px solid var(--nivenxa-border);
+  border-bottom: 0.5px solid var(--nivenxa-border);
+  margin-bottom: 14px;
+}
+
+.colourSwitcherLabel {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-muted);
+}
+
+.swatchRow {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 2px;
+  border: none;
+  cursor: pointer;
+  outline: 0.5px solid rgba(0, 0, 0, 0.12);
+  outline-offset: 0;
+  transition: outline-offset 0.1s ease;
+  flex-shrink: 0;
+}
+
+.swatch:hover {
+  outline: 1px solid rgba(0, 0, 0, 0.3);
+  outline-offset: 1px;
+}
+
+.swatchActive {
+  outline: 1.5px solid var(--nivenxa-text-primary) !important;
+  outline-offset: 2px !important;
+}
+
+.activeName {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--nivenxa-text-primary);
+}
+
+.changeNote {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 10px;
+  font-style: italic;
+  color: var(--nivenxa-cta-forest);
+  letter-spacing: 0.02em;
+}
+
+/* ── PRICE + NOTE ─────────────────────────────────── */
+
+.editPrice {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--nivenxa-text-primary);
+  padding: 10px 0;
+  border-bottom: 0.5px solid var(--nivenxa-border);
+  margin-bottom: 12px;
+}
+
+.editNote {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 10px;
+  color: var(--nivenxa-text-muted);
+  font-style: italic;
+  line-height: 1.5;
+  text-align: center;
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+/* ── MOBILE ───────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .modal {
+    grid-template-columns: 60px 1fr;
+  }
+
+  .editCol {
+    display: none;
+  }
+
+  .mainImage {
+    touch-action: pinch-zoom;
+  }
+}
+
+@media (max-width: 600px) {
+  .modal {
+    grid-template-columns: 1fr;
+  }
+
+  .thumbCol {
+    display: none;
+  }
+}
