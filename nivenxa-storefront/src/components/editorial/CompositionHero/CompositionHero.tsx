@@ -5,13 +5,16 @@ interface Props {
   compositionQuote: string
 }
 
-export default function CompositionHero({ category, compositionQuote }: Props) {
+export default function CompositionHero({ compositionQuote }: Props) {
   return (
     <section className={styles.section}>
-      <div className={styles.inner}>
-        <p className={styles.eyebrow}>COMPOSITION</p>
-        <h2 className={styles.title}>{category}</h2>
-        <blockquote className={styles.quote}>{compositionQuote}</blockquote>
+      <div className={styles.compositionHeader}>
+        <div className={styles.left}>
+          <p className={styles.eyebrow}>MATERIAL</p>
+        </div>
+        <div className={styles.right}>
+          <blockquote className={styles.quote}>{compositionQuote}</blockquote>
+        </div>
       </div>
     </section>
   )

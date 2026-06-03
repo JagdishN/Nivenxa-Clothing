@@ -1,50 +1,52 @@
 .section {
-  padding: 100px 32px 56px;
   background: var(--nivenxa-bg-secondary);
-  text-align: center;
+  padding: 0 32px;
 }
 
-/* Narrow centred column — ~48% on desktop, full on mobile */
-.inner {
-  max-width: 48%;
-  margin-inline: auto;
-}
-
-@media (max-width: 1023px) {
-  .inner {
-    max-width: 100%;
-  }
+.compositionHeader {
+  display: grid;
+  grid-template-columns: 40fr 60fr;
+  gap: 3rem;
+  align-items: flex-end;
+  padding: 3rem 0 2rem;
+  border-bottom: 0.5px solid var(--nivenxa-border);
+  margin-bottom: 0;
 }
 
 .eyebrow {
   font-family: system-ui, -apple-system, sans-serif;
   font-size: 10px;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--nivenxa-text-muted);
   margin-bottom: 12px;
+  display: block;
 }
 
-.title {
-  font-family: Georgia, serif;
-  font-size: 22px;
-  font-style: italic;
-  font-weight: 400;
-  color: var(--nivenxa-text-primary);
-  margin-bottom: 16px;
+.right {
+  align-self: flex-end;
 }
 
 .quote {
   font-family: Georgia, serif;
-  font-size: 15px;
+  font-size: 13px;
   font-style: italic;
   font-weight: 400;
-  line-height: 1.75;
-  color: var(--nivenxa-text-primary);
-  border-left: 1.5px solid var(--nivenxa-border);
-  border-radius: 0;
-  padding-left: 20px;
-  max-width: 520px;
-  margin: 16px auto 0;
-  text-align: left;
+  line-height: 1.7;
+  color: var(--nivenxa-text-muted);
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+@media (max-width: 1024px) {
+  .section {
+    padding: 0;
+  }
+
+  .compositionHeader {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 2rem 1.25rem 1.5rem;
+  }
 }

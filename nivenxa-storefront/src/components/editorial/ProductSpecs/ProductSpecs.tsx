@@ -1,10 +1,11 @@
-import type { ProductSpec, FitBar } from '@/types/product'
+import type { ProductSpec, FitBar, CareInstruction } from '@/types/product'
 import styles from './ProductSpecs.module.css'
 
 interface Props {
   specs: ProductSpec[]
   fitBars: FitBar[]
   modelNote: string | null
+  care: CareInstruction[]
 }
 
 // Extract ordered unique groups from specs — order matches first appearance
@@ -20,12 +21,13 @@ function getGroups(specs: ProductSpec[]): string[] {
   return groups
 }
 
-export default function ProductSpecs({ specs, fitBars, modelNote }: Props) {
+export default function ProductSpecs({ specs, fitBars, modelNote, care }: Props) {
   const isGrouped = specs.some(s => s.group)
   const groups = isGrouped ? getGroups(specs) : []
 
   return (
-    <section className={styles.section}>
+    <section className={styles.specsAndCare}>
+
       {/* Left col — Garment Specifications */}
       <div className={styles.col}>
         <p className={styles.colTitle}>GARMENT SPECIFICATIONS</p>
@@ -65,31 +67,58 @@ export default function ProductSpecs({ specs, fitBars, modelNote }: Props) {
         </div>
       </div>
 
-      {/* Right col — Fit Guide */}
-      <div className={styles.col}>
-        <p className={styles.colTitle}>FIT GUIDE</p>
-        <div className={styles.fitList}>
-          {/* Axis labels */}
-          <div className={styles.fitAxisRow}>
-            <span className={styles.fitAxisLabel}>Relaxed</span>
-            <span className={styles.fitAxisLabel}>Fitted</span>
-          </div>
-          {fitBars.map(bar => (
-            <div key={bar.label} className={styles.fitRow}>
-              <span className={styles.fitLabel}>{bar.label}</span>
-              <div className={styles.barTrack}>
-                <div
-                  className={styles.barFill}
-                  style={{ width: `${bar.value}%` }}
-                />
-              </div>
-              <span className={styles.fitDescriptor}>{bar.descriptor}</span>
+      {/* Right col — Fit Guide + Care Instructions stacked */}
+      <div className={styles.rightColumn}>
+
+        {/* Fit Guide */}
+        <div className={styles.fitGuideSection}>
+          <p className={styles.colTitle}>FIT GUIDE</p>
+          <div className={styles.fitList}>
+            {/* Axis labels */}
+            <div className={styles.fitAxisRow}>
+              <span className={styles.fitAxisLabel}>Relaxed</span>
+              <span className={styles.fitAxisLabel}>Fitted</span>
             </div>
-          ))}
+            {fitBars.map(bar => (
+              <div key={bar.label} className={styles.fitRow}>
+                <span className={styles.fitLabel}>{bar.label}</span>
+                <div className={styles.barTrack}>
+                  <div
+                    className={styles.barFill}
+                    style={{ width: `${bar.value}%` }}
+                  />
+                </div>
+                <span className={styles.fitDescriptor}>{bar.descriptor}</span>
+              </div>
+            ))}
+          </div>
+          {modelNote && (
+            <p className={styles.modelNote}>{modelNote}</p>
+          )}
         </div>
-        {modelNote && (
-          <p className={styles.modelNote}>{modelNote}</p>
-        )}
+
+        {/* Divider between fit and care */}
+        <div className={styles.columnDivider} />
+
+        {/* Care Instructions */}
+        <div className={styles.careSection}>
+          <span className={styles.careHeading}>CARE INSTRUCTIONS</span>
+          <div className={styles.careGrid}>
+            {care.map(item => (
+              <div key={item.label} className={styles.careItem}>
+                <span className={styles.careIconCircle}>
+                  <i className={`ti ti-${item.icon}`} aria-hidden="true" />
+                </span>
+                <span className={styles.careLabel}>{item.label}</span>
+              </div>
+            ))}
+          </div>
+          <p className={styles.careNote}>
+            Garment softens and improves with each wash. Wash dark and light colourways
+            separately for the first three washes.
+          </p>
+        </div>
+
       </div>
     </section>
   )

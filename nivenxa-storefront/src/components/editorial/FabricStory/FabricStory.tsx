@@ -2,7 +2,6 @@ import type { Product } from '@/types/product'
 import CompositionHero from '../CompositionHero/CompositionHero'
 import FabricPillars from '../FabricPillars/FabricPillars'
 import ProductSpecs from '../ProductSpecs/ProductSpecs'
-import CareInstructions from '../CareInstructions/CareInstructions'
 import InfoAccordions from '../InfoAccordions/InfoAccordions'
 import styles from './FabricStory.module.css'
 
@@ -22,8 +21,8 @@ export default function FabricStory({ product }: Props) {
         specs={product.specs}
         fitBars={product.fitBars}
         modelNote={product.modelNote}
+        care={product.care}
       />
-      <CareInstructions care={product.care} />
       <InfoAccordions accordions={product.accordions} />
     </div>
   )

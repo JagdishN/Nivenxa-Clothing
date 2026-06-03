@@ -1,60 +1,66 @@
-.section {
+.pillarsGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  padding: 40px 0;
-  background: var(--nivenxa-bg-primary);
+  width: 100%;
+  background: var(--nivenxa-bg-secondary);
 }
 
-.col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 0 24px;
+.pillar {
+  padding: 24px 32px;
   border-right: 0.5px solid var(--nivenxa-border);
+  border-top: 0.5px solid var(--nivenxa-border);
 }
 
-.last {
+.pillar:last-child {
   border-right: none;
 }
 
+.valueRow {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
 .value {
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 36px;
-  font-weight: 500;
+  font-family: Georgia, serif;
+  font-size: 28px;
+  font-weight: 400;
   color: var(--nivenxa-text-primary);
+  line-height: 1;
 }
 
 .unit {
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 11px;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--nivenxa-text-muted);
-  margin-top: 4px;
-  letter-spacing: 0.04em;
+}
+
+.subLabel {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-muted);
+  display: block;
+  margin-bottom: 8px;
 }
 
 .description {
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 12px;
-  line-height: 1.7;
+  font-size: 11px;
   color: var(--nivenxa-text-muted);
-  margin-top: 8px;
-  max-width: 18ch;
+  line-height: 1.5;
+  margin: 0;
 }
 
-/* Responsive: stack on small screens */
-@media (max-width: 600px) {
-  .section {
+@media (max-width: 1024px) {
+  .pillarsGrid {
     grid-template-columns: 1fr;
   }
 
-  .col {
+  .pillar {
     border-right: none;
-    border-bottom: 0.5px solid var(--nivenxa-border);
-    padding: 24px;
-  }
-
-  .last {
-    border-bottom: none;
+    border-top: 0.5px solid var(--nivenxa-border);
+    padding: 16px 1.25rem;
   }
 }

@@ -16,6 +16,7 @@ import MobileCarousel from '@/components/product/MobileCarousel/MobileCarousel'
 import MobileStickyBar from '@/components/product/MobileStickyBar/MobileStickyBar'
 import FabricStory from '@/components/editorial/FabricStory/FabricStory'
 import CollectionCarousel from '@/components/collection/CollectionCarousel/CollectionCarousel'
+import ImageZoom from '@/components/product/ImageZoom/ImageZoom'
 
 import styles from './ProductPage.module.css'
 
@@ -52,6 +53,64 @@ function ProductError() {
   )
 }
 
+// ─── ZoomableImage ───────────────────────────────────────────────────────────
+function ZoomableImage({
+  src,
+  alt,
+  index,
+  onZoom,
+}: {
+  src: string
+  alt: string
+  index: number
+  onZoom: (index: number) => void
+}) {
+  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 })
+  const [cursorVisible, setCursorVisible] = useState(false)
+
+  return (
+    <div
+      className={styles.imageContainer}
+      onClick={() => onZoom(index)}
+      onMouseMove={e => {
+        const rect = e.currentTarget.getBoundingClientRect()
+        setCursorPos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
+      }}
+      onMouseEnter={() => setCursorVisible(true)}
+      onMouseLeave={() => setCursorVisible(false)}
+      role="button"
+      aria-label="View full size"
+      tabIndex={0}
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') onZoom(index)
+      }}
+    >
+      <img
+        src={src}
+        alt={alt}
+        className={styles.stackImage}
+        loading="lazy"
+      />
+      {cursorVisible && (
+        <div
+          className={styles.floatingCursor}
+          style={{ left: cursorPos.x, top: cursorPos.y }}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" strokeWidth="1.5"
+               strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 3 21 3 21 9"/>
+            <polyline points="9 21 3 21 3 15"/>
+            <line x1="21" y1="3" x2="14" y2="10"/>
+            <line x1="3" y1="21" x2="10" y2="14"/>
+          </svg>
+          <span>Zoom</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── ProductPage ─────────────────────────────────────────────────────────────
 export default function ProductPage() {
   const params = useParams<{ slug: string; color: string }>()
@@ -63,6 +122,10 @@ export default function ProductPage() {
   const { addToCart } = useCart()
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
   const [swatchExpanded, setSwatchExpandedState] = useState(_swatchExpanded)
+  const [zoomOpen, setZoomOpen] = useState(false)
+  const [zoomStartIndex, setZoomStartIndex] = useState(0)
+  const [heroCursorPos, setHeroCursorPos] = useState({ x: 0, y: 0 })
+  const [heroCursorVisible, setHeroCursorVisible] = useState(false)
 
   const setSwatchExpanded = (value: boolean) => {
     _swatchExpanded = value
@@ -82,6 +145,19 @@ export default function ProductPage() {
     addToCart(product.id, `${activeColour.slug}-${selectedSize}`, 1)
   }
 
+  // Called when zoom overlay closes — applies any colour the user browsed to
+  const handleZoomColourClose = (colour: ProductColour) => {
+    if (colour.slug !== activeColour.slug) {
+      setSelectedSize(null)
+      router.replace(`/shop/${product.handle}/${colour.slug}`)
+    }
+  }
+
+  const openZoom = (index: number) => {
+    setZoomStartIndex(index)
+    setZoomOpen(true)
+  }
+
   const isCtaDisabled =
     !selectedSize ||
     !activeColour.available ||
@@ -89,6 +165,9 @@ export default function ProductPage() {
 
   const primaryImage = getPrimaryImage(activeColour.images)
   const galleryImages = getGalleryImages(activeColour.images)
+
+  // Index of the primary image in the sorted gallery order (almost always 0)
+  const heroZoomIndex = galleryImages.findIndex(img => img.id === primaryImage.id)
 
   return (
     <div className={styles.page}>
@@ -118,28 +197,61 @@ export default function ProductPage() {
           />
         </div>
 
-        {/* Col 2 — sticky hero image */}
+        {/* Col 2 — sticky hero image — entire area is the zoom trigger */}
         <div className={styles.heroImageWrapper}>
-          <img
-            className={styles.heroImage}
-            src={primaryImage.src}
-            alt={`${product.name} — ${activeColour.label}`}
-          />
+          <div
+            className={styles.heroImageContainer}
+            onClick={() => openZoom(heroZoomIndex >= 0 ? heroZoomIndex : 0)}
+            onMouseMove={e => {
+              const rect = e.currentTarget.getBoundingClientRect()
+              setHeroCursorPos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
+            }}
+            onMouseEnter={() => setHeroCursorVisible(true)}
+            onMouseLeave={() => setHeroCursorVisible(false)}
+            role="button"
+            aria-label="View full size"
+            tabIndex={0}
+            onKeyDown={e => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                openZoom(heroZoomIndex >= 0 ? heroZoomIndex : 0)
+              }
+            }}
+          >
+            <img
+              className={styles.heroImage}
+              src={primaryImage.src}
+              alt={`${product.name} — ${activeColour.label}`}
+            />
+            {heroCursorVisible && (
+              <div
+                className={styles.floatingCursor}
+                style={{ left: heroCursorPos.x, top: heroCursorPos.y }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" strokeWidth="1.5"
+                     strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 3 21 3 21 9"/>
+                  <polyline points="9 21 3 21 3 15"/>
+                  <line x1="21" y1="3" x2="14" y2="10"/>
+                  <line x1="3" y1="21" x2="10" y2="14"/>
+                </svg>
+                <span>Zoom</span>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Col 3 — scrollable image stack */}
+        {/* Col 3 — scrollable image stack — each image is a zoom trigger */}
         <div className={styles.imageStack}>
-          {galleryImages
-            .slice(1)
-            .map((img, i) => (
-              <img
-                key={img.id}
-                className={styles.stackImage}
-                src={img.src}
-                alt={`${product.name} — ${activeColour.label} — view ${i + 2}`}
-                loading="lazy"
-              />
-            ))}
+          {galleryImages.slice(1).map((img, i) => (
+            <ZoomableImage
+              key={img.id}
+              src={img.src}
+              alt={`${product.name} — ${activeColour.label} — view ${i + 2}`}
+              index={i + 1}
+              onZoom={openZoom}
+            />
+          ))}
         </div>
 
       </section>
@@ -156,6 +268,18 @@ export default function ProductPage() {
           currentProductId={product.id}
         />
       </section>
+
+      {/* ── Image zoom overlay ── */}
+      <ImageZoom
+        isOpen={zoomOpen}
+        onClose={() => setZoomOpen(false)}
+        images={activeColour.images}
+        activeIndex={zoomStartIndex}
+        product={product}
+        activeColour={activeColour}
+        allColours={product.colours}
+        onColourClose={handleZoomColourClose}
+      />
 
       {/* ── Mobile sticky CTA bar ── */}
       <MobileStickyBar

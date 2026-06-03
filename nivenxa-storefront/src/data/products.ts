@@ -218,21 +218,24 @@ const oversizedTee: Product = {
   fabricPillars: [
     {
       value: '240',
-      unit: 'GSM fabric weight',
+      unit: 'GSM',
+      subLabel: 'Fabric weight',
       description:
-        'Mid-weight opacity. Substantial without heaviness. Not transparent in sunlight.',
+        'Mid-weight. Substantial without heaviness. Not transparent in sunlight.',
     },
     {
       value: '100%',
-      unit: 'Combed cotton',
+      unit: 'Cotton',
+      subLabel: 'Combed cotton',
       description:
-        'Single jersey knit. Yarn-dyed. Soft washed finish. No synthetic blends.',
+        'Single jersey knit. Yarn-dyed. No synthetic blends.',
     },
     {
       value: 'Garment',
-      unit: 'Dyed finish',
+      unit: '',
+      subLabel: 'Dyed finish',
       description:
-        'Dyed after construction for depth and consistency. Colour evolves subtly with every wash.',
+        'Dyed after construction. Colour evolves subtly with every wash.',
     },
   ],
 
@@ -335,6 +338,18 @@ const oversizedTee: Product = {
       'red-earth': { colourSlug: 'stone-beige',    colourName: 'Stone Beige',   hex: '#C8B89A' },
     },
   },
+
+  editorial: {
+    quote:
+      '240 GSM combed cotton jersey — bio-enzyme washed for a lived-in softness from first wear.',
+    specs: [
+      { label: 'Fabric',  value: '100% Combed Cotton' },
+      { label: 'Weight',  value: '240 GSM'            },
+      { label: 'Fit',     value: 'Drop-shoulder'      },
+      { label: 'Wash',    value: 'Bio-enzyme'         },
+      { label: 'Origin',  value: 'Made in India'      },
+    ],
+  },
 }
 
 // ─── Product 2: Unisex Cargo Pants ────────────────────────────────────────────
@@ -392,21 +407,24 @@ const cargoPants: Product = {
   fabricPillars: [
     {
       value: '300',
-      unit: 'GSM canvas weight',
+      unit: 'GSM',
+      subLabel: 'Canvas weight',
       description:
-        'Structured without stiffness. Holds its shape through long wear and repeated washing.',
+        'Structured without stiffness. Holds shape through long wear and repeated washing.',
     },
     {
       value: '6',
-      unit: 'Functional pockets',
+      unit: '',
+      subLabel: 'Functional pockets',
       description:
-        'All six pockets fully usable. No decorative stitching. Every pocket tested for daily carry.',
+        'All six pockets fully usable. No decorative stitching. Every pocket tested.',
     },
     {
       value: '100%',
-      unit: 'Cotton canvas',
+      unit: 'Cotton',
+      subLabel: 'Cotton canvas',
       description:
-        'Pure cotton twill. Breathable for Indian climate. Softens naturally with each wash.',
+        'Pure cotton twill. Breathable. Softens naturally with each wash.',
     },
   ],
 
@@ -495,6 +513,18 @@ const cargoPants: Product = {
       'stone-beige':   { colourSlug: 'espresso', colourName: 'Espresso', hex: '#5C5248' },
       'jet-black':     { colourSlug: 'earth',    colourName: 'Earth',    hex: '#8B7355' },
     },
+  },
+
+  editorial: {
+    quote:
+      '300 GSM enzyme-washed canvas. Six-pocket utility silhouette. Built for movement, worn for life.',
+    specs: [
+      { label: 'Fabric',  value: '300 GSM Canvas'  },
+      { label: 'Pockets', value: 'Six utility'      },
+      { label: 'Fit',     value: 'Relaxed straight' },
+      { label: 'Wash',    value: 'Enzyme softened'  },
+      { label: 'Origin',  value: 'Made in India'    },
+    ],
   },
 }
 
