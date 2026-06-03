@@ -6,6 +6,7 @@ export interface ProductImage {
      | 'pocket-slash' | 'pocket-cargo-side' | 'pocket-back-patch'
      | 'pocket-closure' | 'pocket-depth' | 'pocket-flap'
      | 'sitting' | 'flat-lay' | 'fabric-closure'
+     | 'front-casual' | 'back-casual' | 'side-casual'  // non-studio on-location poses
 }
 
 export type ProductStatus =

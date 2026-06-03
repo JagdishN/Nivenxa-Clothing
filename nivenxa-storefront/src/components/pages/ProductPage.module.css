@@ -1,0 +1,190 @@
+/* ── PAGE WRAPPER ─────────────────────────────── */
+/* Normal document flow. No scroll-snap. No overflow. */
+
+.page {
+  min-height: 100vh;
+}
+
+/* ── HERO SECTION ──────────────────────────────── */
+
+.heroSection {
+  display: grid;
+  grid-template-columns: 28fr 40fr 32fr;
+  min-height: 100vh;
+  padding-top: var(--nivenxa-header-height);
+  box-sizing: border-box;
+  align-items: start;
+}
+
+/* ── COL 1 — LEFT INFO PANEL ───────────────────── */
+
+.productInfoWrapper {
+  position: sticky;
+  top: var(--nivenxa-header-height);
+  height: calc(100vh - var(--nivenxa-header-height));
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.productInfoWrapper::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── COL 2 — HERO IMAGE (STICKY) ──────────────── */
+
+.heroImageWrapper {
+  position: sticky;
+  top: var(--nivenxa-header-height);
+  height: calc(100vh - var(--nivenxa-header-height));
+  overflow: hidden;
+}
+
+.heroImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;   /* prioritise face/shoulders over lower body */
+  display: block;
+  background: var(--nivenxa-bg-primary);
+}
+
+/* ── COL 3 — IMAGE STACK ───────────────────────── */
+
+.imageStack {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 3px;
+}
+
+.stackImage {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  object-position: center top;   /* match hero — show head/face, not feet */
+  display: block;
+  background: var(--nivenxa-bg-primary);
+}
+
+/* ── SECTION 2 — EDITORIAL ─────────────────────── */
+
+.editorialSection {
+  /* normal flow */
+}
+
+/* ── SECTION 3 — CAROUSEL ──────────────────────── */
+
+.carouselSection {
+  /* normal flow */
+}
+
+/* ── MOBILE (max-width: 1024px) ────────────────── */
+
+@media (max-width: 1024px) {
+  .heroSection {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    padding-top: 0;
+  }
+
+  .productInfoWrapper {
+    position: static;
+    height: auto;
+    overflow: visible;
+  }
+
+  .heroImageWrapper {
+    display: none;
+  }
+
+  .imageStack {
+    display: none;
+  }
+}
+
+/* ── MOBILE CAROUSEL ───────────────────────────── */
+
+.mobileCarousel {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .mobileCarousel {
+    display: block;
+  }
+}
+
+/* ── SKELETON ──────────────────────────────────── */
+
+.skeleton {
+  display: grid;
+  grid-template-columns: 28% 40% 32%;
+  min-height: 100vh;
+  background: var(--nivenxa-bg-primary);
+}
+
+@media (max-width: 1024px) {
+  .skeleton {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+}
+
+.skeletonInfo {
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.skeletonBlock {
+  background: var(--nivenxa-bg-secondary);
+  border-radius: 2px;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.skeletonImage { min-height: 100vh; }
+
+@media (max-width: 1024px) {
+  .skeletonImage { min-height: 60vw; }
+}
+
+.skeletonTitle    { height: 32px; width: 60%; }
+.skeletonPrice    { height: 24px; width: 30%; }
+.skeletonSwatches { height: 48px; width: 80%; }
+.skeletonSizes    { height: 36px; width: 55%; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1;   }
+}
+
+/* ── ERROR STATE ───────────────────────────────── */
+
+.error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+  gap: 16px;
+}
+
+.errorMsg {
+  font-family: Georgia, serif;
+  font-size: 18px;
+  color: var(--nivenxa-text-muted);
+}
+
+.errorLink {
+  font-size: 13px;
+  color: var(--nivenxa-text-muted);
+  text-decoration: none;
+  letter-spacing: 0.06em;
+}
+
+.errorLink:hover {
+  color: var(--nivenxa-text-primary);
+  text-decoration: underline;
+}

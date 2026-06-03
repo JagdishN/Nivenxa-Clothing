@@ -1,0 +1,149 @@
+.section {
+  background: var(--nivenxa-bg-secondary);
+  padding: 4rem 2.5rem;
+  border-top: 0.5px solid var(--nivenxa-border);
+}
+
+.inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.left {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.heading {
+  font-family: Georgia, serif;
+  font-size: 32px;
+  font-weight: 400;
+  color: var(--nivenxa-text-primary);
+  line-height: 1.15;
+}
+
+.heading em {
+  font-style: italic;
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.line {
+  font-size: 15px;
+  font-style: italic;
+  color: var(--nivenxa-text-muted);
+  line-height: 2.2;
+  border-bottom: 0.5px solid var(--nivenxa-border-light);
+  padding-bottom: 0;
+}
+
+.line:last-child {
+  border-bottom: none;
+}
+
+.frequency {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-hint);
+}
+
+.right {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.form {
+  display: flex;
+  gap: 0;
+  width: 100%;
+}
+
+.input {
+  flex: 1;
+  height: 48px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--nivenxa-text-primary);
+  background: var(--nivenxa-bg-primary);
+  border: 0.5px solid var(--nivenxa-border);
+  border-right: none;
+  border-radius: 4px 0 0 4px;
+  outline: none;
+  letter-spacing: 0.02em;
+}
+
+.input::placeholder {
+  color: var(--nivenxa-text-hint);
+}
+
+.input:focus {
+  border-color: var(--nivenxa-text-muted);
+}
+
+.button {
+  height: 48px;
+  padding: 0 24px;
+  font-size: 10px;
+  font-family: inherit;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--nivenxa-cta-forest);
+  color: var(--nivenxa-cta-forest-text);
+  border: none;
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.button:hover {
+  opacity: 0.88;
+}
+
+.confirmation {
+  font-size: 14px;
+  font-style: italic;
+  color: var(--nivenxa-text-muted);
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 1024px) {
+  .section {
+    padding: 3rem 1.25rem;
+  }
+
+  .inner {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .heading {
+    font-size: 26px;
+  }
+
+  .form {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .input {
+    border-right: 0.5px solid var(--nivenxa-border);
+    border-radius: 4px;
+  }
+
+  .button {
+    border-radius: 4px;
+    height: 44px;
+  }
+}

@@ -1,0 +1,227 @@
+/* ── Section wrapper ───────────────────────────────────────── */
+
+.section {
+  background: var(--nivenxa-bg-primary);
+  padding: 4rem 2.5rem 3rem;
+  margin-bottom: 0;
+}
+
+/* ── Section header ────────────────────────────────────────── */
+
+.sectionIntro {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 2rem;
+}
+
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-muted);
+  margin-bottom: 8px;
+}
+
+.sectionTitle {
+  font-family: Georgia, serif;
+  font-size: 36px;
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--nivenxa-text-primary);
+}
+
+.sectionTitle em {
+  font-style: italic;
+}
+
+.sectionMeta {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+.editCount {
+  font-size: 11px;
+  color: var(--nivenxa-text-muted);
+  letter-spacing: 0.06em;
+}
+
+.viewAll {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-primary);
+  text-decoration: none;
+  border-bottom: 0.5px solid var(--nivenxa-text-primary);
+  padding-bottom: 2px;
+}
+
+/* ── Card grid ─────────────────────────────────────────────── */
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+}
+
+/* ── Product card (entire card = <Link>) ───────────────────── */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  cursor: pointer;
+  background: var(--nivenxa-bg-primary);
+  transition: opacity 0.2s ease;
+}
+
+.card:hover {
+  opacity: 0.88;
+}
+
+/* ── Image panel ───────────────────────────────────────────── */
+
+.imagePanel {
+  position: relative;
+  height: 360px;
+  overflow: hidden;
+  background: var(--nivenxa-bg-secondary);
+}
+
+.heroImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+
+.fabricPlaceholder {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+}
+
+/* Ghost number — bottom-right of image panel */
+.ghostNum {
+  position: absolute;
+  bottom: 12px;
+  right: 14px;
+  font-family: Georgia, serif;
+  font-size: 64px;
+  line-height: 1;
+  font-weight: 400;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ── Card text — below image ───────────────────────────────── */
+
+.cardText {
+  padding: 14px 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.editLabel {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-muted);
+}
+
+.productName {
+  font-family: Georgia, serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--nivenxa-text-primary);
+  line-height: 1.2;
+}
+
+.fabricLine {
+  font-size: 11px;
+  color: var(--nivenxa-text-muted);
+  font-style: italic;
+  margin-top: 2px;
+}
+
+/* ── View All card (6th slot) ──────────────────────────────── */
+
+.viewAllCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  min-height: 360px;
+  padding: 20px 0;
+  text-decoration: none;
+  border-bottom: 0.5px solid var(--nivenxa-border);
+}
+
+.viewAllCard:hover .viewAllTitle {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.viewAllLabel {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-muted);
+  margin-bottom: 4px;
+}
+
+.viewAllTitle {
+  font-family: Georgia, serif;
+  font-size: 20px;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--nivenxa-text-primary);
+}
+
+/* ── Mobile ────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .section {
+    padding: 2.5rem 1.25rem 2rem;
+  }
+
+  .sectionIntro {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+  }
+
+  .sectionTitle {
+    font-size: 26px;
+  }
+
+  .cardGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .imagePanel {
+    height: 240px;
+  }
+
+  .ghostNum {
+    font-size: 44px;
+  }
+
+  .viewAllCard {
+    min-height: 240px;
+  }
+}
+
+@media (max-width: 600px) {
+  .cardGrid {
+    grid-template-columns: 1fr;
+  }
+}

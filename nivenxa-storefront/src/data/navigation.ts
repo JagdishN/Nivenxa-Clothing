@@ -27,6 +27,7 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
+  // ── SHOP — audience-based entry point ──────────────────────────────────────
   {
     label: 'SHOP',
     href: '/shop',
@@ -37,9 +38,27 @@ export const NAV_ITEMS: NavItem[] = [
     },
     submenu: [
       {
-        label: "Women's Collections",
+        label: "Men's",
+        href: '/shop/mens',
+        descriptor: 'Oversized tees and utility cargo',
+        atmosphere: {
+          gradient: 'linear-gradient(150deg, #3A3830 0%, #2E2C26 55%, #222018 100%)',
+          text: "Heavyweight combed cotton\nand utility canvas for the modern wardrobe.",
+          ghost: 'MEN',
+          editorial: [
+            'Oversized tees and utility cargo in heavyweight fabrics.',
+            'Designed for repeat wear and considered daily movement.',
+          ],
+        },
+        children: [
+          { label: 'Oversized Tee', href: '/shop/over-tee-shirts' },
+          { label: 'Cargo Pants',   href: '/shop/cargo-pants'     },
+        ],
+      },
+      {
+        label: "Women's",
         href: '/shop/women',
-        descriptor: 'Relaxed Indo-Western comfortwear',
+        descriptor: 'Indo-Western comfortwear',
         atmosphere: {
           gradient: 'linear-gradient(148deg, #C89080 0%, #A87060 55%, #8A5548 100%)',
           text: "Relaxed women's forms\nin bio-washed and natural fibres.",
@@ -49,11 +68,16 @@ export const NAV_ITEMS: NavItem[] = [
             'Designed for contemporary Indian wardrobes where comfort and everyday elegance coexist naturally.',
           ],
         },
+        children: [
+          { label: 'Indo-Western Kurta', href: '/shop/women-indo-western' },
+          { label: 'Co-ord Set',         href: '/shop/women-lounge-sets'  },
+          { label: 'Sleepwear',          href: '/shop/kids-nightwear'     },
+        ],
       },
       {
-        label: 'Unisex Essentials',
+        label: 'Unisex',
         href: '/shop/unisex',
-        descriptor: 'Heavyweight everyday silhouettes',
+        descriptor: 'Shared silhouettes, shared ease',
         atmosphere: {
           gradient: 'linear-gradient(145deg, #C8C4B0 0%, #B0AC9A 50%, #9A9888 100%)',
           text: 'Heavy GSM unisex staples\nfor the considered wardrobe.',
@@ -63,11 +87,15 @@ export const NAV_ITEMS: NavItem[] = [
             'Oversized fits, washed textures, and structured fabrics designed to soften naturally over time.',
           ],
         },
+        children: [
+          { label: 'Cargo Pants',  href: '/shop/cargo-pants'      },
+          { label: 'Lounge Sets',  href: '/shop/women-lounge-sets' },
+        ],
       },
       {
         label: 'Youth Studio',
         href: '/shop/kids',
-        descriptor: 'Playful comfortwear for younger wardrobes',
+        descriptor: 'Premium comfort for young ones',
         atmosphere: {
           gradient: 'linear-gradient(148deg, #8EA890 0%, #728C74 50%, #5A7060 100%)',
           text: 'Premium kids collections\nbuilt to last, made to wear.',
@@ -77,9 +105,15 @@ export const NAV_ITEMS: NavItem[] = [
             'Relaxed forms and breathable fabrics made for daily life and growing individuality.',
           ],
         },
+        children: [
+          { label: 'Kids Sleepwear', href: '/shop/kids-nightwear' },
+          { label: 'Kids Tee',       href: '/shop/boys-premium'   },
+        ],
       },
     ],
   },
+
+  // ── EDITS — mood/story-based entry point ───────────────────────────────────
   {
     label: 'EDITS',
     href: null,
@@ -90,21 +124,26 @@ export const NAV_ITEMS: NavItem[] = [
     },
     submenu: [
       {
-        label: 'Slow Comfort',
-        href: '/shop/women-lounge-sets',
-        descriptor: 'Cloud-soft modal for slow mornings',
+        label: 'The Everyday Edit',
+        href: null,
+        descriptor: 'Bio-washed comfortwear for daily wear',
         atmosphere: {
           gradient: 'linear-gradient(155deg, #EDE8DC 0%, #D8D0C0 40%, #C8BEA8 100%)',
-          text: 'Cloud-soft modal co-ords\nfor slow, considered mornings.',
-          ghost: 'COMFORT',
+          text: 'Bio-washed comfortwear\nbuilt for daily wear and repeat wash.',
+          ghost: 'EVERYDAY',
           editorial: [
-            'Cloud-soft modal co-ords\nfor slow, considered mornings.',
-            'Relaxed silhouettes designed\nfor comfort without excess.',
+            'Bio-washed essentials for the unhurried wardrobe.',
+            'Designed for comfort, ease, and the rhythm of daily life.',
           ],
         },
+        children: [
+          { label: 'Relaxed Utility',       href: '/shop/cargo-pants'     },
+          { label: 'Everyday Silhouettes',  href: '/shop/over-tee-shirts' },
+          { label: 'Bio-Washed Essentials', href: '/shop/unisex'          },
+        ],
       },
       {
-        label: 'Utility Cargo',
+        label: 'The Utility Edit',
         href: '/shop/cargo-pants',
         descriptor: 'Six-pocket bio-washed canvas',
         atmosphere: {
@@ -123,78 +162,43 @@ export const NAV_ITEMS: NavItem[] = [
         ],
       },
       {
-        label: 'Everyday Silhouettes',
-        href: '/shop/women-indo-western',
-        descriptor: 'Modern Indo-western forms',
-        atmosphere: {
-          gradient: 'linear-gradient(140deg, #C87060 0%, #A85848 60%, #8A4538 100%)',
-          text: 'Modern Indo-western forms\nfor elevated everyday ease.',
-          ghost: 'FORM',
-          editorial: [
-            'Modern Indo-western forms\ndesigned for effortless movement.',
-            'Relaxed structure balanced\nwith softness and quiet ease.',
-          ],
-        },
-      },
-      {
-        label: 'Bio-Washed Essentials',
-        href: '/shop/unisex',
-        descriptor: 'Heavy GSM unisex staples',
-        atmosphere: {
-          gradient: 'linear-gradient(145deg, #D4CFBA 0%, #BFBA9E 55%, #ACA890 100%)',
-          text: 'Heavyweight bio-washed essentials\ncrafted for elevated everyday wear.',
-          ghost: 'WASHED',
-          editorial: [
-            'Heavyweight essentials\nwith softened structure and ease.',
-            'Designed to feel lived-in\nfrom the very first wear.',
-          ],
-        },
-      },
-      {
-        label: 'Oversized Tees',
-        href: '/shop/over-tee-shirts',
-        descriptor: 'Boxy heritage drop-shoulder cuts',
-        atmosphere: {
-          gradient: 'linear-gradient(150deg, #4A4844 0%, #383432 55%, #282826 100%)',
-          text: 'Dense combed cotton\nin boxy heritage drop-shoulder silhouettes.',
-          ghost: 'OVERSIZED',
-          editorial: [
-            'Boxy heritage silhouettes\nwith softened structure and weight.',
-            'Everyday tees designed\nto drape naturally over time.',
-          ],
-        },
-      },
-      {
-        label: 'Everyday Essentials',
-        href: '/shop/unisex',
-        descriptor: 'Unisex staples for elevated daily wear',
-        atmosphere: {
-          gradient: 'linear-gradient(142deg, #D8D4C4 0%, #C4C0AE 50%, #B4B0A0 100%)',
-          text: 'Unisex staples in heavy GSM\nfor effortless, elevated daily wear.',
-          ghost: 'DAILY',
-          editorial: [
-            'Clean everyday layers\nrooted in utility and softness.',
-            'Designed for effortless wear\nacross changing routines.',
-          ],
-        },
-      },
-      {
-        label: 'Sleepwear',
+        label: 'The Rest Edit',
         href: null,
-        descriptor: 'Considered rest, ultra-soft fabrics',
+        descriptor: 'Considered rest. Ultra-soft fabrics.',
         atmosphere: {
           gradient: 'linear-gradient(148deg, #EAE6DC 0%, #DEDAD0 50%, #CCC8C0 100%)',
           text: 'Ultra-soft nightwear\nfor considered rest.',
           ghost: 'REST',
         },
         children: [
-          { label: "Women's Sleepwear", href: '/shop/women-lounge-sets' },
-          { label: 'Kids Sleepwear',    href: '/shop/kids-nightwear'    },
-          { label: 'Unisex Lounge Sets',href: '/shop/unisex'            },
+          { label: "Women's Sleepwear",  href: '/shop/women-lounge-sets' },
+          { label: 'Kids Sleepwear',     href: '/shop/kids-nightwear'    },
+          { label: 'Unisex Lounge Sets', href: '/shop/unisex'            },
+        ],
+      },
+      {
+        label: "The Women's Edit",
+        href: null,
+        descriptor: 'Indo-Western comfortwear for everyday India',
+        atmosphere: {
+          gradient: 'linear-gradient(140deg, #C87060 0%, #A85848 60%, #8A4538 100%)',
+          text: 'Modern Indo-western forms\nfor elevated everyday ease.',
+          ghost: 'WOMEN',
+          editorial: [
+            'Indo-Western comfortwear designed for contemporary Indian wardrobes.',
+            'Relaxed silhouettes balanced with softness and quiet elegance.',
+          ],
+        },
+        children: [
+          { label: 'A-line Kurta',             href: '/shop/women-indo-western' },
+          { label: 'Co-ord Set',               href: '/shop/women-lounge-sets'  },
+          { label: 'Indo-Western Silhouettes', href: '/shop/women-indo-western' },
         ],
       },
     ],
   },
+
+  // ── STORIES — unchanged ────────────────────────────────────────────────────
   {
     label: 'STORIES',
     href: '/stories',

@@ -1,0 +1,47 @@
+.wrapper {
+  width: 100%;
+  background: var(--nivenxa-bg-primary);
+}
+
+.track {
+  display: flex;
+  overflow-x: scroll;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.track::-webkit-scrollbar {
+  display: none;
+}
+
+.slide {
+  min-width: 92vw;
+  flex-shrink: 0;
+  scroll-snap-align: center;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  background-color: var(--nivenxa-bg-primary);
+  display: block;
+}
+
+/* Dot indicator */
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 0;
+}
+
+.dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.18);
+  transition: background 200ms ease;
+}
+
+.dotActive {
+  background: rgba(0, 0, 0, 0.60);
+}

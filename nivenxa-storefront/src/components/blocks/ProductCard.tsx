@@ -125,6 +125,12 @@ export default function ProductCard({ product, large = false }: ProductCardProps
               style={{ '--gradient': product.gradient } as React.CSSProperties}
             >
               <TextureOverlay opacity={0.8} />
+              {/* Placeholder editorial label — colour / product name / season */}
+              <div className={styles.placeholderMeta} aria-hidden="true">
+                <span className={styles.placeholderColour}>{product.colorway}</span>
+                <span className={styles.placeholderName}>{product.name}</span>
+                <span className={styles.placeholderSeason}>Coming SS 2026</span>
+              </div>
             </div>
           )}
         </div>

@@ -8,6 +8,30 @@
   --color-accent:  #B1684F;   // sun-baked terracotta — CTAs
   --color-olive:   #7A755E;   // muted warm olive — footer, borders, labels
 
+  // ── Header height tokens ───────────────────────────────────────────────────
+  // Navbar.module.scss: padding-block 1.75rem + logo (1.7rem × ~1.2 line-height) ≈ 88px
+  // Compact (scrolled): padding-block 1.125rem + same logo ≈ 68px
+  // Values rounded up to 90 / 70 to ensure no content ever slips behind the bar.
+  --nivenxa-header-default: 90px;
+  --nivenxa-header-compact: 70px;
+  --nivenxa-header-height:  var(--nivenxa-header-default);
+  // --nivenxa-header-height is overridden via :has() when header is compact (see below)
+
+  // ── Product detail page tokens (Shopify-ready) ─────────────────────────────
+  --nivenxa-bg-primary:   #F2EDE6;
+  --nivenxa-bg-secondary: #EDEAE4;
+  --nivenxa-text-primary: #1A1A1A;
+  --nivenxa-text-muted:   #888888;
+  --nivenxa-text-hint:    #BBBBBB;
+  --nivenxa-border:       rgba(0, 0, 0, 0.10);
+  --nivenxa-border-light: rgba(0, 0, 0, 0.06);
+  --nivenxa-cta-bg:            #1C2E1E;
+  --nivenxa-cta-text:          #FFFFFF;
+  --nivenxa-cta-forest:        #1C2E1E;
+  --nivenxa-cta-forest-text:   #FFFFFF;
+  --nivenxa-cta-terracotta:    #C47A4E;
+  --nivenxa-cta-terra-text:    #FFFFFF;
+
   // Typography — Noto Sans covers Indian scripts as fallback
   --font-serif: var(--font-playfair), var(--font-noto-sans), serif;
   --font-sans:  var(--font-inter), var(--font-noto-sans), sans-serif;
@@ -34,8 +58,12 @@
 
 html {
   scroll-behavior: smooth;
+  // Offset anchor / scrollIntoView targets so fixed navbar never covers them
+  scroll-padding-top: var(--nivenxa-header-height);
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  // No height, no overflow — browser default (visible) keeps the viewport
+  // as the natural scroll container. Do not add overflow-y or height here.
 }
 
 body {
@@ -45,7 +73,9 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: clip;  // clip ≠ hidden — doesn't create a second scroll container
+  // No overflow-x: hidden — it coerces overflow-y to auto via CSS spec rules,
+  // making body the scroll container instead of the viewport. Each component
+  // that needs clipping uses overflow: hidden on itself.
 }
 
 // ─── Typography Defaults ────────────────────────────────────────────────────
@@ -107,3 +137,17 @@ button {
   background-color: var(--color-accent);
   color: var(--color-canvas);
 }
+
+// ─── Header compact state — auto-update layout token via CSS :has() ──────────
+// Navbar.module.scss applies a CSS-module class containing "scrolled" on
+// the <header> element when the user has scrolled down.
+// CSS Modules hashes the name (e.g. Navbar_scrolled__KpBwN), so we match
+// by substring to stay hash-agnostic. CSS :has() is supported in all modern
+// browsers (Chrome 105+, Safari 15.4+, Firefox 121+).
+:root:has(header[class*="scrolled"]) {
+  --nivenxa-header-height: var(--nivenxa-header-compact);
+}
+
+// ─── Layout — normal document flow ───────────────────────────────────────────
+// html/body have height: auto (default) — the viewport is the scroll container.
+// position: sticky on ProductPage columns works correctly with window scroll.

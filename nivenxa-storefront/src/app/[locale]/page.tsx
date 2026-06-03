@@ -1,13 +1,17 @@
 import HeroSection from '@/components/blocks/HeroSection'
-import FeaturedProducts from '@/components/blocks/FeaturedProducts'
+import EditsSection from '@/components/home/EditsSection/EditsSection'
 import CategoryBanner from '@/components/blocks/CategoryBanner'
+import StoriesSection from '@/components/home/StoriesSection/StoriesSection'
+import NewsletterSection from '@/components/home/NewsletterSection/NewsletterSection'
 
 export default function Home() {
   return (
     <>
       <HeroSection />
-      <FeaturedProducts />
+      <EditsSection />
       <CategoryBanner />
+      <StoriesSection />
+      <NewsletterSection />
     </>
   )
 }

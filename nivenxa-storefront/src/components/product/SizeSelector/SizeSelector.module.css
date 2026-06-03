@@ -1,0 +1,39 @@
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.btn {
+  min-width: 40px;
+  padding: 0 12px;
+  height: 34px;
+  flex-shrink: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  color: var(--nivenxa-text-primary);
+  background: transparent;
+  border: 0.5px solid var(--nivenxa-border);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.btn:hover:not(.unavailable):not(.active) {
+  border-color: var(--nivenxa-text-muted);
+}
+
+/* Active */
+.active {
+  background: var(--nivenxa-cta-forest) !important;
+  color: var(--nivenxa-cta-forest-text) !important;
+  border-color: var(--nivenxa-cta-forest) !important;
+}
+
+/* Unavailable */
+.unavailable {
+  opacity: 0.35;
+  text-decoration: line-through;
+  cursor: default;
+  pointer-events: none;
+}

@@ -1,0 +1,62 @@
+.section {
+  padding: 40px 32px 48px;
+  background: var(--nivenxa-bg-primary);
+}
+
+.eyebrow {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-muted);
+  margin-bottom: 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+}
+
+.iconCircle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 0.5px solid var(--nivenxa-border);
+  font-size: 18px;
+  color: var(--nivenxa-text-primary);
+  flex-shrink: 0;
+}
+
+.label {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 11px;
+  color: var(--nivenxa-text-muted);
+  text-align: center;
+  line-height: 1.5;
+  max-width: 80px;
+}
+
+.note {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 12px;
+  line-height: 1.75;
+  color: var(--nivenxa-text-muted);
+  border-left: 1.5px solid var(--nivenxa-border);
+  border-radius: 0;
+  padding-left: 14px;
+  margin-top: 20px;
+}

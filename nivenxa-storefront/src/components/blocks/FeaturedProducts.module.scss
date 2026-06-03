@@ -253,7 +253,7 @@
   font-size: 0.74rem;
   font-weight: 400;
   line-height: 1;
-  color: rgba(44, 44, 44, 0.38);
+  color: var(--nivenxa-text-muted);
   letter-spacing: 0.01em;
   margin: 0;
   padding: 0.65rem 0;
@@ -281,7 +281,7 @@
   color: rgba(122, 117, 94, 0.72);
   border: 1px solid rgba(122, 117, 94, 0.18);
   background: rgba(249, 247, 242, 0.7);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
 }
 
 // Product DNA

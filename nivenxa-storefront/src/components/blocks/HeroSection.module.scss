@@ -2,10 +2,11 @@
 
 .section {
   position: relative;
-  min-height: 100svh;
+  min-height: 100vh;
   display: flex;
   align-items: flex-end;
-  padding-top: 1.5rem;
+  // Clear the fixed navbar (--nivenxa-header-default = 90px) plus editorial breathing room
+  padding-top: calc(var(--nivenxa-header-default) + 2rem);
   padding-bottom: clamp(4rem, 8vw, 6rem);
   padding-inline: var(--gutter);
   overflow: hidden;
@@ -15,11 +16,11 @@
   @include v.xl  { padding-inline: clamp(3rem,   4vw,   5rem); }
 }
 
-// ─── Background gradient ──────────────────────────────────────────────────────
+// ─── Background ───────────────────────────────────────────────────────────────
 .bg {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, #EDE8DC 0%, #D9D4C4 45%, #CAC5B5 100%);
+  background-color: #E3DDD1;  // flat canvas mid-tone — no decorative gradient
 }
 
 // ─── Right-side editorial blocks ─────────────────────────────────────────────
@@ -49,118 +50,46 @@
   }
 }
 
-// ─── Block 1: Lifestyle crop ──────────────────────────────────────────────────
-// Warm skin-adjacent tonal gradient — suggests a close-up of draped fabric on a body
+// ─── Block 1: Fabric close-up ─────────────────────────────────────────────────
+// Real image: fabric_close_up.webp (oat-beige)
+// Fallback background-color set inline in TSX: #C8B89A
 .block1 {
   top: 8%;
   right: 12%;
   width: clamp(10rem, 14vw, 13rem);
   height: clamp(14rem, 19vw, 18rem);
-  background: linear-gradient(
-    175deg,
-    #DDD6C8 0%,
-    #C9BEAA 25%,
-    #BDAF97 55%,
-    #A89880 80%,
-    #9A8A71 100%
-  );
-
-  // Side-light rim to simulate natural photography
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.13) 0%,
-      transparent 40%
-    );
-    pointer-events: none;
-  }
 }
 
-// ─── Block 2: Fabric drape ────────────────────────────────────────────────────
-// CSS linen weave grid over warm stone gradient — simulates flat-lay fabric photography
+// ─── Block 2: Studio-side ────────────────────────────────────────────────────
+// Real image: side_studio_view.webp (oat-beige)
+// Fallback background-color set inline in TSX: #8B9E7A
 .block2 {
   top: 28%;
   right: 30%;
   width: clamp(14rem, 19vw, 18rem);
   height: clamp(18rem, 24vw, 24rem);
-  background-image:
-    // Warp threads (vertical)
-    repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 5px,
-      rgba(255, 255, 255, 0.052) 5px,
-      rgba(255, 255, 255, 0.052) 6px
-    ),
-    // Weft threads (horizontal)
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 8px,
-      rgba(0, 0, 0, 0.035) 8px,
-      rgba(0, 0, 0, 0.035) 9px
-    ),
-    // Base cloth gradient — warm stone, soft directional light
-    linear-gradient(
-      155deg,
-      #E3DDD1 0%,
-      #D8D0C2 20%,
-      #CEC7B8 45%,
-      #C2BBA8 70%,
-      #B6B0A0 100%
-    );
-
-  // Top-left catch-light
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    background: radial-gradient(
-      ellipse at 25% 15%,
-      rgba(255, 255, 255, 0.20) 0%,
-      transparent 55%
-    );
-    pointer-events: none;
-  }
 }
 
-// ─── Block 3: Texture macro ───────────────────────────────────────────────────
-// Diamond crosshatch over deep olive — simulates close-up of knit/weave fabric
+// ─── Block 3: Cargo studio-front ─────────────────────────────────────────────
+// Real image: front_view.png (cargo dark-olive)
+// Fallback background-color set inline in TSX: #4A5240
 .block3 {
   bottom: 15%;
   right: 10%;
   width: clamp(8rem, 11vw, 10rem);
   height: clamp(10rem, 14vw, 12rem);
-  background-image:
-    // Diagonal weave A
-    repeating-linear-gradient(
-      45deg,
-      transparent,
-      transparent 3px,
-      rgba(255, 255, 255, 0.065) 3px,
-      rgba(255, 255, 255, 0.065) 4px
-    ),
-    // Diagonal weave B
-    repeating-linear-gradient(
-      -45deg,
-      transparent,
-      transparent 3px,
-      rgba(0, 0, 0, 0.075) 3px,
-      rgba(0, 0, 0, 0.075) 4px
-    ),
-    // Deep olive base
-    linear-gradient(
-      150deg,
-      #7A755E 0%,
-      #6D6852 35%,
-      #615C48 65%,
-      #565240 100%
-    );
+}
+
+// ─── Block image ──────────────────────────────────────────────────────────────
+.blockImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  z-index: 1;
 }
 
 // ─── Block editorial labels ────────────────────────────────────────────────────
@@ -258,4 +187,27 @@
   height: 2.5rem;
   background-color: var(--color-olive);
   transform-origin: top;
+}
+
+// ─── Scroll cue chevron ───────────────────────────────────────────────────────
+.scrollCue {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 20px;
+  color: var(--nivenxa-text-muted);
+  opacity: 0;
+  animation: scrollBounce 2.5s ease-in-out infinite;
+  animation-delay: 1.2s;
+  z-index: v.$z-overlay;
+  pointer-events: none;
+}
+
+@keyframes scrollBounce {
+  0%   { opacity: 0; transform: translateX(-50%) translateY(0); }
+  20%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+  50%  { opacity: 1; transform: translateX(-50%) translateY(7px); }
+  80%  { opacity: 1; transform: translateX(-50%) translateY(7px); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(0); }
 }

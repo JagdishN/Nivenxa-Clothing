@@ -1,6 +1,5 @@
 import { Link } from '@/i18n/routing'
 import { COLLECTIONS, STORIES, SOCIAL } from '@/data/footer'
-import NewsletterSignup from './NewsletterSignup'
 import styles from './Footer.module.scss'
 
 export default function Footer() {
@@ -73,14 +72,6 @@ export default function Footer() {
           </ul>
         </div>
 
-        {/* Col 4 — Newsletter */}
-        <div className={styles.newsletterCol}>
-          <p className={styles.colTitle}>Stay Connected</p>
-          <p className={styles.newsletterNote}>
-            New arrivals, fabric stories, and quiet updates from the atelier.
-          </p>
-          <NewsletterSignup />
-        </div>
 
       </div>
 

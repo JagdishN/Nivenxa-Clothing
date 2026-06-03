@@ -1,0 +1,9 @@
+.wrapper {
+  width: 100%;
+  background: var(--nivenxa-bg-primary);
+
+  /* Desktop: proximity snap within the editorial scroll flow */
+  @media (min-width: 1024px) {
+    scroll-snap-type: y proximity;
+  }
+}

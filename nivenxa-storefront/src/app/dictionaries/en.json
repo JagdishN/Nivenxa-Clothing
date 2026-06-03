@@ -9,15 +9,15 @@
     "closeMenu": "Close menu"
   },
   "hero": {
-    "eyebrow": "New Collection — SS 2025",
+    "eyebrow": "New Collection — SS 2026",
     "titleLine1": "Crafted for",
     "titleAccent": "Slow",
     "titleLine2": "Comfort",
     "body": "Heavyweight bio-washed essentials designed for elevated everyday living.",
-    "ctaShop": "Shop the Collection",
+    "ctaShop": "Shop Oversized Tee →",
     "ctaStory": "Our Story",
     "scroll": "Scroll",
-    "block1Tag": "SS 2025",
+    "block1Tag": "SS 2026",
     "block1Caption": "Everyday Silhouette",
     "block2Tag": "200–300 GSM",
     "block2Caption": "Natural Comfort Fabrics",
@@ -36,7 +36,7 @@
     "women": {
       "index": "01",
       "label": "Women's",
-      "title": "Women's Collections",
+      "title": "Women's",
       "body": "Relaxed lounge sets and premium Indo-Western comfortwear crafted for the modern Indian woman.",
       "cta": "Shop Women's"
     },
@@ -49,8 +49,8 @@
     },
     "unisex": {
       "index": "02",
-      "label": "Unisex Essentials",
-      "title": "Unisex Essentials",
+      "label": "Unisex",
+      "title": "Unisex",
       "body": "Heavyweight cargo pants and oversized tees in 240–340 GSM bio-washed cotton. Built for movement, worn for life.",
       "cta": "Shop Unisex"
     }
@@ -68,7 +68,7 @@
       "sustainability": "Sustainability",
       "contact": "Contact"
     },
-    "copyright": "© 2025 NIVENXA. All rights reserved.",
+    "copyright": "© 2026 NIVENXA. All rights reserved.",
     "madeIn": "Made with intent in India."
   },
   "shop": {
