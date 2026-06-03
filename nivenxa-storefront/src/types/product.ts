@@ -58,7 +58,8 @@ export interface CareInstruction {
 
 export interface FabricPillar {
   value: string        // e.g. '240' | '100%' | 'Garment'
-  unit: string
+  unit: string         // inline with value, e.g. 'GSM' — empty string if none
+  subLabel: string     // descriptive label on its own line below value row
   description: string
 }
 

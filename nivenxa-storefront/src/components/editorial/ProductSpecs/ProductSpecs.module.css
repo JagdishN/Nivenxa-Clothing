@@ -1,24 +1,15 @@
-.section {
+/* ── Outer 2-col grid ── */
+.specsAndCare {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  padding: 40px 32px;
-  background: var(--nivenxa-bg-secondary);
   gap: 0;
+  background: var(--nivenxa-bg-secondary);
+  border-top: 0.5px solid var(--nivenxa-border);
 }
 
+/* ── Left column — Garment Specifications ── */
 .col {
-  padding: 0 24px;
-}
-
-/* Column divider */
-.col:first-child {
-  border-right: 0.5px solid var(--nivenxa-border);
-  padding-left: 0;
-}
-
-.col:last-child {
-  padding-right: 0;
-  border-left: 0.5px solid var(--nivenxa-border);
+  padding: 40px 24px 40px 32px;
 }
 
 .colTitle {
@@ -38,12 +29,13 @@
 }
 
 .groupHeading {
-  font-size: 9px;
-  letter-spacing: 0.12em;
+  font-size: 10px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--nivenxa-text-muted);
-  padding: 14px 0 6px;
-  border-bottom: 0.5px solid var(--nivenxa-border);
+  color: var(--nivenxa-text-primary);
+  font-weight: 500;
+  padding: 16px 0 8px;
+  border-bottom: 1px solid var(--nivenxa-border);
   margin-bottom: 0;
 }
 
@@ -81,6 +73,23 @@
   font-weight: 500;
   color: var(--nivenxa-text-primary);
   text-align: right;
+}
+
+/* ── Right column — Fit Guide + Care Instructions ── */
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+  border-left: 0.5px solid var(--nivenxa-border);
+}
+
+.fitGuideSection {
+  padding: 20px 28px;
+}
+
+.columnDivider {
+  height: 0.5px;
+  background: var(--nivenxa-border);
+  margin: 0 28px;
 }
 
 /* Fit axis labels row */
@@ -153,17 +162,90 @@
   line-height: 1.6;
 }
 
-/* Stack on mobile */
-@media (max-width: 1023px) {
-  .section {
+/* ── Care Instructions ── */
+.careSection {
+  padding: 20px 28px;
+}
+
+.careHeading {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-muted);
+  margin-bottom: 16px;
+  display: block;
+}
+
+.careGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.careItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.careIconCircle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 0.5px solid var(--nivenxa-border);
+  font-size: 18px;
+  color: var(--nivenxa-text-primary);
+  flex-shrink: 0;
+}
+
+.careLabel {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 11px;
+  color: var(--nivenxa-text-muted);
+  text-align: center;
+  line-height: 1.4;
+}
+
+.careNote {
+  font-size: 11px;
+  font-style: italic;
+  color: var(--nivenxa-text-muted);
+  line-height: 1.6;
+  border-top: 0.5px solid var(--nivenxa-border-light);
+  padding-top: 12px;
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+/* ── Mobile: stack columns ── */
+@media (max-width: 1024px) {
+  .specsAndCare {
     grid-template-columns: 1fr;
   }
 
-  .col:first-child {
-    border-right: none;
-    border-bottom: 0.5px solid var(--nivenxa-border);
-    padding-left: 0;
-    padding-bottom: 32px;
-    margin-bottom: 32px;
+  .col {
+    padding: 32px 1.25rem;
+  }
+
+  .rightColumn {
+    border-left: none;
+    border-top: 0.5px solid var(--nivenxa-border);
+  }
+
+  /* Care icons: 4-column row when full width is available */
+  .careGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .careGrid {
+    grid-template-columns: 1fr 1fr;
   }
 }

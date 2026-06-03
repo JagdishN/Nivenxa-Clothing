@@ -7,14 +7,14 @@ interface Props {
 
 export default function FabricPillars({ pillars }: Props) {
   return (
-    <section className={styles.section}>
+    <section className={styles.pillarsGrid}>
       {pillars.map((pillar, i) => (
-        <div
-          key={pillar.unit}
-          className={`${styles.col} ${i === pillars.length - 1 ? styles.last : ''}`}
-        >
-          <p className={styles.value}>{pillar.value}</p>
-          <p className={styles.unit}>{pillar.unit}</p>
+        <div key={i} className={styles.pillar}>
+          <div className={styles.valueRow}>
+            <span className={styles.value}>{pillar.value}</span>
+            {pillar.unit && <span className={styles.unit}>{pillar.unit}</span>}
+          </div>
+          <span className={styles.subLabel}>{pillar.subLabel}</span>
           <p className={styles.description}>{pillar.description}</p>
         </div>
       ))}

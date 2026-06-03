@@ -218,21 +218,24 @@ const oversizedTee: Product = {
   fabricPillars: [
     {
       value: '240',
-      unit: 'GSM fabric weight',
+      unit: 'GSM',
+      subLabel: 'Fabric weight',
       description:
-        'Mid-weight opacity. Substantial without heaviness. Not transparent in sunlight.',
+        'Mid-weight. Substantial without heaviness. Not transparent in sunlight.',
     },
     {
       value: '100%',
-      unit: 'Combed cotton',
+      unit: 'Cotton',
+      subLabel: 'Combed cotton',
       description:
-        'Single jersey knit. Yarn-dyed. Soft washed finish. No synthetic blends.',
+        'Single jersey knit. Yarn-dyed. No synthetic blends.',
     },
     {
       value: 'Garment',
-      unit: 'Dyed finish',
+      unit: '',
+      subLabel: 'Dyed finish',
       description:
-        'Dyed after construction for depth and consistency. Colour evolves subtly with every wash.',
+        'Dyed after construction. Colour evolves subtly with every wash.',
     },
   ],
 
@@ -392,21 +395,24 @@ const cargoPants: Product = {
   fabricPillars: [
     {
       value: '300',
-      unit: 'GSM canvas weight',
+      unit: 'GSM',
+      subLabel: 'Canvas weight',
       description:
-        'Structured without stiffness. Holds its shape through long wear and repeated washing.',
+        'Structured without stiffness. Holds shape through long wear and repeated washing.',
     },
     {
       value: '6',
-      unit: 'Functional pockets',
+      unit: '',
+      subLabel: 'Functional pockets',
       description:
-        'All six pockets fully usable. No decorative stitching. Every pocket tested for daily carry.',
+        'All six pockets fully usable. No decorative stitching. Every pocket tested.',
     },
     {
       value: '100%',
-      unit: 'Cotton canvas',
+      unit: 'Cotton',
+      subLabel: 'Cotton canvas',
       description:
-        'Pure cotton twill. Breathable for Indian climate. Softens naturally with each wash.',
+        'Pure cotton twill. Breathable. Softens naturally with each wash.',
     },
   ],
 
