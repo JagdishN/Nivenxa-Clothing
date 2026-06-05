@@ -3,5 +3,12 @@
     "allow": [
       "Bash(curl -sI http://localhost:3003/en/stories/craftsmanship)"
     ]
+  },
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp"]
+    }
   }
+
 }

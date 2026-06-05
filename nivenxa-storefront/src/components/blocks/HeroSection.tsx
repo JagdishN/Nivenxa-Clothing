@@ -103,7 +103,8 @@ export default function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.5 }}
         >
-          <Link href="/shop/mens">
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <Link href={'/shop' as any}>
             <Button>SHOP THE COLLECTION →</Button>
           </Link>
           <Link href="/stories/our-story">
