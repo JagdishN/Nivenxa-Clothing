@@ -1,0 +1,95 @@
+/* ── EditSubItemPage ────────────────────────────────────── */
+
+.section {
+  background: var(--nivenxa-bg-primary);
+  padding: 4rem 2.5rem;
+}
+
+/* ── Back link ─────────────────────────────────────────── */
+
+.backLink {
+  display: inline-block;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-muted);
+  text-decoration: none;
+  margin-bottom: 2rem;
+  transition: color 0.2s ease;
+}
+
+.backLink:hover {
+  color: var(--nivenxa-text-primary);
+}
+
+/* ── Header ────────────────────────────────────────────── */
+
+.header {
+  margin-bottom: 3rem;
+}
+
+.title {
+  font-family: Georgia, serif;
+  font-size: 36px;
+  font-weight: 400;
+  color: var(--nivenxa-text-primary);
+  line-height: 1.1;
+  margin: 0 0 10px;
+}
+
+.descriptor {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--nivenxa-text-muted);
+  max-width: 520px;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.rule {
+  width: 32px;
+  height: 1.5px;
+  background: var(--nivenxa-cta-terracotta);
+  margin-top: 14px;
+}
+
+/* ── Product grid ──────────────────────────────────────── */
+
+.productGrid {
+  display: grid;
+  gap: 20px;
+}
+
+.gridTwo {
+  grid-template-columns: 1fr 1fr;
+}
+
+.gridThree {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .section {
+    padding: 2.5rem 1.25rem;
+  }
+
+  .title {
+    font-size: 28px;
+  }
+
+  .gridTwo,
+  .gridThree {
+    grid-template-columns: 1fr 1fr;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .gridTwo,
+  .gridThree {
+    grid-template-columns: 1fr;
+    max-width: 100%;
+  }
+}

@@ -27,7 +27,7 @@ export default function CategoryBanner() {
                 <p className={styles.womenEyebrow}>{t('women.index')} — {t('women.label')}</p>
                 <h3 className={styles.womenTitle}>{t('women.title')}</h3>
                 <p className={styles.womenBody}>{t('women.body')}</p>
-                <Link href="/shop/women">
+                <Link href="/shop/womens">
                   <Button className={styles.categoryBtn}>{t('women.cta')}</Button>
                 </Link>
               </div>
@@ -68,7 +68,7 @@ export default function CategoryBanner() {
                 <p className={styles.kidsEyebrow}>{t('kids.index')} — {t('kids.label')}</p>
                 <h3 className={styles.kidsTitle}>{t('kids.title')}</h3>
                 <p className={styles.kidsBody}>{t('kids.body')}</p>
-                <Link href="/shop/kids">
+                <Link href="/shop/youth-studio">
                   <Button className={styles.categoryBtn}>{t('kids.cta')}</Button>
                 </Link>
                 <p className={styles.comingSoon}>Coming SS 2026</p>

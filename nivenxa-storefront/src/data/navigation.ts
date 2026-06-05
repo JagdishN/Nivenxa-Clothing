@@ -51,13 +51,13 @@ export const NAV_ITEMS: NavItem[] = [
           ],
         },
         children: [
-          { label: 'Oversized Tee', href: '/shop/over-tee-shirts' },
-          { label: 'Cargo Pants',   href: '/shop/cargo-pants'     },
+          { label: 'Oversized Tee', href: '/shop/mens/oversized-tee' },
+          { label: 'Cargo Pants',   href: '/shop/mens/cargo-pants'   },
         ],
       },
       {
         label: "Women's",
-        href: '/shop/women',
+        href: '/shop/womens',
         descriptor: 'Indo-Western comfortwear',
         atmosphere: {
           gradient: 'linear-gradient(148deg, #C89080 0%, #A87060 55%, #8A5548 100%)',
@@ -69,9 +69,9 @@ export const NAV_ITEMS: NavItem[] = [
           ],
         },
         children: [
-          { label: 'Indo-Western Kurta', href: '/shop/women-indo-western' },
-          { label: 'Co-ord Set',         href: '/shop/women-lounge-sets'  },
-          { label: 'Sleepwear',          href: '/shop/kids-nightwear'     },
+          { label: 'A-line Kurta', href: '/shop/womens/a-line-kurta' },
+          { label: 'Co-ord Set',   href: '/shop/womens/co-ord-set'   },
+          { label: 'Sleepwear',    href: '/shop/womens/sleepwear'     },
         ],
       },
       {
@@ -88,13 +88,13 @@ export const NAV_ITEMS: NavItem[] = [
           ],
         },
         children: [
-          { label: 'Cargo Pants',  href: '/shop/cargo-pants'      },
-          { label: 'Lounge Sets',  href: '/shop/women-lounge-sets' },
+          { label: 'Cargo Pants', href: '/shop/unisex/cargo-pants' },
+          { label: 'Lounge Sets', href: '/shop/unisex/lounge-sets' },
         ],
       },
       {
         label: 'Youth Studio',
-        href: '/shop/kids',
+        href: '/shop/youth-studio',
         descriptor: 'Premium comfort for young ones',
         atmosphere: {
           gradient: 'linear-gradient(148deg, #8EA890 0%, #728C74 50%, #5A7060 100%)',
@@ -106,8 +106,8 @@ export const NAV_ITEMS: NavItem[] = [
           ],
         },
         children: [
-          { label: 'Kids Sleepwear', href: '/shop/kids-nightwear' },
-          { label: 'Kids Tee',       href: '/shop/boys-premium'   },
+          { label: 'Kids Sleepwear', href: '/shop/youth-studio/kids-sleepwear' },
+          { label: 'Kids Tee',       href: '/shop/youth-studio/kids-tee'       },
         ],
       },
     ],
@@ -125,7 +125,7 @@ export const NAV_ITEMS: NavItem[] = [
     submenu: [
       {
         label: 'The Everyday Edit',
-        href: null,
+        href: '/edits/everyday-edit',
         descriptor: 'Bio-washed comfortwear for daily wear',
         atmosphere: {
           gradient: 'linear-gradient(155deg, #EDE8DC 0%, #D8D0C0 40%, #C8BEA8 100%)',
@@ -137,14 +137,14 @@ export const NAV_ITEMS: NavItem[] = [
           ],
         },
         children: [
-          { label: 'Relaxed Utility',       href: '/shop/cargo-pants'     },
-          { label: 'Everyday Silhouettes',  href: '/shop/over-tee-shirts' },
-          { label: 'Bio-Washed Essentials', href: '/shop/unisex'          },
+          { label: 'Relaxed Utility',       href: '/edits/everyday-edit/relaxed-utility'       },
+          { label: 'Everyday Silhouettes',  href: '/edits/everyday-edit/everyday-silhouettes'  },
+          { label: 'Bio-Washed Essentials', href: '/edits/everyday-edit/bio-washed-essentials' },
         ],
       },
       {
         label: 'The Utility Edit',
-        href: '/shop/cargo-pants',
+        href: '/edits/utility-edit',
         descriptor: 'Six-pocket bio-washed canvas',
         atmosphere: {
           gradient: 'linear-gradient(150deg, #4A4840 0%, #3A3730 55%, #2E2C26 100%)',
@@ -156,14 +156,14 @@ export const NAV_ITEMS: NavItem[] = [
           tags: ['240–340 GSM cottons', 'Bio-washed finishes', 'Built for repetition'],
         },
         children: [
-          { label: 'Relaxed Utility',    href: '/shop/cargo-pants' },
-          { label: 'Urban Movement',     href: '/shop/cargo-pants' },
-          { label: 'Heavyweight Canvas', href: '/shop/cargo-pants' },
+          { label: 'Relaxed Utility',    href: '/edits/utility-edit/relaxed-utility'    },
+          { label: 'Urban Movement',     href: '/edits/utility-edit/urban-movement'     },
+          { label: 'Heavyweight Canvas', href: '/edits/utility-edit/heavyweight-canvas' },
         ],
       },
       {
         label: 'The Rest Edit',
-        href: null,
+        href: '/edits/rest-edit',
         descriptor: 'Considered rest. Ultra-soft fabrics.',
         atmosphere: {
           gradient: 'linear-gradient(148deg, #EAE6DC 0%, #DEDAD0 50%, #CCC8C0 100%)',
@@ -171,14 +171,14 @@ export const NAV_ITEMS: NavItem[] = [
           ghost: 'REST',
         },
         children: [
-          { label: "Women's Sleepwear",  href: '/shop/women-lounge-sets' },
-          { label: 'Kids Sleepwear',     href: '/shop/kids-nightwear'    },
-          { label: 'Unisex Lounge Sets', href: '/shop/unisex'            },
+          { label: "Women's Sleepwear",  href: '/edits/rest-edit/womens-sleepwear'  },
+          { label: 'Kids Sleepwear',     href: '/edits/rest-edit/kids-sleepwear'    },
+          { label: 'Unisex Lounge Sets', href: '/edits/rest-edit/unisex-lounge-sets'},
         ],
       },
       {
         label: "The Women's Edit",
-        href: null,
+        href: '/edits/womens-edit',
         descriptor: 'Indo-Western comfortwear for everyday India',
         atmosphere: {
           gradient: 'linear-gradient(140deg, #C87060 0%, #A85848 60%, #8A4538 100%)',
@@ -190,9 +190,9 @@ export const NAV_ITEMS: NavItem[] = [
           ],
         },
         children: [
-          { label: 'A-line Kurta',             href: '/shop/women-indo-western' },
-          { label: 'Co-ord Set',               href: '/shop/women-lounge-sets'  },
-          { label: 'Indo-Western Silhouettes', href: '/shop/women-indo-western' },
+          { label: 'A-line Kurta',             href: '/edits/womens-edit/a-line-kurta'             },
+          { label: 'Co-ord Set',               href: '/edits/womens-edit/co-ord-set'               },
+          { label: 'Indo-Western Silhouettes', href: '/edits/womens-edit/indo-western-silhouettes'  },
         ],
       },
     ],

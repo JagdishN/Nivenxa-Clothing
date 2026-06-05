@@ -1,0 +1,142 @@
+/* ── CollectionPage ────────────────────────────────────── */
+
+.section {
+  background: var(--nivenxa-bg-primary);
+  padding: 4rem 2.5rem;
+}
+
+.header {
+  margin-bottom: 3rem;
+}
+
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-muted);
+  margin-bottom: 12px;
+  display: block;
+}
+
+.title {
+  font-family: Georgia, serif;
+  font-size: 48px;
+  font-weight: 400;
+  color: var(--nivenxa-text-primary);
+  line-height: 1;
+  margin: 0;
+}
+
+.titleRule {
+  width: 32px;
+  height: 1.5px;
+  background: var(--nivenxa-cta-terracotta);
+  margin-top: 14px;
+}
+
+/* ── Product grid ──────────────────────────────────────── */
+
+.productGrid {
+  display: grid;
+  gap: 20px;
+}
+
+.gridTwo {
+  grid-template-columns: 1fr 1fr;
+}
+
+.gridThree {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* ── Product card ──────────────────────────────────────── */
+
+.productCard {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  cursor: pointer;
+  color: inherit;
+}
+
+.cardImageWrap {
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: var(--nivenxa-bg-secondary);
+  position: relative;
+}
+
+.cardImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  transition: transform 0.5s ease;
+}
+
+.productCard:hover .cardImage {
+  transform: scale(1.03);
+}
+
+.cardText {
+  padding: 14px 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cardTitle {
+  font-family: Georgia, serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--nivenxa-text-primary);
+  margin: 0;
+}
+
+.cardFabric {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--nivenxa-text-muted);
+  margin: 0;
+}
+
+.cardPrice {
+  font-size: 12px;
+  color: var(--nivenxa-text-muted);
+  margin: 0;
+}
+
+.cardTones {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-hint);
+  margin-top: 4px;
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .section {
+    padding: 2.5rem 1.25rem;
+  }
+
+  .title {
+    font-size: 32px;
+  }
+
+  .gridTwo,
+  .gridThree {
+    grid-template-columns: 1fr 1fr;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .gridTwo,
+  .gridThree {
+    grid-template-columns: 1fr;
+    max-width: 100%;
+  }
+}

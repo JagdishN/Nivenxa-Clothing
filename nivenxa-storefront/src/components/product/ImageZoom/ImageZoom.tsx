@@ -34,7 +34,6 @@ export { ZoomIcon }
 export default function ImageZoom({
   isOpen,
   onClose,
-  images,
   activeIndex,
   product,
   activeColour,
@@ -50,6 +49,7 @@ export default function ImageZoom({
 
   const imageRef = useRef<HTMLDivElement>(null)
   const lastScrollTime = useRef(0)
+  const activeImgRef = useRef(activeIndex)
   const thumbRefs = useRef<(HTMLButtonElement | null)[]>([])
   const touchStartX = useRef(0)
   const touchStartY = useRef(0)
@@ -66,11 +66,21 @@ export default function ImageZoom({
     }
   }, [isOpen, activeColour, activeIndex])
 
-  // ── Body scroll lock ──────────────────────────────────────────────────────
+  // ── Body scroll lock — position:fixed required for iOS Safari ────────────
   useEffect(() => {
-    document.body.style.overflow = isOpen ? 'hidden' : ''
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+      document.body.style.position = 'fixed'
+      document.body.style.width = '100%'
+    } else {
+      document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.width = ''
+    }
     return () => {
       document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.width = ''
     }
   }, [isOpen])
 
@@ -84,11 +94,11 @@ export default function ImageZoom({
     return () => window.removeEventListener('keydown', handler)
   }, [isOpen])
 
-  // ── goToImage — 150 ms fade transition ────────────────────────────────────
-  const goToImage = useCallback((index: number) => {
+  // ── triggerTransition — 150 ms fade, safe for native event closures ──────
+  const triggerTransition = useCallback((nextIndex: number) => {
     setTransitioning(true)
     setTimeout(() => {
-      setActiveImg(index)
+      setActiveImg(nextIndex)
       setZoomLevel(1.4)
       setTransitioning(false)
     }, 150)
@@ -120,11 +130,15 @@ export default function ImageZoom({
   const displayImages = getGalleryImages(internalColour.images)
 
   // ── Navigation ───────────────────────────────────────────────────────────
-  const handlePrev = () =>
-    goToImage(activeImg === 0 ? displayImages.length - 1 : activeImg - 1)
+  const handlePrev = () => {
+    const i = activeImgRef.current
+    triggerTransition(i === 0 ? displayImages.length - 1 : i - 1)
+  }
 
-  const handleNext = () =>
-    goToImage(activeImg === displayImages.length - 1 ? 0 : activeImg + 1)
+  const handleNext = () => {
+    const i = activeImgRef.current
+    triggerTransition(i === displayImages.length - 1 ? 0 : i + 1)
+  }
 
   // ── Auto-scroll thumbnail into view ──────────────────────────────────────
   useEffect(() => {
@@ -134,6 +148,11 @@ export default function ImageZoom({
   // ── Reset zoom on image change ────────────────────────────────────────────
   useEffect(() => {
     setZoomLevel(1.4)
+  }, [activeImg])
+
+  // ── Keep activeImgRef current ─────────────────────────────────────────────
+  useEffect(() => {
+    activeImgRef.current = activeImg
   }, [activeImg])
 
   // ── Mouse zoom follow ─────────────────────────────────────────────────────
@@ -149,21 +168,30 @@ export default function ImageZoom({
     [zoomLevel],
   )
 
-  // ── Scroll wheel navigation (600 ms throttle) ─────────────────────────────
-  const handleWheel = useCallback(
-    (e: React.WheelEvent<HTMLDivElement>) => {
+  // ── Scroll wheel — native listener so passive:false actually works ────────
+  useEffect(() => {
+    const el = imageRef.current
+    if (!el || !isOpen) return
+
+    const onWheel = (e: WheelEvent) => {
       if (zoomLevel === 2.2) return
       e.preventDefault()
       e.stopPropagation()
       const now = Date.now()
-      if (now - lastScrollTime.current < 600) return
+      if (now - lastScrollTime.current < 500) return
       lastScrollTime.current = now
-      if (e.deltaY > 0) handleNext()
-      else handlePrev()
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [zoomLevel, handleNext, handlePrev],
-  )
+      const total = internalColour.images.length
+      const current = activeImgRef.current
+      if (e.deltaY > 0) {
+        triggerTransition(current === total - 1 ? 0 : current + 1)
+      } else {
+        triggerTransition(current === 0 ? total - 1 : current - 1)
+      }
+    }
+
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [isOpen, zoomLevel, internalColour.images.length, triggerTransition])
 
   // ── Click cycles zoom: 1.4 → 2.2 → 1 → 1.4 ──────────────────────────────
   const handleImageClick = useCallback(() => {
@@ -200,6 +228,12 @@ export default function ImageZoom({
     ? 'Click to zoom'
     : 'Click for close-up'
 
+  // ── Per-image editorial — falls back to product-level data ────────────────
+  const byImageEntry = product.editorial?.byImage?.[currentImage.type]
+  const activeTitle  = byImageEntry ? byImageEntry.headline : product.name
+  const activeBody   = byImageEntry?.body ?? product.editorial?.quote ?? product.compositionQuote
+  const activeSpecs  = byImageEntry?.specs ?? product.editorial?.specs
+
   return (
     <div className={styles.overlay} onClick={handleClose}>
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
@@ -220,7 +254,7 @@ export default function ImageZoom({
               key={i}
               ref={el => { thumbRefs.current[i] = el }}
               className={`${styles.thumb} ${i === activeImg ? styles.thumbActive : ''}`}
-              onClick={() => goToImage(i)}
+              onClick={() => triggerTransition(i)}
               aria-label={`View image ${i + 1}`}
             >
               <img
@@ -238,7 +272,6 @@ export default function ImageZoom({
           className={styles.imageCol}
           onClick={handleImageClick}
           onMouseMove={handleMouseMove}
-          onWheel={handleWheel}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
           style={{ cursor: zoomLevel === 2.2 ? 'zoom-out' : 'zoom-in' }}
@@ -268,7 +301,9 @@ export default function ImageZoom({
           >→</button>
 
           <span className={styles.counter}>
-            {activeImg + 1} / {displayImages.length}
+            {String(activeImg + 1).padStart(2, '0')}
+            {' — '}
+            {String(displayImages.length).padStart(2, '0')}
           </span>
 
           <span className={styles.scrollHint}>Scroll to browse</span>
@@ -281,17 +316,13 @@ export default function ImageZoom({
             {product.collectionName ?? 'NIVENXA ESSENTIAL'}
           </span>
 
-          <h2 className={styles.editTitle}>{product.name}</h2>
+          <h2 className={styles.editTitle}>{activeTitle}</h2>
 
-          <p className={styles.editQuote}>
-            {product.editorial?.quote ?? product.compositionQuote}
-          </p>
+          <p className={styles.editQuote}>{activeBody}</p>
 
-          <div className={styles.editDivider} />
-
-          {product.editorial?.specs && product.editorial.specs.length > 0 && (
+          {activeSpecs && activeSpecs.length > 0 && (
             <div className={styles.editSpecs}>
-              {product.editorial.specs.map((spec, i) => (
+              {activeSpecs.map((spec, i) => (
                 <div key={i} className={styles.specRow}>
                   <span className={styles.specLabel}>{spec.label}</span>
                   <span className={styles.specValue}>{spec.value}</span>
@@ -300,28 +331,31 @@ export default function ImageZoom({
             </div>
           )}
 
-          {/* Colour switcher */}
-          <div className={styles.colourSwitcher}>
-            <span className={styles.colourSwitcherLabel}>Available Tones</span>
-            <div className={styles.swatchRow}>
-              {allColours.map(colour => (
-                <button
-                  key={colour.slug}
-                  className={`${styles.swatch} ${colour.slug === internalColour.slug ? styles.swatchActive : ''}`}
-                  style={{ background: colour.hex }}
-                  onClick={() => handleColourChange(colour)}
-                  title={colour.label}
-                  aria-label={colour.label}
-                />
-              ))}
+          {/* Colour + price — grouped purchase block */}
+          <div className={styles.purchaseBlock}>
+            <div className={styles.colourSwitcher}>
+              <span className={styles.colourSwitcherLabel}>Available Tones</span>
+              <div className={styles.swatchRow}>
+                {allColours.map(colour => (
+                  <button
+                    key={colour.slug}
+                    className={`${styles.swatch} ${colour.slug === internalColour.slug ? styles.swatchActive : ''}`}
+                    style={{ background: colour.hex }}
+                    onClick={() => handleColourChange(colour)}
+                    title={colour.label}
+                    aria-label={colour.label}
+                  />
+                ))}
+              </div>
+              <div className={styles.colourPriceRow}>
+                <span className={styles.activeName}>{internalColour.label}</span>
+                <span className={styles.inlinePrice}>{formattedPrice}</span>
+              </div>
+              {internalColour.slug !== activeColour.slug && (
+                <span className={styles.changeNote}>Will apply on close</span>
+              )}
             </div>
-            <span className={styles.activeName}>{internalColour.label}</span>
-            {internalColour.slug !== activeColour.slug && (
-              <span className={styles.changeNote}>Will apply on close</span>
-            )}
           </div>
-
-          <div className={styles.editPrice}>{formattedPrice}</div>
 
           <p className={styles.editNote}>
             Select size on product page to add to bag.

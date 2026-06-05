@@ -168,17 +168,20 @@
 
 .counter {
   position: absolute;
-  top: 14px;
+  top: 16px;
   left: 50%;
   transform: translateX(-50%);
+  font-family: Georgia, serif;
   font-size: 10px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.14em;
   color: rgba(0, 0, 0, 0.4);
-  background: rgba(255, 255, 255, 0.7);
-  padding: 3px 10px;
+  background: rgba(255, 255, 255, 0.75);
+  padding: 4px 12px;
   border-radius: 3px;
   pointer-events: none;
   white-space: nowrap;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 /* ── EDITORIAL COLUMN ─────────────────────────────── */
@@ -186,10 +189,11 @@
 .editCol {
   display: flex;
   flex-direction: column;
-  padding: 32px 24px 24px;
+  padding: 36px 28px 28px;
   background: var(--nivenxa-bg-secondary);
   border-left: 0.5px solid var(--nivenxa-border);
   overflow-y: auto;
+  gap: 0;
   scrollbar-width: none;
 }
 
@@ -202,48 +206,43 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--nivenxa-text-muted);
-  margin-bottom: 10px;
   display: block;
+  margin-bottom: 28px;
 }
 
 .editTitle {
   font-family: Georgia, serif;
-  font-size: 20px;
+  font-size: 28px;
   font-weight: 400;
-  line-height: 1.2;
+  line-height: 1.15;
   color: var(--nivenxa-text-primary);
-  margin-bottom: 10px;
-  margin-top: 0;
+  margin-bottom: 20px;
+  white-space: pre-line;
 }
 
 .editQuote {
   font-family: Georgia, serif;
-  font-size: 12px;
+  font-size: 13px;
   font-style: italic;
   color: var(--nivenxa-text-muted);
-  line-height: 1.7;
-  margin-bottom: 16px;
-  margin-top: 0;
+  line-height: 1.85;
+  margin-bottom: 28px;
 }
 
-.editDivider {
-  height: 0.5px;
-  background: var(--nivenxa-border);
-  margin-bottom: 14px;
-  flex-shrink: 0;
-}
 
 .editSpecs {
   display: flex;
   flex-direction: column;
-  margin-bottom: 16px;
+  border-top: 0.5px solid var(--nivenxa-border);
+  padding-top: 16px;
+  margin-bottom: 28px;
 }
 
 .specRow {
   display: flex;
   justify-content: space-between;
   font-size: 11px;
-  padding: 5px 0;
+  padding: 7px 0;
   border-bottom: 0.5px solid var(--nivenxa-border-light);
 }
 
@@ -253,6 +252,7 @@
 
 .specLabel {
   color: var(--nivenxa-text-muted);
+  letter-spacing: 0.03em;
 }
 
 .specValue {
@@ -260,23 +260,27 @@
   color: var(--nivenxa-text-primary);
 }
 
+/* ── PURCHASE BLOCK ───────────────────────────────── */
+
+.purchaseBlock {
+  margin-top: auto;
+  border-top: 0.5px solid var(--nivenxa-border);
+  padding-top: 20px;
+}
+
 /* ── COLOUR SWITCHER ──────────────────────────────── */
 
 .colourSwitcher {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 14px 0;
-  border-top: 0.5px solid var(--nivenxa-border);
-  border-bottom: 0.5px solid var(--nivenxa-border);
-  margin-bottom: 14px;
+  gap: 10px;
 }
 
 .colourSwitcherLabel {
   font-size: 9px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--nivenxa-text-muted);
+  color: var(--nivenxa-text-hint);
 }
 
 .swatchRow {
@@ -307,42 +311,42 @@
   outline-offset: 2px !important;
 }
 
+/* Colour name + price on same row */
+
+.colourPriceRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
 .activeName {
-  font-family: system-ui, -apple-system, sans-serif;
   font-size: 12px;
   font-weight: 500;
   color: var(--nivenxa-text-primary);
 }
 
+.inlinePrice {
+  font-family: Georgia, serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--nivenxa-text-primary);
+}
+
 .changeNote {
-  font-family: system-ui, -apple-system, sans-serif;
   font-size: 10px;
   font-style: italic;
   color: var(--nivenxa-cta-forest);
   letter-spacing: 0.02em;
 }
 
-/* ── PRICE + NOTE ─────────────────────────────────── */
-
-.editPrice {
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 18px;
-  font-weight: 500;
-  color: var(--nivenxa-text-primary);
-  padding: 10px 0;
-  border-bottom: 0.5px solid var(--nivenxa-border);
-  margin-bottom: 12px;
-}
+/* ── NOTE ─────────────────────────────────────────── */
 
 .editNote {
-  font-family: system-ui, -apple-system, sans-serif;
   font-size: 10px;
   color: var(--nivenxa-text-muted);
   font-style: italic;
   line-height: 1.5;
-  text-align: center;
-  margin-top: auto;
-  padding-top: 12px;
+  margin-top: 12px;
 }
 
 /* ── MOBILE ───────────────────────────────────────── */

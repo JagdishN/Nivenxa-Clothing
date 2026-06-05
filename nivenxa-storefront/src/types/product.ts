@@ -96,9 +96,16 @@ export interface EditorialSpec {
   value: string
 }
 
+export interface EditorialByImageEntry {
+  headline: string          // \n marks a line break
+  body: string
+  specs: EditorialSpec[]
+}
+
 export interface ProductEditorial {
   quote?: string
   specs?: EditorialSpec[]
+  byImage?: Partial<Record<ImageType, EditorialByImageEntry>>
 }
 
 export interface Product {

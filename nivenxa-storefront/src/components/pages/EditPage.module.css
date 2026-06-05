@@ -1,0 +1,188 @@
+/* ── EditPage ──────────────────────────────────────────── */
+
+/* ── Hero ──────────────────────────────────────────────── */
+
+.hero {
+  position: relative;
+  min-height: 70vh;
+  overflow: hidden;
+}
+
+.heroImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  position: absolute;
+  inset: 0;
+}
+
+.heroPlaceholder {
+  position: absolute;
+  inset: 0;
+}
+
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.5) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.heroContent {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  padding: 2.5rem;
+}
+
+.heroEyebrow {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0 0 10px;
+}
+
+.heroHeadline {
+  font-family: Georgia, serif;
+  font-size: 52px;
+  font-weight: 400;
+  color: #ffffff;
+  line-height: 1.1;
+  margin: 0;
+  white-space: pre-line;
+}
+
+/* ── Story ─────────────────────────────────────────────── */
+
+.storySection {
+  background: var(--nivenxa-bg-primary);
+  padding: 4rem 2.5rem;
+  display: grid;
+  grid-template-columns: 40% 60%;
+  gap: 2rem;
+}
+
+.storyLeft {
+  /* column anchor */
+}
+
+.storyEditName {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-muted);
+  margin: 0 0 12px;
+}
+
+.storyRule {
+  width: 32px;
+  height: 1.5px;
+  background: var(--nivenxa-cta-terracotta);
+}
+
+.storyRight {
+  /* column anchor */
+}
+
+.storyText {
+  font-family: Georgia, serif;
+  font-size: 16px;
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.8;
+  color: var(--nivenxa-text-primary);
+  max-width: 560px;
+  margin: 0;
+}
+
+/* ── Sub-nav strip ─────────────────────────────────────── */
+
+.subNavWrap {
+  background: var(--nivenxa-bg-secondary);
+  border-top: 0.5px solid var(--nivenxa-border);
+  border-bottom: 0.5px solid var(--nivenxa-border);
+}
+
+.subNav {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.subNav::-webkit-scrollbar {
+  display: none;
+}
+
+.subNavItem {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-muted);
+  padding: 16px 24px;
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: 1.5px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.subNavItem:hover {
+  color: var(--nivenxa-text-primary);
+}
+
+/* ── Products section ──────────────────────────────────── */
+
+.productsSection {
+  background: var(--nivenxa-bg-primary);
+  padding: 3rem 2.5rem;
+}
+
+.productGrid {
+  display: grid;
+  gap: 20px;
+}
+
+.gridTwo {
+  grid-template-columns: 1fr 1fr;
+}
+
+.gridThree {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .heroHeadline {
+    font-size: 38px;
+  }
+
+  .storySection {
+    grid-template-columns: 1fr;
+    padding: 2.5rem 1.25rem;
+  }
+
+  .productsSection {
+    padding: 2rem 1.25rem;
+  }
+
+  .gridTwo,
+  .gridThree {
+    grid-template-columns: 1fr 1fr;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .heroHeadline {
+    font-size: 30px;
+  }
+
+  .gridTwo,
+  .gridThree {
+    grid-template-columns: 1fr;
+    max-width: 100%;
+  }
+}
