@@ -1,0 +1,126 @@
+/* ── AllEditsPage ───────────────────────────────────────── */
+
+.section {
+  background: var(--nivenxa-bg-primary);
+  padding: 4rem 2.5rem;
+}
+
+/* ── Header ────────────────────────────────────────────── */
+
+.header {
+  margin-bottom: 3rem;
+}
+
+.eyebrow {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-muted);
+  margin-bottom: 12px;
+}
+
+.title {
+  font-family: Georgia, serif;
+  font-size: 48px;
+  font-weight: 400;
+  color: var(--nivenxa-text-primary);
+  line-height: 1;
+  margin: 0;
+}
+
+.rule {
+  width: 32px;
+  height: 1.5px;
+  background: var(--nivenxa-cta-terracotta);
+  margin-top: 14px;
+}
+
+/* ── Grid ──────────────────────────────────────────────── */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3px;
+}
+
+/* ── Edit card ─────────────────────────────────────────── */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.cardImageWrap {
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: var(--nivenxa-bg-secondary);
+}
+
+.cardImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  transition: transform 0.5s ease;
+}
+
+.card:hover .cardImage {
+  transform: scale(1.03);
+}
+
+.cardInfo {
+  padding: 16px 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cardName {
+  font-family: Georgia, serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--nivenxa-text-primary);
+  margin: 0;
+}
+
+.cardStory {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--nivenxa-text-muted);
+  line-height: 1.65;
+  margin: 0;
+}
+
+.cardCta {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-primary);
+  border-bottom: 0.5px solid var(--nivenxa-text-primary);
+  padding-bottom: 1px;
+  width: fit-content;
+  margin-top: 4px;
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .section {
+    padding: 2.5rem 1.25rem;
+  }
+
+  .title {
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

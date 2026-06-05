@@ -1,9 +1,9 @@
 export const COLLECTIONS = [
-  { label: "Men's",       href: '/shop/men'    },
-  { label: "Women's",    href: '/shop/women'   },
-  { label: 'Youth Studio', href: '/shop/kids'  },
-  { label: 'Unisex',    href: '/shop/unisex'   },
-  { label: 'Shop All',  href: '/shop'           },
+  { label: "Men's",        href: '/shop/mens-essentials' },
+  { label: "Women's",      href: '/shop/womens'          },
+  { label: 'Youth Studio', href: '/shop/youth-studio'    },
+  { label: 'Unisex',       href: '/shop/unisex'          },
+  { label: 'Shop All',     href: '/shop'                  },
 ] as const
 
 export const SOCIAL = [

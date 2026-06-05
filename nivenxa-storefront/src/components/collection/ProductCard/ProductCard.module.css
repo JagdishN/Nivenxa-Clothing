@@ -1,0 +1,143 @@
+/* ── ProductCard ────────────────────────────────────────── */
+
+.card {
+  display: flex;
+  flex-direction: column;
+}
+
+.imageWrap {
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: var(--nivenxa-bg-secondary);
+  display: block;
+  position: relative;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  transition: transform 0.5s ease;
+}
+
+.card:hover .image {
+  transform: scale(1.03);
+}
+
+.placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  padding: 14px;
+}
+
+.placeholderName {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.35);
+}
+
+/* ── Info ────────────────────────────────────────────────── */
+
+.info {
+  padding: 14px 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: baseline;
+}
+
+.title {
+  font-family: Georgia, serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--nivenxa-text-primary);
+  line-height: 1.2;
+}
+
+.fabric {
+  font-size: 11px;
+  font-style: italic;
+  color: var(--nivenxa-text-muted);
+}
+
+/* ── Swatches ────────────────────────────────────────────── */
+
+.swatchRow {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  border: none;
+  cursor: pointer;
+  outline: 0.5px solid rgba(0, 0, 0, 0.12);
+  transition: outline-offset 0.1s ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.swatch:hover {
+  outline: 1px solid rgba(0, 0, 0, 0.25);
+  outline-offset: 1px;
+}
+
+.swatchActive {
+  outline: 1.5px solid var(--nivenxa-text-primary) !important;
+  outline-offset: 2px !important;
+}
+
+/* ── Colour + price stack ────────────────────────────────── */
+
+.colourPriceStack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.activeName {
+  font-size: 11px;
+  color: var(--nivenxa-text-muted);
+  line-height: 1.3;
+}
+
+.price {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--nivenxa-text-primary);
+  font-family: Georgia, serif;
+  line-height: 1.3;
+}
+
+/* ── View CTA ────────────────────────────────────────────── */
+
+.viewCta {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-primary);
+  text-decoration: none;
+  border-bottom: 0.5px solid var(--nivenxa-text-primary);
+  padding-bottom: 1px;
+  display: inline-block;
+  width: fit-content;
+  margin-top: 6px;
+}
+
+.viewCta:hover {
+  opacity: 0.7;
+}

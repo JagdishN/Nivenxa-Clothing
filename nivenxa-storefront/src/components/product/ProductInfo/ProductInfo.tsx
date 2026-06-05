@@ -68,10 +68,29 @@ export default function ProductInfo({
     <div className={styles.panel}>
 
       {/* 1. Breadcrumb — above title, anchors context */}
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-      <Link href={`/shop/${product.collectionSlug ?? product.handle}` as any} className={styles.breadcrumb}>
-        ← {product.collectionName ?? 'COLLECTION'}
-      </Link>
+      {(() => {
+        const COLLECTION_HREF: Record<string, string> = {
+          'mens':          '/shop/mens',
+          'womens':        '/shop/womens',
+          'unisex':        '/shop/unisex',
+          'youth-studio':  '/shop/youth-studio',
+        }
+        const COLLECTION_LABEL: Record<string, string> = {
+          'mens':          "Men's",
+          'womens':        "Women's",
+          'unisex':        'Unisex',
+          'youth-studio':  'Youth Studio',
+        }
+        const slug   = product.collectionSlug ?? product.handle
+        const href   = COLLECTION_HREF[slug]  ?? `/shop/${slug}`
+        const label  = COLLECTION_LABEL[slug] ?? product.collectionName ?? 'Collection'
+        return (
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          <Link href={href as any} className={styles.breadcrumb}>
+            ← {label}
+          </Link>
+        )
+      })()}
 
       {/* 2. Product title */}
       <h1 className={styles.title}>{product.name}</h1>

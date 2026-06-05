@@ -1,0 +1,36 @@
+.section {
+  background: var(--nivenxa-bg-primary);
+  padding: 4rem 2.5rem;
+  min-height: 40vh;
+}
+
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-muted);
+  margin-bottom: 12px;
+}
+
+.title {
+  font-family: Georgia, serif;
+  font-size: 48px;
+  font-weight: 400;
+  color: var(--nivenxa-text-primary);
+  line-height: 1;
+  margin: 0;
+}
+
+.rule {
+  width: 32px;
+  height: 1.5px;
+  background: var(--nivenxa-cta-terracotta);
+  margin-top: 14px;
+  margin-bottom: 2rem;
+}
+
+.soon {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--nivenxa-text-muted);
+}
