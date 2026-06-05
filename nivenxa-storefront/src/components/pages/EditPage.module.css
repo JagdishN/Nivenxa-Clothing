@@ -101,6 +101,9 @@
 /* ── Sub-nav strip ─────────────────────────────────────── */
 
 .subNavWrap {
+  position: sticky;
+  top: var(--nivenxa-header-height);
+  z-index: 100;
   background: var(--nivenxa-bg-secondary);
   border-top: 0.5px solid var(--nivenxa-border);
   border-bottom: 0.5px solid var(--nivenxa-border);
