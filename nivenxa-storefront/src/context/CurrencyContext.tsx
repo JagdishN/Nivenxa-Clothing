@@ -62,8 +62,10 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
       }
     } catch {}
 
-    // Detect currency from IP, then fetch exchange rate
-    fetch('https://ipapi.co/json/')
+    // Detect currency from IP via server-side proxy (/api/geo).
+    // Direct calls to ipapi.co are blocked by CORS — the proxy
+    // fetches server-side and returns only the currency code.
+    fetch('/api/geo')
       .then((r) => r.json())
       .then(async (geo: { currency?: string }) => {
         const code = geo.currency ?? 'INR'
