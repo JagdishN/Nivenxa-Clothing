@@ -26,7 +26,7 @@ const CARDS: EditCard[] = [
     editName: 'The Everyday Edit',
     productName: 'Oversized Tee',
     fabricLine: '240 GSM combed cotton',
-    href: '/shop/over-tee-shirts/raw-oat',
+    href: '/edits/everyday-edit',
     imageSrc: TEE_OAT_WALKING,
     imageAlt: 'Oversized Tee — Oat Beige — walking view',
     ghostColor: 'rgba(0,0,0,0.08)',
@@ -36,7 +36,7 @@ const CARDS: EditCard[] = [
     editName: 'The Utility Edit',
     productName: 'Cargo Pant',
     fabricLine: '300 GSM enzyme canvas',
-    href: '/shop/cargo-pants/dark-olive',
+    href: '/edits/utility-edit',
     imageSrc: CARGO_OLIVE_FRONT,
     imageAlt: 'Cargo Pant — Dark Olive — studio front',
     ghostColor: 'rgba(255,255,255,0.10)',
@@ -46,7 +46,7 @@ const CARDS: EditCard[] = [
     editName: 'The Rest Edit',
     productName: 'Long Sleeve Lounge Set',
     fabricLine: '280 GSM French Terry',
-    href: '/shop/women-sleepwear/soft-cream',
+    href: '/edits/rest-edit',
     placeholderBg: '#F5F0E8',
     ghostColor: 'rgba(0,0,0,0.08)',
   },
@@ -56,7 +56,7 @@ const CARDS: EditCard[] = [
     editName: "The Women's Edit",
     productName: 'A-line Kurta',
     fabricLine: '160 GSM Cotton-Modal slub',
-    href: '/shop/a-line-kurta/warm-ivory',
+    href: '/edits/womens-edit',
     placeholderBg: '#E8DFC8',
     ghostColor: 'rgba(0,0,0,0.08)',
   },
@@ -65,7 +65,7 @@ const CARDS: EditCard[] = [
     editName: 'The Youth Studio',
     productName: 'Kids Sleepwear Set',
     fabricLine: 'Super combed cotton, 2Y–12Y',
-    href: '/shop/kids-sleepwear/soft-cream',
+    href: '/shop',  // /edits/youth-studio not built yet — fallback to shop
     placeholderBg: '#EAF3DE',
     ghostColor: 'rgba(0,0,0,0.08)',
   },
@@ -88,7 +88,7 @@ export default function EditsSection() {
         <div className={styles.sectionMeta}>
           <span className={styles.editCount}>05 edits · 14 pieces</span>
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          <Link href={'/shop' as any} className={styles.viewAll}>
+          <Link href={'/edits' as any} className={styles.viewAll}>
             View all →
           </Link>
         </div>
@@ -140,7 +140,7 @@ export default function EditsSection() {
 
         {/* View All card — 6th slot, Row 2 position 3 */}
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <Link href={'/shop' as any} className={styles.viewAllCard}>
+        <Link href={'/edits' as any} className={styles.viewAllCard}>
           <span className={styles.viewAllLabel}>05 edits</span>
           <span className={styles.viewAllTitle}>View all →</span>
         </Link>

@@ -116,11 +116,11 @@ export default function ImageZoom({
   })
 
   // ── handleColourChange — deferred sync ───────────────────────────────────
+  // activeImg intentionally NOT reset — customer stays on same image index
   const handleColourChange = useCallback((colour: ProductColour) => {
     setTransitioning(true)
     setTimeout(() => {
       setInternalColour(colour)
-      setActiveImg(0)
       setZoomLevel(1.4)
       setTransitioning(false)
     }, 150)
@@ -141,9 +141,10 @@ export default function ImageZoom({
   }
 
   // ── Auto-scroll thumbnail into view ──────────────────────────────────────
+  // internalColour dep: re-scroll when colour changes so strip updates correctly
   useEffect(() => {
     thumbRefs.current[activeImg]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-  }, [activeImg])
+  }, [activeImg, internalColour])
 
   // ── Reset zoom on image change ────────────────────────────────────────────
   useEffect(() => {

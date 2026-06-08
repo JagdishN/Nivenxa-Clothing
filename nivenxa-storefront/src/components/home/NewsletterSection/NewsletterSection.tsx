@@ -6,11 +6,18 @@ import styles from './NewsletterSection.module.css'
 export default function NewsletterSection() {
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = () => {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
     if (!email || !email.includes('@')) return
-    setSubmitted(true)
-    setEmail('')
+    setLoading(true)
+    // Simulate async — replace with real API call later
+    setTimeout(() => {
+      setSubmitted(true)
+      setLoading(false)
+      setEmail('')
+    }, 600)
   }
 
   return (
@@ -38,24 +45,23 @@ export default function NewsletterSection() {
               Noted. We will be in touch.
             </p>
           ) : (
-            <div className={styles.form}>
+            <form className={styles.form} onSubmit={handleSubmit}>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your@email.com"
                 className={styles.input}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleSubmit()
-                }}
+                required
               />
               <button
-                onClick={handleSubmit}
+                type="submit"
                 className={styles.button}
+                disabled={loading}
               >
-                Subscribe
+                {loading ? 'Adding...' : 'Subscribe'}
               </button>
-            </div>
+            </form>
           )}
         </div>
 

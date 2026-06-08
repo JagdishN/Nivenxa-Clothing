@@ -79,7 +79,7 @@ function ZoomableImage({
       onMouseEnter={() => setCursorVisible(true)}
       onMouseLeave={() => setCursorVisible(false)}
       role="button"
-      aria-label="View full size"
+      aria-label="Open image zoom"
       tabIndex={0}
       onKeyDown={e => {
         if (e.key === 'Enter' || e.key === ' ') onZoom(index)
@@ -209,7 +209,7 @@ export default function ProductPage() {
             onMouseEnter={() => setHeroCursorVisible(true)}
             onMouseLeave={() => setHeroCursorVisible(false)}
             role="button"
-            aria-label="View full size"
+            aria-label="Open image zoom"
             tabIndex={0}
             onKeyDown={e => {
               if (e.key === 'Enter' || e.key === ' ') {
