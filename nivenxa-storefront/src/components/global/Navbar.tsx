@@ -21,8 +21,7 @@ export default function Navbar() {
   const [mobileSubExpanded, setMobileSubExpanded] = useState<string | null>(null)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { customer, loading, logout } = useAuth()
-  const { cart, bagCount } = useCart()
-  const cartTotal = (cart?.totalQuantity ?? 0) + bagCount
+  const { totalCount, openDrawer } = useCart()
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   useEffect(() => {
@@ -111,18 +110,22 @@ export default function Navbar() {
                 </button>
               )
             )}
-            <button className={styles.cartBtn}>
+            <button
+              className={styles.cartBtn}
+              onClick={openDrawer}
+              aria-label={`Shopping bag, ${totalCount} items`}
+            >
               {t('cart')}{' '}
               (<AnimatePresence mode="popLayout" initial={false}>
                 <motion.span
-                  key={cartTotal}
+                  key={totalCount}
                   initial={{ opacity: 0, scale: 0.6 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.6 }}
                   transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                   style={{ display: 'inline-block' }}
                 >
-                  {cartTotal}
+                  {totalCount}
                 </motion.span>
               </AnimatePresence>)
             </button>
@@ -381,21 +384,25 @@ export default function Navbar() {
             </li>
           ))}
           <li>
-            <span className={styles.mobileNavLink}>
+            <button
+              className={styles.mobileNavLink}
+              onClick={openDrawer}
+              style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', cursor: 'pointer' }}
+            >
               {t('cart')}{' '}
               (<AnimatePresence mode="popLayout" initial={false}>
                 <motion.span
-                  key={cartTotal}
+                  key={totalCount}
                   initial={{ opacity: 0, scale: 0.6 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.6 }}
                   transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                   style={{ display: 'inline-block' }}
                 >
-                  {cartTotal}
+                  {totalCount}
                 </motion.span>
               </AnimatePresence>)
-            </span>
+            </button>
           </li>
           <li className={styles.mobileLangItem}>
             <LanguageSwitcher />

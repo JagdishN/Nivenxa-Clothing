@@ -127,12 +127,59 @@
   padding: 16px 24px;
   text-decoration: none;
   white-space: nowrap;
+  border: none;
+  background: none;
+  cursor: pointer;
   border-bottom: 1.5px solid transparent;
   transition: color 0.15s ease, border-color 0.15s ease;
 }
 
 .subNavItem:hover {
   color: var(--nivenxa-text-primary);
+}
+
+.subNavActive {
+  color: var(--nivenxa-text-primary);
+  border-bottom-color: var(--nivenxa-text-primary);
+}
+
+/* ── View All Products link — right-aligned ────────────────── */
+
+.viewAllLink {
+  margin-left: auto;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-primary);
+  text-decoration: none;
+  padding: 16px 24px;
+  white-space: nowrap;
+  border-bottom: 0.5px solid var(--nivenxa-text-primary);
+  padding-bottom: calc(16px - 1px);
+  align-self: center;
+  transition: opacity 0.15s ease;
+}
+
+.viewAllLink:hover {
+  opacity: 0.7;
+}
+
+/* ── Editorial intro ───────────────────────────────────────── */
+
+.editorialIntro {
+  background: var(--nivenxa-bg-secondary);
+  padding: 2.5rem 2.5rem 0;
+}
+
+.editorialText {
+  font-family: Georgia, serif;
+  font-size: 15px;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--nivenxa-text-muted);
+  line-height: 1.7;
+  max-width: 520px;
+  margin: 0;
 }
 
 /* ── Products section ──────────────────────────────────── */

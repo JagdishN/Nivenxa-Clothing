@@ -12,15 +12,36 @@ import type { ShopifyCart } from '@/types/shopify'
 
 const CART_ID_KEY = 'nivenxa_cart_id'
 
+// ─── Local cart item (pre-Shopify / local UI cart) ────────────────────────────
+export interface CartItem {
+  productHandle: string
+  colourSlug:    string
+  size:          string
+  productTitle:  string
+  colourName:    string
+  colourHex:     string
+  imageUrl?:     string
+  price:         string  // formatted string, e.g. "₹1,299"
+  quantity:      number
+}
+
 interface CartContextValue {
-  cart:        ShopifyCart | null
-  loading:     boolean
-  bagCount:    number   // local UI counter (pre-Shopify / mock products)
-  bumpLocal:   () => void
-  addItem:     (merchandiseId: string, quantity?: number) => Promise<void>
-  updateItem:  (lineId: string, quantity: number) => Promise<void>
-  removeItem:  (lineId: string) => Promise<void>
-  clearCart:   () => void
+  // ── Shopify cart ────────────────────────────────────────────────────────────
+  cart:              ShopifyCart | null
+  loading:           boolean
+  addShopifyItem:    (merchandiseId: string, quantity?: number) => Promise<void>
+  updateShopifyItem: (lineId: string, quantity: number) => Promise<void>
+  removeShopifyLine: (lineId: string) => Promise<void>
+  // ── Local cart ──────────────────────────────────────────────────────────────
+  items:             CartItem[]
+  totalCount:        number
+  addItem:           (item: Omit<CartItem, 'quantity'>) => void
+  removeItem:        (productHandle: string, colourSlug: string, size: string) => void
+  clearCart:         () => void
+  // ── Cart drawer ─────────────────────────────────────────────────────────────
+  isDrawerOpen:      boolean
+  openDrawer:        () => void
+  closeDrawer:       () => void
 }
 
 const CartContext = createContext<CartContextValue | null>(null)
@@ -28,11 +49,17 @@ const CartContext = createContext<CartContextValue | null>(null)
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart,     setCart]    = useState<ShopifyCart | null>(null)
   const [loading,  setLoading] = useState(true)
-  const [bagCount, setBagCount] = useState(0)
+  const [items,    setItems]   = useState<CartItem[]>([])
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
-  const bumpLocal = useCallback(() => setBagCount((n) => n + 1), [])
+  // ── Derived ────────────────────────────────────────────────────────────────
+  const totalCount = items.reduce((sum, item) => sum + item.quantity, 0)
 
-  // Restore cart from localStorage on mount
+  // ── Drawer ──────────────────────────────────────────────────────────────────
+  const openDrawer  = useCallback(() => setIsDrawerOpen(true),  [])
+  const closeDrawer = useCallback(() => setIsDrawerOpen(false), [])
+
+  // ── Restore Shopify cart from localStorage on mount ────────────────────────
   useEffect(() => {
     const storedId = typeof window !== 'undefined'
       ? localStorage.getItem(CART_ID_KEY)
@@ -52,7 +79,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       .finally(() => setLoading(false))
   }, [])
 
-  // Ensure a cart exists — creates one if needed, returns cart ID
+  // ── Ensure Shopify cart exists ─────────────────────────────────────────────
   const ensureCart = useCallback(async (): Promise<string> => {
     if (cart?.id) return cart.id
 
@@ -65,14 +92,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return newCart.id
   }, [cart])
 
-  const addItem = useCallback(async (merchandiseId: string, quantity = 1) => {
+  // ── Shopify cart operations ────────────────────────────────────────────────
+  const addShopifyItem = useCallback(async (merchandiseId: string, quantity = 1) => {
     const cartId = await ensureCart()
     const lines: CartLineInput[] = [{ merchandiseId, quantity }]
     const updated = await addCartLines(cartId, lines)
     setCart(updated)
   }, [ensureCart])
 
-  const updateItem = useCallback(async (lineId: string, quantity: number) => {
+  const updateShopifyItem = useCallback(async (lineId: string, quantity: number) => {
     if (!cart?.id) return
     if (quantity <= 0) {
       const updated = await removeCartLines(cart.id, [lineId])
@@ -83,19 +111,57 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [cart])
 
-  const removeItem = useCallback(async (lineId: string) => {
+  const removeShopifyLine = useCallback(async (lineId: string) => {
     if (!cart?.id) return
     const updated = await removeCartLines(cart.id, [lineId])
     setCart(updated)
   }, [cart])
 
+  // ── Local cart operations ──────────────────────────────────────────────────
+  const addItem = useCallback((item: Omit<CartItem, 'quantity'>) => {
+    setItems(prev => {
+      const idx = prev.findIndex(
+        i => i.productHandle === item.productHandle &&
+             i.colourSlug    === item.colourSlug &&
+             i.size          === item.size
+      )
+      if (idx >= 0) {
+        // Increment quantity if already in cart
+        return prev.map((i, n) =>
+          n === idx ? { ...i, quantity: i.quantity + 1 } : i
+        )
+      }
+      return [...prev, { ...item, quantity: 1 }]
+    })
+  }, [])
+
+  const removeItem = useCallback(
+    (productHandle: string, colourSlug: string, size: string) => {
+      setItems(prev =>
+        prev.filter(
+          i => !(i.productHandle === productHandle &&
+                 i.colourSlug    === colourSlug &&
+                 i.size          === size)
+        )
+      )
+    },
+    []
+  )
+
   const clearCart = useCallback(() => {
     localStorage.removeItem(CART_ID_KEY)
     setCart(null)
+    setItems([])
   }, [])
 
   return (
-    <CartContext.Provider value={{ cart, loading, bagCount, bumpLocal, addItem, updateItem, removeItem, clearCart }}>
+    <CartContext.Provider value={{
+      cart, loading,
+      addShopifyItem, updateShopifyItem, removeShopifyLine,
+      items, totalCount,
+      addItem, removeItem, clearCart,
+      isDrawerOpen, openDrawer, closeDrawer,
+    }}>
       {children}
     </CartContext.Provider>
   )

@@ -1,8 +1,12 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createPortal } from 'react-dom'
 import { Link } from '@/i18n/routing'
 import type { Product, ProductColour } from '@/types/product'
+import { getPrimaryImage } from '@/utils/getProductImages'
+import { useCart } from '@/context/CartContext'
+import Toast from '@/components/global/Toast/Toast'
 import ColourSwatch from '../ColourSwatch/ColourSwatch'
 import SizeSelector from '../SizeSelector/SizeSelector'
 import StyledWithBlock from '../StyledWith/StyledWith'
@@ -30,9 +34,55 @@ export default function ProductInfo({
   onSwatchExpandedChange,
 }: Props) {
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false)
+  const [toastVisible,  setToastVisible]  = useState(false)
+  const [toastMessage,  setToastMessage]  = useState('')
+  const [toastSub,      setToastSub]      = useState('')
   const closeRef = useRef<HTMLButtonElement>(null)
+  const searchParams = useSearchParams()
+  const refFrom    = searchParams.get('from')
+  const refSlug    = searchParams.get('refSlug')
+  const refName    = searchParams.get('refName')
+  const { addItem, openDrawer } = useCart()
 
-  // Lock body scroll when modal is open
+  const closeToast = useCallback(() => setToastVisible(false), [])
+
+  // Auto-dismiss toast — managed here so the timer is reliable across re-renders
+  useEffect(() => {
+    if (!toastVisible) return
+    const t = setTimeout(() => setToastVisible(false), 3700)
+    return () => clearTimeout(t)
+  }, [toastVisible])
+
+  const handleAddToBag = useCallback(() => {
+    if (!selectedSize) return
+
+    // Add full item data to local cart
+    const primaryImage = getPrimaryImage(activeColour.images)
+    addItem({
+      productHandle: product.handle,
+      colourSlug:    activeColour.slug,
+      size:          selectedSize,
+      productTitle:  product.name,
+      colourName:    activeColour.label,
+      colourHex:     activeColour.hex,
+      imageUrl:      primaryImage?.src,
+      price:         `${product.currency}${product.price.toLocaleString('en-IN')}`,
+    })
+
+    // Also call the prop (writes to useLocalCart for Shopify prep)
+    onAddToBag()
+
+    // Show toast
+    setToastMessage('Added to your bag')
+    setToastSub(`${product.name}\n${activeColour.label} · Size ${selectedSize}`)
+    setToastVisible(true)
+  }, [
+    selectedSize, addItem, onAddToBag,
+    product.handle, product.name, product.currency, product.price,
+    activeColour.slug, activeColour.label, activeColour.hex, activeColour.images,
+  ])
+
+  // Lock body scroll when size guide modal is open
   useEffect(() => {
     if (sizeGuideOpen) {
       document.body.style.overflow = 'hidden'
@@ -43,7 +93,7 @@ export default function ProductInfo({
     return () => { document.body.style.overflow = '' }
   }, [sizeGuideOpen])
 
-  // Close on Escape key
+  // Close size guide on Escape key
   useEffect(() => {
     if (!sizeGuideOpen) return
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setSizeGuideOpen(false) }
@@ -69,6 +119,15 @@ export default function ProductInfo({
 
       {/* 1. Breadcrumb — above title, anchors context */}
       {(() => {
+        // Edit referrer takes precedence over default collection breadcrumb
+        if (refFrom === 'edit' && refSlug && refName) {
+          return (
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            <Link href={`/edits/${refSlug}` as any} className={styles.breadcrumb}>
+              ← {decodeURIComponent(refName)}
+            </Link>
+          )
+        }
         const COLLECTION_HREF: Record<string, string> = {
           'mens':          '/shop/mens',
           'womens':        '/shop/womens',
@@ -144,7 +203,7 @@ export default function ProductInfo({
       <button
         type="button"
         className={styles.cta}
-        onClick={onAddToBag}
+        onClick={handleAddToBag}
         disabled={isDisabled}
         aria-disabled={isDisabled}
       >
@@ -161,6 +220,15 @@ export default function ProductInfo({
           />
         </>
       )}
+
+      {/* 10. Add-to-bag toast */}
+      <Toast
+        visible={toastVisible}
+        message={toastMessage}
+        subMessage={toastSub}
+        onViewBag={() => openDrawer()}
+        onClose={closeToast}
+      />
 
       {/* Size guide modal — portalled to <body> to escape sticky/overflow stacking contexts */}
       {sizeGuideOpen && createPortal(

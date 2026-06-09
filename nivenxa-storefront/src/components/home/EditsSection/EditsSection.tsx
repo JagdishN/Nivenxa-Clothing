@@ -75,26 +75,22 @@ const CARDS: EditCard[] = [
 
 export default function EditsSection() {
   return (
-    <section className={styles.section}>
+    <section className={styles.section} data-section="the-edits">
 
       {/* Section header */}
       <div className={styles.sectionIntro}>
         <div>
-          <p className={styles.eyebrow}>Curated collections</p>
+          <p className={styles.eyebrow}>CURATED COLLECTIONS</p>
           <h2 className={styles.sectionTitle}>
             The <em>Edits</em>
           </h2>
         </div>
         <div className={styles.sectionMeta}>
           <span className={styles.editCount}>05 edits · 14 pieces</span>
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          <Link href={'/edits' as any} className={styles.viewAll}>
-            View all →
-          </Link>
         </div>
       </div>
 
-      {/* 3-column grid — 5 product cards + 1 view-all */}
+      {/* 4-column grid — 5 product cards + explore panel */}
       <div className={styles.cardGrid}>
 
         {CARDS.map((card) => (
@@ -138,12 +134,36 @@ export default function EditsSection() {
           </Link>
         ))}
 
-        {/* View All card — 6th slot, Row 2 position 3 */}
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <Link href={'/edits' as any} className={styles.viewAllCard}>
-          <span className={styles.viewAllLabel}>05 edits</span>
-          <span className={styles.viewAllTitle}>View all →</span>
-        </Link>
+        {/* Explore All panel — always last */}
+        {/*
+          FUTURE: when Edits count reaches 8+
+          update explorePanel grid-column
+          from span 3 to span 4 in CSS
+        */}
+        <div className={styles.explorePanel}>
+          <div
+            className={styles.exploreBg}
+            style={{ backgroundImage: `url(${TEE_OAT_WALKING})` }}
+          />
+          <div className={styles.exploreContent}>
+            <p className={styles.exploreQuote}>
+              Curated Edits
+            </p>
+            <div className={styles.exploreLines}>
+              <span>Everyday essentials.</span>
+              <span>Utility pieces.</span>
+              <span>Women&#39;s comfortwear.</span>
+              <span>Youth Studio.</span>
+            </div>
+            <p className={styles.exploreTagline}>
+              Designed to work together.
+            </p>
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            <Link href={'/edits' as any} className={styles.exploreBtn}>
+              Explore All →
+            </Link>
+          </div>
+        </div>
 
       </div>
     </section>

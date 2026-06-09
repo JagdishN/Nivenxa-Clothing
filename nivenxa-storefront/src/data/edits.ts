@@ -7,6 +7,7 @@ export interface EditSubItem {
   name: string
   slug: string
   productHandles: string[]
+  editorial: string
 }
 
 export interface Edit {
@@ -30,21 +31,25 @@ export const edits: Edit[] = [
       'Bio-washed comfortwear built for the rhythm of Indian daily life. Heavyweight enough to feel considered. Light enough to forget you\'re wearing it.',
     featuredProductHandle: 'over-tee-shirts',
     featuredColourSlug: 'raw-oat',
+    // Everyday Silhouettes is index 0 — always the default tab
     subItems: [
-      {
-        name: 'Relaxed Utility',
-        slug: 'relaxed-utility',
-        productHandles: ['over-tee-shirts', 'cargo-pants'],
-      },
       {
         name: 'Everyday Silhouettes',
         slug: 'everyday-silhouettes',
         productHandles: ['over-tee-shirts', 'a-line-kurta'],
+        editorial: 'Everyday forms and proportions',
+      },
+      {
+        name: 'Relaxed Utility',
+        slug: 'relaxed-utility',
+        productHandles: ['over-tee-shirts', 'cargo-pants'],
+        editorial: 'Built for movement and daily use',
       },
       {
         name: 'Bio-Washed Essentials',
         slug: 'bio-washed-essentials',
         productHandles: ['over-tee-shirts', 'cargo-pants', 'a-line-kurta', 'kids-sleepwear'],
+        editorial: 'The full everyday toolkit',
       },
     ],
   },
@@ -62,16 +67,19 @@ export const edits: Edit[] = [
         name: 'Relaxed Utility',
         slug: 'relaxed-utility',
         productHandles: ['cargo-pants'],
+        editorial: 'Canvas built for the long day',
       },
       {
         name: 'Urban Movement',
         slug: 'urban-movement',
         productHandles: ['cargo-pants', 'over-tee-shirts'],
+        editorial: 'Structured forms, free movement',
       },
       {
         name: 'Heavyweight Canvas',
         slug: 'heavyweight-canvas',
         productHandles: ['cargo-pants'],
+        editorial: '300 GSM, six pockets, all purpose',
       },
     ],
   },
@@ -89,16 +97,19 @@ export const edits: Edit[] = [
         name: "Women's Sleepwear",
         slug: 'womens-sleepwear',
         productHandles: ['women-sleepwear'],
+        editorial: 'Soft enough to sleep in. Beautiful enough to wear at home.',
       },
       {
         name: 'Kids Sleepwear',
         slug: 'kids-sleepwear',
         productHandles: ['kids-sleepwear'],
+        editorial: 'Sized 2Y to 12Y. Combed cotton, every night.',
       },
       {
         name: 'Unisex Lounge Sets',
         slug: 'unisex-lounge-sets',
         productHandles: ['women-lounge-sets', 'women-sleepwear'],
+        editorial: 'The between hours — neither sleep nor waking.',
       },
     ],
   },
@@ -111,21 +122,25 @@ export const edits: Edit[] = [
       'Cotton-Modal silhouettes designed for the contemporary Indian woman. Not occasion wear. Not casual wear. The space between — for every day that deserves both.',
     featuredProductHandle: 'a-line-kurta',
     featuredColourSlug: 'warm-ivory',
+    // Indo-Western Silhouettes is index 0 — always the default tab
     subItems: [
+      {
+        name: 'Indo-Western Silhouettes',
+        slug: 'indo-western-silhouettes',
+        productHandles: ['a-line-kurta', 'women-lounge-sets'],
+        editorial: 'Between Indian and Western — a silhouette for both.',
+      },
       {
         name: 'A-line Kurta',
         slug: 'a-line-kurta',
         productHandles: ['a-line-kurta'],
+        editorial: 'The everyday Indian silhouette, elevated.',
       },
       {
         name: 'Co-ord Set',
         slug: 'co-ord-set',
         productHandles: ['women-lounge-sets'],
-      },
-      {
-        name: 'Indo-Western Silhouettes',
-        slug: 'indo-western-silhouettes',
-        productHandles: ['a-line-kurta', 'women-lounge-sets'],
+        editorial: 'Matched fabric, unmatched ease.',
       },
     ],
   },

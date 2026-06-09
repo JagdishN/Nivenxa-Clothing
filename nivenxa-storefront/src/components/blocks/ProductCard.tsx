@@ -129,7 +129,7 @@ export default function ProductCard({ product, large = false }: ProductCardProps
               <div className={styles.placeholderMeta} aria-hidden="true">
                 <span className={styles.placeholderColour}>{product.colorway}</span>
                 <span className={styles.placeholderName}>{product.name}</span>
-                <span className={styles.placeholderSeason}>Coming SS 2026</span>
+                {/* <span className={styles.placeholderSeason}>Coming SS 2026</span> */}
               </div>
             </div>
           )}

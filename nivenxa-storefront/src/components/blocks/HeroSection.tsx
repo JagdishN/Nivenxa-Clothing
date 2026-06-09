@@ -107,6 +107,10 @@ export default function HeroSection() {
           <Link href={'/shop' as any}>
             <Button>SHOP THE COLLECTION →</Button>
           </Link>
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <Link href={'/edits' as any}>
+            <Button variant="outline" className={styles.editsCtaBtn}>EXPLORE THE EDITS →</Button>
+          </Link>
           <Link href="/stories/our-story">
             <Button variant="outline">{t('ctaStory')}</Button>
           </Link>
