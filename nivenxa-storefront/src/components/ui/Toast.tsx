@@ -18,7 +18,7 @@ function ToastCard({
   onRemove: (id: string) => void
 }) {
   useEffect(() => {
-    const t = setTimeout(() => onRemove(toast.id), 4500)
+    const t = setTimeout(() => onRemove(toast.id), 3000)
     return () => clearTimeout(t)
   }, [toast.id, onRemove])
 

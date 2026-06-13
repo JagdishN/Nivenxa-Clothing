@@ -211,3 +211,18 @@
   80%  { opacity: 1; transform: translateX(-50%) translateY(7px); }
   100% { opacity: 0; transform: translateX(-50%) translateY(0); }
 }
+
+// ─── Edits CTA — forest green outlined ────────────────────────────────────────
+.editsCtaBtn {
+  border: 1.5px solid #1C2E1E !important;
+  color: #1C2E1E !important;
+  padding: 1rem 2rem !important;
+}
+
+// ─── CTA mobile stacking ──────────────────────────────────────────────────────
+@media (max-width: 600px) {
+  .ctas {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

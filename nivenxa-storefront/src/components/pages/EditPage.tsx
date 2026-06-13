@@ -1,4 +1,6 @@
-import { Link } from '@/i18n/routing'
+'use client'
+
+import { useState, useMemo } from 'react'
 import type { Product } from '@/types/product'
 import type { Edit } from '@/data/edits'
 import { getPrimaryImage } from '@/utils/getProductImages'
@@ -17,12 +19,32 @@ function getGridClass(count: number): string {
 }
 
 export default function EditPage({ edit, products }: Props) {
-  // Compute hero image from featured product / colour
+  // First sub-item (Silhouettes) is always the default tab
+  const [activeTab, setActiveTab] = useState<string>(edit.subItems[0]?.slug ?? '')
+
+  // Products for the active tab — filters from the full products prop
+  const activeProducts = useMemo(() => {
+    if (activeTab === 'all') {
+      return products
+    }
+    const subItem = edit.subItems.find(s => s.slug === activeTab)
+    if (!subItem) return []
+    return subItem.productHandles
+      .map(h => products.find(p => p.handle === h))
+      .filter((p): p is Product => p !== undefined)
+  }, [activeTab, edit.subItems, products])
+
+  // Active sub-item for editorial intro — null when 'all' tab is selected
+  const activeSubItem =
+    activeTab === 'all'
+      ? null
+      : edit.subItems.find(s => s.slug === activeTab) ?? null
+
+  // Hero image — derived from featured product / colour
   const featuredProduct = products.find(p => p.handle === edit.featuredProductHandle)
   const featuredColour =
     featuredProduct?.colours.find(c => c.slug === edit.featuredColourSlug) ??
     featuredProduct?.colours[0]
-
   const heroImage = featuredColour ? getPrimaryImage(featuredColour.images) : null
   const heroUrl   = edit.heroImageUrl || heroImage?.src || ''
   const heroFall  = featuredColour?.hex || '#D8C9B0'
@@ -55,30 +77,62 @@ export default function EditPage({ edit, products }: Props) {
         </div>
       </section>
 
-      {/* ── Section 3: Sub-item navigation strip ──────────── */}
+      {/* ── Section 3: Tab navigation strip ───────────────── */}
       <div className={styles.subNavWrap}>
         <nav className={styles.subNav}>
+
           {edit.subItems.map(sub => (
-            <Link
+            <button
               key={sub.slug}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              href={`/edits/${edit.slug}/${sub.slug}` as any}
-              className={styles.subNavItem}
+              className={`${styles.subNavItem} ${activeTab === sub.slug ? styles.subNavActive : ''}`}
+              onClick={() => setActiveTab(sub.slug)}
+              aria-pressed={activeTab === sub.slug}
             >
               {sub.name}
-            </Link>
+            </button>
           ))}
+
+          {/* View All — always visible, right-aligned */}
+          {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+          <a
+            href="#all-products"
+            className={styles.viewAllLink}
+            onClick={(e) => {
+              e.preventDefault()
+              setActiveTab('all')
+            }}
+          >
+            View All Products →
+          </a>
+
         </nav>
       </div>
 
-      {/* ── Section 4: Product cards ───────────────────────── */}
-      <section className={styles.productsSection}>
-        {products.length === 1 ? (
-          <FeaturedProductCard product={products[0]} />
+      {/* ── Section 4: Editorial intro (hidden when 'all' tab active) ── */}
+      {activeSubItem && (
+        <div className={styles.editorialIntro}>
+          <p className={styles.editorialText}>
+            &ldquo;{activeSubItem.editorial}&rdquo;
+          </p>
+        </div>
+      )}
+
+      {/* ── Section 5: Product grid ────────────────────────── */}
+      <section id="all-products" className={styles.productsSection}>
+        {activeProducts.length === 1 ? (
+          <FeaturedProductCard product={activeProducts[0]} />
         ) : (
-          <div className={`${styles.productGrid} ${getGridClass(products.length)}`}>
-            {products.map(product => (
-              <ProductCard key={product.id} product={product} />
+          <div className={`${styles.productGrid} ${getGridClass(activeProducts.length)}`}>
+            {activeProducts.map(product => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                referrer={{
+                  from: 'edit',
+                  slug: edit.slug,
+                  name: edit.name,
+                }}
+              />
             ))}
           </div>
         )}

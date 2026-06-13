@@ -1,70 +1,126 @@
 @use '../../styles/variables' as v;
 
+// ── Section wrapper ───────────────────────────────────────────────────────────
+
 .section {
-  background-color: var(--color-ink);
-  padding-block: var(--section-y);
-  padding-inline: var(--gutter);
+  background: var(--nivenxa-bg-secondary);
+  padding: 4rem 2.5rem 0;
+  border-bottom: 0.5px solid var(--nivenxa-border);
 }
 
 .inner {
   max-width: var(--max-width);
-  margin-inline: auto;
 }
 
-// ─── Section header ───────────────────────────────────────────────────────────
+// ── Section header ────────────────────────────────────────────────────────────
+
 .sectionHeader {
-  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
   margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.headerLeft {
+  // column anchor
+}
+
+.headerRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.metadata {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--nivenxa-text-muted);
+  letter-spacing: 0.06em;
+}
+
+.viewAllLink {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-primary);
+  text-decoration: none;
+  border-bottom: 0.5px solid var(--nivenxa-text-primary);
+  padding-bottom: 2px;
+
+  &:hover {
+    opacity: 0.7;
+  }
 }
 
 .eyebrow {
   font-family: var(--font-sans);
-  font-size: 0.6875rem;
+  font-size: 10px;
   font-weight: 400;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  letter-spacing: 0.3em;
-  color: rgba(245, 242, 235, 0.42);
-  margin-bottom: 1rem;
+  color: var(--nivenxa-text-muted);
+  margin-bottom: 10px;
 }
 
 .heading {
-  font-family: var(--font-serif);
-  font-size: clamp(2rem, 5vw, 3.5rem);
-  color: var(--color-canvas);
+  font-family: Georgia, serif;
+  font-size: 32px;
+  font-weight: 400;
+  color: var(--nivenxa-text-primary);
+  text-transform: none;
+  letter-spacing: 0;
 }
 
-// ─── Two-column grid ─────────────────────────────────────────────────────────
+// ── Four-column grid ──────────────────────────────────────────────────────────
+
 .grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 1.5rem;
 
-  @include v.md { grid-template-columns: repeat(3, 1fr); }
+  @include v.md { grid-template-columns: repeat(4, 1fr); }
+  align-items: stretch;
 }
 
-// ─── Panel (shared) ──────────────────────────────────────────────────────────
-.panel {
-  position: relative;
-  overflow: hidden;
-  min-height: clamp(360px, 50vw, 520px);
+// ── Card ─────────────────────────────────────────────────────────────────────
+
+.card {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  padding: clamp(1.5rem, 4vw, 2.5rem);
+  height: 100%;
+  background: var(--nivenxa-bg-primary);
+  text-decoration: none;
+  cursor: pointer;
 }
 
-.panelBg {
+// ── Card image area (180px) ───────────────────────────────────────────────────
+
+.cardImage {
+  height: 180px;
+  overflow: hidden;
+  position: relative;
+}
+
+.colorBlock {
   position: absolute;
   inset: 0;
-  transition: transform 0.7s v.$ease-out-expo;
-
-  .panel:hover & {
-    transform: scale(1.03);
-  }
+  transition: transform 0.5s ease;
 }
 
-// Product image inside panelBg — cover, top-anchored
-.panelImg {
+.card:hover .colorBlock {
+  transform: scale(1.03);
+}
+
+.womenColor {
+  background: #A87060;
+}
+
+.kidsColor {
+  background: #5E7060;
+}
+
+.cardImg {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -72,139 +128,126 @@
   object-fit: cover;
   object-position: center top;
   display: block;
+  transition: transform 0.7s v.$ease-out-expo;
+
+  .card:hover & {
+    transform: scale(1.03);
+  }
 }
 
-// Youth Studio placeholder label
+// ── Card content (below image) ────────────────────────────────────────────────
+
+.cardContent {
+  padding: 1.25rem 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 0.625rem;
+}
+
+.cardEyebrow {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--nivenxa-text-muted);
+}
+
+.cardTitle {
+  font-family: Georgia, serif;
+  font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+  font-weight: 400;
+  color: var(--nivenxa-text-primary);
+}
+
+.cardBody {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.75;
+  color: var(--nivenxa-text-muted);
+  max-width: 32ch;
+  flex: 1;
+}
+
+// ── "View →" fade-in CTA ──────────────────────────────────────────────────────
+
+.viewCta {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-primary);
+  margin-top: 8px;
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity 0.2s ease 0.1s,
+              transform 0.2s ease 0.1s;
+}
+
+.card:hover .viewCta {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .comingSoon {
   font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
-  margin-top: 12px;
+  color: var(--nivenxa-text-muted);
+  margin-top: 4px;
   font-family: var(--font-sans);
 }
 
-.panelFade {
+// ── Ghost number inside card image ────────────────────────────────────────────
+
+.ghostNumber {
   position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 66%;
+  bottom: 10px;
+  right: 12px;
+  font-family: Georgia, serif;
+  font-size: 48px;
+  font-weight: 400;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.2);
+  mix-blend-mode: overlay;
   pointer-events: none;
+  user-select: none;
 }
 
-.panelContent {
-  position: relative;
-  z-index: v.$z-overlay;
-}
+// ── Category CTA override — Forest Ink ───────────────────────────────────────
 
-// ─── Category CTA override — Forest Ink ─────────────────────────────────────
-// Overrides the default terracotta Button.primary for product-category CTAs.
 .categoryBtn {
   background-color: var(--nivenxa-cta-forest) !important;
   color: var(--nivenxa-cta-forest-text) !important;
   border-radius: 4px;
 }
 
-// ─── Women's panel ────────────────────────────────────────────────────────────
-.womenBg {
-  background: #A87060;
+// ── Responsive ────────────────────────────────────────────────────────────────
+
+@media (max-width: 1024px) {
+  .section {
+    padding: 2.5rem 1.25rem 2rem;
+  }
+
+  .sectionHeader {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .headerRight {
+    align-items: flex-start;
+  }
+
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
-.womenFade {
-  background: rgba(0, 0, 0, 0.25);
-}
-
-.womenEyebrow {
-  font-family: var(--font-sans);
-  font-size: 0.625rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  color: rgba(245, 242, 235, 0.58);
-  margin-bottom: 0.75rem;
-}
-
-.womenTitle {
-  font-family: var(--font-serif);
-  font-size: clamp(1.75rem, 4vw, 2.5rem);
-  color: var(--color-canvas);
-  margin-bottom: 1rem;
-}
-
-.womenBody {
-  font-family: var(--font-sans);
-  font-size: 0.875rem;
-  line-height: 1.75;
-  color: rgba(245, 242, 235, 0.62);
-  max-width: 32ch;
-  margin-bottom: 1.5rem;
-}
-
-// ─── Unisex panel ────────────────────────────────────────────────────────────
-.unisexBg {
-  background: #3A3732;
-}
-
-.unisexFade {
-  background: rgba(0, 0, 0, 0.25);
-}
-
-.unisexEyebrow {
-  font-family: var(--font-sans);
-  font-size: 0.625rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  color: rgba(245, 242, 235, 0.48);
-  margin-bottom: 0.75rem;
-}
-
-.unisexTitle {
-  font-family: var(--font-serif);
-  font-size: clamp(1.75rem, 4vw, 2.5rem);
-  color: var(--color-canvas);
-  margin-bottom: 1rem;
-}
-
-.unisexBody {
-  font-family: var(--font-sans);
-  font-size: 0.875rem;
-  line-height: 1.75;
-  color: rgba(245, 242, 235, 0.60);
-  max-width: 32ch;
-  margin-bottom: 1.5rem;
-}
-
-// ─── Kids' panel ─────────────────────────────────────────────────────────────
-.kidsBg {
-  background: #5E7060;
-}
-
-.kidsFade {
-  background: rgba(0, 0, 0, 0.25);
-}
-
-.kidsEyebrow {
-  font-family: var(--font-sans);
-  font-size: 0.625rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  color: rgba(245, 242, 235, 0.55);
-  margin-bottom: 0.75rem;
-}
-
-.kidsTitle {
-  font-family: var(--font-serif);
-  font-size: clamp(1.75rem, 4vw, 2.5rem);
-  color: var(--color-canvas);
-  margin-bottom: 1rem;
-}
-
-.kidsBody {
-  font-family: var(--font-sans);
-  font-size: 0.875rem;
-  line-height: 1.75;
-  color: rgba(245, 242, 235, 0.70);
-  max-width: 32ch;
-  margin-bottom: 1.5rem;
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }

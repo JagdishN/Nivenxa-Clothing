@@ -25,6 +25,7 @@
   color: var(--nivenxa-text-primary);
   line-height: 1;
   margin: 0;
+  padding-top: 12 px;
 }
 
 .titleRule {

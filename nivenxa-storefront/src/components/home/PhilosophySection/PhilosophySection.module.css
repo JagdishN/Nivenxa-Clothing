@@ -1,0 +1,96 @@
+/* ── Section wrapper ───────────────────────────────────────── */
+
+.section {
+  background: var(--nivenxa-bg-secondary);
+  padding: 4rem 2.5rem;
+  border-top: 0.5px solid var(--nivenxa-border);
+  border-bottom: 0.5px solid var(--nivenxa-border);
+}
+
+/* ── Two-column layout ─────────────────────────────────────── */
+
+.inner {
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  gap: 3rem;
+  align-items: center;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* ── Left column — eyebrow + three italic lines ───────────── */
+
+.heading {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-muted);
+  display: block;
+  margin-bottom: 16px;
+}
+
+.left {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.line {
+  font-family: Georgia, serif;
+  font-size: 22px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--nivenxa-text-primary);
+  line-height: 2;
+  margin: 0;
+}
+
+/* ── Vertical divider ──────────────────────────────────────── */
+
+.divider {
+  background: var(--nivenxa-border);
+  height: 80px;
+  width: 1px;
+  align-self: center;
+}
+
+/* ── Right column — material proof ────────────────────────── */
+
+.right {
+  display: flex;
+  align-items: center;
+}
+
+.proof {
+  font-family: Georgia, serif;
+  font-size: 13px;
+  font-style: italic;
+  line-height: 1.85;
+  color: var(--nivenxa-text-muted);
+  margin: 0;
+}
+
+/* ── Mobile ────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .section {
+    padding: 3rem 1.25rem;
+  }
+
+  .inner {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .divider {
+    display: none;
+  }
+
+  .line {
+    font-size: 18px;
+  }
+
+  .proof {
+    font-size: 12px;
+  }
+}

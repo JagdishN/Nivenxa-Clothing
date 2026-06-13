@@ -13,22 +13,42 @@
 
 .item {
   display: grid;
-  grid-template-columns: 72px 1fr auto;
+  grid-template-columns: 120px 1fr auto;
   gap: 12px;
   align-items: center;
 }
 
 .imageBox {
-  width: 72px;
-  height: 90px;
-  border-radius: 3px;
-  overflow: hidden;
+  width: 120px;
+  height: 150px;
   flex-shrink: 0;
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--nivenxa-bg-secondary);
+}
+
+/* img inside imageBox — ready for when real product photos are wired in */
+.imageBox img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top; /* top bias: shows garment, not feet */
 }
 
 .imagePlaceholder {
   width: 100%;
   height: 100%;
+}
+
+@media (max-width: 600px) {
+  .item {
+    grid-template-columns: 100px 1fr auto;
+  }
+
+  .imageBox {
+    width: 100px;
+    height: 125px; /* same 4:5 ratio — slightly smaller on mobile */
+  }
 }
 
 .info {
