@@ -160,7 +160,7 @@ export default function EditsSection() {
             </p>
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             <Link href={'/edits' as any} className={styles.exploreBtn}>
-              Explore All →
+              Explore All Edits →
             </Link>
           </div>
         </div>

@@ -35,7 +35,7 @@ export default function NewsletterSection() {
             <p className={styles.line}>Quiet releases.</p>
           </div>
           <span className={styles.frequency}>
-            Delivered occasionally.
+            No spam. Occasional notes only.
           </span>
         </div>
 

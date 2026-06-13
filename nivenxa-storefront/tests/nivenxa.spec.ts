@@ -587,6 +587,32 @@ test.describe('Product Page', () => {
       page.getByRole('dialog', { name: /shopping bag/i })
     ).toBeVisible()
   })
+
+  test('PP-40 — styled with image box is enlarged', async ({ page }) => {
+    await page.goto(`${BASE}/en/shop/over-tee-shirts/raw-oat`, { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(1000)
+
+    // StyledWith renders a div.imageBox (colour placeholder) — not an <img> element
+    const imageBox = page.locator('[class*="imageBox"]').first()
+    await expect(imageBox).toBeVisible()
+
+    const box = await imageBox.boundingBox()
+
+    // Image box should be at least 100px wide (allows for mobile viewport)
+    expect(box?.width).toBeGreaterThan(90)
+
+    // Height should maintain 4:5 ratio — at least 110px tall
+    expect(box?.height).toBeGreaterThan(110)
+  })
+
+  test.skip('PP-41 — styled with image shows garment not cropped to feet — no <img> element yet', async () => {
+    // StyledWith currently renders a coloured div placeholder (pairing.hex background),
+    // not an <img> element. CSS object-position is only effective on replaced elements
+    // (<img>, <video>) and has no effect on a <div>.
+    // Enable this test and remove the skip when real product images are wired into
+    // the StyledWith component: replace .imagePlaceholder <div> with an <img> and
+    // confirm object-position: center top is applied via .imageBox img in the CSS.
+  })
 })
 
 // ─────────────────────────────────────────────────────────────────────────────

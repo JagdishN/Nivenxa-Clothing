@@ -87,17 +87,15 @@ const COMMON_FILES = {
 
 const teeSlugs: TeeConfig[] = [
   // ── 1. DEFAULT COLOUR (first = default on product page) ───────────────────
-  { slug: 'raw-oat',   hex: 'D4C5A9', textHex: '333333', label: 'Raw Oat',   folder: "Men/OversizedTee's/OAT BEIGE",      ...COMMON_FILES },
+  { slug: 'raw-oat',  hex: 'CBC3B4', textHex: '333333', label: 'Raw Oat',  folder: "Men/OversizedTee's/OAT BEIGE",      ...COMMON_FILES }, // Pantone 13-0401 TCX
   // ── 2. BONE ───────────────────────────────────────────────────────────────
-  { slug: 'bone',      hex: 'F0EBE0', textHex: '333333', label: 'Bone',      folder: "Men/OversizedTee's/WARM IVORY",     ...COMMON_FILES },
+  { slug: 'bone',     hex: 'F0EBE0', textHex: '333333', label: 'Bone',     folder: "Men/OversizedTee's/WARM IVORY",     ...COMMON_FILES }, // Pantone 11-0507 TCX
   // ── 3. ESPRESSO ───────────────────────────────────────────────────────────
-  { slug: 'espresso',  hex: '5C5248', textHex: 'FFFFFF', label: 'Espresso',  folder: "Men/OversizedTee's/CHARCOAL EARTH", ...COMMON_FILES },
+  { slug: 'espresso', hex: '363031', textHex: 'FFFFFF', label: 'Espresso', folder: "Men/OversizedTee's/CHARCOAL EARTH", ...COMMON_FILES }, // Pantone 19-1103 TCX
   // ── 4. MUSHROOM ───────────────────────────────────────────────────────────
-  { slug: 'mushroom',  hex: 'A89888', textHex: 'FFFFFF', label: 'Mushroom',  folder: "Men/OversizedTee's/MUSHROOM TAUPE", ...COMMON_FILES },
+  { slug: 'mushroom', hex: 'A89888', textHex: 'FFFFFF', label: 'Mushroom', folder: "Men/OversizedTee's/MUSHROOM TAUPE", ...COMMON_FILES }, // Pantone 17-1210 TCX
   // ── 5. EARTH ──────────────────────────────────────────────────────────────
-  { slug: 'earth',     hex: '8B7355', textHex: 'FFFFFF', label: 'Earth',     folder: "Men/OversizedTee's/MINERAL BROWN",  ...COMMON_FILES },
-  // ── 6. RED EARTH ──────────────────────────────────────────────────────────
-  { slug: 'red-earth', hex: 'C47A4E', textHex: 'FFFFFF', label: 'Red Earth', folder: "Men/OversizedTee's/DESERT CLAY",    ...COMMON_FILES },
+  { slug: 'earth',    hex: '8B7355', textHex: 'FFFFFF', label: 'Earth',    folder: "Men/OversizedTee's/MINERAL BROWN",  ...COMMON_FILES }, // Pantone 18-1022 TCX
 ]
 
 function buildTeeImages(c: TeeConfig): ProductImage[] {
@@ -114,8 +112,8 @@ function buildTeeImages(c: TeeConfig): ProductImage[] {
 }
 
 // ─── Cargo image config ───────────────────────────────────────────────────────
-// charcoal-grey and dark-olive have real images.
-// stone-beige has no matching folder — falls back to placehold.co (unchanged).
+// carbon and forest-floor have real images on disk.
+// chalk-stone, tobacco, phantom fall back to placehold.co. (terracotta hidden)
 
 interface CargoFiles {
   front: string
@@ -136,8 +134,9 @@ interface CargoConfig {
 }
 
 const cargoSlugs: CargoConfig[] = [
+  // ── 1. CARBON (real images on disk) ─────────────────────────────────────────
   {
-    slug: 'charcoal-grey', hex: '4A4A4A', textHex: 'FFFFFF', label: 'Charcoal Grey',
+    slug: 'carbon',      hex: '6B6560', textHex: 'FFFFFF', label: 'Carbon',       // Pantone 18-0601 TCX
     folder: 'Unisex/cargos/charcoalgrey',
     files: {
       front:  'front_view.png',
@@ -148,25 +147,24 @@ const cargoSlugs: CargoConfig[] = [
       detail: 'pocket_details_view.png',
     },
   },
+  // ── 2. FOREST FLOOR (real images on disk) ───────────────────────────────────
   {
-    slug: 'dark-olive',    hex: '4A5240', textHex: 'FFFFFF', label: 'Dark Olive',
+    slug: 'forest-floor', hex: '4A5240', textHex: 'FFFFFF', label: 'Forest Floor', // Pantone 19-0417 TCX
     folder: 'Unisex/cargos/darkolive',
     files: {
       front:  'front_view.png',
       back:   'back_view.png',
       side:   'side_view.png',
       walk:   'walking_view.png',
-      edit:   'cargo_lifestyle_view.png',  // differs from charcoal-grey
+      edit:   'cargo_lifestyle_view.png',  // differs from carbon
       detail: 'pocket_details_view.png',
     },
   },
-  {
-    slug: 'stone-beige',   hex: 'C4B49A', textHex: '333333', label: 'Stone Beige',
-    folder: null,   // no matching folder on disk — placehold.co fallback used below
-  },
-  { slug: 'jet-black',   hex: '1A1A1A', textHex: 'FFFFFF', label: 'Jet Black',   folder: null },
-  { slug: 'mocha-brown', hex: '7B5C47', textHex: 'FFFFFF', label: 'Mocha Brown', folder: null },
-  { slug: 'rust-clay',   hex: 'B5572A', textHex: 'FFFFFF', label: 'Rust Clay',   folder: null },
+  // ── 3–6. No real images on disk — placehold.co fallback ─────────────────────
+  { slug: 'chalk-stone', hex: 'C4B49A', textHex: '333333', label: 'Chalk Stone',  folder: null }, // Pantone 12-0712 TCX
+  // { slug: 'terracotta', hex: 'B5541C', textHex: 'FFFFFF', label: 'Terracotta', folder: null }, // Pantone 18-1250 TCX — hidden
+  { slug: 'tobacco',     hex: '7B5B3A', textHex: 'FFFFFF', label: 'Tobacco',      folder: null }, // Pantone 18-1048 TCX
+  { slug: 'phantom',     hex: '1A1A1A', textHex: 'FFFFFF', label: 'Phantom',      folder: null }, // Pantone 19-4005 TCX
 ]
 
 function buildCargoImages(c: CargoConfig): ProductImage[] {
@@ -297,18 +295,20 @@ const oversizedTee: Product = {
       content: `<table style="width:100%;border-collapse:collapse;font-size:13px">
   <thead><tr>
     <th style="text-align:left;padding:6px 4px 6px 0;border-bottom:1px solid rgba(0,0,0,0.10)">Size</th>
-    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Chest (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Body Length (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Chest ½ (in)</th>
     <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Shoulder (in)</th>
     <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Sleeve (in)</th>
-    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Length (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Bicep ½ (in)</th>
   </tr></thead>
   <tbody>
-    <tr><td style="padding:6px 4px 6px 0">S</td><td style="padding:6px 4px">38–40</td><td style="padding:6px 4px">17.5</td><td style="padding:6px 4px">8.5</td><td style="padding:6px 4px">28</td></tr>
-    <tr><td style="padding:6px 4px 6px 0">M</td><td style="padding:6px 4px">40–42</td><td style="padding:6px 4px">18.5</td><td style="padding:6px 4px">9</td><td style="padding:6px 4px">29</td></tr>
-    <tr><td style="padding:6px 4px 6px 0">L</td><td style="padding:6px 4px">42–44</td><td style="padding:6px 4px">19.5</td><td style="padding:6px 4px">9.5</td><td style="padding:6px 4px">30</td></tr>
-    <tr><td style="padding:6px 4px 6px 0">XL</td><td style="padding:6px 4px">44–46</td><td style="padding:6px 4px">20.5</td><td style="padding:6px 4px">10</td><td style="padding:6px 4px">31</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">S</td><td style="padding:6px 4px">28</td><td style="padding:6px 4px">22.5</td><td style="padding:6px 4px">19.5</td><td style="padding:6px 4px">9</td><td style="padding:6px 4px">9.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">M</td><td style="padding:6px 4px">29</td><td style="padding:6px 4px">24</td><td style="padding:6px 4px">21</td><td style="padding:6px 4px">9.5</td><td style="padding:6px 4px">10</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">L</td><td style="padding:6px 4px">30</td><td style="padding:6px 4px">25.5</td><td style="padding:6px 4px">22.5</td><td style="padding:6px 4px">10</td><td style="padding:6px 4px">10.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">XL</td><td style="padding:6px 4px">31</td><td style="padding:6px 4px">27</td><td style="padding:6px 4px">24</td><td style="padding:6px 4px">10.5</td><td style="padding:6px 4px">11</td></tr>
   </tbody>
-</table>`,
+</table>
+<p style="margin:8px 0 0;font-size:11px;color:rgba(0,0,0,0.45)">All measurements are garment measurements in inches (half body where applicable).</p>`,
     },
   ],
 
@@ -340,14 +340,14 @@ const oversizedTee: Product = {
     },
     {
       id: 'col-tee-003',
-      slug: 'over-tee-shirts/red-earth',
+      slug: 'over-tee-shirts/earth',
       name: 'Heavyweight Pocket Tee',
-      colourLabel: 'Red Earth',
+      colourLabel: 'Earth',
       price: 1999,
       currency: '₹',
       images: [
-        localImg('col-tee-003-sf', "Men/OversizedTee's/DESERT CLAY", 'front_studio_view.webp', 'studio-front', 'Heavyweight Pocket Tee', 'red-earth'),
-        localImg('col-tee-003-wk', "Men/OversizedTee's/DESERT CLAY", 'walking_view.webp',      'walking',      'Heavyweight Pocket Tee', 'red-earth'),
+        localImg('col-tee-003-sf', "Men/OversizedTee's/MINERAL BROWN", 'front_studio_view.webp', 'studio-front', 'Heavyweight Pocket Tee', 'earth'),
+        localImg('col-tee-003-wk', "Men/OversizedTee's/MINERAL BROWN", 'walking_view.webp',      'walking',      'Heavyweight Pocket Tee', 'earth'),
       ],
     },
   ],
@@ -357,12 +357,11 @@ const oversizedTee: Product = {
     productName: 'Cargo Pant',
     price: '₹3,499',
     pairings: {
-      'raw-oat':   { colourSlug: 'dark-olive',    colourName: 'Dark Olive',    hex: '#4A5240' },
-      'bone':      { colourSlug: 'charcoal-grey',  colourName: 'Charcoal Grey', hex: '#6B7280' },
-      'espresso':  { colourSlug: 'stone-beige',    colourName: 'Stone Beige',   hex: '#C8B89A' },
-      'mushroom':  { colourSlug: 'dark-olive',     colourName: 'Dark Olive',    hex: '#4A5240' },
-      'earth':     { colourSlug: 'jet-black',      colourName: 'Jet Black',     hex: '#1A1A1A' },
-      'red-earth': { colourSlug: 'stone-beige',    colourName: 'Stone Beige',   hex: '#C8B89A' },
+      'raw-oat':  { colourSlug: 'forest-floor', colourName: 'Forest Floor', hex: '#4A5240' },
+      'bone':     { colourSlug: 'carbon',        colourName: 'Carbon',       hex: '#6B6560' },
+      'espresso': { colourSlug: 'chalk-stone',   colourName: 'Chalk Stone',  hex: '#C4B49A' },
+      'mushroom': { colourSlug: 'forest-floor',  colourName: 'Forest Floor', hex: '#4A5240' },
+      'earth':    { colourSlug: 'phantom',       colourName: 'Phantom',      hex: '#1A1A1A' },
     },
   },
 
@@ -549,46 +548,50 @@ const cargoPants: Product = {
       title: 'Size guide',
       content: `<table style="width:100%;border-collapse:collapse;font-size:13px">
   <thead><tr>
-    <th style="text-align:left;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.10)">Size</th>
-    <th style="text-align:left;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.10)">Waist (in)</th>
-    <th style="text-align:left;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.10)">Inseam (in)</th>
+    <th style="text-align:left;padding:6px 4px 6px 0;border-bottom:1px solid rgba(0,0,0,0.10)">Size</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Outseam (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Waist ½ (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Hip ½ (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Inseam (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Leg Open ½ (in)</th>
   </tr></thead>
   <tbody>
-    <tr><td style="padding:6px 0">S</td><td>28–30</td><td>29</td></tr>
-    <tr><td style="padding:6px 0">M</td><td>30–32</td><td>30</td></tr>
-    <tr><td style="padding:6px 0">L</td><td>32–34</td><td>30.5</td></tr>
-    <tr><td style="padding:6px 0">XL</td><td>34–36</td><td>31</td></tr>
-    <tr><td style="padding:6px 0">XXL</td><td>36–38</td><td>31.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">S</td><td style="padding:6px 4px">39.5</td><td style="padding:6px 4px">14.5</td><td style="padding:6px 4px">21.5</td><td style="padding:6px 4px">28.5</td><td style="padding:6px 4px">13</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">M</td><td style="padding:6px 4px">40.5</td><td style="padding:6px 4px">15.5</td><td style="padding:6px 4px">23</td><td style="padding:6px 4px">29</td><td style="padding:6px 4px">13.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">L</td><td style="padding:6px 4px">41.5</td><td style="padding:6px 4px">16.5</td><td style="padding:6px 4px">24.5</td><td style="padding:6px 4px">29.5</td><td style="padding:6px 4px">14</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">XL</td><td style="padding:6px 4px">42</td><td style="padding:6px 4px">18</td><td style="padding:6px 4px">26</td><td style="padding:6px 4px">30</td><td style="padding:6px 4px">14.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">XXL</td><td style="padding:6px 4px">43</td><td style="padding:6px 4px">20</td><td style="padding:6px 4px">28</td><td style="padding:6px 4px">31</td><td style="padding:6px 4px">15</td></tr>
   </tbody>
-</table>`,
+</table>
+<p style="margin:8px 0 0;font-size:11px;color:rgba(0,0,0,0.45)">All measurements are garment measurements in inches (half body where applicable).</p>`,
     },
   ],
 
-  // Cross-sell items — dark-olive uses real images; stone-beige falls back to placehold.co
+  // Cross-sell items — forest-floor uses real images; chalk-stone falls back to placehold.co
   collectionItems: [
     {
       id: 'col-cargo-001',
-      slug: 'cargo-pants/dark-olive',
+      slug: 'cargo-pants/forest-floor',
       name: 'Unisex Cargo Pants',
-      colourLabel: 'Dark Olive',
+      colourLabel: 'Forest Floor',
       price: 3499,
       currency: '₹',
       images: [
-        localImg('col-cargo-001-sf', 'Unisex/cargos/darkolive', 'front_view.png',   'studio-front', 'Unisex Cargo Pants', 'dark-olive'),
-        localImg('col-cargo-001-wk', 'Unisex/cargos/darkolive', 'walking_view.png', 'walking',      'Unisex Cargo Pants', 'dark-olive'),
+        localImg('col-cargo-001-sf', 'Unisex/cargos/darkolive', 'front_view.png',   'studio-front', 'Unisex Cargo Pants', 'forest-floor'),
+        localImg('col-cargo-001-wk', 'Unisex/cargos/darkolive', 'walking_view.png', 'walking',      'Unisex Cargo Pants', 'forest-floor'),
       ],
     },
     {
       id: 'col-cargo-002',
-      slug: 'cargo-pants/stone-beige',
+      slug: 'cargo-pants/chalk-stone',
       name: 'Unisex Cargo Pants',
-      colourLabel: 'Stone Beige',
+      colourLabel: 'Chalk Stone',
       price: 3499,
       currency: '₹',
-      // No matching image folder on disk for stone-beige — placehold.co fallback
+      // No matching image folder on disk for chalk-stone — placehold.co fallback
       images: [
-        { id: 'col-cargo-002-sf', src: ph('C4B49A', '333333', 'studio-front'), alt: 'Unisex Cargo Pants — studio-front — stone-beige', type: 'studio-front', colourSlug: 'stone-beige' },
-        { id: 'col-cargo-002-wk', src: ph('C4B49A', '333333', 'walking'),      alt: 'Unisex Cargo Pants — walking — stone-beige',      type: 'walking',      colourSlug: 'stone-beige' },
+        { id: 'col-cargo-002-sf', src: ph('C4B49A', '333333', 'studio-front'), alt: 'Unisex Cargo Pants — studio-front — chalk-stone', type: 'studio-front', colourSlug: 'chalk-stone' },
+        { id: 'col-cargo-002-wk', src: ph('C4B49A', '333333', 'walking'),      alt: 'Unisex Cargo Pants — walking — chalk-stone',      type: 'walking',      colourSlug: 'chalk-stone' },
       ],
     },
   ],
@@ -598,12 +601,12 @@ const cargoPants: Product = {
     productName: 'Heavyweight Pocket Tee',
     price: '₹1,999',
     pairings: {
-      'dark-olive':    { colourSlug: 'raw-oat',  colourName: 'Raw Oat',  hex: '#D8C9B0' },
-      'charcoal-grey': { colourSlug: 'bone',     colourName: 'Bone',     hex: '#F0EBE0' },
-      'stone-beige':   { colourSlug: 'espresso', colourName: 'Espresso', hex: '#5C5248' },
-      'jet-black':     { colourSlug: 'earth',    colourName: 'Earth',    hex: '#8B7355' },
-      'mocha-brown':   { colourSlug: 'bone',     colourName: 'Bone',     hex: '#F0EBE0' },
-      'rust-clay':     { colourSlug: 'espresso', colourName: 'Espresso', hex: '#5C5248' },
+      'forest-floor': { colourSlug: 'raw-oat',  colourName: 'Raw Oat',  hex: '#CBC3B4' },
+      'carbon':       { colourSlug: 'bone',     colourName: 'Bone',     hex: '#F0EBE0' },
+      'chalk-stone':  { colourSlug: 'espresso', colourName: 'Espresso', hex: '#363031' },
+      'phantom':      { colourSlug: 'earth',    colourName: 'Earth',    hex: '#8B7355' },
+      'tobacco':      { colourSlug: 'bone',     colourName: 'Bone',     hex: '#F0EBE0' },
+      // 'terracotta' pairing removed — colour hidden
     },
   },
 
@@ -669,17 +672,11 @@ const cargoPants: Product = {
 
 // ─── Product 3: A-line Kurta ──────────────────────────────────────────────────
 const kurta3ColourSlugs: Array<{ slug: string; hex: string; label: string }> = [
-  { slug: 'warm-ivory',     hex: 'F0EBE0', label: 'Warm Ivory'     },
-  { slug: 'soft-ecru',      hex: 'EDE5D0', label: 'Soft Ecru'      },
-  { slug: 'oat-beige',      hex: 'D8C9B0', label: 'Oat Beige'      },
-  { slug: 'sandstone',      hex: 'C8A882', label: 'Sandstone'       },
-  { slug: 'mushroom-taupe', hex: 'A89888', label: 'Mushroom Taupe'  },
-  { slug: 'dust-sage',      hex: '8C9E84', label: 'Dust Sage'       },
-  { slug: 'dust-olive',     hex: '7A8060', label: 'Dust Olive'      },
-  { slug: 'mineral-brown',  hex: '8B7355', label: 'Mineral Brown'   },
-  { slug: 'dusty-rose',     hex: 'D4A8A0', label: 'Dusty Rose'      },
-  { slug: 'desert-clay',    hex: 'C47A4E', label: 'Desert Clay'     },
-  { slug: 'soft-black',     hex: '1E1C1A', label: 'Soft Black'      },
+  { slug: 'ivory', hex: 'F0EBE0', label: 'Ivory' }, // Pantone 11-0608 TCX — print: minimal-floral
+  { slug: 'sand',  hex: 'C8A882', label: 'Sand'  }, // Pantone 14-1116 TCX — print: minimal-floral
+  { slug: 'sage',  hex: '8C9E84', label: 'Sage'  }, // Pantone 16-5803 TCX — print: plain
+  { slug: 'rose',  hex: 'D4A8A0', label: 'Rose'  }, // Pantone 14-1911 TCX — print: plain
+  { slug: 'clay',  hex: 'C47A4E', label: 'Clay'  }, // Pantone 18-1441 TCX — print: plain
 ]
 
 const aLineKurta: Product = {
@@ -691,7 +688,7 @@ const aLineKurta: Product = {
   collectionSlug: 'womens',
   badge: null,
   compositionQuote: '160 GSM Cotton-Modal slub — bio-washed for softness, designed for the everyday Indian wardrobe.',
-  price: 2499,
+  price: 3999,
   currency: '₹',
   trustLine: 'Inclusive of all taxes · Free delivery above ₹999',
   sizeUnit: null,
@@ -784,46 +781,66 @@ const aLineKurta: Product = {
     },
     {
       title: 'Size guide',
-      content: `<table style="width:100%;border-collapse:collapse;font-size:13px">
+      content: `<p style="margin:0 0 6px;font-size:11px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase">Kurta</p>
+<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px">
   <thead><tr>
     <th style="text-align:left;padding:6px 4px 6px 0;border-bottom:1px solid rgba(0,0,0,0.10)">Size</th>
-    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Chest (in)</th>
-    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Length (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Front Length (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Chest ½ (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Armhole (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Sleeve ¾ (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Neck Depth (in)</th>
   </tr></thead>
   <tbody>
-    <tr><td style="padding:6px 4px 6px 0">XS</td><td style="padding:6px 4px">32–34</td><td style="padding:6px 4px">40</td></tr>
-    <tr><td style="padding:6px 4px 6px 0">S</td><td style="padding:6px 4px">34–36</td><td style="padding:6px 4px">41</td></tr>
-    <tr><td style="padding:6px 4px 6px 0">M</td><td style="padding:6px 4px">36–38</td><td style="padding:6px 4px">42</td></tr>
-    <tr><td style="padding:6px 4px 6px 0">L</td><td style="padding:6px 4px">38–40</td><td style="padding:6px 4px">43</td></tr>
-    <tr><td style="padding:6px 4px 6px 0">XL</td><td style="padding:6px 4px">40–42</td><td style="padding:6px 4px">44</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">S</td><td style="padding:6px 4px">42</td><td style="padding:6px 4px">19</td><td style="padding:6px 4px">16</td><td style="padding:6px 4px">19</td><td style="padding:6px 4px">5.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">M</td><td style="padding:6px 4px">43</td><td style="padding:6px 4px">20.5</td><td style="padding:6px 4px">17</td><td style="padding:6px 4px">19.5</td><td style="padding:6px 4px">6</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">L</td><td style="padding:6px 4px">44</td><td style="padding:6px 4px">22</td><td style="padding:6px 4px">18</td><td style="padding:6px 4px">20</td><td style="padding:6px 4px">6.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">XL</td><td style="padding:6px 4px">45</td><td style="padding:6px 4px">23.5</td><td style="padding:6px 4px">19</td><td style="padding:6px 4px">20.5</td><td style="padding:6px 4px">7</td></tr>
   </tbody>
-</table>`,
+</table>
+<p style="margin:0 0 6px;font-size:11px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase">Pant</p>
+<table style="width:100%;border-collapse:collapse;font-size:13px">
+  <thead><tr>
+    <th style="text-align:left;padding:6px 4px 6px 0;border-bottom:1px solid rgba(0,0,0,0.10)">Size</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Outseam (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Waist ½ (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Hip ½ (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Leg Open ½ (in)</th>
+  </tr></thead>
+  <tbody>
+    <tr><td style="padding:6px 4px 6px 0">S</td><td style="padding:6px 4px">38</td><td style="padding:6px 4px">14.75</td><td style="padding:6px 4px">19.5</td><td style="padding:6px 4px">13</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">M</td><td style="padding:6px 4px">39</td><td style="padding:6px 4px">16.25</td><td style="padding:6px 4px">21</td><td style="padding:6px 4px">13.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">L</td><td style="padding:6px 4px">40</td><td style="padding:6px 4px">17.75</td><td style="padding:6px 4px">22.5</td><td style="padding:6px 4px">14</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">XL</td><td style="padding:6px 4px">41</td><td style="padding:6px 4px">19.25</td><td style="padding:6px 4px">24</td><td style="padding:6px 4px">14.5</td></tr>
+  </tbody>
+</table>
+<p style="margin:8px 0 0;font-size:11px;color:rgba(0,0,0,0.45)">All measurements are garment measurements in inches (half body where applicable).</p>`,
     },
   ],
 
   collectionItems: [
     {
       id: 'col-kurta-001',
-      slug: 'a-line-kurta/soft-ecru',
+      slug: 'a-line-kurta/ivory',
       name: 'A-line Kurta',
-      colourLabel: 'Soft Ecru',
-      price: 2499,
+      colourLabel: 'Ivory',
+      price: 3999,
       currency: '₹',
       images: [
-        { id: 'col-k3-001-sf', src: phImg('EDE5D0', 2000, 2500, 'A-line Kurta studio-front'), alt: 'A-line Kurta — studio-front — soft-ecru', type: 'studio-front', colourSlug: 'soft-ecru' },
-        { id: 'col-k3-001-wk', src: phImg('EDE5D0', 1200, 1500, 'A-line Kurta walking'),      alt: 'A-line Kurta — walking — soft-ecru',      type: 'walking',      colourSlug: 'soft-ecru' },
+        { id: 'col-k3-001-sf', src: phImg('F0EBE0', 2000, 2500, 'A-line Kurta studio-front'), alt: 'A-line Kurta — studio-front — ivory', type: 'studio-front', colourSlug: 'ivory' },
+        { id: 'col-k3-001-wk', src: phImg('F0EBE0', 1200, 1500, 'A-line Kurta walking'),      alt: 'A-line Kurta — walking — ivory',      type: 'walking',      colourSlug: 'ivory' },
       ],
     },
     {
       id: 'col-kurta-002',
-      slug: 'a-line-kurta/dust-sage',
+      slug: 'a-line-kurta/sage',
       name: 'A-line Kurta',
-      colourLabel: 'Dust Sage',
-      price: 2499,
+      colourLabel: 'Sage',
+      price: 3999,
       currency: '₹',
       images: [
-        { id: 'col-k3-002-sf', src: phImg('8C9E84', 2000, 2500, 'A-line Kurta studio-front'), alt: 'A-line Kurta — studio-front — dust-sage', type: 'studio-front', colourSlug: 'dust-sage' },
-        { id: 'col-k3-002-wk', src: phImg('8C9E84', 1200, 1500, 'A-line Kurta walking'),      alt: 'A-line Kurta — walking — dust-sage',      type: 'walking',      colourSlug: 'dust-sage' },
+        { id: 'col-k3-002-sf', src: phImg('8C9E84', 2000, 2500, 'A-line Kurta studio-front'), alt: 'A-line Kurta — studio-front — sage', type: 'studio-front', colourSlug: 'sage' },
+        { id: 'col-k3-002-wk', src: phImg('8C9E84', 1200, 1500, 'A-line Kurta walking'),      alt: 'A-line Kurta — walking — sage',      type: 'walking',      colourSlug: 'sage' },
       ],
     },
   ],
@@ -889,9 +906,10 @@ const aLineKurta: Product = {
 
 // ─── Product 4: Women's Co-ord Set ────────────────────────────────────────────
 const coordColourSlugs: Array<{ slug: string; hex: string; label: string }> = [
-  { slug: 'warm-ivory', hex: 'F0EBE0', label: 'Warm Ivory' },
-  { slug: 'dust-sage',  hex: '8C9E84', label: 'Dust Sage'  },
-  { slug: 'dusty-rose', hex: 'D4A8A0', label: 'Dusty Rose' },
+  { slug: 'raw-ivory',   hex: 'F0EBE0', label: 'Raw Ivory'   }, // Pantone 11-0602 TCX
+  { slug: 'flax',        hex: 'C8B89A', label: 'Flax'        }, // Pantone 12-0712 TCX
+  { slug: 'meadow-sage', hex: '8C9E84', label: 'Meadow Sage' }, // Pantone 16-0430 TCX
+  { slug: 'rose-dust',   hex: 'D4A8A0', label: 'Rose Dust'   }, // Pantone 14-1911 TCX
 ]
 
 const womenCoordSet: Product = {
@@ -994,46 +1012,67 @@ const womenCoordSet: Product = {
     },
     {
       title: 'Size guide',
-      content: `<table style="width:100%;border-collapse:collapse;font-size:13px">
+      content: `<p style="margin:0 0 6px;font-size:11px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase">Top</p>
+<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px">
   <thead><tr>
     <th style="text-align:left;padding:6px 4px 6px 0;border-bottom:1px solid rgba(0,0,0,0.10)">Size</th>
-    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Chest (in)</th>
-    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Top Length (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Body Length (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Chest ½ (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Shoulder (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Sleeve (in)</th>
   </tr></thead>
   <tbody>
-    <tr><td style="padding:6px 4px 6px 0">XS</td><td style="padding:6px 4px">32–34</td><td style="padding:6px 4px">26</td></tr>
-    <tr><td style="padding:6px 4px 6px 0">S</td><td style="padding:6px 4px">34–36</td><td style="padding:6px 4px">27</td></tr>
-    <tr><td style="padding:6px 4px 6px 0">M</td><td style="padding:6px 4px">36–38</td><td style="padding:6px 4px">28</td></tr>
-    <tr><td style="padding:6px 4px 6px 0">L</td><td style="padding:6px 4px">38–40</td><td style="padding:6px 4px">29</td></tr>
-    <tr><td style="padding:6px 4px 6px 0">XL</td><td style="padding:6px 4px">40–42</td><td style="padding:6px 4px">30</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">XS</td><td style="padding:6px 4px">24</td><td style="padding:6px 4px">18.5</td><td style="padding:6px 4px">15</td><td style="padding:6px 4px">8</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">S</td><td style="padding:6px 4px">25</td><td style="padding:6px 4px">19.5</td><td style="padding:6px 4px">15.5</td><td style="padding:6px 4px">8.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">M</td><td style="padding:6px 4px">26</td><td style="padding:6px 4px">21</td><td style="padding:6px 4px">16.5</td><td style="padding:6px 4px">9</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">L</td><td style="padding:6px 4px">27</td><td style="padding:6px 4px">22.5</td><td style="padding:6px 4px">17.5</td><td style="padding:6px 4px">9.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">XL</td><td style="padding:6px 4px">28</td><td style="padding:6px 4px">24</td><td style="padding:6px 4px">18.5</td><td style="padding:6px 4px">10</td></tr>
   </tbody>
-</table>`,
+</table>
+<p style="margin:0 0 6px;font-size:11px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase">Bottom</p>
+<table style="width:100%;border-collapse:collapse;font-size:13px">
+  <thead><tr>
+    <th style="text-align:left;padding:6px 4px 6px 0;border-bottom:1px solid rgba(0,0,0,0.10)">Size</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Outseam (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Waist ½ (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Hip ½ (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Leg Open ½ (in)</th>
+  </tr></thead>
+  <tbody>
+    <tr><td style="padding:6px 4px 6px 0">XS</td><td style="padding:6px 4px">40.5</td><td style="padding:6px 4px">12.5</td><td style="padding:6px 4px">19.5</td><td style="padding:6px 4px">13</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">S</td><td style="padding:6px 4px">41</td><td style="padding:6px 4px">13.5</td><td style="padding:6px 4px">21</td><td style="padding:6px 4px">14</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">M</td><td style="padding:6px 4px">41.5</td><td style="padding:6px 4px">14.5</td><td style="padding:6px 4px">22.5</td><td style="padding:6px 4px">15</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">L</td><td style="padding:6px 4px">42</td><td style="padding:6px 4px">15.75</td><td style="padding:6px 4px">24</td><td style="padding:6px 4px">16</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">XL</td><td style="padding:6px 4px">42.5</td><td style="padding:6px 4px">17</td><td style="padding:6px 4px">25.5</td><td style="padding:6px 4px">17</td></tr>
+  </tbody>
+</table>
+<p style="margin:8px 0 0;font-size:11px;color:rgba(0,0,0,0.45)">All measurements are garment measurements in inches (half body where applicable).</p>`,
     },
   ],
 
   collectionItems: [
     {
       id: 'col-coord-001',
-      slug: 'women-lounge-sets/dust-sage',
+      slug: 'women-lounge-sets/meadow-sage',
       name: 'Relaxed Co-ord Set',
-      colourLabel: 'Dust Sage',
+      colourLabel: 'Meadow Sage',
       price: 3299,
       currency: '₹',
       images: [
-        { id: 'col-p4-001-sf', src: phImg('8C9E84', 2000, 2500, 'Relaxed Co-ord Set studio-front'), alt: 'Relaxed Co-ord Set — studio-front — dust-sage', type: 'studio-front', colourSlug: 'dust-sage' },
-        { id: 'col-p4-001-wk', src: phImg('8C9E84', 1200, 1500, 'Relaxed Co-ord Set walking'),      alt: 'Relaxed Co-ord Set — walking — dust-sage',      type: 'walking',      colourSlug: 'dust-sage' },
+        { id: 'col-p4-001-sf', src: phImg('8C9E84', 2000, 2500, 'Relaxed Co-ord Set studio-front'), alt: 'Relaxed Co-ord Set — studio-front — meadow-sage', type: 'studio-front', colourSlug: 'meadow-sage' },
+        { id: 'col-p4-001-wk', src: phImg('8C9E84', 1200, 1500, 'Relaxed Co-ord Set walking'),      alt: 'Relaxed Co-ord Set — walking — meadow-sage',      type: 'walking',      colourSlug: 'meadow-sage' },
       ],
     },
     {
       id: 'col-coord-002',
-      slug: 'women-lounge-sets/dusty-rose',
+      slug: 'women-lounge-sets/rose-dust',
       name: 'Relaxed Co-ord Set',
-      colourLabel: 'Dusty Rose',
+      colourLabel: 'Rose Dust',
       price: 3299,
       currency: '₹',
       images: [
-        { id: 'col-p4-002-sf', src: phImg('D4A8A0', 2000, 2500, 'Relaxed Co-ord Set studio-front'), alt: 'Relaxed Co-ord Set — studio-front — dusty-rose', type: 'studio-front', colourSlug: 'dusty-rose' },
-        { id: 'col-p4-002-wk', src: phImg('D4A8A0', 1200, 1500, 'Relaxed Co-ord Set walking'),      alt: 'Relaxed Co-ord Set — walking — dusty-rose',      type: 'walking',      colourSlug: 'dusty-rose' },
+        { id: 'col-p4-002-sf', src: phImg('D4A8A0', 2000, 2500, 'Relaxed Co-ord Set studio-front'), alt: 'Relaxed Co-ord Set — studio-front — rose-dust', type: 'studio-front', colourSlug: 'rose-dust' },
+        { id: 'col-p4-002-wk', src: phImg('D4A8A0', 1200, 1500, 'Relaxed Co-ord Set walking'),      alt: 'Relaxed Co-ord Set — walking — rose-dust',      type: 'walking',      colourSlug: 'rose-dust' },
       ],
     },
   ],
@@ -1098,11 +1137,11 @@ const womenCoordSet: Product = {
 
 // ─── Product 5: Women's Sleepwear ─────────────────────────────────────────────
 const sleepwearColourSlugs: Array<{ slug: string; hex: string; label: string }> = [
-  { slug: 'soft-cream',    hex: 'F5F0E8', label: 'Soft Cream'    },
-  { slug: 'oat-beige',     hex: 'D8C9B0', label: 'Oat Beige'     },
-  { slug: 'dusty-rose',    hex: 'D4A8A0', label: 'Dusty Rose'    },
-  { slug: 'lavender-grey', hex: 'C4C0D8', label: 'Lavender Grey' },
-  { slug: 'olive-grey',    hex: '8A8E7A', label: 'Olive Grey'    },
+  { slug: 'morning-cream', hex: 'F5F0E8', label: 'Morning Cream' }, // Pantone 11-0602 TCX — print: micro-botanical
+  { slug: 'blush-field',   hex: 'D4A8A0', label: 'Blush Field'   }, // Pantone 14-1911 TCX — print: micro-botanical
+  { slug: 'sage-atelier',  hex: '8C9E84', label: 'Sage Atelier'  }, // Pantone 16-5803 TCX — print: dabu-block
+  { slug: 'dusk-lavender', hex: 'B8B0C8', label: 'Dusk Lavender' }, // Pantone 14-3812 TCX — print: micro-stripe
+  { slug: 'dark-earth',    hex: '7B5B3A', label: 'Dark Earth'    }, // Pantone 18-1048 TCX — print: plain
 ]
 
 const womenSleepwear: Product = {
@@ -1205,46 +1244,67 @@ const womenSleepwear: Product = {
     },
     {
       title: 'Size guide',
-      content: `<table style="width:100%;border-collapse:collapse;font-size:13px">
+      content: `<p style="margin:0 0 6px;font-size:11px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase">Top</p>
+<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px">
   <thead><tr>
     <th style="text-align:left;padding:6px 4px 6px 0;border-bottom:1px solid rgba(0,0,0,0.10)">Size</th>
-    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Chest (in)</th>
-    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Top Length (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Body Length (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Chest ½ (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Shoulder (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Sleeve (in)</th>
   </tr></thead>
   <tbody>
-    <tr><td style="padding:6px 4px 6px 0">XS</td><td style="padding:6px 4px">32–34</td><td style="padding:6px 4px">24</td></tr>
-    <tr><td style="padding:6px 4px 6px 0">S</td><td style="padding:6px 4px">34–36</td><td style="padding:6px 4px">25</td></tr>
-    <tr><td style="padding:6px 4px 6px 0">M</td><td style="padding:6px 4px">36–38</td><td style="padding:6px 4px">26</td></tr>
-    <tr><td style="padding:6px 4px 6px 0">L</td><td style="padding:6px 4px">38–40</td><td style="padding:6px 4px">27</td></tr>
-    <tr><td style="padding:6px 4px 6px 0">XL</td><td style="padding:6px 4px">40–42</td><td style="padding:6px 4px">28</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">XS</td><td style="padding:6px 4px">24</td><td style="padding:6px 4px">18.5</td><td style="padding:6px 4px">15</td><td style="padding:6px 4px">8</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">S</td><td style="padding:6px 4px">25</td><td style="padding:6px 4px">19.5</td><td style="padding:6px 4px">15.5</td><td style="padding:6px 4px">8.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">M</td><td style="padding:6px 4px">26</td><td style="padding:6px 4px">21</td><td style="padding:6px 4px">16.5</td><td style="padding:6px 4px">9</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">L</td><td style="padding:6px 4px">27</td><td style="padding:6px 4px">22.5</td><td style="padding:6px 4px">17.5</td><td style="padding:6px 4px">9.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">XL</td><td style="padding:6px 4px">28</td><td style="padding:6px 4px">24</td><td style="padding:6px 4px">18.5</td><td style="padding:6px 4px">10</td></tr>
   </tbody>
-</table>`,
+</table>
+<p style="margin:0 0 6px;font-size:11px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase">Pant</p>
+<table style="width:100%;border-collapse:collapse;font-size:13px">
+  <thead><tr>
+    <th style="text-align:left;padding:6px 4px 6px 0;border-bottom:1px solid rgba(0,0,0,0.10)">Size</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Outseam (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Waist ½ (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Hip ½ (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Inseam (in)</th>
+  </tr></thead>
+  <tbody>
+    <tr><td style="padding:6px 4px 6px 0">XS</td><td style="padding:6px 4px">40.5</td><td style="padding:6px 4px">12.5</td><td style="padding:6px 4px">19.5</td><td style="padding:6px 4px">28</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">S</td><td style="padding:6px 4px">41</td><td style="padding:6px 4px">13.5</td><td style="padding:6px 4px">21</td><td style="padding:6px 4px">28.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">M</td><td style="padding:6px 4px">41.5</td><td style="padding:6px 4px">14.5</td><td style="padding:6px 4px">22.5</td><td style="padding:6px 4px">29</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">L</td><td style="padding:6px 4px">42</td><td style="padding:6px 4px">15.75</td><td style="padding:6px 4px">24</td><td style="padding:6px 4px">29.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">XL</td><td style="padding:6px 4px">42.5</td><td style="padding:6px 4px">17</td><td style="padding:6px 4px">25.5</td><td style="padding:6px 4px">30</td></tr>
+  </tbody>
+</table>
+<p style="margin:8px 0 0;font-size:11px;color:rgba(0,0,0,0.45)">All measurements are garment measurements in inches (half body where applicable).</p>`,
     },
   ],
 
   collectionItems: [
     {
       id: 'col-sw-001',
-      slug: 'women-sleepwear/oat-beige',
+      slug: 'women-sleepwear/morning-cream',
       name: 'Long Sleeve Lounge Set',
-      colourLabel: 'Oat Beige',
+      colourLabel: 'Morning Cream',
       price: 2499,
       currency: '₹',
       images: [
-        { id: 'col-p5-001-sf', src: phImg('D8C9B0', 2000, 2500, 'Long Sleeve Lounge Set studio-front'), alt: 'Long Sleeve Lounge Set — studio-front — oat-beige', type: 'studio-front', colourSlug: 'oat-beige' },
-        { id: 'col-p5-001-wk', src: phImg('D8C9B0', 1200, 1500, 'Long Sleeve Lounge Set walking'),      alt: 'Long Sleeve Lounge Set — walking — oat-beige',      type: 'walking',      colourSlug: 'oat-beige' },
+        { id: 'col-p5-001-sf', src: phImg('F5F0E8', 2000, 2500, 'Long Sleeve Lounge Set studio-front'), alt: 'Long Sleeve Lounge Set — studio-front — morning-cream', type: 'studio-front', colourSlug: 'morning-cream' },
+        { id: 'col-p5-001-wk', src: phImg('F5F0E8', 1200, 1500, 'Long Sleeve Lounge Set walking'),      alt: 'Long Sleeve Lounge Set — walking — morning-cream',      type: 'walking',      colourSlug: 'morning-cream' },
       ],
     },
     {
       id: 'col-sw-002',
-      slug: 'women-sleepwear/dusty-rose',
+      slug: 'women-sleepwear/blush-field',
       name: 'Long Sleeve Lounge Set',
-      colourLabel: 'Dusty Rose',
+      colourLabel: 'Blush Field',
       price: 2499,
       currency: '₹',
       images: [
-        { id: 'col-p5-002-sf', src: phImg('D4A8A0', 2000, 2500, 'Long Sleeve Lounge Set studio-front'), alt: 'Long Sleeve Lounge Set — studio-front — dusty-rose', type: 'studio-front', colourSlug: 'dusty-rose' },
-        { id: 'col-p5-002-wk', src: phImg('D4A8A0', 1200, 1500, 'Long Sleeve Lounge Set walking'),      alt: 'Long Sleeve Lounge Set — walking — dusty-rose',      type: 'walking',      colourSlug: 'dusty-rose' },
+        { id: 'col-p5-002-sf', src: phImg('D4A8A0', 2000, 2500, 'Long Sleeve Lounge Set studio-front'), alt: 'Long Sleeve Lounge Set — studio-front — blush-field', type: 'studio-front', colourSlug: 'blush-field' },
+        { id: 'col-p5-002-wk', src: phImg('D4A8A0', 1200, 1500, 'Long Sleeve Lounge Set walking'),      alt: 'Long Sleeve Lounge Set — walking — blush-field',      type: 'walking',      colourSlug: 'blush-field' },
       ],
     },
   ],
@@ -1310,10 +1370,11 @@ const womenSleepwear: Product = {
 
 // ─── Product 6: Kids Sleepwear Set ────────────────────────────────────────────
 const kidsColourSlugs: Array<{ slug: string; hex: string; label: string }> = [
-  { slug: 'soft-cream', hex: 'F5F0E8', label: 'Soft Cream' },
-  { slug: 'oat-beige',  hex: 'D8C9B0', label: 'Oat Beige'  },
-  { slug: 'sage-green', hex: '8E9E82', label: 'Sage Green'  },
-  { slug: 'mushroom',   hex: 'A89888', label: 'Mushroom'    },
+  { slug: 'soft-cloud-white', hex: 'F5F2EC', label: 'Soft Cloud White' }, // Pantone 11-0601 TCX
+  { slug: 'pale-oat',         hex: 'EDE5D0', label: 'Pale Oat'         }, // Pantone 12-0104 TCX
+  { slug: 'baby-blue-grey',   hex: 'A8B8C8', label: 'Baby Blue Grey'   }, // Pantone 14-4112 TCX
+  { slug: 'dusty-sage',       hex: '9EAA8C', label: 'Dusty Sage'       }, // Pantone 16-0213 TCX
+  { slug: 'faded-blush',      hex: 'E8C4B8', label: 'Faded Blush'      }, // Pantone 13-2010 TCX
 ]
 
 const kidsSleepwear: Product = {
@@ -1440,26 +1501,26 @@ const kidsSleepwear: Product = {
   collectionItems: [
     {
       id: 'col-kids-001',
-      slug: 'kids-sleepwear/oat-beige',
+      slug: 'kids-sleepwear/soft-cloud-white',
       name: 'Kids Sleepwear Set',
-      colourLabel: 'Oat Beige',
+      colourLabel: 'Soft Cloud White',
       price: 1499,
       currency: '₹',
       images: [
-        { id: 'col-p6-001-sf', src: phImg('D8C9B0', 2000, 2500, 'Kids Sleepwear Set studio-front'), alt: 'Kids Sleepwear Set — studio-front — oat-beige', type: 'studio-front', colourSlug: 'oat-beige' },
-        { id: 'col-p6-001-wk', src: phImg('D8C9B0', 1200, 1500, 'Kids Sleepwear Set walking'),      alt: 'Kids Sleepwear Set — walking — oat-beige',      type: 'walking',      colourSlug: 'oat-beige' },
+        { id: 'col-p6-001-sf', src: phImg('F5F2EC', 2000, 2500, 'Kids Sleepwear Set studio-front'), alt: 'Kids Sleepwear Set — studio-front — soft-cloud-white', type: 'studio-front', colourSlug: 'soft-cloud-white' },
+        { id: 'col-p6-001-wk', src: phImg('F5F2EC', 1200, 1500, 'Kids Sleepwear Set walking'),      alt: 'Kids Sleepwear Set — walking — soft-cloud-white',      type: 'walking',      colourSlug: 'soft-cloud-white' },
       ],
     },
     {
       id: 'col-kids-002',
-      slug: 'kids-sleepwear/sage-green',
+      slug: 'kids-sleepwear/dusty-sage',
       name: 'Kids Sleepwear Set',
-      colourLabel: 'Sage Green',
+      colourLabel: 'Dusty Sage',
       price: 1499,
       currency: '₹',
       images: [
-        { id: 'col-p6-002-sf', src: phImg('8E9E82', 2000, 2500, 'Kids Sleepwear Set studio-front'), alt: 'Kids Sleepwear Set — studio-front — sage-green', type: 'studio-front', colourSlug: 'sage-green' },
-        { id: 'col-p6-002-wk', src: phImg('8E9E82', 1200, 1500, 'Kids Sleepwear Set walking'),      alt: 'Kids Sleepwear Set — walking — sage-green',      type: 'walking',      colourSlug: 'sage-green' },
+        { id: 'col-p6-002-sf', src: phImg('9EAA8C', 2000, 2500, 'Kids Sleepwear Set studio-front'), alt: 'Kids Sleepwear Set — studio-front — dusty-sage', type: 'studio-front', colourSlug: 'dusty-sage' },
+        { id: 'col-p6-002-wk', src: phImg('9EAA8C', 1200, 1500, 'Kids Sleepwear Set walking'),      alt: 'Kids Sleepwear Set — walking — dusty-sage',      type: 'walking',      colourSlug: 'dusty-sage' },
       ],
     },
   ],
@@ -1523,6 +1584,312 @@ const kidsSleepwear: Product = {
   },
 }
 
+// ─── Product 7: Kurta Straight Pant ──────────────────────────────────────────
+// Colours shared with A-line Kurta — references kurta3ColourSlugs directly.
+const kurtaStraightPant: Product = {
+  id: 'prod-007',
+  name: 'Kurta Straight Pant',
+  category: 'Kurta',
+  handle: 'kurta-straight-pant',
+  collectionName: "Women's",
+  collectionSlug: 'womens',
+  badge: null,
+  compositionQuote: '160 GSM Cotton-Modal slub — bio-washed for softness. Designed to pair with the A-line Kurta or wear as a standalone.',
+  price: 1499,
+  currency: '₹',
+  trustLine: 'Inclusive of all taxes · Free delivery above ₹999',
+  sizeUnit: null,
+  modelNote: "Model is 5'6\" wearing size S.",
+
+  colours: kurta3ColourSlugs.map(c => ({
+    slug:      c.slug,
+    label:     c.label,
+    hex:       `#${c.hex}`,
+    available: true,
+    images:    buildPlaceholderImages('p7', 'Kurta Straight Pant', c.slug, c.hex),
+  })),
+
+  sizes: [
+    { label: 'XS', available: true },
+    { label: 'S',  available: true },
+    { label: 'M',  available: true },
+    { label: 'L',  available: true },
+    { label: 'XL', available: true },
+  ],
+
+  featureBullets: [
+    '160 GSM Cotton-Modal slub',
+    'Straight leg silhouette',
+    'Elasticated waistband with drawcord',
+    'Bio-wash and silicone softener finish',
+    'Coordinates with A-line Kurta',
+  ],
+
+  specs: [
+    { group: 'Material',     label: 'Fabric',     value: '60% Cotton 40% Modal' },
+    { group: 'Material',     label: 'Weight',      value: '160 GSM'              },
+    { group: 'Material',     label: 'Character',   value: 'Cotton-Modal slub'    },
+    { group: 'Construction', label: 'Silhouette',  value: 'Straight leg'         },
+    { group: 'Construction', label: 'Rise',        value: 'Mid-rise'             },
+    { group: 'Construction', label: 'Waistband',   value: 'Elastic + drawcord'   },
+    { group: 'Production',   label: 'Finish',      value: 'Bio-wash + silicone'  },
+    { group: 'Production',   label: 'Origin',      value: 'Made in India'        },
+  ],
+
+  fabricPillars: [
+    {
+      value: '160',
+      unit: 'GSM',
+      subLabel: 'Fabric weight',
+      description: 'Lightweight. Breathable in Indian heat. Falls cleanly without being sheer.',
+    },
+    {
+      value: '60/40',
+      unit: '',
+      subLabel: 'Cotton-Modal blend',
+      description: 'Combed cotton base with Modal for drape and softness. Natural slub character from the yarn.',
+    },
+    {
+      value: 'Bio',
+      unit: '-wash',
+      subLabel: 'Finishing process',
+      description: 'Bio-washed and silicone softened. Feels worn-in from first use. Stays soft after washing.',
+    },
+  ],
+
+  fitBars: [
+    { label: 'Waist ease', value: 50, descriptor: 'Regular'  },
+    { label: 'Hip ease',   value: 55, descriptor: 'Relaxed'  },
+    { label: 'Thigh',      value: 50, descriptor: 'Straight' },
+    { label: 'Length',     value: 80, descriptor: 'Full'     },
+  ],
+
+  care: [
+    { icon: 'wash',      label: 'Machine wash 30°C gentle'     },
+    { icon: 'sun-off',   label: 'Dry in shade. Not direct sun' },
+    { icon: 'flame-off', label: 'Cool iron reverse side'        },
+    { icon: 'ban',       label: 'Do not bleach or dry clean'    },
+  ],
+
+  accordions: [
+    {
+      title: 'Shipping & delivery',
+      content: 'Free delivery on orders above ₹999. Standard delivery 3–5 business days. Express delivery available at checkout. Tracking link shared via WhatsApp once dispatched.',
+    },
+    {
+      title: 'Exchange & returns',
+      content: 'Free returns within 30 days of delivery. Items must be unworn, unwashed, tags intact. Initiate via the Returns Portal. Refund processed within 5–7 business days.',
+    },
+    {
+      title: 'Size guide',
+      content: `<table style="width:100%;border-collapse:collapse;font-size:13px">
+  <thead><tr>
+    <th style="text-align:left;padding:6px 4px 6px 0;border-bottom:1px solid rgba(0,0,0,0.10)">Size</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Outseam (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Waist ½ (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Hip ½ (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Inseam (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Leg Open ½ (in)</th>
+  </tr></thead>
+  <tbody>
+    <tr><td style="padding:6px 4px 6px 0">XS</td><td style="padding:6px 4px">40.5</td><td style="padding:6px 4px">13.5</td><td style="padding:6px 4px">18.5</td><td style="padding:6px 4px">27.5</td><td style="padding:6px 4px">13.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">S</td><td style="padding:6px 4px">41</td><td style="padding:6px 4px">14.75</td><td style="padding:6px 4px">19.5</td><td style="padding:6px 4px">28</td><td style="padding:6px 4px">14</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">M</td><td style="padding:6px 4px">41.5</td><td style="padding:6px 4px">16.25</td><td style="padding:6px 4px">21</td><td style="padding:6px 4px">28.5</td><td style="padding:6px 4px">15</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">L</td><td style="padding:6px 4px">42</td><td style="padding:6px 4px">17.75</td><td style="padding:6px 4px">22.5</td><td style="padding:6px 4px">29</td><td style="padding:6px 4px">16</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">XL</td><td style="padding:6px 4px">43</td><td style="padding:6px 4px">19.25</td><td style="padding:6px 4px">24</td><td style="padding:6px 4px">29.5</td><td style="padding:6px 4px">17</td></tr>
+  </tbody>
+</table>
+<p style="margin:8px 0 0;font-size:11px;color:rgba(0,0,0,0.45)">All measurements are garment measurements in inches (half body where applicable).</p>`,
+    },
+  ],
+
+  collectionItems: [
+    {
+      id: 'col-ksp-001',
+      slug: 'kurta-straight-pant/ivory',
+      name: 'Kurta Straight Pant',
+      colourLabel: 'Ivory',
+      price: 1499,
+      currency: '₹',
+      images: [
+        { id: 'col-p7-001-sf', src: phImg('F0EBE0', 2000, 2500, 'Kurta Straight Pant studio-front'), alt: 'Kurta Straight Pant — studio-front — ivory', type: 'studio-front', colourSlug: 'ivory' },
+        { id: 'col-p7-001-wk', src: phImg('F0EBE0', 1200, 1500, 'Kurta Straight Pant walking'),      alt: 'Kurta Straight Pant — walking — ivory',      type: 'walking',      colourSlug: 'ivory' },
+      ],
+    },
+    {
+      id: 'col-ksp-002',
+      slug: 'kurta-straight-pant/sage',
+      name: 'Kurta Straight Pant',
+      colourLabel: 'Sage',
+      price: 1499,
+      currency: '₹',
+      images: [
+        { id: 'col-p7-002-sf', src: phImg('8C9E84', 2000, 2500, 'Kurta Straight Pant studio-front'), alt: 'Kurta Straight Pant — studio-front — sage', type: 'studio-front', colourSlug: 'sage' },
+        { id: 'col-p7-002-wk', src: phImg('8C9E84', 1200, 1500, 'Kurta Straight Pant walking'),      alt: 'Kurta Straight Pant — walking — sage',      type: 'walking',      colourSlug: 'sage' },
+      ],
+    },
+  ],
+}
+
+// ─── Kids Summer Sleepwear colour slugs ──────────────────────────────────────
+const kidsSummerColourSlugs: Array<{ slug: string; hex: string; label: string }> = [
+  { slug: 'soft-cloud-white', hex: 'F5F2EC', label: 'Soft Cloud White' }, // Pantone 11-0601 TCX — print: plain
+  { slug: 'dusty-sage',       hex: '9EAA8C', label: 'Dusty Sage'       }, // Pantone 16-0213 TCX — print: plain
+  { slug: 'faded-blush',      hex: 'E8C4B8', label: 'Faded Blush'      }, // Pantone 13-2010 TCX — print: minimal-tonal
+  { slug: 'pale-mint',        hex: 'C8E0C8', label: 'Pale Mint'        }, // Pantone 13-0221 TCX — print: minimal-tonal
+  { slug: 'warm-butter',      hex: 'F5E6C8', label: 'Warm Butter'      }, // Pantone 12-0712 TCX — print: plain
+]
+
+// ─── Product 8: Kids Summer Sleepwear ────────────────────────────────────────
+const kidsSummerSleepwear: Product = {
+  id: 'prod-008',
+  name: 'Kids Summer Sleepwear',
+  category: 'Kids Sleepwear',
+  handle: 'kids-summer-sleepwear',
+  collectionName: 'Youth Studio',
+  collectionSlug: 'youth-studio',
+  badge: null,
+  compositionQuote: 'Super combed cotton — enzyme washed, OEKO-TEX certified. Light enough for Indian summers. Soft enough for every night.',
+  price: 1299,
+  currency: '₹',
+  trustLine: 'Inclusive of all taxes · Free delivery above ₹999',
+  sizeUnit: null,
+  modelNote: 'Model is 6 years old wearing size 6Y.',
+
+  colours: kidsSummerColourSlugs.map(c => ({
+    slug:      c.slug,
+    label:     c.label,
+    hex:       `#${c.hex}`,
+    available: true,
+    images:    buildPlaceholderImages('p8', 'Kids Summer Sleepwear', c.slug, c.hex),
+  })),
+
+  sizes: [
+    { label: '2Y',  available: true },
+    { label: '4Y',  available: true },
+    { label: '6Y',  available: true },
+    { label: '8Y',  available: true },
+    { label: '10Y', available: true },
+    { label: '12Y', available: true },
+  ],
+
+  featureBullets: [
+    'Super combed cotton — summer weight',
+    'Unisex fit — 2Y to 12Y',
+    'Enzyme washed for softness',
+    'No synthetic blends',
+    'OEKO-TEX Standard 100 certified',
+  ],
+
+  specs: [
+    { group: 'Material',     label: 'Fabric',        value: 'Super combed cotton'      },
+    { group: 'Material',     label: 'Blends',        value: 'None'                     },
+    { group: 'Material',     label: 'Certification', value: 'OEKO-TEX Standard 100'   },
+    { group: 'Construction', label: 'Set',           value: 'Short sleeve top + pant'  },
+    { group: 'Construction', label: 'Seams',         value: 'Flat construction'        },
+    { group: 'Construction', label: 'Label',         value: 'Heat printed'             },
+    { group: 'Construction', label: 'Sizes',         value: '2Y – 12Y unisex'          },
+    { group: 'Production',   label: 'Finish',        value: 'Enzyme washed'            },
+    { group: 'Production',   label: 'Origin',        value: 'Made in India'            },
+  ],
+
+  fabricPillars: [
+    {
+      value: 'Super',
+      unit: '',
+      subLabel: 'Combed cotton',
+      description: 'Highest yarn quality. Fine, consistent fibre. Soft against sensitive skin. No synthetic blends.',
+    },
+    {
+      value: 'OEKO',
+      unit: '-TEX',
+      subLabel: 'Certified safe',
+      description: 'All components tested and certified free of harmful substances. Safe from newborn.',
+    },
+    {
+      value: 'Flat',
+      unit: '',
+      subLabel: 'Seam construction',
+      description: 'No raised seams against skin. Heat-printed label. Nothing to irritate during sleep.',
+    },
+  ],
+
+  fitBars: [
+    { label: 'Body ease', value: 60, descriptor: 'Relaxed' },
+    { label: 'Length',    value: 50, descriptor: 'Summer'  },
+    { label: 'Sleeve',    value: 30, descriptor: 'Short'   },
+    { label: 'Seat ease', value: 65, descriptor: 'Roomy'   },
+  ],
+
+  care: [
+    { icon: 'wash',      label: 'Machine wash 30°C gentle' },
+    { icon: 'sun-off',   label: 'Dry in shade'             },
+    { icon: 'flame-off', label: 'Warm iron only'           },
+    { icon: 'ban',       label: 'Do not bleach'            },
+  ],
+
+  accordions: [
+    {
+      title: 'Shipping & delivery',
+      content: 'Free delivery on orders above ₹999. Standard delivery 3–5 business days. Express delivery available at checkout. Tracking link shared via WhatsApp once dispatched.',
+    },
+    {
+      title: 'Exchange & returns',
+      content: 'Free returns within 30 days of delivery. Items must be unworn, unwashed, tags intact. Initiate via the Returns Portal. Refund processed within 5–7 business days.',
+    },
+    {
+      title: 'Care note',
+      content: 'Wash before first use. Wash separately for first wash. All components are skin-safe and certified OEKO-TEX Standard 100.',
+    },
+    {
+      title: 'Size guide',
+      content: `<table style="width:100%;border-collapse:collapse;font-size:13px">
+  <thead><tr>
+    <th style="text-align:left;padding:6px 4px 6px 0;border-bottom:1px solid rgba(0,0,0,0.10)">Size</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Chest (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Length (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Height</th>
+  </tr></thead>
+  <tbody>
+    <tr><td style="padding:6px 4px 6px 0">2Y</td><td style="padding:6px 4px">20–21</td><td style="padding:6px 4px">13</td><td style="padding:6px 4px">85–95cm</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">4Y</td><td style="padding:6px 4px">21–22</td><td style="padding:6px 4px">14</td><td style="padding:6px 4px">95–105cm</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">6Y</td><td style="padding:6px 4px">22–24</td><td style="padding:6px 4px">15</td><td style="padding:6px 4px">105–115cm</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">8Y</td><td style="padding:6px 4px">24–26</td><td style="padding:6px 4px">16</td><td style="padding:6px 4px">115–125cm</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">10Y</td><td style="padding:6px 4px">26–28</td><td style="padding:6px 4px">17</td><td style="padding:6px 4px">125–135cm</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">12Y</td><td style="padding:6px 4px">28–30</td><td style="padding:6px 4px">18</td><td style="padding:6px 4px">135–145cm</td></tr>
+  </tbody>
+</table>`,
+    },
+  ],
+
+  collectionItems: [
+    {
+      id: 'col-ksw-001',
+      slug: 'kids-summer-sleepwear/soft-cloud-white',
+      name: 'Kids Summer Sleepwear',
+      colourLabel: 'Soft Cloud White',
+      price: 1299,
+      currency: '₹',
+      images: [
+        { id: 'col-p8-001-sf', src: phImg('F5F2EC', 2000, 2500, 'Kids Summer Sleepwear studio-front'), alt: 'Kids Summer Sleepwear — studio-front — soft-cloud-white', type: 'studio-front', colourSlug: 'soft-cloud-white' },
+        { id: 'col-p8-001-wk', src: phImg('F5F2EC', 1200, 1500, 'Kids Summer Sleepwear walking'),      alt: 'Kids Summer Sleepwear — walking — soft-cloud-white',      type: 'walking',      colourSlug: 'soft-cloud-white' },
+      ],
+    },
+    {
+      id: 'col-ksw-002',
+      slug: 'kids-summer-sleepwear/faded-blush',
+      name: 'Kids Summer Sleepwear',
+      colourLabel: 'Faded Blush',
+      price: 1299,
+      currency: '₹',
+      images: [
+        { id: 'col-p8-002-sf', src: phImg('E8C4B8', 2000, 2500, 'Kids Summer Sleepwear studio-front'), alt: 'Kids Summer Sleepwear — studio-front — faded-blush', type: 'studio-front', colourSlug: 'faded-blush' },
+        { id: 'col-p8-002-wk', src: phImg('E8C4B8', 1200, 1500, 'Kids Summer Sleepwear walking'),      alt: 'Kids Summer Sleepwear — walking — faded-blush',      type: 'walking',      colourSlug: 'faded-blush' },
+      ],
+    },
+  ],
+}
+
 // ─── Exported array ────────────────────────────────────────────────────────────
 export const products: Product[] = [
   oversizedTee,
@@ -1531,6 +1898,8 @@ export const products: Product[] = [
   womenCoordSet,
   womenSleepwear,
   kidsSleepwear,
+  kurtaStraightPant,
+  kidsSummerSleepwear,
 ]
 
 // ─── Helper: look up by URL handle ────────────────────────────────────────────
