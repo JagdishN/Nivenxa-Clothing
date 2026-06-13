@@ -80,7 +80,7 @@ export default function ProductStoryClient({ product, variants, related }: Props
   const toastTimer                      = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const router = useRouter()
-  const { bumpLocal } = useCart()
+  const { addItem, openDrawer } = useCart()
   const { customer } = useAuth()
   const { formatPrice } = useCurrency()
 
@@ -248,7 +248,18 @@ export default function ProductStoryClient({ product, variants, related }: Props
                     showToast('Select your size to continue')
                   } else {
                     setNudgeSizes(false)
-                    bumpLocal()
+                    addItem({
+                      productHandle: selected.id,
+                      colourSlug:    toColorSlug(selected.colorway),
+                      size:          selectedSize,
+                      productTitle:  selected.name.split(' / ')[0],
+                      colourName:    selected.colorway,
+                      colourHex:     selected.gradient ?? '',
+                      imageUrl:      selected.images?.find(i => i.view === 'front')?.src
+                                  ?? selected.images?.[0]?.src,
+                      price:         formatPrice(selected.price),
+                    })
+                    openDrawer()
                     showToast('Added to Bag')
                   }
                 }}
