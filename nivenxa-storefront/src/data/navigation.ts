@@ -40,7 +40,7 @@ export const NAV_ITEMS: NavItem[] = [
       {
         label: "Men's",
         href: '/shop/mens',
-        descriptor: 'Oversized tees and utility cargo',
+        descriptor: 'Elevated Everyday Essentials',
         atmosphere: {
           gradient: 'linear-gradient(150deg, #3A3830 0%, #2E2C26 55%, #222018 100%)',
           text: "Heavyweight combed cotton\nand utility canvas for the modern wardrobe.",
@@ -58,7 +58,7 @@ export const NAV_ITEMS: NavItem[] = [
       {
         label: "Women's",
         href: '/shop/womens',
-        descriptor: 'Indo-Western comfortwear',
+        descriptor: 'Relaxed Indian Comfortwear',
         atmosphere: {
           gradient: 'linear-gradient(148deg, #C89080 0%, #A87060 55%, #8A5548 100%)',
           text: "Relaxed women's forms\nin bio-washed and natural fibres.",
@@ -77,7 +77,7 @@ export const NAV_ITEMS: NavItem[] = [
       {
         label: 'Unisex',
         href: '/shop/unisex',
-        descriptor: 'Shared silhouettes, shared ease',
+        descriptor: 'Utility Cargos & Shared Essentials',
         atmosphere: {
           gradient: 'linear-gradient(145deg, #C8C4B0 0%, #B0AC9A 50%, #9A9888 100%)',
           text: 'Heavy GSM unisex staples\nfor the considered wardrobe.',
@@ -95,7 +95,7 @@ export const NAV_ITEMS: NavItem[] = [
       {
         label: 'Youth Studio',
         href: '/shop/youth-studio',
-        descriptor: 'Premium comfort for young ones',
+        descriptor: 'Playful Comfort, Designed to Last',
         atmosphere: {
           gradient: 'linear-gradient(148deg, #8EA890 0%, #728C74 50%, #5A7060 100%)',
           text: 'Premium kids collections\nbuilt to last, made to wear.',
@@ -106,8 +106,8 @@ export const NAV_ITEMS: NavItem[] = [
           ],
         },
         children: [
-          { label: 'Kids Sleepwear', href: '/shop/youth-studio/kids-sleepwear' },
-          { label: 'Kids Tee',       href: '/shop/youth-studio/kids-tee'       },
+          { label: 'Sleepwear', href: '/shop/youth-studio/kids-sleepwear' },
+          { label: 'Kids Tee',  href: '/shop/youth-studio/kids-tee'       },
         ],
       },
     ],
@@ -145,10 +145,10 @@ export const NAV_ITEMS: NavItem[] = [
       {
         label: 'The Utility Edit',
         href: '/edits/utility-edit',
-        descriptor: 'Six-pocket bio-washed canvas',
+        descriptor: 'Six-pocket bio-washed twill',
         atmosphere: {
           gradient: 'linear-gradient(150deg, #4A4840 0%, #3A3730 55%, #2E2C26 100%)',
-          text: 'Six-pocket utility cuts\nin 320 GSM bio-washed canvas twill.',
+          text: 'Six-pocket utility cuts\nin 320 GSM bio-washed twill.',
           ghost: 'CARGO',
           editorial: [
             'Utility-focused silhouettes designed with washed structure, oversized proportions, and heavyweight movement.',
@@ -171,15 +171,14 @@ export const NAV_ITEMS: NavItem[] = [
           ghost: 'REST',
         },
         children: [
-          { label: "Women's Sleepwear",  href: '/edits/rest-edit/womens-sleepwear'  },
-          { label: 'Kids Sleepwear',     href: '/edits/rest-edit/kids-sleepwear'    },
-          { label: 'Unisex Lounge Sets', href: '/edits/rest-edit/unisex-lounge-sets'},
+          { label: "Women's Sleepwear", href: '/edits/rest-edit/womens-sleepwear' },
+          { label: 'Kids Sleepwear',    href: '/edits/rest-edit/kids-sleepwear'   },
         ],
       },
       {
-        label: "The Women's Edit",
+        label: "The Indian Edit",
         href: '/edits/womens-edit',
-        descriptor: 'Indo-Western comfortwear for everyday India',
+        descriptor: 'Relaxed Indian Comfortwear',
         atmosphere: {
           gradient: 'linear-gradient(140deg, #C87060 0%, #A85848 60%, #8A4538 100%)',
           text: 'Modern Indo-western forms\nfor elevated everyday ease.',
@@ -190,9 +189,9 @@ export const NAV_ITEMS: NavItem[] = [
           ],
         },
         children: [
-          { label: 'A-line Kurta',             href: '/edits/womens-edit/a-line-kurta'             },
-          { label: 'Co-ord Set',               href: '/edits/womens-edit/co-ord-set'               },
-          { label: 'Indo-Western Silhouettes', href: '/edits/womens-edit/indo-western-silhouettes'  },
+          { label: 'A-line Kurta', href: '/edits/womens-edit/a-line-kurta' },
+          { label: 'Co-ord Set',   href: '/edits/womens-edit/co-ord-set'   },
+          { label: 'Sleepwear',    href: '/edits/womens-edit/sleepwear'    },
         ],
       },
     ],

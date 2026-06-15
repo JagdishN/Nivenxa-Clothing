@@ -1,7 +1,9 @@
 'use client'
 import { motion } from 'framer-motion'
 import { useTranslations } from 'next-intl'
+import Image from 'next/image'
 import { Link } from '@/i18n/routing'
+import { IconChevronDown } from '@tabler/icons-react'
 import Button from '../ui/Button'
 import TextureOverlay from '../ui/TextureOverlay'
 import styles from './HeroSection.module.scss'
@@ -23,10 +25,13 @@ export default function HeroSection() {
       >
         {/* Block 1 — fabric close-up (detail image, oat-beige) */}
         <div className={`${styles.block} ${styles.block1}`} style={{ backgroundColor: '#C8B89A' }}>
-          <img
-            src="/images/Men/OversizedTee's/OAT%20BEIGE/fabric_close_up.webp"
+          <Image
+            src="/images/Men/OversizedTee's/OAT BEIGE/fabric_close_up.webp"
             alt=""
+            fill
             className={styles.blockImg}
+            priority
+            sizes="(max-width: 768px) 0px, 14vw"
             aria-hidden="true"
           />
           <TextureOverlay opacity={0.5} />
@@ -38,10 +43,13 @@ export default function HeroSection() {
 
         {/* Block 2 — studio-side (oat-beige) */}
         <div className={`${styles.block} ${styles.block2}`} style={{ backgroundColor: '#8B9E7A' }}>
-          <img
-            src="/images/Men/OversizedTee's/OAT%20BEIGE/side_studio_view.webp"
+          <Image
+            src="/images/Men/OversizedTee's/OAT BEIGE/side_studio_view.webp"
             alt=""
+            fill
             className={styles.blockImg}
+            priority
+            sizes="(max-width: 768px) 0px, 19vw"
             aria-hidden="true"
           />
           <TextureOverlay opacity={0.4} />
@@ -53,10 +61,12 @@ export default function HeroSection() {
 
         {/* Block 3 — cargo dark-olive studio-front */}
         <div className={`${styles.block} ${styles.block3}`} style={{ backgroundColor: '#4A5240' }}>
-          <img
-            src="/images/Unisex/cargos/darkolive/front_view.png"
+          <Image
+            src="/images/Unisex/cargos/darkolive/front_view.webp"
             alt=""
+            fill
             className={styles.blockImg}
+            sizes="(max-width: 768px) 0px, 11vw"
             aria-hidden="true"
           />
           <TextureOverlay opacity={0.35} />
@@ -133,7 +143,7 @@ export default function HeroSection() {
 
       {/* Scroll cue — chevron bounce at horizontal centre */}
       <div className={styles.scrollCue} aria-hidden="true">
-        <i className="ti ti-chevron-down" />
+        <IconChevronDown size={20} />
       </div>
     </section>
   )

@@ -1,9 +1,10 @@
 import { Link } from '@/i18n/routing'
+import Image from 'next/image'
 import styles from './EditsSection.module.css'
 
 // ── Real product image paths ──────────────────────────────────────────────────
 const TEE_OAT_WALKING    = "/images/Men/OversizedTee's/OAT%20BEIGE/walking_view.webp"
-const CARGO_OLIVE_FRONT  = '/images/Unisex/cargos/darkolive/front_view.png'
+const CARGO_OLIVE_FRONT  = '/images/Unisex/cargos/darkolive/front_view.webp'
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
@@ -53,7 +54,7 @@ const CARDS: EditCard[] = [
   // ── Row 2 ────────────────────────────────────────────────────────────────
   {
     num: '04',
-    editName: "The Women's Edit",
+    editName: "The Indian Edit",
     productName: 'A-line Kurta',
     fabricLine: '160 GSM Cotton-Modal slub',
     href: '/edits/womens-edit',
@@ -62,10 +63,10 @@ const CARDS: EditCard[] = [
   },
   {
     num: '05',
-    editName: 'The Youth Studio',
+    editName: 'The Dream Edit',
     productName: 'Kids Sleepwear Set',
-    fabricLine: 'Super combed cotton, 2Y–12Y',
-    href: '/shop',  // /edits/youth-studio not built yet — fallback to shop
+    fabricLine: 'Soft organic sleepwear',
+    href: '/shop/youth-studio/kids-sleepwear',
     placeholderBg: '#EAF3DE',
     ghostColor: 'rgba(0,0,0,0.08)',
   },
@@ -101,11 +102,12 @@ export default function EditsSection() {
             {/* Image panel */}
             <div className={styles.imagePanel}>
               {card.imageSrc ? (
-                <img
+                <Image
                   src={card.imageSrc}
                   alt={card.imageAlt ?? card.productName}
+                  fill
                   className={styles.heroImg}
-                  loading="lazy"
+                  sizes="(max-width: 768px) 50vw, 25vw"
                 />
               ) : (
                 <div
@@ -152,8 +154,8 @@ export default function EditsSection() {
             <div className={styles.exploreLines}>
               <span>Everyday essentials.</span>
               <span>Utility pieces.</span>
-              <span>Women&#39;s comfortwear.</span>
-              <span>Youth Studio.</span>
+              <span>Indian comfortwear.</span>
+              <span>The Dream Edit.</span>
             </div>
             <p className={styles.exploreTagline}>
               Designed to work together.

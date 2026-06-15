@@ -1,6 +1,7 @@
 'use client'
 import { useRef, useState, useEffect } from 'react'
 import { Link } from '@/i18n/routing'
+import { IconArrowLeft, IconArrowRight } from '@tabler/icons-react'
 import type { CollectionItem } from '@/types/product'
 import { getCrossSellImage } from '@/utils/getProductImages'
 import styles from './CollectionCarousel.module.css'
@@ -60,7 +61,7 @@ export default function CollectionCarousel({ items, currentProductId }: Props) {
             onClick={() => scrollBy('prev')}
             disabled={!canScrollLeft}
           >
-            <i className="ti ti-arrow-left" aria-hidden="true" />
+            <IconArrowLeft aria-hidden="true" />
           </button>
           <button
             type="button"
@@ -69,7 +70,7 @@ export default function CollectionCarousel({ items, currentProductId }: Props) {
             onClick={() => scrollBy('next')}
             disabled={!canScrollRight}
           >
-            <i className="ti ti-arrow-right" aria-hidden="true" />
+            <IconArrowRight aria-hidden="true" />
           </button>
         </div>
       </div>

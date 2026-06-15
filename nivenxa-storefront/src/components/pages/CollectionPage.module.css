@@ -28,6 +28,13 @@
   padding-top: 12 px;
 }
 
+.intro {
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--nivenxa-text-muted);
+  margin: 10px 0 0;
+}
+
 .titleRule {
   width: 32px;
   height: 1.5px;

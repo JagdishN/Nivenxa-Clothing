@@ -1368,40 +1368,39 @@ const womenSleepwear: Product = {
   },
 }
 
-// ─── Product 6: Kids Sleepwear Set ────────────────────────────────────────────
-const kidsColourSlugs: Array<{ slug: string; hex: string; label: string }> = [
-  { slug: 'soft-cloud-white', hex: 'F5F2EC', label: 'Soft Cloud White' }, // Pantone 11-0601 TCX
-  { slug: 'pale-oat',         hex: 'EDE5D0', label: 'Pale Oat'         }, // Pantone 12-0104 TCX
-  { slug: 'baby-blue-grey',   hex: 'A8B8C8', label: 'Baby Blue Grey'   }, // Pantone 14-4112 TCX
-  { slug: 'dusty-sage',       hex: '9EAA8C', label: 'Dusty Sage'       }, // Pantone 16-0213 TCX
-  { slug: 'faded-blush',      hex: 'E8C4B8', label: 'Faded Blush'      }, // Pantone 13-2010 TCX
+// ─── Product 6: The Rest Sleep Set ────────────────────────────────────────────
+const kidsRestColourSlugs: Array<{ slug: string; hex: string; label: string }> = [
+  { slug: 'cloud',       hex: 'F5F2EC', label: 'Cloud'       }, // Pantone 11-0601 TCX
+  { slug: 'oat',         hex: 'EDE5D0', label: 'Oat'         }, // Pantone 12-0104 TCX
+  { slug: 'mist-blue',   hex: 'A8B8C8', label: 'Mist Blue'   }, // Pantone 14-4112 TCX
+  { slug: 'little-sage', hex: '9EAA8C', label: 'Little Sage' }, // Pantone 16-0213 TCX
+  { slug: 'petal',       hex: 'E8C4B8', label: 'Petal'       }, // Pantone 13-2010 TCX
 ]
 
-const kidsSleepwear: Product = {
+const kidsRestSleepSet: Product = {
   id: 'prod-006',
-  name: 'Kids Sleepwear Set',
+  name: 'The Rest Sleep Set',
   category: 'Kids Sleepwear',
-  handle: 'kids-sleepwear',
+  handle: 'kids-rest-sleep-set',
   collectionName: 'Youth Studio',
   collectionSlug: 'youth-studio',
   badge: null,
-  compositionQuote: 'Super combed cotton — enzyme washed, OEKO-TEX certified. Soft enough for sleep. Built for everything that comes before it.',
+  compositionQuote: '220 GSM Organic Cotton-Bamboo — enzyme washed, OEKO-TEX certified. Full-sleeve top and full-length trouser for cooler weather and AC rooms.',
   price: 1499,
   currency: '₹',
   trustLine: 'Inclusive of all taxes · Free delivery above ₹999',
   sizeUnit: null,
   modelNote: 'Model is 6 years old wearing size 6Y.',
 
-  colours: kidsColourSlugs.map(c => ({
+  colours: kidsRestColourSlugs.map(c => ({
     slug:      c.slug,
     label:     c.label,
     hex:       `#${c.hex}`,
     available: true,
-    images:    buildPlaceholderImages('p6', 'Kids Sleepwear Set', c.slug, c.hex),
+    images:    buildPlaceholderImages('p6', 'The Rest Sleep Set', c.slug, c.hex),
   })),
 
   sizes: [
-    { label: '2Y',  available: true },
     { label: '4Y',  available: true },
     { label: '6Y',  available: true },
     { label: '8Y',  available: true },
@@ -1410,31 +1409,31 @@ const kidsSleepwear: Product = {
   ],
 
   featureBullets: [
-    'Super combed cotton',
-    'Unisex fit — 2Y to 12Y',
+    '220 GSM Organic Cotton-Bamboo',
+    'Full-sleeve top + full-length trouser',
+    'Unisex fit — 4Y to 12Y',
     'Enzyme washed for softness',
-    'No synthetic blends',
     'OEKO-TEX Standard 100 certified',
   ],
 
   specs: [
-    { group: 'Material',     label: 'Fabric',        value: 'Super combed cotton'      },
-    { group: 'Material',     label: 'Blends',        value: 'None'                     },
+    { group: 'Material',     label: 'Fabric',        value: 'Organic Cotton-Bamboo'    },
+    { group: 'Material',     label: 'Weight',        value: '220 GSM'                  },
     { group: 'Material',     label: 'Certification', value: 'OEKO-TEX Standard 100'   },
-    { group: 'Construction', label: 'Set',           value: 'Top + trouser/shorts'     },
+    { group: 'Construction', label: 'Set',           value: 'Full-sleeve top + trouser'},
     { group: 'Construction', label: 'Seams',         value: 'Flat construction'        },
     { group: 'Construction', label: 'Label',         value: 'Heat printed'             },
-    { group: 'Construction', label: 'Sizes',         value: '2Y – 12Y unisex'          },
+    { group: 'Construction', label: 'Sizes',         value: '4Y – 12Y unisex'          },
     { group: 'Production',   label: 'Finish',        value: 'Enzyme washed'            },
     { group: 'Production',   label: 'Origin',        value: 'Made in India'            },
   ],
 
   fabricPillars: [
     {
-      value: 'Super',
-      unit: '',
-      subLabel: 'Combed cotton',
-      description: 'Highest yarn quality. Fine, consistent fibre. Soft against sensitive skin. No synthetic blends.',
+      value: '220',
+      unit: 'GSM',
+      subLabel: 'Cotton-Bamboo weight',
+      description: 'Soft and warm without bulk. Natural temperature regulation for cooler nights and AC rooms.',
     },
     {
       value: 'OEKO',
@@ -1452,8 +1451,8 @@ const kidsSleepwear: Product = {
 
   fitBars: [
     { label: 'Body ease', value: 60, descriptor: 'Relaxed'  },
-    { label: 'Length',    value: 60, descriptor: 'Extended' },
-    { label: 'Sleeve',    value: 50, descriptor: 'Regular'  },
+    { label: 'Length',    value: 70, descriptor: 'Extended' },
+    { label: 'Sleeve',    value: 70, descriptor: 'Full'     },
     { label: 'Seat ease', value: 70, descriptor: 'Roomy'    },
   ],
 
@@ -1487,7 +1486,6 @@ const kidsSleepwear: Product = {
     <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Height</th>
   </tr></thead>
   <tbody>
-    <tr><td style="padding:6px 4px 6px 0">2Y</td><td style="padding:6px 4px">20–21</td><td style="padding:6px 4px">15</td><td style="padding:6px 4px">85–95cm</td></tr>
     <tr><td style="padding:6px 4px 6px 0">4Y</td><td style="padding:6px 4px">21–22</td><td style="padding:6px 4px">16</td><td style="padding:6px 4px">95–105cm</td></tr>
     <tr><td style="padding:6px 4px 6px 0">6Y</td><td style="padding:6px 4px">22–24</td><td style="padding:6px 4px">17</td><td style="padding:6px 4px">105–115cm</td></tr>
     <tr><td style="padding:6px 4px 6px 0">8Y</td><td style="padding:6px 4px">24–26</td><td style="padding:6px 4px">18</td><td style="padding:6px 4px">115–125cm</td></tr>
@@ -1501,64 +1499,64 @@ const kidsSleepwear: Product = {
   collectionItems: [
     {
       id: 'col-kids-001',
-      slug: 'kids-sleepwear/soft-cloud-white',
-      name: 'Kids Sleepwear Set',
-      colourLabel: 'Soft Cloud White',
+      slug: 'kids-rest-sleep-set/cloud',
+      name: 'The Rest Sleep Set',
+      colourLabel: 'Cloud',
       price: 1499,
       currency: '₹',
       images: [
-        { id: 'col-p6-001-sf', src: phImg('F5F2EC', 2000, 2500, 'Kids Sleepwear Set studio-front'), alt: 'Kids Sleepwear Set — studio-front — soft-cloud-white', type: 'studio-front', colourSlug: 'soft-cloud-white' },
-        { id: 'col-p6-001-wk', src: phImg('F5F2EC', 1200, 1500, 'Kids Sleepwear Set walking'),      alt: 'Kids Sleepwear Set — walking — soft-cloud-white',      type: 'walking',      colourSlug: 'soft-cloud-white' },
+        { id: 'col-p6-001-sf', src: phImg('F5F2EC', 2000, 2500, 'The Rest Sleep Set studio-front'), alt: 'The Rest Sleep Set — studio-front — cloud', type: 'studio-front', colourSlug: 'cloud' },
+        { id: 'col-p6-001-wk', src: phImg('F5F2EC', 1200, 1500, 'The Rest Sleep Set walking'),      alt: 'The Rest Sleep Set — walking — cloud',      type: 'walking',      colourSlug: 'cloud' },
       ],
     },
     {
       id: 'col-kids-002',
-      slug: 'kids-sleepwear/dusty-sage',
-      name: 'Kids Sleepwear Set',
-      colourLabel: 'Dusty Sage',
+      slug: 'kids-rest-sleep-set/little-sage',
+      name: 'The Rest Sleep Set',
+      colourLabel: 'Little Sage',
       price: 1499,
       currency: '₹',
       images: [
-        { id: 'col-p6-002-sf', src: phImg('9EAA8C', 2000, 2500, 'Kids Sleepwear Set studio-front'), alt: 'Kids Sleepwear Set — studio-front — dusty-sage', type: 'studio-front', colourSlug: 'dusty-sage' },
-        { id: 'col-p6-002-wk', src: phImg('9EAA8C', 1200, 1500, 'Kids Sleepwear Set walking'),      alt: 'Kids Sleepwear Set — walking — dusty-sage',      type: 'walking',      colourSlug: 'dusty-sage' },
+        { id: 'col-p6-002-sf', src: phImg('9EAA8C', 2000, 2500, 'The Rest Sleep Set studio-front'), alt: 'The Rest Sleep Set — studio-front — little-sage', type: 'studio-front', colourSlug: 'little-sage' },
+        { id: 'col-p6-002-wk', src: phImg('9EAA8C', 1200, 1500, 'The Rest Sleep Set walking'),      alt: 'The Rest Sleep Set — walking — little-sage',      type: 'walking',      colourSlug: 'little-sage' },
       ],
     },
   ],
 
   editorial: {
-    quote: 'Super combed cotton — enzyme washed, OEKO-TEX certified. Soft enough for sleep. Built for everything that comes before it.',
+    quote: '220 GSM Organic Cotton-Bamboo — enzyme washed, OEKO-TEX certified. For cooler weather and considered rest.',
     specs: [
-      { label: 'Fabric',        value: 'Super combed cotton'    },
+      { label: 'Fabric',        value: 'Organic Cotton-Bamboo'  },
+      { label: 'Weight',        value: '220 GSM'                },
       { label: 'Certification', value: 'OEKO-TEX Standard 100'  },
-      { label: 'Seams',         value: 'Flat construction'       },
-      { label: 'Finish',        value: 'Enzyme washed'           },
-      { label: 'Origin',        value: 'Made in India'           },
+      { label: 'Seams',         value: 'Flat construction'      },
+      { label: 'Finish',        value: 'Enzyme washed'          },
     ],
     byImage: {
       'studio-front': {
-        headline: "Soft enough\nfor sleep.",
-        body: 'Super combed cotton — the same fibre standard used in NIVENXA adult products. No synthetic blends. Safe against skin. Certified.',
+        headline: "Full-sleeve\ncomfort.",
+        body: '220 GSM Organic Cotton-Bamboo. Full-sleeve top and full-length trouser. Designed for cooler weather and AC rooms — substantial enough to feel cosy, soft enough for sleep.',
         specs: [
-          { label: 'Fabric',        value: 'Super combed cotton'   },
-          { label: 'Certification', value: 'OEKO-TEX Standard 100' },
-          { label: 'Blends',        value: 'None'                  },
+          { label: 'Fabric',        value: 'Organic Cotton-Bamboo' },
+          { label: 'Weight',        value: '220 GSM'               },
+          { label: 'Set',           value: 'Full sleeve + trouser' },
         ],
       },
       'walking': {
         headline: "Built for\neverything before.",
         body: 'Soft enough for sleep. Durable enough for everything that comes before it. Enzyme washed to feel worn-in from first wear.',
         specs: [
-          { label: 'Sizes',  value: '2Y – 12Y unisex'  },
-          { label: 'Fit',    value: 'Relaxed comfort'   },
-          { label: 'Finish', value: 'Enzyme washed'     },
+          { label: 'Sizes',  value: '4Y – 12Y unisex' },
+          { label: 'Fit',    value: 'Relaxed comfort'  },
+          { label: 'Finish', value: 'Enzyme washed'    },
         ],
       },
       'studio-back': {
         headline: "No irritation\nat the back.",
         body: 'Flat seam construction throughout. No raised seams against the skin. The label is heat-printed — not sewn — so there is nothing to irritate during sleep.',
         specs: [
-          { label: 'Seams',  value: 'Flat construction'  },
-          { label: 'Label',  value: 'Heat printed'       },
+          { label: 'Seams', value: 'Flat construction'   },
+          { label: 'Label', value: 'Heat printed'        },
           { label: 'Finish', value: 'Skin-safe throughout'},
         ],
       },
@@ -1566,9 +1564,9 @@ const kidsSleepwear: Product = {
         headline: "The right\nproportions.",
         body: 'Sized for real children — not scaled-down adults. The proportions account for the way children move and sit. Longer in the body. Roomier in the seat.',
         specs: [
-          { label: 'Sizing',       value: 'Indian child proportions' },
-          { label: 'Body length',  value: 'Extended for coverage'    },
-          { label: 'Fit',          value: 'Relaxed through seat'     },
+          { label: 'Sizing',      value: 'Indian child proportions' },
+          { label: 'Body length', value: 'Extended for coverage'    },
+          { label: 'Fit',         value: 'Relaxed through seat'     },
         ],
       },
       'detail': {
@@ -1576,8 +1574,8 @@ const kidsSleepwear: Product = {
         body: 'Every component tested — fabric, thread, label, button. Certified free of harmful substances. Safe for children from newborn.',
         specs: [
           { label: 'Certification', value: 'OEKO-TEX Standard 100' },
-          { label: 'Tested',        value: 'All components'         },
-          { label: 'Origin',        value: 'Made in India'          },
+          { label: 'Tested',        value: 'All components'        },
+          { label: 'Origin',        value: 'Made in India'         },
         ],
       },
     },
@@ -1731,26 +1729,26 @@ const kurtaStraightPant: Product = {
   ],
 }
 
-// ─── Kids Summer Sleepwear colour slugs ──────────────────────────────────────
+// ─── Kids Summer Sleep Set colour slugs ──────────────────────────────────────
 const kidsSummerColourSlugs: Array<{ slug: string; hex: string; label: string }> = [
-  { slug: 'soft-cloud-white', hex: 'F5F2EC', label: 'Soft Cloud White' }, // Pantone 11-0601 TCX — print: plain
-  { slug: 'dusty-sage',       hex: '9EAA8C', label: 'Dusty Sage'       }, // Pantone 16-0213 TCX — print: plain
-  { slug: 'faded-blush',      hex: 'E8C4B8', label: 'Faded Blush'      }, // Pantone 13-2010 TCX — print: minimal-tonal
-  { slug: 'pale-mint',        hex: 'C8E0C8', label: 'Pale Mint'        }, // Pantone 13-0221 TCX — print: minimal-tonal
-  { slug: 'warm-butter',      hex: 'F5E6C8', label: 'Warm Butter'      }, // Pantone 12-0712 TCX — print: plain
+  { slug: 'cloud',       hex: 'F5F2EC', label: 'Cloud'       }, // Pantone 11-0601 TCX — plain
+  { slug: 'little-sage', hex: '9EAA8C', label: 'Little Sage' }, // Pantone 16-0213 TCX — plain
+  { slug: 'butter',      hex: 'F5E6C8', label: 'Butter'      }, // Pantone 12-0712 TCX — plain
+  { slug: 'petal',       hex: 'E8C4B8', label: 'Petal'       }, // Pantone 13-2010 TCX — tonal print
+  { slug: 'mint',        hex: 'C8E0C8', label: 'Mint'        }, // Pantone 13-0221 TCX — tonal print
 ]
 
-// ─── Product 8: Kids Summer Sleepwear ────────────────────────────────────────
-const kidsSummerSleepwear: Product = {
+// ─── Product 8: The Summer Sleep Set ─────────────────────────────────────────
+const kidsSummerSleepSet: Product = {
   id: 'prod-008',
-  name: 'Kids Summer Sleepwear',
+  name: 'The Summer Sleep Set',
   category: 'Kids Sleepwear',
-  handle: 'kids-summer-sleepwear',
+  handle: 'kids-summer-sleep-set',
   collectionName: 'Youth Studio',
   collectionSlug: 'youth-studio',
   badge: null,
-  compositionQuote: 'Super combed cotton — enzyme washed, OEKO-TEX certified. Light enough for Indian summers. Soft enough for every night.',
-  price: 1299,
+  compositionQuote: '180–200 GSM 100% GOTS Organic Cotton — enzyme washed, OEKO-TEX certified. Half-sleeve top and relaxed mid-length shorts for warm weather.',
+  price: 1499,
   currency: '₹',
   trustLine: 'Inclusive of all taxes · Free delivery above ₹999',
   sizeUnit: null,
@@ -1761,11 +1759,10 @@ const kidsSummerSleepwear: Product = {
     label:     c.label,
     hex:       `#${c.hex}`,
     available: true,
-    images:    buildPlaceholderImages('p8', 'Kids Summer Sleepwear', c.slug, c.hex),
+    images:    buildPlaceholderImages('p8', 'The Summer Sleep Set', c.slug, c.hex),
   })),
 
   sizes: [
-    { label: '2Y',  available: true },
     { label: '4Y',  available: true },
     { label: '6Y',  available: true },
     { label: '8Y',  available: true },
@@ -1774,37 +1771,37 @@ const kidsSummerSleepwear: Product = {
   ],
 
   featureBullets: [
-    'Super combed cotton — summer weight',
-    'Unisex fit — 2Y to 12Y',
+    '180–200 GSM 100% GOTS Organic Cotton',
+    'Half-sleeve top + relaxed mid-length shorts',
+    'Unisex fit — 4Y to 12Y',
     'Enzyme washed for softness',
-    'No synthetic blends',
     'OEKO-TEX Standard 100 certified',
   ],
 
   specs: [
-    { group: 'Material',     label: 'Fabric',        value: 'Super combed cotton'      },
-    { group: 'Material',     label: 'Blends',        value: 'None'                     },
+    { group: 'Material',     label: 'Fabric',        value: '100% GOTS Organic Cotton' },
+    { group: 'Material',     label: 'Weight',        value: '180–200 GSM'              },
     { group: 'Material',     label: 'Certification', value: 'OEKO-TEX Standard 100'   },
-    { group: 'Construction', label: 'Set',           value: 'Short sleeve top + pant'  },
+    { group: 'Construction', label: 'Set',           value: 'Half-sleeve top + shorts' },
     { group: 'Construction', label: 'Seams',         value: 'Flat construction'        },
     { group: 'Construction', label: 'Label',         value: 'Heat printed'             },
-    { group: 'Construction', label: 'Sizes',         value: '2Y – 12Y unisex'          },
+    { group: 'Construction', label: 'Sizes',         value: '4Y – 12Y unisex'          },
     { group: 'Production',   label: 'Finish',        value: 'Enzyme washed'            },
     { group: 'Production',   label: 'Origin',        value: 'Made in India'            },
   ],
 
   fabricPillars: [
     {
-      value: 'Super',
-      unit: '',
-      subLabel: 'Combed cotton',
-      description: 'Highest yarn quality. Fine, consistent fibre. Soft against sensitive skin. No synthetic blends.',
+      value: '180',
+      unit: 'GSM',
+      subLabel: 'Summer-weight cotton',
+      description: 'Lightweight and breathable. Moves easily. Designed for Indian warm weather and hot nights.',
     },
     {
-      value: 'OEKO',
-      unit: '-TEX',
-      subLabel: 'Certified safe',
-      description: 'All components tested and certified free of harmful substances. Safe from newborn.',
+      value: 'GOTS',
+      unit: '',
+      subLabel: 'Organic certified',
+      description: 'Global Organic Textile Standard. 100% organic cotton, no synthetic blends, certified throughout the supply chain.',
     },
     {
       value: 'Flat',
@@ -1816,7 +1813,7 @@ const kidsSummerSleepwear: Product = {
 
   fitBars: [
     { label: 'Body ease', value: 60, descriptor: 'Relaxed' },
-    { label: 'Length',    value: 50, descriptor: 'Summer'  },
+    { label: 'Length',    value: 40, descriptor: 'Shorts'  },
     { label: 'Sleeve',    value: 30, descriptor: 'Short'   },
     { label: 'Seat ease', value: 65, descriptor: 'Roomy'   },
   ],
@@ -1851,7 +1848,6 @@ const kidsSummerSleepwear: Product = {
     <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Height</th>
   </tr></thead>
   <tbody>
-    <tr><td style="padding:6px 4px 6px 0">2Y</td><td style="padding:6px 4px">20–21</td><td style="padding:6px 4px">13</td><td style="padding:6px 4px">85–95cm</td></tr>
     <tr><td style="padding:6px 4px 6px 0">4Y</td><td style="padding:6px 4px">21–22</td><td style="padding:6px 4px">14</td><td style="padding:6px 4px">95–105cm</td></tr>
     <tr><td style="padding:6px 4px 6px 0">6Y</td><td style="padding:6px 4px">22–24</td><td style="padding:6px 4px">15</td><td style="padding:6px 4px">105–115cm</td></tr>
     <tr><td style="padding:6px 4px 6px 0">8Y</td><td style="padding:6px 4px">24–26</td><td style="padding:6px 4px">16</td><td style="padding:6px 4px">115–125cm</td></tr>
@@ -1865,26 +1861,26 @@ const kidsSummerSleepwear: Product = {
   collectionItems: [
     {
       id: 'col-ksw-001',
-      slug: 'kids-summer-sleepwear/soft-cloud-white',
-      name: 'Kids Summer Sleepwear',
-      colourLabel: 'Soft Cloud White',
-      price: 1299,
+      slug: 'kids-summer-sleep-set/cloud',
+      name: 'The Summer Sleep Set',
+      colourLabel: 'Cloud',
+      price: 1499,
       currency: '₹',
       images: [
-        { id: 'col-p8-001-sf', src: phImg('F5F2EC', 2000, 2500, 'Kids Summer Sleepwear studio-front'), alt: 'Kids Summer Sleepwear — studio-front — soft-cloud-white', type: 'studio-front', colourSlug: 'soft-cloud-white' },
-        { id: 'col-p8-001-wk', src: phImg('F5F2EC', 1200, 1500, 'Kids Summer Sleepwear walking'),      alt: 'Kids Summer Sleepwear — walking — soft-cloud-white',      type: 'walking',      colourSlug: 'soft-cloud-white' },
+        { id: 'col-p8-001-sf', src: phImg('F5F2EC', 2000, 2500, 'The Summer Sleep Set studio-front'), alt: 'The Summer Sleep Set — studio-front — cloud', type: 'studio-front', colourSlug: 'cloud' },
+        { id: 'col-p8-001-wk', src: phImg('F5F2EC', 1200, 1500, 'The Summer Sleep Set walking'),      alt: 'The Summer Sleep Set — walking — cloud',      type: 'walking',      colourSlug: 'cloud' },
       ],
     },
     {
       id: 'col-ksw-002',
-      slug: 'kids-summer-sleepwear/faded-blush',
-      name: 'Kids Summer Sleepwear',
-      colourLabel: 'Faded Blush',
-      price: 1299,
+      slug: 'kids-summer-sleep-set/petal',
+      name: 'The Summer Sleep Set',
+      colourLabel: 'Petal',
+      price: 1499,
       currency: '₹',
       images: [
-        { id: 'col-p8-002-sf', src: phImg('E8C4B8', 2000, 2500, 'Kids Summer Sleepwear studio-front'), alt: 'Kids Summer Sleepwear — studio-front — faded-blush', type: 'studio-front', colourSlug: 'faded-blush' },
-        { id: 'col-p8-002-wk', src: phImg('E8C4B8', 1200, 1500, 'Kids Summer Sleepwear walking'),      alt: 'Kids Summer Sleepwear — walking — faded-blush',      type: 'walking',      colourSlug: 'faded-blush' },
+        { id: 'col-p8-002-sf', src: phImg('E8C4B8', 2000, 2500, 'The Summer Sleep Set studio-front'), alt: 'The Summer Sleep Set — studio-front — petal', type: 'studio-front', colourSlug: 'petal' },
+        { id: 'col-p8-002-wk', src: phImg('E8C4B8', 1200, 1500, 'The Summer Sleep Set walking'),      alt: 'The Summer Sleep Set — walking — petal',      type: 'walking',      colourSlug: 'petal' },
       ],
     },
   ],
@@ -1897,9 +1893,9 @@ export const products: Product[] = [
   aLineKurta,
   womenCoordSet,
   womenSleepwear,
-  kidsSleepwear,
+  kidsRestSleepSet,
   kurtaStraightPant,
-  kidsSummerSleepwear,
+  kidsSummerSleepSet,
 ]
 
 // ─── Helper: look up by URL handle ────────────────────────────────────────────
@@ -1914,4 +1910,11 @@ export function getProductByHandle(handle: string): Product {
 //   'mens' | 'womens' | 'unisex' | 'youth-studio'
 export function getProductsByCollection(collection: string): Product[] {
   return products.filter(p => p.collectionSlug === collection)
+}
+
+// ─── Helper: filter by product category ───────────────────────────────────────
+// category matches product.category — used by sub-category pages
+// e.g. getProductsByCategory('Kids Sleepwear')
+export function getProductsByCategory(category: string): Product[] {
+  return products.filter(p => p.category === category)
 }

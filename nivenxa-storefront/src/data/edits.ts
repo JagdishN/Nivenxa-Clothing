@@ -48,7 +48,7 @@ export const edits: Edit[] = [
       {
         name: 'Bio-Washed Essentials',
         slug: 'bio-washed-essentials',
-        productHandles: ['over-tee-shirts', 'cargo-pants', 'a-line-kurta', 'kids-sleepwear'],
+        productHandles: ['over-tee-shirts', 'cargo-pants', 'a-line-kurta', 'kids-rest-sleep-set'],
         editorial: 'The full everyday toolkit',
       },
     ],
@@ -102,8 +102,8 @@ export const edits: Edit[] = [
       {
         name: 'Kids Sleepwear',
         slug: 'kids-sleepwear',
-        productHandles: ['kids-sleepwear'],
-        editorial: 'Sized 2Y to 12Y. Combed cotton, every night.',
+        productHandles: ['kids-rest-sleep-set', 'kids-summer-sleep-set'],
+        editorial: 'Sized 4Y to 12Y. Organic cotton, every night.',
       },
       {
         name: 'Unisex Lounge Sets',
@@ -114,7 +114,7 @@ export const edits: Edit[] = [
     ],
   },
   {
-    name: "The Women's Edit",
+    name: "The Indian Edit",
     slug: 'womens-edit',
     heroImageUrl: '',
     headline: 'Indo-Western for\neveryday India.',
@@ -122,14 +122,8 @@ export const edits: Edit[] = [
       'Cotton-Modal silhouettes designed for the contemporary Indian woman. Not occasion wear. Not casual wear. The space between — for every day that deserves both.',
     featuredProductHandle: 'a-line-kurta',
     featuredColourSlug: 'warm-ivory',
-    // Indo-Western Silhouettes is index 0 — always the default tab
+    // A-line Kurta is index 0 — always the default tab
     subItems: [
-      {
-        name: 'Indo-Western Silhouettes',
-        slug: 'indo-western-silhouettes',
-        productHandles: ['a-line-kurta', 'women-lounge-sets'],
-        editorial: 'Between Indian and Western — a silhouette for both.',
-      },
       {
         name: 'A-line Kurta',
         slug: 'a-line-kurta',
@@ -141,6 +135,12 @@ export const edits: Edit[] = [
         slug: 'co-ord-set',
         productHandles: ['women-lounge-sets'],
         editorial: 'Matched fabric, unmatched ease.',
+      },
+      {
+        name: 'Sleepwear',
+        slug: 'sleepwear',
+        productHandles: ['women-sleepwear'],
+        editorial: 'Ultra-soft fabrications for considered rest.',
       },
     ],
   },

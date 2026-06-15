@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { IconChevronDown } from '@tabler/icons-react'
 import type { AccordionItem } from '@/types/product'
 import styles from './InfoAccordions.module.css'
 
@@ -29,9 +30,10 @@ export default function InfoAccordions({ accordions }: Props) {
             aria-controls={`accordion-content-${i}`}
           >
             <span className={styles.triggerLabel}>{item.title}</span>
-            <i
-              className={`ti ti-chevron-down ${styles.chevron} ${openIndex === i ? styles.chevronOpen : ''}`}
+            <IconChevronDown
+              className={`${styles.chevron} ${openIndex === i ? styles.chevronOpen : ''}`}
               aria-hidden="true"
+              size={16}
             />
           </button>
           <div

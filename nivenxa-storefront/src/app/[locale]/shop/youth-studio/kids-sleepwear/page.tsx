@@ -1,14 +1,15 @@
-import ProductColourPage from '@/components/pages/ProductColourPage'
-import { getProductByHandle } from '@/data/products'
+import CollectionPage from '@/components/pages/CollectionPage'
+import { getProductsByCategory } from '@/data/products'
 
-export default function KidsSleepwearPage() {
-  const product = getProductByHandle('kids-sleepwear')
+export default function KidsSleepwearCategoryPage() {
+  const products = getProductsByCategory('Kids Sleepwear')
   return (
-    <ProductColourPage
-      product={product}
-      collectionName="Youth Studio"
+    <CollectionPage
+      collectionName="Kids Sleepwear"
       collectionSlug="youth-studio"
-      backHref="/shop/youth-studio"
+      eyebrow="Youth Studio"
+      intro="Relaxed sleepwear for every season."
+      products={products}
     />
   )
 }

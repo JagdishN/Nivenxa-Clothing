@@ -1,4 +1,5 @@
 import { useTranslations } from 'next-intl'
+import Image from 'next/image'
 import { Link } from '@/i18n/routing'
 import AnimatedSection from '../ui/AnimatedSection'
 import styles from './CategoryBanner.module.scss'
@@ -57,10 +58,12 @@ export default function CategoryBanner() {
           <AnimatedSection delay={0.3}>
             <Link href="/shop/unisex" className={styles.card} aria-label="Shop Unisex collection">
               <div className={styles.cardImage}>
-                <img
-                  src="/images/Unisex/cargos/darkolive/front_view.png"
+                <Image
+                  src="/images/Unisex/cargos/darkolive/front_view.webp"
                   alt=""
+                  fill
                   className={styles.cardImg}
+                  sizes="(max-width: 768px) 100vw, 25vw"
                   aria-hidden="true"
                 />
                 <span className={styles.ghostNumber} aria-hidden="true">03</span>
