@@ -15,7 +15,7 @@ import ProductInfo from '@/components/product/ProductInfo/ProductInfo'
 import MobileCarousel from '@/components/product/MobileCarousel/MobileCarousel'
 import MobileStickyBar from '@/components/product/MobileStickyBar/MobileStickyBar'
 import FabricStory from '@/components/editorial/FabricStory/FabricStory'
-import CollectionCarousel from '@/components/collection/CollectionCarousel/CollectionCarousel'
+import ProductDiscovery from '@/components/product/ProductDiscovery/ProductDiscovery'
 import ImageZoom from '@/components/product/ImageZoom/ImageZoom'
 
 import styles from './ProductPage.module.css'
@@ -53,63 +53,7 @@ function ProductError() {
   )
 }
 
-// ─── ZoomableImage ───────────────────────────────────────────────────────────
-function ZoomableImage({
-  src,
-  alt,
-  index,
-  onZoom,
-}: {
-  src: string
-  alt: string
-  index: number
-  onZoom: (index: number) => void
-}) {
-  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 })
-  const [cursorVisible, setCursorVisible] = useState(false)
-
-  return (
-    <div
-      className={styles.imageContainer}
-      onClick={() => onZoom(index)}
-      onMouseMove={e => {
-        const rect = e.currentTarget.getBoundingClientRect()
-        setCursorPos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
-      }}
-      onMouseEnter={() => setCursorVisible(true)}
-      onMouseLeave={() => setCursorVisible(false)}
-      role="button"
-      aria-label="Open image zoom"
-      tabIndex={0}
-      onKeyDown={e => {
-        if (e.key === 'Enter' || e.key === ' ') onZoom(index)
-      }}
-    >
-      <img
-        src={src}
-        alt={alt}
-        className={styles.stackImage}
-        loading="lazy"
-      />
-      {cursorVisible && (
-        <div
-          className={styles.floatingCursor}
-          style={{ left: cursorPos.x, top: cursorPos.y }}
-        >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" strokeWidth="1.5"
-               strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="15 3 21 3 21 9"/>
-            <polyline points="9 21 3 21 3 15"/>
-            <line x1="21" y1="3" x2="14" y2="10"/>
-            <line x1="3" y1="21" x2="10" y2="14"/>
-          </svg>
-          <span>Zoom</span>
-        </div>
-      )}
-    </div>
-  )
-}
+// ZoomableImage removed — replaced by <ZoomPan> inline in the stack below.
 
 // ─── ProductPage ─────────────────────────────────────────────────────────────
 export default function ProductPage() {
@@ -124,8 +68,6 @@ export default function ProductPage() {
   const [swatchExpanded, setSwatchExpandedState] = useState(_swatchExpanded)
   const [zoomOpen, setZoomOpen] = useState(false)
   const [zoomStartIndex, setZoomStartIndex] = useState(0)
-  const [heroCursorPos, setHeroCursorPos] = useState({ x: 0, y: 0 })
-  const [heroCursorVisible, setHeroCursorVisible] = useState(false)
 
   const setSwatchExpanded = (value: boolean) => {
     _swatchExpanded = value
@@ -197,60 +139,39 @@ export default function ProductPage() {
           />
         </div>
 
-        {/* Col 2 — sticky hero image — entire area is the zoom trigger */}
+        {/* Col 2 — sticky hero image */}
         <div className={styles.heroImageWrapper}>
-          <div
-            className={styles.heroImageContainer}
+          <button
+            type="button"
+            className={styles.heroImageBtn}
             onClick={() => openZoom(heroZoomIndex >= 0 ? heroZoomIndex : 0)}
-            onMouseMove={e => {
-              const rect = e.currentTarget.getBoundingClientRect()
-              setHeroCursorPos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
-            }}
-            onMouseEnter={() => setHeroCursorVisible(true)}
-            onMouseLeave={() => setHeroCursorVisible(false)}
-            role="button"
-            aria-label="Open image zoom"
-            tabIndex={0}
-            onKeyDown={e => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                openZoom(heroZoomIndex >= 0 ? heroZoomIndex : 0)
-              }
-            }}
+            aria-label="Open image zoom viewer"
           >
             <img
               className={styles.heroImage}
               src={primaryImage.src}
               alt={`${product.name} — ${activeColour.label}`}
             />
-            {heroCursorVisible && (
-              <div
-                className={styles.floatingCursor}
-                style={{ left: heroCursorPos.x, top: heroCursorPos.y }}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" strokeWidth="1.5"
-                     strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="15 3 21 3 21 9"/>
-                  <polyline points="9 21 3 21 3 15"/>
-                  <line x1="21" y1="3" x2="14" y2="10"/>
-                  <line x1="3" y1="21" x2="10" y2="14"/>
-                </svg>
-                <span>Zoom</span>
-              </div>
-            )}
-          </div>
+          </button>
         </div>
 
-        {/* Col 3 — scrollable image stack — each image is a zoom trigger */}
+        {/* Col 3 — scrollable image stack */}
         <div className={styles.imageStack}>
           {galleryImages.slice(1).map((img, i) => (
-            <ZoomableImage
+            <button
               key={img.id}
-              src={img.src}
-              alt={`${product.name} — ${activeColour.label} — view ${i + 2}`}
-              index={i + 1}
-              onZoom={openZoom}
-            />
+              type="button"
+              className={styles.stackImageBtn}
+              onClick={() => openZoom(i + 1)}
+              aria-label={`Open image ${i + 2} in zoom viewer`}
+            >
+              <img
+                src={img.src}
+                alt={`${product.name} — ${activeColour.label} — view ${i + 2}`}
+                className={styles.stackImage}
+                loading="lazy"
+              />
+            </button>
           ))}
         </div>
 
@@ -261,12 +182,9 @@ export default function ProductPage() {
         <FabricStory product={product} />
       </section>
 
-      {/* SECTION 3 — CROSS-SELL */}
+      {/* SECTION 3 — SMART DISCOVERY */}
       <section className={styles.carouselSection}>
-        <CollectionCarousel
-          items={product.collectionItems}
-          currentProductId={product.id}
-        />
+        <ProductDiscovery currentHandle={product.handle} />
       </section>
 
       {/* ── Image zoom overlay ── */}
