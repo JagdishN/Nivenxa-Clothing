@@ -6,10 +6,6 @@
 
 import type { Product, ProductImage, ImageType } from '@/types/product'
 
-// ─── Fallback: placehold.co (used when no real image exists for a colour) ────
-function ph(bg: string, text: string, label: string): string {
-  return `https://placehold.co/800x1000/${bg}/${text}?text=${encodeURIComponent(label)}`
-}
 
 // ─── Sized placeholder — hero 2000×2500, stack 1200×1500, text always F2EDE6 ──
 function phImg(bg: string, w: number, h: number, label: string): string {
@@ -112,59 +108,100 @@ function buildTeeImages(c: TeeConfig): ProductImage[] {
 }
 
 // ─── Cargo image config ───────────────────────────────────────────────────────
-// carbon and forest-floor have real images on disk.
-// chalk-stone, tobacco, phantom fall back to placehold.co. (terracotta hidden)
+// All five colours have real images on disk. (terracotta hidden)
+// front_studio_view.webp is always the hero; all others appear as stack images.
 
 interface CargoFiles {
-  front: string
-  back: string
-  side: string
-  walk: string
-  edit: string
-  detail: string
+  front:     string   // front_studio_view.webp           — hero
+  back:      string   // back_studio_view.webp            — stack
+  flatlay:   string   // flat_lay_view.webp               — stack
+  sitting:   string   // sittingorLearning_studio_view.webp — stack
+  stylewith: string   // stylewith_view.webp / .png       — stack
+  walk:      string   // walking_view.webp                — stack
+  fabric:    string   // fabric_close_up.webp             — stack
 }
 
 interface CargoConfig {
-  slug: string
-  hex: string
+  slug:    string
+  hex:     string
   textHex: string
-  label: string
-  folder: string | null   // null → no real images, use ph() fallback
-  files?: CargoFiles
+  label:   string
+  folder:  string | null   // null → no real images, use phImg() fallback
+  files?:  CargoFiles
 }
 
 const cargoSlugs: CargoConfig[] = [
-  // ── 1. CARBON (real images on disk) ─────────────────────────────────────────
+  // ── 1. CHARCOALGREY ─────────────────────────────────────────────────────────
   {
-    slug: 'carbon',      hex: '6B6560', textHex: 'FFFFFF', label: 'Carbon',       // Pantone 18-0601 TCX
-    folder: 'Unisex/cargos/charcoalgrey',
+    slug: 'carbon', hex: '6B6560', textHex: 'FFFFFF', label: 'Carbon',         // Pantone 18-0601 TCX
+    folder: 'Unisex/cargos/CHARCOALGREY',
     files: {
-      front:  'front_view.png',
-      back:   'back_view.png',
-      side:   'side_view.png',
-      walk:   'walking_view.png',
-      edit:   'lifestyle_view.png',
-      detail: 'pocket_details_view.png',
+      front:     'front_studio_view.webp',
+      back:      'back_studio_view.webp',
+      flatlay:   'flat_lay_view.webp',
+      sitting:   'sittingorLearning_studio_view.webp',
+      stylewith: 'stylewith_view.png',
+      walk:      'walking_view.webp',
+      fabric:    'fabric_close_up.webp',
     },
   },
-  // ── 2. FOREST FLOOR (real images on disk) ───────────────────────────────────
+  // ── 2. DARKOLIVE ────────────────────────────────────────────────────────────
   {
     slug: 'forest-floor', hex: '4A5240', textHex: 'FFFFFF', label: 'Forest Floor', // Pantone 19-0417 TCX
-    folder: 'Unisex/cargos/darkolive',
+    folder: 'Unisex/cargos/DARKOLIVE',
     files: {
-      front:  'front_view.png',
-      back:   'back_view.png',
-      side:   'side_view.png',
-      walk:   'walking_view.png',
-      edit:   'cargo_lifestyle_view.png',  // differs from carbon
-      detail: 'pocket_details_view.png',
+      front:     'front_studio_view.webp',
+      back:      'back_studio_view.webp',
+      flatlay:   'flat_lay_view.webp',
+      sitting:   'sittingorLearning_studio_view.webp',
+      stylewith: 'stylewith_view.webp',
+      walk:      'walking_view.webp',
+      fabric:    'fabric_close_up.webp',
     },
   },
-  // ── 3–6. No real images on disk — placehold.co fallback ─────────────────────
-  { slug: 'chalk-stone', hex: 'C4B49A', textHex: '333333', label: 'Chalk Stone',  folder: null }, // Pantone 12-0712 TCX
+  // ── 3. SANDBEIGE ────────────────────────────────────────────────────────────
+  {
+    slug: 'chalk-stone', hex: 'C4B49A', textHex: '333333', label: 'Chalk Stone',  // Pantone 12-0712 TCX
+    folder: 'Unisex/cargos/SANDBEIGE',
+    files: {
+      front:     'front_studio_view.webp',
+      back:      'back_studio_view.webp',
+      flatlay:   'flat_lay_view.webp',
+      sitting:   'sittingorLearning_studio_view.webp',
+      stylewith: 'stylewith_view.png',
+      walk:      'walking_view.webp',
+      fabric:    'fabric_close_up.webp',
+    },
+  },
   // { slug: 'terracotta', hex: 'B5541C', textHex: 'FFFFFF', label: 'Terracotta', folder: null }, // Pantone 18-1250 TCX — hidden
-  { slug: 'tobacco',     hex: '7B5B3A', textHex: 'FFFFFF', label: 'Tobacco',      folder: null }, // Pantone 18-1048 TCX
-  { slug: 'phantom',     hex: '1A1A1A', textHex: 'FFFFFF', label: 'Phantom',      folder: null }, // Pantone 19-4005 TCX
+  // ── 4. MOCHA BROWN ──────────────────────────────────────────────────────────
+  {
+    slug: 'tobacco', hex: '7B5B3A', textHex: 'FFFFFF', label: 'Tobacco',         // Pantone 18-1048 TCX
+    folder: 'Unisex/cargos/MOCHA BROWN',
+    files: {
+      front:     'front_studio_view.webp',
+      back:      'back_studio_view.webp',
+      flatlay:   'flat_lay_view.webp',
+      sitting:   'sittingorLearning_studio_view.webp',
+      stylewith: 'stylewith_view.webp',
+      walk:      'walking_view.webp',
+      fabric:    'fabric_close_up.webp',
+    },
+  },
+  // ── 5. JETBLACK ─────────────────────────────────────────────────────────────
+  {
+    slug: 'phantom', hex: '1A1A1A', textHex: 'FFFFFF', label: 'Phantom',         // Pantone 19-4005 TCX
+    folder: 'Unisex/cargos/JETBLACK',
+    files: {
+      front:     'front_studio_view.webp',
+      back:      'back_studio_view.webp',
+      flatlay:   'flat_lay_view.webp',
+      sitting:   'sittingorLearning_studio_view.webp',
+      stylewith: 'stylewith_view.png',
+      walk:      'walking_view.webp',
+      fabric:    'fabric_close_up.webp',
+    },
+  },
 ]
 
 function buildCargoImages(c: CargoConfig): ProductImage[] {
@@ -175,17 +212,17 @@ function buildCargoImages(c: CargoConfig): ProductImage[] {
       { id: `cargo-${c.slug}-sf`, src: phImg(c.hex, 2000, 2500, `${n} studio-front`), alt: `${n} — studio-front — ${c.slug}`, type: 'studio-front', colourSlug: c.slug },
       { id: `cargo-${c.slug}-wk`, src: phImg(c.hex, 1200, 1500, `${n} walking`),      alt: `${n} — walking — ${c.slug}`,      type: 'walking',      colourSlug: c.slug },
       { id: `cargo-${c.slug}-sb`, src: phImg(c.hex, 1200, 1500, `${n} studio-back`),  alt: `${n} — studio-back — ${c.slug}`,  type: 'studio-back',  colourSlug: c.slug },
-      { id: `cargo-${c.slug}-ss`, src: phImg(c.hex, 1200, 1500, `${n} studio-side`),  alt: `${n} — studio-side — ${c.slug}`,  type: 'studio-side',  colourSlug: c.slug },
       { id: `cargo-${c.slug}-d1`, src: phImg(c.hex, 1200, 1500, `${n} detail`),       alt: `${n} — detail — ${c.slug}`,       type: 'detail',       colourSlug: c.slug },
     ]
   }
   return [
-    localImg(`cargo-${c.slug}-sf`, c.folder, c.files.front,  'studio-front', 'Unisex Cargo Pants', c.slug),
-    localImg(`cargo-${c.slug}-sb`, c.folder, c.files.back,   'studio-back',  'Unisex Cargo Pants', c.slug),
-    localImg(`cargo-${c.slug}-ss`, c.folder, c.files.side,   'studio-side',  'Unisex Cargo Pants', c.slug),
-    localImg(`cargo-${c.slug}-wk`, c.folder, c.files.walk,   'walking',      'Unisex Cargo Pants', c.slug),
-    localImg(`cargo-${c.slug}-ed`, c.folder, c.files.edit,   'editorial',    'Unisex Cargo Pants', c.slug),
-    localImg(`cargo-${c.slug}-d1`, c.folder, c.files.detail, 'detail',       'Unisex Cargo Pants', c.slug),
+    localImg(`cargo-${c.slug}-sf`, c.folder, c.files.front,     'studio-front', 'Unisex Cargo Pants', c.slug),  // hero
+    localImg(`cargo-${c.slug}-sb`, c.folder, c.files.back,      'studio-back',  'Unisex Cargo Pants', c.slug),  // stack
+    localImg(`cargo-${c.slug}-fl`, c.folder, c.files.flatlay,   'detail',       'Unisex Cargo Pants', c.slug),  // stack
+    localImg(`cargo-${c.slug}-st`, c.folder, c.files.sitting,   'editorial',    'Unisex Cargo Pants', c.slug),  // stack
+    localImg(`cargo-${c.slug}-sw`, c.folder, c.files.stylewith, 'editorial',    'Unisex Cargo Pants', c.slug),  // stack
+    localImg(`cargo-${c.slug}-wk`, c.folder, c.files.walk,      'walking',      'Unisex Cargo Pants', c.slug),  // stack
+    localImg(`cargo-${c.slug}-fc`, c.folder, c.files.fabric,    'detail',       'Unisex Cargo Pants', c.slug),  // stack
   ]
 }
 
@@ -567,7 +604,7 @@ const cargoPants: Product = {
     },
   ],
 
-  // Cross-sell items — forest-floor uses real images; chalk-stone falls back to placehold.co
+  // Cross-sell items — all 5 colours; CollectionCarousel filters out the active page's own id
   collectionItems: [
     {
       id: 'col-cargo-001',
@@ -577,8 +614,8 @@ const cargoPants: Product = {
       price: 3499,
       currency: '₹',
       images: [
-        localImg('col-cargo-001-sf', 'Unisex/cargos/darkolive', 'front_view.png',   'studio-front', 'Unisex Cargo Pants', 'forest-floor'),
-        localImg('col-cargo-001-wk', 'Unisex/cargos/darkolive', 'walking_view.png', 'walking',      'Unisex Cargo Pants', 'forest-floor'),
+        localImg('col-cargo-001-sf', 'Unisex/cargos/DARKOLIVE', 'front_studio_view.webp', 'studio-front', 'Unisex Cargo Pants', 'forest-floor'),
+        localImg('col-cargo-001-wk', 'Unisex/cargos/DARKOLIVE', 'walking_view.webp',      'walking',      'Unisex Cargo Pants', 'forest-floor'),
       ],
     },
     {
@@ -588,10 +625,45 @@ const cargoPants: Product = {
       colourLabel: 'Chalk Stone',
       price: 3499,
       currency: '₹',
-      // No matching image folder on disk for chalk-stone — placehold.co fallback
       images: [
-        { id: 'col-cargo-002-sf', src: ph('C4B49A', '333333', 'studio-front'), alt: 'Unisex Cargo Pants — studio-front — chalk-stone', type: 'studio-front', colourSlug: 'chalk-stone' },
-        { id: 'col-cargo-002-wk', src: ph('C4B49A', '333333', 'walking'),      alt: 'Unisex Cargo Pants — walking — chalk-stone',      type: 'walking',      colourSlug: 'chalk-stone' },
+        localImg('col-cargo-002-sf', 'Unisex/cargos/SANDBEIGE', 'front_studio_view.webp', 'studio-front', 'Unisex Cargo Pants', 'chalk-stone'),
+        localImg('col-cargo-002-wk', 'Unisex/cargos/SANDBEIGE', 'walking_view.webp',      'walking',      'Unisex Cargo Pants', 'chalk-stone'),
+      ],
+    },
+    {
+      id: 'col-cargo-003',
+      slug: 'cargo-pants/carbon',
+      name: 'Unisex Cargo Pants',
+      colourLabel: 'Carbon',
+      price: 3499,
+      currency: '₹',
+      images: [
+        localImg('col-cargo-003-sf', 'Unisex/cargos/CHARCOALGREY', 'front_studio_view.webp', 'studio-front', 'Unisex Cargo Pants', 'carbon'),
+        localImg('col-cargo-003-wk', 'Unisex/cargos/CHARCOALGREY', 'walking_view.webp',      'walking',      'Unisex Cargo Pants', 'carbon'),
+      ],
+    },
+    {
+      id: 'col-cargo-004',
+      slug: 'cargo-pants/tobacco',
+      name: 'Unisex Cargo Pants',
+      colourLabel: 'Tobacco',
+      price: 3499,
+      currency: '₹',
+      images: [
+        localImg('col-cargo-004-sf', 'Unisex/cargos/MOCHA BROWN', 'front_studio_view.webp', 'studio-front', 'Unisex Cargo Pants', 'tobacco'),
+        localImg('col-cargo-004-wk', 'Unisex/cargos/MOCHA BROWN', 'walking_view.webp',      'walking',      'Unisex Cargo Pants', 'tobacco'),
+      ],
+    },
+    {
+      id: 'col-cargo-005',
+      slug: 'cargo-pants/phantom',
+      name: 'Unisex Cargo Pants',
+      colourLabel: 'Phantom',
+      price: 3499,
+      currency: '₹',
+      images: [
+        localImg('col-cargo-005-sf', 'Unisex/cargos/JETBLACK', 'front_studio_view.webp', 'studio-front', 'Unisex Cargo Pants', 'phantom'),
+        localImg('col-cargo-005-wk', 'Unisex/cargos/JETBLACK', 'walking_view.webp',      'walking',      'Unisex Cargo Pants', 'phantom'),
       ],
     },
   ],
@@ -671,13 +743,58 @@ const cargoPants: Product = {
 }
 
 // ─── Product 3: A-line Kurta ──────────────────────────────────────────────────
-const kurta3ColourSlugs: Array<{ slug: string; hex: string; label: string }> = [
-  { slug: 'ivory', hex: 'F0EBE0', label: 'Ivory' }, // Pantone 11-0608 TCX — print: minimal-floral
-  { slug: 'sand',  hex: 'C8A882', label: 'Sand'  }, // Pantone 14-1116 TCX — print: minimal-floral
-  { slug: 'sage',  hex: '8C9E84', label: 'Sage'  }, // Pantone 16-5803 TCX — print: plain
-  { slug: 'rose',  hex: 'D4A8A0', label: 'Rose'  }, // Pantone 14-1911 TCX — print: plain
-  { slug: 'clay',  hex: 'C47A4E', label: 'Clay'  }, // Pantone 18-1441 TCX — print: plain
+// All five colours have real images on disk. front_studio_view.webp is the
+// hero; back/walking/sitting/fabric appear in the stack. stylewith_view.webp
+// is deliberately excluded from the stack — it powers the "Style it with"
+// section rendered after the Add to Bag button instead (see ProductInfo).
+interface KurtaFiles {
+  front:     string   // front_studio_view.webp           — hero
+  back:      string   // back_studio_view.webp            — stack
+  sitting:   string   // sittingorLearning_studio_view.webp — stack
+  walk:      string   // walking_view.webp                — stack
+  fabric:    string   // fabric_close_up.webp             — stack
+  stylewith: string   // stylewith_view.webp              — NOT in stack, used post-CTA
+}
+
+interface KurtaConfig {
+  slug:  string
+  hex:   string
+  label: string
+  folder: string
+  files: KurtaFiles
+}
+
+const KURTA_COMMON_FILES: KurtaFiles = {
+  front:     'front_studio_view.webp',
+  back:      'back_studio_view.webp',
+  sitting:   'sittingorLearning_studio_view.webp',
+  walk:      'walking_view.webp',
+  fabric:    'fabric_close_up.webp',
+  stylewith: 'stylewith_view.webp',
+}
+
+const kurta3ColourSlugs: KurtaConfig[] = [
+  { slug: 'ivory', hex: 'F0EBE0', label: 'Ivory', folder: 'Wonmen/A-line Kurta/MORNING IVORY', files: KURTA_COMMON_FILES }, // Pantone 11-0608 TCX — print: minimal-floral
+  { slug: 'sand',  hex: 'C8A882', label: 'Sand',  folder: 'Wonmen/A-line Kurta/DESERT SAND',    files: KURTA_COMMON_FILES }, // Pantone 14-1116 TCX — print: minimal-floral
+  { slug: 'sage',  hex: '8C9E84', label: 'Sage',  folder: 'Wonmen/A-line Kurta/WILD SAGE',      files: KURTA_COMMON_FILES }, // Pantone 16-5803 TCX — print: plain
+  { slug: 'rose',  hex: 'D4A8A0', label: 'Rose',  folder: 'Wonmen/A-line Kurta/DUSK ROSE',      files: KURTA_COMMON_FILES }, // Pantone 14-1911 TCX — print: plain
+  { slug: 'clay',  hex: 'C47A4E', label: 'Clay',  folder: 'Wonmen/A-line Kurta/BAKED CLAY',     files: KURTA_COMMON_FILES }, // Pantone 18-1441 TCX — print: plain
 ]
+
+function buildKurtaImages(c: KurtaConfig): ProductImage[] {
+  return [
+    localImg(`kurta-${c.slug}-sf`, c.folder, c.files.front,   'studio-front', 'A-line Kurta', c.slug), // hero
+    localImg(`kurta-${c.slug}-sb`, c.folder, c.files.back,    'studio-back',  'A-line Kurta', c.slug), // stack
+    localImg(`kurta-${c.slug}-wk`, c.folder, c.files.walk,    'walking',      'A-line Kurta', c.slug), // stack
+    localImg(`kurta-${c.slug}-st`, c.folder, c.files.sitting, 'editorial',    'A-line Kurta', c.slug), // stack
+    localImg(`kurta-${c.slug}-fc`, c.folder, c.files.fabric,  'detail',       'A-line Kurta', c.slug), // stack
+  ]
+}
+
+function buildKurtaStyleImage(c: KurtaConfig): ProductImage {
+  // Used only by the "Style it with" section after Add to Bag — never in the gallery stack.
+  return localImg(`kurta-${c.slug}-sw`, c.folder, c.files.stylewith, 'editorial', 'A-line Kurta', c.slug)
+}
 
 const aLineKurta: Product = {
   id: 'prod-003',
@@ -699,7 +816,8 @@ const aLineKurta: Product = {
     label:     c.label,
     hex:       `#${c.hex}`,
     available: true,
-    images:    buildPlaceholderImages('k3', 'A-line Kurta', c.slug, c.hex),
+    images:    buildKurtaImages(c),
+    styleImage: buildKurtaStyleImage(c),
   })),
 
   sizes: [
@@ -1368,13 +1486,53 @@ const womenSleepwear: Product = {
   },
 }
 
+// ─── Kids Sleepwear image config — shared by Rest Set + Summer Set ───────────
+// All views live in one folder per colour: front_studio_view (hero),
+// back/side/sitting/walking (stack), fabric_close_up (detail, last in stack).
+interface KidsSleepFiles {
+  front:   string
+  back:    string
+  side:    string
+  sitting: string
+  walk:    string
+  fabric:  string
+}
+
+interface KidsSleepConfig {
+  slug:   string
+  hex:    string
+  label:  string
+  folder: string
+  files:  KidsSleepFiles
+}
+
+function buildKidsSleepImages(productSlug: string, productName: string, c: KidsSleepConfig): ProductImage[] {
+  return [
+    localImg(`${productSlug}-${c.slug}-sf`, c.folder, c.files.front,   'studio-front', productName, c.slug), // hero
+    localImg(`${productSlug}-${c.slug}-sb`, c.folder, c.files.back,    'studio-back',  productName, c.slug), // stack
+    localImg(`${productSlug}-${c.slug}-ss`, c.folder, c.files.side,    'studio-side',  productName, c.slug), // stack
+    localImg(`${productSlug}-${c.slug}-st`, c.folder, c.files.sitting, 'editorial',    productName, c.slug), // stack
+    localImg(`${productSlug}-${c.slug}-wk`, c.folder, c.files.walk,    'walking',      productName, c.slug), // stack
+    localImg(`${productSlug}-${c.slug}-fc`, c.folder, c.files.fabric,  'detail',       productName, c.slug), // stack
+  ]
+}
+
 // ─── Product 6: The Rest Sleep Set ────────────────────────────────────────────
-const kidsRestColourSlugs: Array<{ slug: string; hex: string; label: string }> = [
-  { slug: 'cloud',       hex: 'F5F2EC', label: 'Cloud'       }, // Pantone 11-0601 TCX
-  { slug: 'oat',         hex: 'EDE5D0', label: 'Oat'         }, // Pantone 12-0104 TCX
-  { slug: 'mist-blue',   hex: 'A8B8C8', label: 'Mist Blue'   }, // Pantone 14-4112 TCX
-  { slug: 'little-sage', hex: '9EAA8C', label: 'Little Sage' }, // Pantone 16-0213 TCX
-  { slug: 'petal',       hex: 'E8C4B8', label: 'Petal'       }, // Pantone 13-2010 TCX
+const KIDS_REST_COMMON_FILES: KidsSleepFiles = {
+  front:   'front_studio_view.webp',
+  back:    'back_studio_view.webp',
+  side:    'side_studio_view.webp',
+  sitting: 'sittingorLearning_studio_view.webp',
+  walk:    'walking_view.webp',
+  fabric:  'fabric_close_up.webp',
+}
+
+const kidsRestColourSlugs: KidsSleepConfig[] = [
+  { slug: 'cloud',       hex: 'F5F2EC', label: 'Cloud',       folder: 'Kids/unisex sleeper wear/Rest Set/SOFT CLOUD WHITE', files: KIDS_REST_COMMON_FILES }, // Pantone 11-0601 TCX
+  { slug: 'oat',         hex: 'EDE5D0', label: 'Oat',         folder: 'Kids/unisex sleeper wear/Rest Set/PALE OAT',         files: KIDS_REST_COMMON_FILES }, // Pantone 12-0104 TCX
+  { slug: 'mist-blue',   hex: 'A8B8C8', label: 'Mist Blue',   folder: 'Kids/unisex sleeper wear/Rest Set/BABYBLUEGREY',    files: KIDS_REST_COMMON_FILES }, // Pantone 14-4112 TCX
+  { slug: 'little-sage', hex: '9EAA8C', label: 'Little Sage', folder: 'Kids/unisex sleeper wear/Rest Set/DUSTY SAGE',      files: KIDS_REST_COMMON_FILES }, // Pantone 16-0213 TCX
+  { slug: 'petal',       hex: 'E8C4B8', label: 'Petal',       folder: 'Kids/unisex sleeper wear/Rest Set/FADED BLUSH',     files: KIDS_REST_COMMON_FILES }, // Pantone 13-2010 TCX
 ]
 
 const kidsRestSleepSet: Product = {
@@ -1397,7 +1555,7 @@ const kidsRestSleepSet: Product = {
     label:     c.label,
     hex:       `#${c.hex}`,
     available: true,
-    images:    buildPlaceholderImages('p6', 'The Rest Sleep Set', c.slug, c.hex),
+    images:    buildKidsSleepImages('rest', 'The Rest Sleep Set', c),
   })),
 
   sizes: [
@@ -1730,12 +1888,41 @@ const kurtaStraightPant: Product = {
 }
 
 // ─── Kids Summer Sleep Set colour slugs ──────────────────────────────────────
-const kidsSummerColourSlugs: Array<{ slug: string; hex: string; label: string }> = [
-  { slug: 'cloud',       hex: 'F5F2EC', label: 'Cloud'       }, // Pantone 11-0601 TCX — plain
-  { slug: 'little-sage', hex: '9EAA8C', label: 'Little Sage' }, // Pantone 16-0213 TCX — plain
-  { slug: 'butter',      hex: 'F5E6C8', label: 'Butter'      }, // Pantone 12-0712 TCX — plain
-  { slug: 'petal',       hex: 'E8C4B8', label: 'Petal'       }, // Pantone 13-2010 TCX — tonal print
-  { slug: 'mint',        hex: 'C8E0C8', label: 'Mint'        }, // Pantone 13-0221 TCX — tonal print
+const KIDS_SUMMER_COMMON_FILES: KidsSleepFiles = {
+  front:   'front_studio_view.webp',
+  back:    'back_studio_view.webp',
+  side:    'side_studio_view.webp',
+  sitting: 'sittingorLearning_studio_view.webp',
+  walk:    'walking_view.webp',
+  fabric:  'fabric_close_up.webp',
+}
+
+const kidsSummerColourSlugs: KidsSleepConfig[] = [
+  {
+    slug: 'cloud', hex: 'F5F2EC', label: 'Cloud', // Pantone 11-0601 TCX — plain
+    folder: 'Kids/unisex sleeper wear/Summer Set/SOFT CLOUD WHITE',
+    files: {
+      ...KIDS_SUMMER_COMMON_FILES,
+      // This colour's side-profile shot was delivered under its own filename.
+      side: 'Summer Cloud - Side Profile.webp',
+    },
+  },
+  { slug: 'little-sage', hex: '9EAA8C', label: 'Little Sage', folder: 'Kids/unisex sleeper wear/Summer Set/DUSTY SAGE',        files: KIDS_SUMMER_COMMON_FILES }, // Pantone 16-0213 TCX — plain
+  { slug: 'butter',      hex: 'F5E6C8', label: 'Butter',      folder: 'Kids/unisex sleeper wear/Summer Set/WARM BUTTER',      files: KIDS_SUMMER_COMMON_FILES }, // Pantone 12-0712 TCX — plain
+  { slug: 'petal',       hex: 'E8C4B8', label: 'Petal',       folder: 'Kids/unisex sleeper wear/Summer Set/FADED BLUSH',      files: KIDS_SUMMER_COMMON_FILES }, // Pantone 13-2010 TCX — tonal print
+  {
+    slug: 'mint', hex: 'C8E0C8', label: 'Mint', // Pantone 13-0221 TCX — tonal print
+    folder: 'Kids/unisex sleeper wear/Summer Set/Pale Mint',
+    files: {
+      // This colour's photos were delivered as .png except the hero shot.
+      front:   'front_studio_view.webp',
+      back:    'back_studio_view.png',
+      side:    'side_studio_view.png',
+      sitting: 'sittingorLearning_studio_view.png',
+      walk:    'walking_view.png',
+      fabric:  'fabric_close_up.png',
+    },
+  },
 ]
 
 // ─── Product 8: The Summer Sleep Set ─────────────────────────────────────────
@@ -1759,7 +1946,7 @@ const kidsSummerSleepSet: Product = {
     label:     c.label,
     hex:       `#${c.hex}`,
     available: true,
-    images:    buildPlaceholderImages('p8', 'The Summer Sleep Set', c.slug, c.hex),
+    images:    buildKidsSleepImages('summer', 'The Summer Sleep Set', c),
   })),
 
   sizes: [
