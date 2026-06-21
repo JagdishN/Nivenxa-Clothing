@@ -102,9 +102,9 @@
   touch-action: none; /* hand full touch control to our native listeners */
 }
 
-/* When zoomed in, switch to grab cursor */
+/* When zoomed in, hint that a click/tap zooms back out */
 .imageColZoomed {
-  cursor: grab;
+  cursor: zoom-out;
 }
 
 /* Grabbing while actively pressing */

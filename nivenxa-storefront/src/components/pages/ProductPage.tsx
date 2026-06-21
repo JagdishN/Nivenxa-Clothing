@@ -53,7 +53,7 @@ function ProductError() {
   )
 }
 
-// ZoomableImage removed — replaced by <ZoomPan> inline in the stack below.
+// ZoomableImage removed — hero/stack images are now plain <button> triggers that call openZoom().
 
 // ─── ProductPage ─────────────────────────────────────────────────────────────
 export default function ProductPage() {

@@ -6,9 +6,11 @@ import { getGalleryImages } from '@/utils/getProductImages'
 import styles from './ImageZoom.module.css'
 
 // ─── Zoom constants ───────────────────────────────────────────────────────────
-const LB_MIN_SCALE = 1
-const LB_MAX_SCALE = 5
-const LB_ZOOM_STEP = 0.5
+const LB_MIN_SCALE         = 1
+const LB_MAX_SCALE         = 5
+const LB_ZOOM_STEP         = 0.5
+const LB_CLICK_ZOOM_SCALE  = 2   // fixed step a click/tap zooms to from 1x
+const LB_TAP_MOVE_THRESHOLD = 5  // px — distinguishes a tap/click from a drag
 
 interface Props {
   isOpen: boolean
@@ -78,6 +80,10 @@ export default function ImageZoom({
   // Double-tap timestamp
   const lastTap = useRef(0)
 
+  // Tap/click-vs-drag detection (shared by touch + pointer paths)
+  const touchMoved    = useRef(false)
+  const pinchOccurred  = useRef(false)
+
   // DOM + stable function refs
   const imageRef     = useRef<HTMLDivElement>(null)
   const activeImgRef = useRef(activeIndex)
@@ -144,9 +150,23 @@ export default function ImageZoom({
   /** Reset zoom to 1× centred. */
   const resetZoom = useCallback(() => apply(LB_MIN_SCALE, 0, 0), [apply])
 
+  /** Click/tap on the image: zoom to a fixed step centred on the point, or reset if already zoomed. */
+  const handleImageActivate = useCallback((cx: number, cy: number) => {
+    if (scaleRef.current > LB_MIN_SCALE) {
+      resetZoom()
+    } else {
+      zoomAt(cx, cy, LB_CLICK_ZOOM_SCALE - LB_MIN_SCALE)
+    }
+  }, [resetZoom, zoomAt])
+
   // ── Sync on open ──────────────────────────────────────────────────────────
+  // resetZoom touches scaleRef/transXRef/transYRef, which the lint rule below
+  // forbids during render (ref mutation isn't render-safe under Strict Mode's
+  // double-invoke). An effect is the correct place for that ref write, so this
+  // one setState-in-effect is intentional rather than an oversight.
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- resets refs (scaleRef etc.) in lockstep with state; see comment above
       setInternalColour(activeColour)
       setActiveImg(activeIndex)
       resetZoom()
@@ -264,6 +284,7 @@ export default function ImageZoom({
       if (e.touches.length === 2) {
         // Two-finger pinch start
         e.preventDefault()
+        pinchOccurred.current = true
         const t0   = e.touches[0]
         const t1   = e.touches[1]
         const dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY)
@@ -278,6 +299,9 @@ export default function ImageZoom({
         }
       } else if (e.touches.length === 1) {
         pinch.current.active = false
+        // Fresh single-finger gesture — only reached on a genuine 0→1 touch transition
+        pinchOccurred.current = false
+        touchMoved.current    = false
 
         // Double-tap → reset
         const now = Date.now()
@@ -289,7 +313,7 @@ export default function ImageZoom({
         }
         lastTap.current = now
 
-        // Record start point for both pan and swipe detection
+        // Record start point for tap / pan / swipe detection
         dragStart.current = {
           px: e.touches[0].clientX,
           py: e.touches[0].clientY,
@@ -303,6 +327,7 @@ export default function ImageZoom({
       if (e.touches.length === 2 && pinch.current.active) {
         // Pinch zoom
         e.preventDefault()
+        touchMoved.current = true
         const t0   = e.touches[0]
         const t1   = e.touches[1]
         const dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY)
@@ -321,19 +346,41 @@ export default function ImageZoom({
         e.preventDefault()
         const dx = e.touches[0].clientX - dragStart.current.px
         const dy = e.touches[0].clientY - dragStart.current.py
+        if (Math.abs(dx) > LB_TAP_MOVE_THRESHOLD || Math.abs(dy) > LB_TAP_MOVE_THRESHOLD) {
+          touchMoved.current = true
+        }
         apply(scaleRef.current, dragStart.current.tx + dx, dragStart.current.ty + dy)
+      } else if (e.touches.length === 1) {
+        // At 1× with one finger: no preventDefault → swipe detection fires in onTouchEnd.
+        // Still track movement so a swipe isn't mistaken for a tap.
+        const dx = e.touches[0].clientX - dragStart.current.px
+        const dy = e.touches[0].clientY - dragStart.current.py
+        if (Math.abs(dx) > LB_TAP_MOVE_THRESHOLD || Math.abs(dy) > LB_TAP_MOVE_THRESHOLD) {
+          touchMoved.current = true
+        }
       }
-      // At 1× with one finger: no preventDefault → swipe detection fires in onTouchEnd
     }
 
     const onTouchEnd = (e: TouchEvent) => {
       if (e.touches.length < 2) pinch.current.active = false
+      if (e.touches.length === 0 && pinch.current.active === false) {
+        // Full release — clear pinch flag for the next gesture (touchstart also
+        // resets it on a fresh 0→1 transition, this just keeps state tidy)
+        pinchOccurred.current = false
+      }
 
-      // Swipe navigation — only at 1× (zoomed in → drag pans, not nav)
-      if (e.changedTouches.length === 1 && scaleRef.current <= LB_MIN_SCALE) {
+      // A pinch occurred this gesture — its finger-lift events aren't taps/swipes
+      if (pinchOccurred.current) return
+
+      if (e.changedTouches.length === 1) {
         const dx = e.changedTouches[0].clientX - dragStart.current.px
         const dy = e.changedTouches[0].clientY - dragStart.current.py
-        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+
+        if (!touchMoved.current) {
+          // Tap — toggle zoom at the tap point
+          handleImageActivate(e.changedTouches[0].clientX, e.changedTouches[0].clientY)
+        } else if (scaleRef.current <= LB_MIN_SCALE && Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+          // Swipe navigation — only at 1× (zoomed in → drag pans, not nav)
           if (dx < 0) handleNextRef.current()
           else handlePrevRef.current()
         }
@@ -348,7 +395,7 @@ export default function ImageZoom({
       el.removeEventListener('touchmove',  onTouchMove)
       el.removeEventListener('touchend',   onTouchEnd)
     }
-  }, [isOpen, apply, resetZoom])
+  }, [isOpen, apply, resetZoom, handleImageActivate])
 
   // ── Pointer events — mouse/pen drag to pan ────────────────────────────────
 
@@ -375,7 +422,7 @@ export default function ImageZoom({
     if (!isDragging.current || e.pointerType === 'touch') return
     const dx = e.clientX - dragStart.current.px
     const dy = e.clientY - dragStart.current.py
-    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasDragged.current = true
+    if (Math.abs(dx) > LB_TAP_MOVE_THRESHOLD || Math.abs(dy) > LB_TAP_MOVE_THRESHOLD) hasDragged.current = true
     // Pan only when: movement threshold crossed AND zoomed in
     if (hasDragged.current && scaleRef.current > LB_MIN_SCALE) {
       apply(scaleRef.current, dragStart.current.tx + dx, dragStart.current.ty + dy)
@@ -384,8 +431,14 @@ export default function ImageZoom({
 
   function handlePointerUp(e: React.PointerEvent<HTMLDivElement>) {
     if (e.pointerType === 'touch') return
+    const wasEligible = isDragging.current
+    const dragged     = hasDragged.current
     isDragging.current = false
     hasDragged.current = false
+    // A click (no drag movement) on the image toggles zoom at the click point
+    if (wasEligible && !dragged) {
+      handleImageActivate(e.clientX, e.clientY)
+    }
   }
 
   function handleDoubleClick(e: React.MouseEvent<HTMLDivElement>) {
