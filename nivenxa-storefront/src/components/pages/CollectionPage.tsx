@@ -7,12 +7,13 @@ import styles from './CollectionPage.module.css'
 // Maps product handles → the URL sub-segment used under each collection
 // e.g. /shop/mens/oversized-tee, /shop/womens/co-ord-set
 const PRODUCT_SUBPATH: Record<string, string> = {
-  'over-tee-shirts':   'oversized-tee',
-  'cargo-pants':       'cargo-pants',
-  'a-line-kurta':      'a-line-kurta',
-  'women-lounge-sets': 'co-ord-set',
-  'women-sleepwear':   'sleepwear',
-  'kids-sleepwear':    'kids-sleepwear',
+  'over-tee-shirts':      'oversized-tee',
+  'cargo-pants':          'cargo-pants',
+  'a-line-kurta':         'a-line-kurta',
+  'women-lounge-sets':    'co-ord-set',
+  'women-sleepwear':      'sleepwear',
+  'kids-rest-sleep-set':  'kids-rest-sleep-set',
+  'kids-summer-sleep-set':'kids-summer-sleep-set',
 }
 
 function getGridClass(count: number): string {
@@ -24,6 +25,7 @@ interface Props {
   collectionName: string
   collectionSlug: string
   eyebrow?: string
+  intro?: string
   products: Product[]
 }
 
@@ -31,6 +33,7 @@ export default function CollectionPage({
   collectionName,
   collectionSlug,
   eyebrow = 'Shop',
+  intro,
   products,
 }: Props) {
   return (
@@ -38,6 +41,7 @@ export default function CollectionPage({
       <div className={styles.header}>
         <span className={styles.eyebrow}>{eyebrow}</span>
         <h1 className={styles.title}>{collectionName}</h1>
+        {intro && <p className={styles.intro}>{intro}</p>}
         <div className={styles.titleRule} />
       </div>
 

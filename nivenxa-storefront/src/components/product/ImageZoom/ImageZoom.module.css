@@ -98,6 +98,18 @@
   width: 100%;
   height: 100vh;
   display: block;
+  cursor: zoom-in;
+  touch-action: none; /* hand full touch control to our native listeners */
+}
+
+/* When zoomed in, hint that a click/tap zooms back out */
+.imageColZoomed {
+  cursor: zoom-out;
+}
+
+/* Grabbing while actively pressing */
+.imageColZoomed:active {
+  cursor: grabbing;
 }
 
 .mainImage {
@@ -106,7 +118,7 @@
   object-fit: cover;
   object-position: center top;
   display: block;
-  transition: opacity 0.15s ease, transform 0.25s ease;
+  transition: opacity 0.15s ease;
   pointer-events: none;
   user-select: none;
 }
@@ -116,31 +128,62 @@
   opacity: 0;
 }
 
-.zoomHint {
+.scrollHint {
   position: absolute;
   bottom: 14px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(0, 0, 0, 0.35);
-  background: rgba(255, 255, 255, 0.8);
-  padding: 4px 10px;
-  border-radius: 3px;
-  pointer-events: none;
-  white-space: nowrap;
-}
-
-.scrollHint {
-  position: absolute;
-  bottom: 14px;
-  right: 14px;
   font-size: 9px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: rgba(0, 0, 0, 0.25);
   pointer-events: none;
+  white-space: nowrap;
+}
+
+/* ── Zoom +/− controls ─────────────────────────────── */
+
+.zoomControls {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 6;
+}
+
+.zoomControlBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 0.5px solid var(--nivenxa-border);
+  border-radius: 2px;
+  background: var(--nivenxa-bg-secondary);
+  color: var(--nivenxa-text-muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.75;
+  transition: opacity 150ms ease, color 150ms ease;
+}
+
+.zoomControlBtn:hover:not(:disabled) {
+  color: var(--nivenxa-text-primary);
+  opacity: 1;
+}
+
+.zoomControlBtn:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+@media (max-width: 1024px) {
+  .zoomControls {
+    display: none;
+  }
 }
 
 .navBtn {
@@ -360,9 +403,7 @@
     display: none;
   }
 
-  .mainImage {
-    touch-action: pinch-zoom;
-  }
+
 }
 
 @media (max-width: 600px) {

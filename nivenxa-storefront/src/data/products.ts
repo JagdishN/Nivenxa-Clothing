@@ -6,10 +6,6 @@
 
 import type { Product, ProductImage, ImageType } from '@/types/product'
 
-// ─── Fallback: placehold.co (used when no real image exists for a colour) ────
-function ph(bg: string, text: string, label: string): string {
-  return `https://placehold.co/800x1000/${bg}/${text}?text=${encodeURIComponent(label)}`
-}
 
 // ─── Sized placeholder — hero 2000×2500, stack 1200×1500, text always F2EDE6 ──
 function phImg(bg: string, w: number, h: number, label: string): string {
@@ -112,59 +108,100 @@ function buildTeeImages(c: TeeConfig): ProductImage[] {
 }
 
 // ─── Cargo image config ───────────────────────────────────────────────────────
-// carbon and forest-floor have real images on disk.
-// chalk-stone, tobacco, phantom fall back to placehold.co. (terracotta hidden)
+// All five colours have real images on disk. (terracotta hidden)
+// front_studio_view.webp is always the hero; all others appear as stack images.
 
 interface CargoFiles {
-  front: string
-  back: string
-  side: string
-  walk: string
-  edit: string
-  detail: string
+  front:     string   // front_studio_view.webp           — hero
+  back:      string   // back_studio_view.webp            — stack
+  flatlay:   string   // flat_lay_view.webp               — stack
+  sitting:   string   // sittingorLearning_studio_view.webp — stack
+  stylewith: string   // stylewith_view.webp / .png       — stack
+  walk:      string   // walking_view.webp                — stack
+  fabric:    string   // fabric_close_up.webp             — stack
 }
 
 interface CargoConfig {
-  slug: string
-  hex: string
+  slug:    string
+  hex:     string
   textHex: string
-  label: string
-  folder: string | null   // null → no real images, use ph() fallback
-  files?: CargoFiles
+  label:   string
+  folder:  string | null   // null → no real images, use phImg() fallback
+  files?:  CargoFiles
 }
 
 const cargoSlugs: CargoConfig[] = [
-  // ── 1. CARBON (real images on disk) ─────────────────────────────────────────
+  // ── 1. CHARCOALGREY ─────────────────────────────────────────────────────────
   {
-    slug: 'carbon',      hex: '6B6560', textHex: 'FFFFFF', label: 'Carbon',       // Pantone 18-0601 TCX
-    folder: 'Unisex/cargos/charcoalgrey',
+    slug: 'carbon', hex: '6B6560', textHex: 'FFFFFF', label: 'Carbon',         // Pantone 18-0601 TCX
+    folder: 'Unisex/cargos/CHARCOALGREY',
     files: {
-      front:  'front_view.png',
-      back:   'back_view.png',
-      side:   'side_view.png',
-      walk:   'walking_view.png',
-      edit:   'lifestyle_view.png',
-      detail: 'pocket_details_view.png',
+      front:     'front_studio_view.webp',
+      back:      'back_studio_view.webp',
+      flatlay:   'flat_lay_view.webp',
+      sitting:   'sittingorLearning_studio_view.webp',
+      stylewith: 'stylewith_view.png',
+      walk:      'walking_view.webp',
+      fabric:    'fabric_close_up.webp',
     },
   },
-  // ── 2. FOREST FLOOR (real images on disk) ───────────────────────────────────
+  // ── 2. DARKOLIVE ────────────────────────────────────────────────────────────
   {
     slug: 'forest-floor', hex: '4A5240', textHex: 'FFFFFF', label: 'Forest Floor', // Pantone 19-0417 TCX
-    folder: 'Unisex/cargos/darkolive',
+    folder: 'Unisex/cargos/DARKOLIVE',
     files: {
-      front:  'front_view.png',
-      back:   'back_view.png',
-      side:   'side_view.png',
-      walk:   'walking_view.png',
-      edit:   'cargo_lifestyle_view.png',  // differs from carbon
-      detail: 'pocket_details_view.png',
+      front:     'front_studio_view.webp',
+      back:      'back_studio_view.webp',
+      flatlay:   'flat_lay_view.webp',
+      sitting:   'sittingorLearning_studio_view.webp',
+      stylewith: 'stylewith_view.webp',
+      walk:      'walking_view.webp',
+      fabric:    'fabric_close_up.webp',
     },
   },
-  // ── 3–6. No real images on disk — placehold.co fallback ─────────────────────
-  { slug: 'chalk-stone', hex: 'C4B49A', textHex: '333333', label: 'Chalk Stone',  folder: null }, // Pantone 12-0712 TCX
+  // ── 3. SANDBEIGE ────────────────────────────────────────────────────────────
+  {
+    slug: 'chalk-stone', hex: 'C4B49A', textHex: '333333', label: 'Chalk Stone',  // Pantone 12-0712 TCX
+    folder: 'Unisex/cargos/SANDBEIGE',
+    files: {
+      front:     'front_studio_view.webp',
+      back:      'back_studio_view.webp',
+      flatlay:   'flat_lay_view.webp',
+      sitting:   'sittingorLearning_studio_view.webp',
+      stylewith: 'stylewith_view.png',
+      walk:      'walking_view.webp',
+      fabric:    'fabric_close_up.webp',
+    },
+  },
   // { slug: 'terracotta', hex: 'B5541C', textHex: 'FFFFFF', label: 'Terracotta', folder: null }, // Pantone 18-1250 TCX — hidden
-  { slug: 'tobacco',     hex: '7B5B3A', textHex: 'FFFFFF', label: 'Tobacco',      folder: null }, // Pantone 18-1048 TCX
-  { slug: 'phantom',     hex: '1A1A1A', textHex: 'FFFFFF', label: 'Phantom',      folder: null }, // Pantone 19-4005 TCX
+  // ── 4. MOCHA BROWN ──────────────────────────────────────────────────────────
+  {
+    slug: 'tobacco', hex: '7B5B3A', textHex: 'FFFFFF', label: 'Tobacco',         // Pantone 18-1048 TCX
+    folder: 'Unisex/cargos/MOCHA BROWN',
+    files: {
+      front:     'front_studio_view.webp',
+      back:      'back_studio_view.webp',
+      flatlay:   'flat_lay_view.webp',
+      sitting:   'sittingorLearning_studio_view.webp',
+      stylewith: 'stylewith_view.webp',
+      walk:      'walking_view.webp',
+      fabric:    'fabric_close_up.webp',
+    },
+  },
+  // ── 5. JETBLACK ─────────────────────────────────────────────────────────────
+  {
+    slug: 'phantom', hex: '1A1A1A', textHex: 'FFFFFF', label: 'Phantom',         // Pantone 19-4005 TCX
+    folder: 'Unisex/cargos/JETBLACK',
+    files: {
+      front:     'front_studio_view.webp',
+      back:      'back_studio_view.webp',
+      flatlay:   'flat_lay_view.webp',
+      sitting:   'sittingorLearning_studio_view.webp',
+      stylewith: 'stylewith_view.png',
+      walk:      'walking_view.webp',
+      fabric:    'fabric_close_up.webp',
+    },
+  },
 ]
 
 function buildCargoImages(c: CargoConfig): ProductImage[] {
@@ -175,17 +212,17 @@ function buildCargoImages(c: CargoConfig): ProductImage[] {
       { id: `cargo-${c.slug}-sf`, src: phImg(c.hex, 2000, 2500, `${n} studio-front`), alt: `${n} — studio-front — ${c.slug}`, type: 'studio-front', colourSlug: c.slug },
       { id: `cargo-${c.slug}-wk`, src: phImg(c.hex, 1200, 1500, `${n} walking`),      alt: `${n} — walking — ${c.slug}`,      type: 'walking',      colourSlug: c.slug },
       { id: `cargo-${c.slug}-sb`, src: phImg(c.hex, 1200, 1500, `${n} studio-back`),  alt: `${n} — studio-back — ${c.slug}`,  type: 'studio-back',  colourSlug: c.slug },
-      { id: `cargo-${c.slug}-ss`, src: phImg(c.hex, 1200, 1500, `${n} studio-side`),  alt: `${n} — studio-side — ${c.slug}`,  type: 'studio-side',  colourSlug: c.slug },
       { id: `cargo-${c.slug}-d1`, src: phImg(c.hex, 1200, 1500, `${n} detail`),       alt: `${n} — detail — ${c.slug}`,       type: 'detail',       colourSlug: c.slug },
     ]
   }
   return [
-    localImg(`cargo-${c.slug}-sf`, c.folder, c.files.front,  'studio-front', 'Unisex Cargo Pants', c.slug),
-    localImg(`cargo-${c.slug}-sb`, c.folder, c.files.back,   'studio-back',  'Unisex Cargo Pants', c.slug),
-    localImg(`cargo-${c.slug}-ss`, c.folder, c.files.side,   'studio-side',  'Unisex Cargo Pants', c.slug),
-    localImg(`cargo-${c.slug}-wk`, c.folder, c.files.walk,   'walking',      'Unisex Cargo Pants', c.slug),
-    localImg(`cargo-${c.slug}-ed`, c.folder, c.files.edit,   'editorial',    'Unisex Cargo Pants', c.slug),
-    localImg(`cargo-${c.slug}-d1`, c.folder, c.files.detail, 'detail',       'Unisex Cargo Pants', c.slug),
+    localImg(`cargo-${c.slug}-sf`, c.folder, c.files.front,     'studio-front', 'Unisex Cargo Pants', c.slug),  // hero
+    localImg(`cargo-${c.slug}-sb`, c.folder, c.files.back,      'studio-back',  'Unisex Cargo Pants', c.slug),  // stack
+    localImg(`cargo-${c.slug}-fl`, c.folder, c.files.flatlay,   'detail',       'Unisex Cargo Pants', c.slug),  // stack
+    localImg(`cargo-${c.slug}-st`, c.folder, c.files.sitting,   'editorial',    'Unisex Cargo Pants', c.slug),  // stack
+    localImg(`cargo-${c.slug}-sw`, c.folder, c.files.stylewith, 'editorial',    'Unisex Cargo Pants', c.slug),  // stack
+    localImg(`cargo-${c.slug}-wk`, c.folder, c.files.walk,      'walking',      'Unisex Cargo Pants', c.slug),  // stack
+    localImg(`cargo-${c.slug}-fc`, c.folder, c.files.fabric,    'detail',       'Unisex Cargo Pants', c.slug),  // stack
   ]
 }
 
@@ -567,7 +604,7 @@ const cargoPants: Product = {
     },
   ],
 
-  // Cross-sell items — forest-floor uses real images; chalk-stone falls back to placehold.co
+  // Cross-sell items — all 5 colours; CollectionCarousel filters out the active page's own id
   collectionItems: [
     {
       id: 'col-cargo-001',
@@ -577,8 +614,8 @@ const cargoPants: Product = {
       price: 3499,
       currency: '₹',
       images: [
-        localImg('col-cargo-001-sf', 'Unisex/cargos/darkolive', 'front_view.png',   'studio-front', 'Unisex Cargo Pants', 'forest-floor'),
-        localImg('col-cargo-001-wk', 'Unisex/cargos/darkolive', 'walking_view.png', 'walking',      'Unisex Cargo Pants', 'forest-floor'),
+        localImg('col-cargo-001-sf', 'Unisex/cargos/DARKOLIVE', 'front_studio_view.webp', 'studio-front', 'Unisex Cargo Pants', 'forest-floor'),
+        localImg('col-cargo-001-wk', 'Unisex/cargos/DARKOLIVE', 'walking_view.webp',      'walking',      'Unisex Cargo Pants', 'forest-floor'),
       ],
     },
     {
@@ -588,10 +625,45 @@ const cargoPants: Product = {
       colourLabel: 'Chalk Stone',
       price: 3499,
       currency: '₹',
-      // No matching image folder on disk for chalk-stone — placehold.co fallback
       images: [
-        { id: 'col-cargo-002-sf', src: ph('C4B49A', '333333', 'studio-front'), alt: 'Unisex Cargo Pants — studio-front — chalk-stone', type: 'studio-front', colourSlug: 'chalk-stone' },
-        { id: 'col-cargo-002-wk', src: ph('C4B49A', '333333', 'walking'),      alt: 'Unisex Cargo Pants — walking — chalk-stone',      type: 'walking',      colourSlug: 'chalk-stone' },
+        localImg('col-cargo-002-sf', 'Unisex/cargos/SANDBEIGE', 'front_studio_view.webp', 'studio-front', 'Unisex Cargo Pants', 'chalk-stone'),
+        localImg('col-cargo-002-wk', 'Unisex/cargos/SANDBEIGE', 'walking_view.webp',      'walking',      'Unisex Cargo Pants', 'chalk-stone'),
+      ],
+    },
+    {
+      id: 'col-cargo-003',
+      slug: 'cargo-pants/carbon',
+      name: 'Unisex Cargo Pants',
+      colourLabel: 'Carbon',
+      price: 3499,
+      currency: '₹',
+      images: [
+        localImg('col-cargo-003-sf', 'Unisex/cargos/CHARCOALGREY', 'front_studio_view.webp', 'studio-front', 'Unisex Cargo Pants', 'carbon'),
+        localImg('col-cargo-003-wk', 'Unisex/cargos/CHARCOALGREY', 'walking_view.webp',      'walking',      'Unisex Cargo Pants', 'carbon'),
+      ],
+    },
+    {
+      id: 'col-cargo-004',
+      slug: 'cargo-pants/tobacco',
+      name: 'Unisex Cargo Pants',
+      colourLabel: 'Tobacco',
+      price: 3499,
+      currency: '₹',
+      images: [
+        localImg('col-cargo-004-sf', 'Unisex/cargos/MOCHA BROWN', 'front_studio_view.webp', 'studio-front', 'Unisex Cargo Pants', 'tobacco'),
+        localImg('col-cargo-004-wk', 'Unisex/cargos/MOCHA BROWN', 'walking_view.webp',      'walking',      'Unisex Cargo Pants', 'tobacco'),
+      ],
+    },
+    {
+      id: 'col-cargo-005',
+      slug: 'cargo-pants/phantom',
+      name: 'Unisex Cargo Pants',
+      colourLabel: 'Phantom',
+      price: 3499,
+      currency: '₹',
+      images: [
+        localImg('col-cargo-005-sf', 'Unisex/cargos/JETBLACK', 'front_studio_view.webp', 'studio-front', 'Unisex Cargo Pants', 'phantom'),
+        localImg('col-cargo-005-wk', 'Unisex/cargos/JETBLACK', 'walking_view.webp',      'walking',      'Unisex Cargo Pants', 'phantom'),
       ],
     },
   ],
@@ -671,13 +743,58 @@ const cargoPants: Product = {
 }
 
 // ─── Product 3: A-line Kurta ──────────────────────────────────────────────────
-const kurta3ColourSlugs: Array<{ slug: string; hex: string; label: string }> = [
-  { slug: 'ivory', hex: 'F0EBE0', label: 'Ivory' }, // Pantone 11-0608 TCX — print: minimal-floral
-  { slug: 'sand',  hex: 'C8A882', label: 'Sand'  }, // Pantone 14-1116 TCX — print: minimal-floral
-  { slug: 'sage',  hex: '8C9E84', label: 'Sage'  }, // Pantone 16-5803 TCX — print: plain
-  { slug: 'rose',  hex: 'D4A8A0', label: 'Rose'  }, // Pantone 14-1911 TCX — print: plain
-  { slug: 'clay',  hex: 'C47A4E', label: 'Clay'  }, // Pantone 18-1441 TCX — print: plain
+// All five colours have real images on disk. front_studio_view.webp is the
+// hero; back/walking/sitting/fabric appear in the stack. stylewith_view.webp
+// is deliberately excluded from the stack — it powers the "Style it with"
+// section rendered after the Add to Bag button instead (see ProductInfo).
+interface KurtaFiles {
+  front:     string   // front_studio_view.webp           — hero
+  back:      string   // back_studio_view.webp            — stack
+  sitting:   string   // sittingorLearning_studio_view.webp — stack
+  walk:      string   // walking_view.webp                — stack
+  fabric:    string   // fabric_close_up.webp             — stack
+  stylewith: string   // stylewith_view.webp              — NOT in stack, used post-CTA
+}
+
+interface KurtaConfig {
+  slug:  string
+  hex:   string
+  label: string
+  folder: string
+  files: KurtaFiles
+}
+
+const KURTA_COMMON_FILES: KurtaFiles = {
+  front:     'front_studio_view.webp',
+  back:      'back_studio_view.webp',
+  sitting:   'sittingorLearning_studio_view.webp',
+  walk:      'walking_view.webp',
+  fabric:    'fabric_close_up.webp',
+  stylewith: 'stylewith_view.webp',
+}
+
+const kurta3ColourSlugs: KurtaConfig[] = [
+  { slug: 'ivory', hex: 'F0EBE0', label: 'Ivory', folder: 'Wonmen/A-line Kurta/MORNING IVORY', files: KURTA_COMMON_FILES }, // Pantone 11-0608 TCX — print: minimal-floral
+  { slug: 'sand',  hex: 'C8A882', label: 'Sand',  folder: 'Wonmen/A-line Kurta/DESERT SAND',    files: KURTA_COMMON_FILES }, // Pantone 14-1116 TCX — print: minimal-floral
+  { slug: 'sage',  hex: '8C9E84', label: 'Sage',  folder: 'Wonmen/A-line Kurta/WILD SAGE',      files: KURTA_COMMON_FILES }, // Pantone 16-5803 TCX — print: plain
+  { slug: 'rose',  hex: 'D4A8A0', label: 'Rose',  folder: 'Wonmen/A-line Kurta/DUSK ROSE',      files: KURTA_COMMON_FILES }, // Pantone 14-1911 TCX — print: plain
+  { slug: 'clay',  hex: 'C47A4E', label: 'Clay',  folder: 'Wonmen/A-line Kurta/BAKED CLAY',     files: KURTA_COMMON_FILES }, // Pantone 18-1441 TCX — print: plain
 ]
+
+function buildKurtaImages(c: KurtaConfig): ProductImage[] {
+  return [
+    localImg(`kurta-${c.slug}-sf`, c.folder, c.files.front,   'studio-front', 'A-line Kurta', c.slug), // hero
+    localImg(`kurta-${c.slug}-sb`, c.folder, c.files.back,    'studio-back',  'A-line Kurta', c.slug), // stack
+    localImg(`kurta-${c.slug}-wk`, c.folder, c.files.walk,    'walking',      'A-line Kurta', c.slug), // stack
+    localImg(`kurta-${c.slug}-st`, c.folder, c.files.sitting, 'editorial',    'A-line Kurta', c.slug), // stack
+    localImg(`kurta-${c.slug}-fc`, c.folder, c.files.fabric,  'detail',       'A-line Kurta', c.slug), // stack
+  ]
+}
+
+function buildKurtaStyleImage(c: KurtaConfig): ProductImage {
+  // Used only by the "Style it with" section after Add to Bag — never in the gallery stack.
+  return localImg(`kurta-${c.slug}-sw`, c.folder, c.files.stylewith, 'editorial', 'A-line Kurta', c.slug)
+}
 
 const aLineKurta: Product = {
   id: 'prod-003',
@@ -699,7 +816,8 @@ const aLineKurta: Product = {
     label:     c.label,
     hex:       `#${c.hex}`,
     available: true,
-    images:    buildPlaceholderImages('k3', 'A-line Kurta', c.slug, c.hex),
+    images:    buildKurtaImages(c),
+    styleImage: buildKurtaStyleImage(c),
   })),
 
   sizes: [
@@ -1368,40 +1486,88 @@ const womenSleepwear: Product = {
   },
 }
 
-// ─── Product 6: Kids Sleepwear Set ────────────────────────────────────────────
-const kidsColourSlugs: Array<{ slug: string; hex: string; label: string }> = [
-  { slug: 'soft-cloud-white', hex: 'F5F2EC', label: 'Soft Cloud White' }, // Pantone 11-0601 TCX
-  { slug: 'pale-oat',         hex: 'EDE5D0', label: 'Pale Oat'         }, // Pantone 12-0104 TCX
-  { slug: 'baby-blue-grey',   hex: 'A8B8C8', label: 'Baby Blue Grey'   }, // Pantone 14-4112 TCX
-  { slug: 'dusty-sage',       hex: '9EAA8C', label: 'Dusty Sage'       }, // Pantone 16-0213 TCX
-  { slug: 'faded-blush',      hex: 'E8C4B8', label: 'Faded Blush'      }, // Pantone 13-2010 TCX
+// ─── Kids Sleepwear image config — shared by Rest Set + Summer Set ───────────
+// All views live in one folder per colour: front_studio_view (hero),
+// back/side/sitting/walking (stack), fabric_close_up (detail, last in stack).
+interface KidsSleepFiles {
+  front:   string
+  back:    string
+  side:    string
+  sitting: string
+  walk:    string
+  fabric:  string
+}
+
+interface KidsSleepConfig {
+  slug:     string
+  hex:      string
+  label:    string
+  pantone:  string
+  isUnique: boolean
+  finish:   'plain' | 'tonal-print'
+  folder:   string
+  files:    KidsSleepFiles
+}
+
+function buildKidsSleepImages(productSlug: string, productName: string, c: KidsSleepConfig): ProductImage[] {
+  return [
+    localImg(`${productSlug}-${c.slug}-sf`, c.folder, c.files.front,   'studio-front', productName, c.slug), // hero
+    localImg(`${productSlug}-${c.slug}-sb`, c.folder, c.files.back,    'studio-back',  productName, c.slug), // stack
+    localImg(`${productSlug}-${c.slug}-ss`, c.folder, c.files.side,    'studio-side',  productName, c.slug), // stack
+    localImg(`${productSlug}-${c.slug}-st`, c.folder, c.files.sitting, 'editorial',    productName, c.slug), // stack
+    localImg(`${productSlug}-${c.slug}-wk`, c.folder, c.files.walk,    'walking',      productName, c.slug), // stack
+    localImg(`${productSlug}-${c.slug}-fc`, c.folder, c.files.fabric,  'detail',       productName, c.slug), // stack
+  ]
+}
+
+// ─── Product 6: The Rest Sleep Set ────────────────────────────────────────────
+const KIDS_REST_COMMON_FILES: KidsSleepFiles = {
+  front:   'front_studio_view.webp',
+  back:    'back_studio_view.webp',
+  side:    'side_studio_view.webp',
+  sitting: 'sittingorLearning_studio_view.webp',
+  walk:    'walking_view.webp',
+  fabric:  'fabric_close_up.webp',
+}
+
+// Editorial names below are [PROPOSED] — confirmed by spec but not yet
+// formally signed off by the brand. Internal spec names (disk folder names),
+// for reference: Soft Cloud White, Pale Oat, Baby Blue Grey, Dusty Sage, Faded Blush.
+const kidsRestColourSlugs: KidsSleepConfig[] = [
+  { slug: 'cloud',       hex: 'F5F2EC', label: 'Cloud',       pantone: '11-0601 TCX', isUnique: false, finish: 'plain', folder: 'Kids/unisex sleeper wear/Rest Set/SOFT CLOUD WHITE', files: KIDS_REST_COMMON_FILES },
+  { slug: 'oat',         hex: 'EDE5D0', label: 'Oat',         pantone: '12-0104 TCX', isUnique: true,  finish: 'plain', folder: 'Kids/unisex sleeper wear/Rest Set/PALE OAT',         files: KIDS_REST_COMMON_FILES },
+  { slug: 'mist-blue',   hex: 'A8B8C8', label: 'Mist Blue',   pantone: '14-4112 TCX', isUnique: false, finish: 'plain', folder: 'Kids/unisex sleeper wear/Rest Set/BABYBLUEGREY',     files: KIDS_REST_COMMON_FILES },
+  { slug: 'little-sage', hex: '9EAA8C', label: 'Little Sage', pantone: '16-0213 TCX', isUnique: false, finish: 'plain', folder: 'Kids/unisex sleeper wear/Rest Set/DUSTY SAGE',       files: KIDS_REST_COMMON_FILES },
+  { slug: 'petal',       hex: 'E8C4B8', label: 'Petal',       pantone: '13-2010 TCX', isUnique: false, finish: 'plain', folder: 'Kids/unisex sleeper wear/Rest Set/FADED BLUSH',      files: KIDS_REST_COMMON_FILES },
 ]
 
-const kidsSleepwear: Product = {
+const kidsRestSleepSet: Product = {
   id: 'prod-006',
-  name: 'Kids Sleepwear Set',
+  name: 'The Rest Sleep Set',
   category: 'Kids Sleepwear',
-  handle: 'kids-sleepwear',
+  handle: 'kids-rest-sleep-set',
   collectionName: 'Youth Studio',
   collectionSlug: 'youth-studio',
   badge: null,
-  compositionQuote: 'Super combed cotton — enzyme washed, OEKO-TEX certified. Soft enough for sleep. Built for everything that comes before it.',
+  compositionQuote: '220 GSM Organic Cotton-Bamboo — enzyme washed, OEKO-TEX certified. Full-sleeve top and full-length trouser for cooler weather and AC rooms.',
   price: 1499,
   currency: '₹',
   trustLine: 'Inclusive of all taxes · Free delivery above ₹999',
   sizeUnit: null,
   modelNote: 'Model is 6 years old wearing size 6Y.',
 
-  colours: kidsColourSlugs.map(c => ({
+  colours: kidsRestColourSlugs.map(c => ({
     slug:      c.slug,
     label:     c.label,
     hex:       `#${c.hex}`,
     available: true,
-    images:    buildPlaceholderImages('p6', 'Kids Sleepwear Set', c.slug, c.hex),
+    pantone:   c.pantone,
+    isUnique:  c.isUnique,
+    finish:    c.finish,
+    images:    buildKidsSleepImages('rest', 'The Rest Sleep Set', c),
   })),
 
   sizes: [
-    { label: '2Y',  available: true },
     { label: '4Y',  available: true },
     { label: '6Y',  available: true },
     { label: '8Y',  available: true },
@@ -1410,31 +1576,31 @@ const kidsSleepwear: Product = {
   ],
 
   featureBullets: [
-    'Super combed cotton',
-    'Unisex fit — 2Y to 12Y',
+    '220 GSM Organic Cotton-Bamboo',
+    'Full-sleeve top + full-length trouser',
+    'Unisex fit — 4Y to 12Y',
     'Enzyme washed for softness',
-    'No synthetic blends',
     'OEKO-TEX Standard 100 certified',
   ],
 
   specs: [
-    { group: 'Material',     label: 'Fabric',        value: 'Super combed cotton'      },
-    { group: 'Material',     label: 'Blends',        value: 'None'                     },
+    { group: 'Material',     label: 'Fabric',        value: 'Organic Cotton-Bamboo'    },
+    { group: 'Material',     label: 'Weight',        value: '220 GSM'                  },
     { group: 'Material',     label: 'Certification', value: 'OEKO-TEX Standard 100'   },
-    { group: 'Construction', label: 'Set',           value: 'Top + trouser/shorts'     },
+    { group: 'Construction', label: 'Set',           value: 'Full-sleeve top + trouser'},
     { group: 'Construction', label: 'Seams',         value: 'Flat construction'        },
     { group: 'Construction', label: 'Label',         value: 'Heat printed'             },
-    { group: 'Construction', label: 'Sizes',         value: '2Y – 12Y unisex'          },
+    { group: 'Construction', label: 'Sizes',         value: '4Y – 12Y unisex'          },
     { group: 'Production',   label: 'Finish',        value: 'Enzyme washed'            },
     { group: 'Production',   label: 'Origin',        value: 'Made in India'            },
   ],
 
   fabricPillars: [
     {
-      value: 'Super',
-      unit: '',
-      subLabel: 'Combed cotton',
-      description: 'Highest yarn quality. Fine, consistent fibre. Soft against sensitive skin. No synthetic blends.',
+      value: '220',
+      unit: 'GSM',
+      subLabel: 'Cotton-Bamboo weight',
+      description: 'Soft and warm without bulk. Natural temperature regulation for cooler nights and AC rooms.',
     },
     {
       value: 'OEKO',
@@ -1452,8 +1618,8 @@ const kidsSleepwear: Product = {
 
   fitBars: [
     { label: 'Body ease', value: 60, descriptor: 'Relaxed'  },
-    { label: 'Length',    value: 60, descriptor: 'Extended' },
-    { label: 'Sleeve',    value: 50, descriptor: 'Regular'  },
+    { label: 'Length',    value: 70, descriptor: 'Extended' },
+    { label: 'Sleeve',    value: 70, descriptor: 'Full'     },
     { label: 'Seat ease', value: 70, descriptor: 'Roomy'    },
   ],
 
@@ -1487,7 +1653,6 @@ const kidsSleepwear: Product = {
     <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Height</th>
   </tr></thead>
   <tbody>
-    <tr><td style="padding:6px 4px 6px 0">2Y</td><td style="padding:6px 4px">20–21</td><td style="padding:6px 4px">15</td><td style="padding:6px 4px">85–95cm</td></tr>
     <tr><td style="padding:6px 4px 6px 0">4Y</td><td style="padding:6px 4px">21–22</td><td style="padding:6px 4px">16</td><td style="padding:6px 4px">95–105cm</td></tr>
     <tr><td style="padding:6px 4px 6px 0">6Y</td><td style="padding:6px 4px">22–24</td><td style="padding:6px 4px">17</td><td style="padding:6px 4px">105–115cm</td></tr>
     <tr><td style="padding:6px 4px 6px 0">8Y</td><td style="padding:6px 4px">24–26</td><td style="padding:6px 4px">18</td><td style="padding:6px 4px">115–125cm</td></tr>
@@ -1501,64 +1666,64 @@ const kidsSleepwear: Product = {
   collectionItems: [
     {
       id: 'col-kids-001',
-      slug: 'kids-sleepwear/soft-cloud-white',
-      name: 'Kids Sleepwear Set',
-      colourLabel: 'Soft Cloud White',
+      slug: 'kids-rest-sleep-set/cloud',
+      name: 'The Rest Sleep Set',
+      colourLabel: 'Cloud',
       price: 1499,
       currency: '₹',
       images: [
-        { id: 'col-p6-001-sf', src: phImg('F5F2EC', 2000, 2500, 'Kids Sleepwear Set studio-front'), alt: 'Kids Sleepwear Set — studio-front — soft-cloud-white', type: 'studio-front', colourSlug: 'soft-cloud-white' },
-        { id: 'col-p6-001-wk', src: phImg('F5F2EC', 1200, 1500, 'Kids Sleepwear Set walking'),      alt: 'Kids Sleepwear Set — walking — soft-cloud-white',      type: 'walking',      colourSlug: 'soft-cloud-white' },
+        { id: 'col-p6-001-sf', src: phImg('F5F2EC', 2000, 2500, 'The Rest Sleep Set studio-front'), alt: 'The Rest Sleep Set — studio-front — cloud', type: 'studio-front', colourSlug: 'cloud' },
+        { id: 'col-p6-001-wk', src: phImg('F5F2EC', 1200, 1500, 'The Rest Sleep Set walking'),      alt: 'The Rest Sleep Set — walking — cloud',      type: 'walking',      colourSlug: 'cloud' },
       ],
     },
     {
       id: 'col-kids-002',
-      slug: 'kids-sleepwear/dusty-sage',
-      name: 'Kids Sleepwear Set',
-      colourLabel: 'Dusty Sage',
+      slug: 'kids-rest-sleep-set/little-sage',
+      name: 'The Rest Sleep Set',
+      colourLabel: 'Little Sage',
       price: 1499,
       currency: '₹',
       images: [
-        { id: 'col-p6-002-sf', src: phImg('9EAA8C', 2000, 2500, 'Kids Sleepwear Set studio-front'), alt: 'Kids Sleepwear Set — studio-front — dusty-sage', type: 'studio-front', colourSlug: 'dusty-sage' },
-        { id: 'col-p6-002-wk', src: phImg('9EAA8C', 1200, 1500, 'Kids Sleepwear Set walking'),      alt: 'Kids Sleepwear Set — walking — dusty-sage',      type: 'walking',      colourSlug: 'dusty-sage' },
+        { id: 'col-p6-002-sf', src: phImg('9EAA8C', 2000, 2500, 'The Rest Sleep Set studio-front'), alt: 'The Rest Sleep Set — studio-front — little-sage', type: 'studio-front', colourSlug: 'little-sage' },
+        { id: 'col-p6-002-wk', src: phImg('9EAA8C', 1200, 1500, 'The Rest Sleep Set walking'),      alt: 'The Rest Sleep Set — walking — little-sage',      type: 'walking',      colourSlug: 'little-sage' },
       ],
     },
   ],
 
   editorial: {
-    quote: 'Super combed cotton — enzyme washed, OEKO-TEX certified. Soft enough for sleep. Built for everything that comes before it.',
+    quote: '220 GSM Organic Cotton-Bamboo — enzyme washed, OEKO-TEX certified. For cooler weather and considered rest.',
     specs: [
-      { label: 'Fabric',        value: 'Super combed cotton'    },
+      { label: 'Fabric',        value: 'Organic Cotton-Bamboo'  },
+      { label: 'Weight',        value: '220 GSM'                },
       { label: 'Certification', value: 'OEKO-TEX Standard 100'  },
-      { label: 'Seams',         value: 'Flat construction'       },
-      { label: 'Finish',        value: 'Enzyme washed'           },
-      { label: 'Origin',        value: 'Made in India'           },
+      { label: 'Seams',         value: 'Flat construction'      },
+      { label: 'Finish',        value: 'Enzyme washed'          },
     ],
     byImage: {
       'studio-front': {
-        headline: "Soft enough\nfor sleep.",
-        body: 'Super combed cotton — the same fibre standard used in NIVENXA adult products. No synthetic blends. Safe against skin. Certified.',
+        headline: "Full-sleeve\ncomfort.",
+        body: '220 GSM Organic Cotton-Bamboo. Full-sleeve top and full-length trouser. Designed for cooler weather and AC rooms — substantial enough to feel cosy, soft enough for sleep.',
         specs: [
-          { label: 'Fabric',        value: 'Super combed cotton'   },
-          { label: 'Certification', value: 'OEKO-TEX Standard 100' },
-          { label: 'Blends',        value: 'None'                  },
+          { label: 'Fabric',        value: 'Organic Cotton-Bamboo' },
+          { label: 'Weight',        value: '220 GSM'               },
+          { label: 'Set',           value: 'Full sleeve + trouser' },
         ],
       },
       'walking': {
         headline: "Built for\neverything before.",
         body: 'Soft enough for sleep. Durable enough for everything that comes before it. Enzyme washed to feel worn-in from first wear.',
         specs: [
-          { label: 'Sizes',  value: '2Y – 12Y unisex'  },
-          { label: 'Fit',    value: 'Relaxed comfort'   },
-          { label: 'Finish', value: 'Enzyme washed'     },
+          { label: 'Sizes',  value: '4Y – 12Y unisex' },
+          { label: 'Fit',    value: 'Relaxed comfort'  },
+          { label: 'Finish', value: 'Enzyme washed'    },
         ],
       },
       'studio-back': {
         headline: "No irritation\nat the back.",
         body: 'Flat seam construction throughout. No raised seams against the skin. The label is heat-printed — not sewn — so there is nothing to irritate during sleep.',
         specs: [
-          { label: 'Seams',  value: 'Flat construction'  },
-          { label: 'Label',  value: 'Heat printed'       },
+          { label: 'Seams', value: 'Flat construction'   },
+          { label: 'Label', value: 'Heat printed'        },
           { label: 'Finish', value: 'Skin-safe throughout'},
         ],
       },
@@ -1566,9 +1731,9 @@ const kidsSleepwear: Product = {
         headline: "The right\nproportions.",
         body: 'Sized for real children — not scaled-down adults. The proportions account for the way children move and sit. Longer in the body. Roomier in the seat.',
         specs: [
-          { label: 'Sizing',       value: 'Indian child proportions' },
-          { label: 'Body length',  value: 'Extended for coverage'    },
-          { label: 'Fit',          value: 'Relaxed through seat'     },
+          { label: 'Sizing',      value: 'Indian child proportions' },
+          { label: 'Body length', value: 'Extended for coverage'    },
+          { label: 'Fit',         value: 'Relaxed through seat'     },
         ],
       },
       'detail': {
@@ -1576,8 +1741,8 @@ const kidsSleepwear: Product = {
         body: 'Every component tested — fabric, thread, label, button. Certified free of harmful substances. Safe for children from newborn.',
         specs: [
           { label: 'Certification', value: 'OEKO-TEX Standard 100' },
-          { label: 'Tested',        value: 'All components'         },
-          { label: 'Origin',        value: 'Made in India'          },
+          { label: 'Tested',        value: 'All components'        },
+          { label: 'Origin',        value: 'Made in India'         },
         ],
       },
     },
@@ -1731,26 +1896,58 @@ const kurtaStraightPant: Product = {
   ],
 }
 
-// ─── Kids Summer Sleepwear colour slugs ──────────────────────────────────────
-const kidsSummerColourSlugs: Array<{ slug: string; hex: string; label: string }> = [
-  { slug: 'soft-cloud-white', hex: 'F5F2EC', label: 'Soft Cloud White' }, // Pantone 11-0601 TCX — print: plain
-  { slug: 'dusty-sage',       hex: '9EAA8C', label: 'Dusty Sage'       }, // Pantone 16-0213 TCX — print: plain
-  { slug: 'faded-blush',      hex: 'E8C4B8', label: 'Faded Blush'      }, // Pantone 13-2010 TCX — print: minimal-tonal
-  { slug: 'pale-mint',        hex: 'C8E0C8', label: 'Pale Mint'        }, // Pantone 13-0221 TCX — print: minimal-tonal
-  { slug: 'warm-butter',      hex: 'F5E6C8', label: 'Warm Butter'      }, // Pantone 12-0712 TCX — print: plain
+// ─── Kids Summer Sleep Set colour slugs ──────────────────────────────────────
+const KIDS_SUMMER_COMMON_FILES: KidsSleepFiles = {
+  front:   'front_studio_view.webp',
+  back:    'back_studio_view.webp',
+  side:    'side_studio_view.webp',
+  sitting: 'sittingorLearning_studio_view.webp',
+  walk:    'walking_view.webp',
+  fabric:  'fabric_close_up.webp',
+}
+
+// Editorial names below are [PROPOSED] — confirmed by spec but not yet
+// formally signed off by the brand. Internal spec names (disk folder names),
+// for reference: Soft Cloud White, Dusty Sage, Warm Butter, Faded Blush, Pale Mint.
+const kidsSummerColourSlugs: KidsSleepConfig[] = [
+  {
+    slug: 'cloud', hex: 'F5F2EC', label: 'Cloud', pantone: '11-0601 TCX', isUnique: false, finish: 'plain',
+    folder: 'Kids/unisex sleeper wear/Summer Set/SOFT CLOUD WHITE',
+    files: {
+      ...KIDS_SUMMER_COMMON_FILES,
+      // This colour's side-profile shot was delivered under its own filename.
+      side: 'Summer Cloud - Side Profile.webp',
+    },
+  },
+  { slug: 'little-sage', hex: '9EAA8C', label: 'Little Sage', pantone: '16-0213 TCX', isUnique: false, finish: 'plain',       folder: 'Kids/unisex sleeper wear/Summer Set/DUSTY SAGE',   files: KIDS_SUMMER_COMMON_FILES },
+  { slug: 'butter',      hex: 'F5E6C8', label: 'Butter',      pantone: '12-0712 TCX', isUnique: true,  finish: 'plain',       folder: 'Kids/unisex sleeper wear/Summer Set/WARM BUTTER',  files: KIDS_SUMMER_COMMON_FILES },
+  { slug: 'petal',       hex: 'E8C4B8', label: 'Petal',       pantone: '13-2010 TCX', isUnique: false, finish: 'tonal-print', folder: 'Kids/unisex sleeper wear/Summer Set/FADED BLUSH',  files: KIDS_SUMMER_COMMON_FILES },
+  {
+    slug: 'mint', hex: 'C8E0C8', label: 'Mint', pantone: '13-0221 TCX', isUnique: false, finish: 'tonal-print',
+    folder: 'Kids/unisex sleeper wear/Summer Set/Pale Mint',
+    files: {
+      // This colour's photos were delivered as .png except the hero shot.
+      front:   'front_studio_view.webp',
+      back:    'back_studio_view.png',
+      side:    'side_studio_view.png',
+      sitting: 'sittingorLearning_studio_view.png',
+      walk:    'walking_view.png',
+      fabric:  'fabric_close_up.png',
+    },
+  },
 ]
 
-// ─── Product 8: Kids Summer Sleepwear ────────────────────────────────────────
-const kidsSummerSleepwear: Product = {
+// ─── Product 8: The Summer Sleep Set ─────────────────────────────────────────
+const kidsSummerSleepSet: Product = {
   id: 'prod-008',
-  name: 'Kids Summer Sleepwear',
+  name: 'The Summer Sleep Set',
   category: 'Kids Sleepwear',
-  handle: 'kids-summer-sleepwear',
+  handle: 'kids-summer-sleep-set',
   collectionName: 'Youth Studio',
   collectionSlug: 'youth-studio',
   badge: null,
-  compositionQuote: 'Super combed cotton — enzyme washed, OEKO-TEX certified. Light enough for Indian summers. Soft enough for every night.',
-  price: 1299,
+  compositionQuote: '180–200 GSM 100% GOTS Organic Cotton — enzyme washed, OEKO-TEX certified. Half-sleeve top and relaxed mid-length shorts for warm weather.',
+  price: 1499,
   currency: '₹',
   trustLine: 'Inclusive of all taxes · Free delivery above ₹999',
   sizeUnit: null,
@@ -1761,11 +1958,13 @@ const kidsSummerSleepwear: Product = {
     label:     c.label,
     hex:       `#${c.hex}`,
     available: true,
-    images:    buildPlaceholderImages('p8', 'Kids Summer Sleepwear', c.slug, c.hex),
+    pantone:   c.pantone,
+    isUnique:  c.isUnique,
+    finish:    c.finish,
+    images:    buildKidsSleepImages('summer', 'The Summer Sleep Set', c),
   })),
 
   sizes: [
-    { label: '2Y',  available: true },
     { label: '4Y',  available: true },
     { label: '6Y',  available: true },
     { label: '8Y',  available: true },
@@ -1774,37 +1973,37 @@ const kidsSummerSleepwear: Product = {
   ],
 
   featureBullets: [
-    'Super combed cotton — summer weight',
-    'Unisex fit — 2Y to 12Y',
+    '180–200 GSM 100% GOTS Organic Cotton',
+    'Half-sleeve top + relaxed mid-length shorts',
+    'Unisex fit — 4Y to 12Y',
     'Enzyme washed for softness',
-    'No synthetic blends',
     'OEKO-TEX Standard 100 certified',
   ],
 
   specs: [
-    { group: 'Material',     label: 'Fabric',        value: 'Super combed cotton'      },
-    { group: 'Material',     label: 'Blends',        value: 'None'                     },
+    { group: 'Material',     label: 'Fabric',        value: '100% GOTS Organic Cotton' },
+    { group: 'Material',     label: 'Weight',        value: '180–200 GSM'              },
     { group: 'Material',     label: 'Certification', value: 'OEKO-TEX Standard 100'   },
-    { group: 'Construction', label: 'Set',           value: 'Short sleeve top + pant'  },
+    { group: 'Construction', label: 'Set',           value: 'Half-sleeve top + shorts' },
     { group: 'Construction', label: 'Seams',         value: 'Flat construction'        },
     { group: 'Construction', label: 'Label',         value: 'Heat printed'             },
-    { group: 'Construction', label: 'Sizes',         value: '2Y – 12Y unisex'          },
+    { group: 'Construction', label: 'Sizes',         value: '4Y – 12Y unisex'          },
     { group: 'Production',   label: 'Finish',        value: 'Enzyme washed'            },
     { group: 'Production',   label: 'Origin',        value: 'Made in India'            },
   ],
 
   fabricPillars: [
     {
-      value: 'Super',
-      unit: '',
-      subLabel: 'Combed cotton',
-      description: 'Highest yarn quality. Fine, consistent fibre. Soft against sensitive skin. No synthetic blends.',
+      value: '180',
+      unit: 'GSM',
+      subLabel: 'Summer-weight cotton',
+      description: 'Lightweight and breathable. Moves easily. Designed for Indian warm weather and hot nights.',
     },
     {
-      value: 'OEKO',
-      unit: '-TEX',
-      subLabel: 'Certified safe',
-      description: 'All components tested and certified free of harmful substances. Safe from newborn.',
+      value: 'GOTS',
+      unit: '',
+      subLabel: 'Organic certified',
+      description: 'Global Organic Textile Standard. 100% organic cotton, no synthetic blends, certified throughout the supply chain.',
     },
     {
       value: 'Flat',
@@ -1816,7 +2015,7 @@ const kidsSummerSleepwear: Product = {
 
   fitBars: [
     { label: 'Body ease', value: 60, descriptor: 'Relaxed' },
-    { label: 'Length',    value: 50, descriptor: 'Summer'  },
+    { label: 'Length',    value: 40, descriptor: 'Shorts'  },
     { label: 'Sleeve',    value: 30, descriptor: 'Short'   },
     { label: 'Seat ease', value: 65, descriptor: 'Roomy'   },
   ],
@@ -1851,7 +2050,6 @@ const kidsSummerSleepwear: Product = {
     <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Height</th>
   </tr></thead>
   <tbody>
-    <tr><td style="padding:6px 4px 6px 0">2Y</td><td style="padding:6px 4px">20–21</td><td style="padding:6px 4px">13</td><td style="padding:6px 4px">85–95cm</td></tr>
     <tr><td style="padding:6px 4px 6px 0">4Y</td><td style="padding:6px 4px">21–22</td><td style="padding:6px 4px">14</td><td style="padding:6px 4px">95–105cm</td></tr>
     <tr><td style="padding:6px 4px 6px 0">6Y</td><td style="padding:6px 4px">22–24</td><td style="padding:6px 4px">15</td><td style="padding:6px 4px">105–115cm</td></tr>
     <tr><td style="padding:6px 4px 6px 0">8Y</td><td style="padding:6px 4px">24–26</td><td style="padding:6px 4px">16</td><td style="padding:6px 4px">115–125cm</td></tr>
@@ -1865,26 +2063,26 @@ const kidsSummerSleepwear: Product = {
   collectionItems: [
     {
       id: 'col-ksw-001',
-      slug: 'kids-summer-sleepwear/soft-cloud-white',
-      name: 'Kids Summer Sleepwear',
-      colourLabel: 'Soft Cloud White',
-      price: 1299,
+      slug: 'kids-summer-sleep-set/cloud',
+      name: 'The Summer Sleep Set',
+      colourLabel: 'Cloud',
+      price: 1499,
       currency: '₹',
       images: [
-        { id: 'col-p8-001-sf', src: phImg('F5F2EC', 2000, 2500, 'Kids Summer Sleepwear studio-front'), alt: 'Kids Summer Sleepwear — studio-front — soft-cloud-white', type: 'studio-front', colourSlug: 'soft-cloud-white' },
-        { id: 'col-p8-001-wk', src: phImg('F5F2EC', 1200, 1500, 'Kids Summer Sleepwear walking'),      alt: 'Kids Summer Sleepwear — walking — soft-cloud-white',      type: 'walking',      colourSlug: 'soft-cloud-white' },
+        { id: 'col-p8-001-sf', src: phImg('F5F2EC', 2000, 2500, 'The Summer Sleep Set studio-front'), alt: 'The Summer Sleep Set — studio-front — cloud', type: 'studio-front', colourSlug: 'cloud' },
+        { id: 'col-p8-001-wk', src: phImg('F5F2EC', 1200, 1500, 'The Summer Sleep Set walking'),      alt: 'The Summer Sleep Set — walking — cloud',      type: 'walking',      colourSlug: 'cloud' },
       ],
     },
     {
       id: 'col-ksw-002',
-      slug: 'kids-summer-sleepwear/faded-blush',
-      name: 'Kids Summer Sleepwear',
-      colourLabel: 'Faded Blush',
-      price: 1299,
+      slug: 'kids-summer-sleep-set/petal',
+      name: 'The Summer Sleep Set',
+      colourLabel: 'Petal',
+      price: 1499,
       currency: '₹',
       images: [
-        { id: 'col-p8-002-sf', src: phImg('E8C4B8', 2000, 2500, 'Kids Summer Sleepwear studio-front'), alt: 'Kids Summer Sleepwear — studio-front — faded-blush', type: 'studio-front', colourSlug: 'faded-blush' },
-        { id: 'col-p8-002-wk', src: phImg('E8C4B8', 1200, 1500, 'Kids Summer Sleepwear walking'),      alt: 'Kids Summer Sleepwear — walking — faded-blush',      type: 'walking',      colourSlug: 'faded-blush' },
+        { id: 'col-p8-002-sf', src: phImg('E8C4B8', 2000, 2500, 'The Summer Sleep Set studio-front'), alt: 'The Summer Sleep Set — studio-front — petal', type: 'studio-front', colourSlug: 'petal' },
+        { id: 'col-p8-002-wk', src: phImg('E8C4B8', 1200, 1500, 'The Summer Sleep Set walking'),      alt: 'The Summer Sleep Set — walking — petal',      type: 'walking',      colourSlug: 'petal' },
       ],
     },
   ],
@@ -1897,9 +2095,9 @@ export const products: Product[] = [
   aLineKurta,
   womenCoordSet,
   womenSleepwear,
-  kidsSleepwear,
+  kidsRestSleepSet,
   kurtaStraightPant,
-  kidsSummerSleepwear,
+  kidsSummerSleepSet,
 ]
 
 // ─── Helper: look up by URL handle ────────────────────────────────────────────
@@ -1914,4 +2112,11 @@ export function getProductByHandle(handle: string): Product {
 //   'mens' | 'womens' | 'unisex' | 'youth-studio'
 export function getProductsByCollection(collection: string): Product[] {
   return products.filter(p => p.collectionSlug === collection)
+}
+
+// ─── Helper: filter by product category ───────────────────────────────────────
+// category matches product.category — used by sub-category pages
+// e.g. getProductsByCategory('Kids Sleepwear')
+export function getProductsByCategory(category: string): Product[] {
+  return products.filter(p => p.category === category)
 }

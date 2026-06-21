@@ -147,7 +147,7 @@ export default function Navbar() {
         <AnimatePresence>
           {activeMenu && activeItem?.submenu && (
             <motion.div
-              className={styles.submenuPanel}
+              className={`${styles.submenuPanel} ${activeMenu === 'EDITS' ? styles.submenuPanelEdits : ''}`}
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}

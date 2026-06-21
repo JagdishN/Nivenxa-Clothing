@@ -166,6 +166,22 @@
   margin: 16px 0 0;
 }
 
+/* ── Style it with photo ── */
+.styleWithPhoto {
+  padding: 16px 0;
+}
+
+.styleWithPhoto .sectionLabel {
+  margin-bottom: 10px;
+}
+
+.styleWithImg {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
 /* ── Size guide modal ── */
 .modalOverlay {
   position: fixed;

@@ -196,20 +196,20 @@
 
 .submenuLabel {
   font-family: var(--font-serif);
-  font-size: 1rem;
+  font-size: 1.75rem;   // 38px — SHOP primary hierarchy level (differentiated from secondary at 34px)
   font-weight: 400;
   color: var(--color-ink);
   letter-spacing: 0.025em;
-  line-height: 1.5;
+  line-height: 1.05;
   transition: color 0.32s ease, transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .submenuDescriptor {
   font-family: var(--font-sans);
-  font-size: 0.575rem;
+  font-size: 0.8125rem;  // 13px — was 0.575rem (~9px)
   font-weight: 400;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.18em; // was 0.14em
   color: var(--color-olive);
   opacity: 0;
   transform: translateY(5px);
@@ -219,7 +219,7 @@
 }
 
 .submenuDescriptorVisible {
-  opacity: 0.42;
+  opacity: 0.5;           // was 0.42 — slightly reduced to stay quiet relative to 48px labels
   transform: translateY(0);
 }
 
@@ -361,6 +361,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+  padding-left: 1.125rem; // 18px visual nesting — indents secondary items under active primary
 }
 
 .submenuChildLabel {
@@ -395,11 +396,24 @@
 
 .submenuChildLinkLabel {
   font-family: var(--font-serif);
-  font-size: clamp(1.25rem, 1.7vw, 1.625rem);
+  font-size: 1.5rem;    // 34px — SHOP secondary hierarchy level (smaller than 38px primary)
   color: var(--color-ink);
   letter-spacing: 0.02em;
-  line-height: 1.1;
+  line-height: 1.05;
   transition: color 0.32s ease, transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+// ─── EDITS menu — quieter editorial type scale ────────────────────────────────
+// Applied via .submenuPanelEdits on the panel when activeMenu === 'EDITS'.
+// EDITS feels quieter/more editorial than SHOP — primary 34px, secondary 30px.
+.submenuPanelEdits {
+  .submenuLabel {
+    font-size: 1.75rem;   // 34px — EDITS primary (4px quieter than SHOP's 38px)
+  }
+
+  .submenuChildLinkLabel {
+    font-size: 1.5rem;   // 30px — EDITS secondary
+  }
 }
 
 // ─── Arrow indicator for parent submenu items ─────────────────────────────────

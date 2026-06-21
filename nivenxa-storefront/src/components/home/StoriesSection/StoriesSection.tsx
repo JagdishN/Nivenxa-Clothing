@@ -1,4 +1,5 @@
 import { Link } from '@/i18n/routing'
+import Image from 'next/image'
 import styles from './StoriesSection.module.css'
 
 // ── Featured story ────────────────────────────────────────────────────────────
@@ -69,10 +70,12 @@ export default function StoriesSection() {
       <Link href={'/stories/fabric-journal' as any} className={styles.featured}>
 
         <div className={styles.featuredImage}>
-          <img
+          <Image
             src={FEATURED_IMAGE}
             alt="Fabric Journal — fabric close-up"
+            fill
             className={styles.featuredImg}
+            sizes="(max-width: 768px) 100vw, 50vw"
           />
         </div>
 

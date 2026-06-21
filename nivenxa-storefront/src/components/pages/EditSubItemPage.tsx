@@ -20,15 +20,15 @@ const DESCRIPTORS: Record<string, string> = {
   'womens-sleepwear':
     'Ultra-soft fabrications for considered rest.',
   'kids-sleepwear':
-    'Premium comfort for young ones. OEKO-TEX certified. Soft from first wear.',
+    'Organic cotton sleepwear for every season. OEKO-TEX certified. Soft from first wear.',
   'unisex-lounge-sets':
     'Sets designed to be worn together or separately — for everyone.',
   'a-line-kurta':
     'The Indo-Western silhouette for everyday India.',
   'co-ord-set':
     'Relaxed sets that work as a complete look or as separates.',
-  'indo-western-silhouettes':
-    'Contemporary Indian silhouettes designed for daily life.',
+  'sleepwear':
+    'Ultra-soft fabrications for considered rest.',
 }
 
 function getGridClass(count: number): string {

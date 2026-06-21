@@ -1,5 +1,13 @@
+import { IconWash, IconSunOff, IconFlameOff, IconBan } from '@tabler/icons-react'
 import type { ProductSpec, FitBar, CareInstruction } from '@/types/product'
 import styles from './ProductSpecs.module.css'
+
+const CARE_ICONS: Record<string, React.ReactNode> = {
+  'wash':      <IconWash      size={20} aria-hidden="true" />,
+  'sun-off':   <IconSunOff   size={20} aria-hidden="true" />,
+  'flame-off': <IconFlameOff size={20} aria-hidden="true" />,
+  'ban':       <IconBan      size={20} aria-hidden="true" />,
+}
 
 interface Props {
   specs: ProductSpec[]
@@ -107,7 +115,7 @@ export default function ProductSpecs({ specs, fitBars, modelNote, care }: Props)
             {care.map(item => (
               <div key={item.label} className={styles.careItem}>
                 <span className={styles.careIconCircle}>
-                  <i className={`ti ti-${item.icon}`} aria-hidden="true" />
+                  {CARE_ICONS[item.icon]}
                 </span>
                 <span className={styles.careLabel}>{item.label}</span>
               </div>

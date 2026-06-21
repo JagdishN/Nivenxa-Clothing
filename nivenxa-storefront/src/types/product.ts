@@ -32,6 +32,10 @@ export interface ProductColour {
   hex: string
   images: ProductImage[]
   available: boolean
+  styleImage?: ProductImage   // "Style it with" editorial shot — shown after Add to Bag, not in the image stack
+  pantone?: string            // confirmed brand reference code, e.g. '11-0601 TCX'
+  isUnique?: boolean          // true if this colourway is exclusive to this product, not shared across the line
+  finish?: 'plain' | 'tonal-print'  // print treatment, when relevant
 }
 
 export interface ProductSize {

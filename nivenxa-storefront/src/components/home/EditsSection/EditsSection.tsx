@@ -1,9 +1,12 @@
 import { Link } from '@/i18n/routing'
+import Image from 'next/image'
 import styles from './EditsSection.module.css'
 
 // ── Real product image paths ──────────────────────────────────────────────────
-const TEE_OAT_WALKING    = "/images/Men/OversizedTee's/OAT%20BEIGE/walking_view.webp"
-const CARGO_OLIVE_FRONT  = '/images/Unisex/cargos/darkolive/front_view.png'
+const TEE_OAT_WALKING     = "/images/Men/OversizedTee's/OAT%20BEIGE/walking_view.webp"
+const CARGO_OLIVE_SITTING = '/images/Unisex/cargos/DARKOLIVE/sittingorLearning_studio_view.webp'
+const KURTA_IVORY_WALKING = '/images/Wonmen/A-line%20Kurta/MORNING%20IVORY/walking_view.webp'
+const KIDS_SAND_WALKING   = '/images/Kids/unisex%20sleeper%20wear/warm_sand/walking_view.png'
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
@@ -37,8 +40,8 @@ const CARDS: EditCard[] = [
     productName: 'Cargo Pant',
     fabricLine: '300 GSM enzyme canvas',
     href: '/edits/utility-edit',
-    imageSrc: CARGO_OLIVE_FRONT,
-    imageAlt: 'Cargo Pant — Dark Olive — studio front',
+    imageSrc: CARGO_OLIVE_SITTING,
+    imageAlt: 'Cargo Pant — Dark Olive — sitting view',
     ghostColor: 'rgba(255,255,255,0.10)',
   },
   {
@@ -53,20 +56,22 @@ const CARDS: EditCard[] = [
   // ── Row 2 ────────────────────────────────────────────────────────────────
   {
     num: '04',
-    editName: "The Women's Edit",
+    editName: "The Indian Edit",
     productName: 'A-line Kurta',
     fabricLine: '160 GSM Cotton-Modal slub',
     href: '/edits/womens-edit',
-    placeholderBg: '#E8DFC8',
+    imageSrc: KURTA_IVORY_WALKING,
+    imageAlt: 'A-line Kurta — Morning Ivory — walking view',
     ghostColor: 'rgba(0,0,0,0.08)',
   },
   {
     num: '05',
-    editName: 'The Youth Studio',
+    editName: 'The Dream Edit',
     productName: 'Kids Sleepwear Set',
-    fabricLine: 'Super combed cotton, 2Y–12Y',
-    href: '/shop',  // /edits/youth-studio not built yet — fallback to shop
-    placeholderBg: '#EAF3DE',
+    fabricLine: 'Soft organic sleepwear',
+    href: '/shop/youth-studio/kids-sleepwear',
+    imageSrc: KIDS_SAND_WALKING,
+    imageAlt: 'Kids Sleepwear Set — Warm Sand — walking view',
     ghostColor: 'rgba(0,0,0,0.08)',
   },
 ]
@@ -101,11 +106,12 @@ export default function EditsSection() {
             {/* Image panel */}
             <div className={styles.imagePanel}>
               {card.imageSrc ? (
-                <img
+                <Image
                   src={card.imageSrc}
                   alt={card.imageAlt ?? card.productName}
+                  fill
                   className={styles.heroImg}
-                  loading="lazy"
+                  sizes="(max-width: 768px) 50vw, 25vw"
                 />
               ) : (
                 <div
@@ -152,8 +158,8 @@ export default function EditsSection() {
             <div className={styles.exploreLines}>
               <span>Everyday essentials.</span>
               <span>Utility pieces.</span>
-              <span>Women&#39;s comfortwear.</span>
-              <span>Youth Studio.</span>
+              <span>Indian comfortwear.</span>
+              <span>The Dream Edit.</span>
             </div>
             <p className={styles.exploreTagline}>
               Designed to work together.

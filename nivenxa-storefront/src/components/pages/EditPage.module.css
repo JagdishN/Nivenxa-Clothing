@@ -103,7 +103,9 @@
 .subNavWrap {
   position: sticky;
   top: var(--nivenxa-header-height);
-  z-index: 100;
+  /* z-index must stay below header ($z-nav = 50) so the mega menu
+     dropdown always renders fully above the sticky tab bar. */
+  z-index: 10;
   background: var(--nivenxa-bg-secondary);
   border-top: 0.5px solid var(--nivenxa-border);
   border-bottom: 0.5px solid var(--nivenxa-border);
