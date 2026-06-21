@@ -1499,11 +1499,14 @@ interface KidsSleepFiles {
 }
 
 interface KidsSleepConfig {
-  slug:   string
-  hex:    string
-  label:  string
-  folder: string
-  files:  KidsSleepFiles
+  slug:     string
+  hex:      string
+  label:    string
+  pantone:  string
+  isUnique: boolean
+  finish:   'plain' | 'tonal-print'
+  folder:   string
+  files:    KidsSleepFiles
 }
 
 function buildKidsSleepImages(productSlug: string, productName: string, c: KidsSleepConfig): ProductImage[] {
@@ -1527,12 +1530,15 @@ const KIDS_REST_COMMON_FILES: KidsSleepFiles = {
   fabric:  'fabric_close_up.webp',
 }
 
+// Editorial names below are [PROPOSED] — confirmed by spec but not yet
+// formally signed off by the brand. Internal spec names (disk folder names),
+// for reference: Soft Cloud White, Pale Oat, Baby Blue Grey, Dusty Sage, Faded Blush.
 const kidsRestColourSlugs: KidsSleepConfig[] = [
-  { slug: 'cloud',       hex: 'F5F2EC', label: 'Cloud',       folder: 'Kids/unisex sleeper wear/Rest Set/SOFT CLOUD WHITE', files: KIDS_REST_COMMON_FILES }, // Pantone 11-0601 TCX
-  { slug: 'oat',         hex: 'EDE5D0', label: 'Oat',         folder: 'Kids/unisex sleeper wear/Rest Set/PALE OAT',         files: KIDS_REST_COMMON_FILES }, // Pantone 12-0104 TCX
-  { slug: 'mist-blue',   hex: 'A8B8C8', label: 'Mist Blue',   folder: 'Kids/unisex sleeper wear/Rest Set/BABYBLUEGREY',    files: KIDS_REST_COMMON_FILES }, // Pantone 14-4112 TCX
-  { slug: 'little-sage', hex: '9EAA8C', label: 'Little Sage', folder: 'Kids/unisex sleeper wear/Rest Set/DUSTY SAGE',      files: KIDS_REST_COMMON_FILES }, // Pantone 16-0213 TCX
-  { slug: 'petal',       hex: 'E8C4B8', label: 'Petal',       folder: 'Kids/unisex sleeper wear/Rest Set/FADED BLUSH',     files: KIDS_REST_COMMON_FILES }, // Pantone 13-2010 TCX
+  { slug: 'cloud',       hex: 'F5F2EC', label: 'Cloud',       pantone: '11-0601 TCX', isUnique: false, finish: 'plain', folder: 'Kids/unisex sleeper wear/Rest Set/SOFT CLOUD WHITE', files: KIDS_REST_COMMON_FILES },
+  { slug: 'oat',         hex: 'EDE5D0', label: 'Oat',         pantone: '12-0104 TCX', isUnique: true,  finish: 'plain', folder: 'Kids/unisex sleeper wear/Rest Set/PALE OAT',         files: KIDS_REST_COMMON_FILES },
+  { slug: 'mist-blue',   hex: 'A8B8C8', label: 'Mist Blue',   pantone: '14-4112 TCX', isUnique: false, finish: 'plain', folder: 'Kids/unisex sleeper wear/Rest Set/BABYBLUEGREY',     files: KIDS_REST_COMMON_FILES },
+  { slug: 'little-sage', hex: '9EAA8C', label: 'Little Sage', pantone: '16-0213 TCX', isUnique: false, finish: 'plain', folder: 'Kids/unisex sleeper wear/Rest Set/DUSTY SAGE',       files: KIDS_REST_COMMON_FILES },
+  { slug: 'petal',       hex: 'E8C4B8', label: 'Petal',       pantone: '13-2010 TCX', isUnique: false, finish: 'plain', folder: 'Kids/unisex sleeper wear/Rest Set/FADED BLUSH',      files: KIDS_REST_COMMON_FILES },
 ]
 
 const kidsRestSleepSet: Product = {
@@ -1555,6 +1561,9 @@ const kidsRestSleepSet: Product = {
     label:     c.label,
     hex:       `#${c.hex}`,
     available: true,
+    pantone:   c.pantone,
+    isUnique:  c.isUnique,
+    finish:    c.finish,
     images:    buildKidsSleepImages('rest', 'The Rest Sleep Set', c),
   })),
 
@@ -1897,9 +1906,12 @@ const KIDS_SUMMER_COMMON_FILES: KidsSleepFiles = {
   fabric:  'fabric_close_up.webp',
 }
 
+// Editorial names below are [PROPOSED] — confirmed by spec but not yet
+// formally signed off by the brand. Internal spec names (disk folder names),
+// for reference: Soft Cloud White, Dusty Sage, Warm Butter, Faded Blush, Pale Mint.
 const kidsSummerColourSlugs: KidsSleepConfig[] = [
   {
-    slug: 'cloud', hex: 'F5F2EC', label: 'Cloud', // Pantone 11-0601 TCX — plain
+    slug: 'cloud', hex: 'F5F2EC', label: 'Cloud', pantone: '11-0601 TCX', isUnique: false, finish: 'plain',
     folder: 'Kids/unisex sleeper wear/Summer Set/SOFT CLOUD WHITE',
     files: {
       ...KIDS_SUMMER_COMMON_FILES,
@@ -1907,11 +1919,11 @@ const kidsSummerColourSlugs: KidsSleepConfig[] = [
       side: 'Summer Cloud - Side Profile.webp',
     },
   },
-  { slug: 'little-sage', hex: '9EAA8C', label: 'Little Sage', folder: 'Kids/unisex sleeper wear/Summer Set/DUSTY SAGE',        files: KIDS_SUMMER_COMMON_FILES }, // Pantone 16-0213 TCX — plain
-  { slug: 'butter',      hex: 'F5E6C8', label: 'Butter',      folder: 'Kids/unisex sleeper wear/Summer Set/WARM BUTTER',      files: KIDS_SUMMER_COMMON_FILES }, // Pantone 12-0712 TCX — plain
-  { slug: 'petal',       hex: 'E8C4B8', label: 'Petal',       folder: 'Kids/unisex sleeper wear/Summer Set/FADED BLUSH',      files: KIDS_SUMMER_COMMON_FILES }, // Pantone 13-2010 TCX — tonal print
+  { slug: 'little-sage', hex: '9EAA8C', label: 'Little Sage', pantone: '16-0213 TCX', isUnique: false, finish: 'plain',       folder: 'Kids/unisex sleeper wear/Summer Set/DUSTY SAGE',   files: KIDS_SUMMER_COMMON_FILES },
+  { slug: 'butter',      hex: 'F5E6C8', label: 'Butter',      pantone: '12-0712 TCX', isUnique: true,  finish: 'plain',       folder: 'Kids/unisex sleeper wear/Summer Set/WARM BUTTER',  files: KIDS_SUMMER_COMMON_FILES },
+  { slug: 'petal',       hex: 'E8C4B8', label: 'Petal',       pantone: '13-2010 TCX', isUnique: false, finish: 'tonal-print', folder: 'Kids/unisex sleeper wear/Summer Set/FADED BLUSH',  files: KIDS_SUMMER_COMMON_FILES },
   {
-    slug: 'mint', hex: 'C8E0C8', label: 'Mint', // Pantone 13-0221 TCX — tonal print
+    slug: 'mint', hex: 'C8E0C8', label: 'Mint', pantone: '13-0221 TCX', isUnique: false, finish: 'tonal-print',
     folder: 'Kids/unisex sleeper wear/Summer Set/Pale Mint',
     files: {
       // This colour's photos were delivered as .png except the hero shot.
@@ -1946,6 +1958,9 @@ const kidsSummerSleepSet: Product = {
     label:     c.label,
     hex:       `#${c.hex}`,
     available: true,
+    pantone:   c.pantone,
+    isUnique:  c.isUnique,
+    finish:    c.finish,
     images:    buildKidsSleepImages('summer', 'The Summer Sleep Set', c),
   })),
 
