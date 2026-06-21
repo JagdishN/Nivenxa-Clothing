@@ -210,7 +210,22 @@ export default function ProductInfo({
         {ctaLabel}
       </button>
 
-      {/* 9. Styled With — colour-aware cross-sell */}
+      {/* 9a. Style it with — editorial styling shot for the active colour */}
+      {activeColour.styleImage && (
+        <>
+          <div className={styles.styledWithDivider} />
+          <div className={styles.styleWithPhoto}>
+            <p className={styles.sectionLabel}>Style it with</p>
+            <img
+              src={activeColour.styleImage.src}
+              alt={activeColour.styleImage.alt}
+              className={styles.styleWithImg}
+            />
+          </div>
+        </>
+      )}
+
+      {/* 9b. Styled With — colour-aware cross-sell */}
       {product.styledWith && (
         <>
           <div className={styles.styledWithDivider} />

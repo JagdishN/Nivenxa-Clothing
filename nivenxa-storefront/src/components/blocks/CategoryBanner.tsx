@@ -24,11 +24,18 @@ export default function CategoryBanner() {
 
         <div className={styles.grid}>
 
-          {/* Men's — bio-washed cotton colour block */}
+          {/* Men's — Oversized Tee studio-front */}
           <AnimatedSection delay={0.1}>
             <Link href="/shop/mens" className={styles.card} aria-label="Shop Men's collection">
               <div className={styles.cardImage}>
-                <div className={styles.colorBlock} style={{ backgroundColor: '#8B7355' }} />
+                <Image
+                  src="/images/Men/OversizedTee's/OAT%20BEIGE/front_studio_view.webp"
+                  alt=""
+                  fill
+                  className={styles.cardImg}
+                  sizes="(max-width: 768px) 100vw, 25vw"
+                  aria-hidden="true"
+                />
                 <span className={styles.ghostNumber} aria-hidden="true">01</span>
               </div>
               <div className={styles.cardContent}>
@@ -39,11 +46,18 @@ export default function CategoryBanner() {
             </Link>
           </AnimatedSection>
 
-          {/* Women's — terracotta colour block placeholder */}
+          {/* Women's — A-line Kurta studio-front */}
           <AnimatedSection delay={0.2}>
             <Link href="/shop/womens" className={styles.card} aria-label="Shop Women's collection">
               <div className={styles.cardImage}>
-                <div className={`${styles.colorBlock} ${styles.womenColor}`} />
+                <Image
+                  src="/images/Wonmen/A-line%20Kurta/MORNING%20IVORY/front_studio_view.webp"
+                  alt=""
+                  fill
+                  className={styles.cardImg}
+                  sizes="(max-width: 768px) 100vw, 25vw"
+                  aria-hidden="true"
+                />
                 <span className={styles.ghostNumber} aria-hidden="true">02</span>
               </div>
               <div className={styles.cardContent}>
@@ -59,7 +73,7 @@ export default function CategoryBanner() {
             <Link href="/shop/unisex" className={styles.card} aria-label="Shop Unisex collection">
               <div className={styles.cardImage}>
                 <Image
-                  src="/images/Unisex/cargos/darkolive/front_view.webp"
+                  src="/images/Unisex/cargos/DARKOLIVE/front_studio_view.webp"
                   alt=""
                   fill
                   className={styles.cardImg}
@@ -76,11 +90,18 @@ export default function CategoryBanner() {
             </Link>
           </AnimatedSection>
 
-          {/* Youth Studio — sage colour block */}
+          {/* Youth Studio — kids sleeper wear studio-front */}
           <AnimatedSection delay={0.4}>
             <Link href="/shop/youth-studio" className={styles.card} aria-label="Shop Youth Studio collection">
               <div className={styles.cardImage}>
-                <div className={`${styles.colorBlock} ${styles.kidsColor}`} />
+                <Image
+                  src="/images/Kids/unisex%20sleeper%20wear/soft_charcoal_mist/font_view.webp"
+                  alt=""
+                  fill
+                  className={styles.cardImg}
+                  sizes="(max-width: 768px) 100vw, 25vw"
+                  aria-hidden="true"
+                />
                 <span className={styles.ghostNumber} aria-hidden="true">04</span>
               </div>
               <div className={styles.cardContent}>

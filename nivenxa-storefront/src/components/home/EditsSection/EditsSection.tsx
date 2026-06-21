@@ -3,8 +3,10 @@ import Image from 'next/image'
 import styles from './EditsSection.module.css'
 
 // ── Real product image paths ──────────────────────────────────────────────────
-const TEE_OAT_WALKING    = "/images/Men/OversizedTee's/OAT%20BEIGE/walking_view.webp"
-const CARGO_OLIVE_FRONT  = '/images/Unisex/cargos/darkolive/front_view.webp'
+const TEE_OAT_WALKING     = "/images/Men/OversizedTee's/OAT%20BEIGE/walking_view.webp"
+const CARGO_OLIVE_SITTING = '/images/Unisex/cargos/DARKOLIVE/sittingorLearning_studio_view.webp'
+const KURTA_IVORY_WALKING = '/images/Wonmen/A-line%20Kurta/MORNING%20IVORY/walking_view.webp'
+const KIDS_SAND_WALKING   = '/images/Kids/unisex%20sleeper%20wear/warm_sand/walking_view.png'
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
@@ -38,8 +40,8 @@ const CARDS: EditCard[] = [
     productName: 'Cargo Pant',
     fabricLine: '300 GSM enzyme canvas',
     href: '/edits/utility-edit',
-    imageSrc: CARGO_OLIVE_FRONT,
-    imageAlt: 'Cargo Pant — Dark Olive — studio front',
+    imageSrc: CARGO_OLIVE_SITTING,
+    imageAlt: 'Cargo Pant — Dark Olive — sitting view',
     ghostColor: 'rgba(255,255,255,0.10)',
   },
   {
@@ -58,7 +60,8 @@ const CARDS: EditCard[] = [
     productName: 'A-line Kurta',
     fabricLine: '160 GSM Cotton-Modal slub',
     href: '/edits/womens-edit',
-    placeholderBg: '#E8DFC8',
+    imageSrc: KURTA_IVORY_WALKING,
+    imageAlt: 'A-line Kurta — Morning Ivory — walking view',
     ghostColor: 'rgba(0,0,0,0.08)',
   },
   {
@@ -67,7 +70,8 @@ const CARDS: EditCard[] = [
     productName: 'Kids Sleepwear Set',
     fabricLine: 'Soft organic sleepwear',
     href: '/shop/youth-studio/kids-sleepwear',
-    placeholderBg: '#EAF3DE',
+    imageSrc: KIDS_SAND_WALKING,
+    imageAlt: 'Kids Sleepwear Set — Warm Sand — walking view',
     ghostColor: 'rgba(0,0,0,0.08)',
   },
 ]

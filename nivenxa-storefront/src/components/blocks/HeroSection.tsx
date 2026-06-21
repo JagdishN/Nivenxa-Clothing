@@ -62,7 +62,7 @@ export default function HeroSection() {
         {/* Block 3 — cargo dark-olive studio-front */}
         <div className={`${styles.block} ${styles.block3}`} style={{ backgroundColor: '#4A5240' }}>
           <Image
-            src="/images/Unisex/cargos/darkolive/front_view.webp"
+            src="/images/Unisex/cargos/DARKOLIVE/front_studio_view.webp"
             alt=""
             fill
             className={styles.blockImg}
