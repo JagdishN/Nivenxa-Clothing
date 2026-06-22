@@ -87,6 +87,18 @@
   transform: scale(1.03);
 }
 
+.cardBadge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--nivenxa-text-primary);
+  background: var(--nivenxa-bg-primary);
+  padding: 5px 10px;
+}
+
 .cardText {
   padding: 14px 0 20px;
   display: flex;

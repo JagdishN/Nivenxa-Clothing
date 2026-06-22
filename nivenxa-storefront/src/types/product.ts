@@ -135,6 +135,7 @@ export interface Product {
   collectionItems: CollectionItem[]
   collectionName?: string   // e.g. "Men's Essentials" — shown in breadcrumb
   collectionSlug?: string   // e.g. "mens-essentials" — used in breadcrumb href
+  cardDescriptor?: string   // short line shown on collection-grid cards, overrides the fabricPillars-derived line when set
   styledWith?: StyledWith         // optional cross-sell pairing, colour-aware
   editorial?: ProductEditorial    // optional editorial data for zoom overlay panel
 }

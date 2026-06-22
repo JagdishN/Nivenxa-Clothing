@@ -1378,6 +1378,7 @@ const womenShortSleeveSleepSet: Product = {
   collectionName: "Women's",
   collectionSlug: 'womens',
   badge: null,
+  cardDescriptor: 'Short sleeve · 160–180 GSM',
   compositionQuote: '60% Cotton / 40% Modal — 160–180 GSM. Short sleeve top and wide-leg pant for warm-weather rest.',
   price: 1499,
   currency: '₹',
@@ -1589,12 +1590,11 @@ const womenLongSleeveSleepSet: Product = {
   handle: 'women-sleep-set',
   collectionName: "Women's",
   collectionSlug: 'womens',
-  // "Coming AW2026" — visual only; nothing currently renders Product.badge
-  // anywhere in the UI (confirmed: it's set on other products too but never
-  // read by any component). The functional gate is every size below being
-  // unavailable, which SizeSelector already disables on render. A real
-  // "coming soon" banner is a separate UI piece, not implemented here.
+  // "Coming AW2026" — rendered as a pill on collection-grid cards
+  // (CollectionPage). The functional gate is every size below being
+  // unavailable, which SizeSelector already disables on render.
   badge: 'Coming AW2026',
+  cardDescriptor: 'Long sleeve · 200–220 GSM',
   compositionQuote: '60% Cotton / 40% Modal — 200–220 GSM. Long sleeve top and wide-leg pant for AW2026.',
   price: 2499,
   currency: '₹',

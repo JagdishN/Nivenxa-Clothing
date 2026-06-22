@@ -11,7 +11,7 @@ const PRODUCT_SUBPATH: Record<string, string> = {
   'cargo-pants':          'cargo-pants',
   'a-line-kurta':         'a-line-kurta',
   'women-lounge-sets':    'co-ord-set',
-  'women-sleepwear':      'sleepwear',
+  'women-sleepwear':      'short-sleeve-sleep-set',
   'women-sleep-set':      'sleep-set',
   'kids-rest-sleep-set':  'kids-rest-sleep-set',
   'kids-summer-sleep-set':'kids-summer-sleep-set',
@@ -56,14 +56,18 @@ export default function CollectionPage({
             const subpath      = PRODUCT_SUBPATH[product.handle] ?? product.handle
             const href         = `/shop/${collectionSlug}/${subpath}`
 
-            // Fabric line — first pillar: "240 GSM" or "300 GSM" etc.
+            // Fabric line — cardDescriptor when set, else first pillar: "240 GSM" etc.
             const fp0 = product.fabricPillars[0]
-            const fabricLine = fp0
+            const fabricLine = product.cardDescriptor || (fp0
               ? [fp0.value, fp0.unit].filter(Boolean).join(' ')
-              : product.category
+              : product.category)
 
             const toneCount = product.colours.length
             const toneLabel = `${toneCount} ${toneCount === 1 ? 'tone' : 'tones'}`
+
+            // Coming-soon pill — only when every size is unavailable, so this
+            // doesn't surface Product.badge on in-stock products (e.g. "New Season").
+            const isComingSoon = product.sizes.length > 0 && product.sizes.every(s => !s.available)
 
             return (
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -74,6 +78,9 @@ export default function CollectionPage({
                     alt={primaryImage.alt}
                     className={styles.cardImage}
                   />
+                  {isComingSoon && product.badge && (
+                    <span className={styles.cardBadge}>{product.badge}</span>
+                  )}
                 </div>
                 <div className={styles.cardText}>
                   <p className={styles.cardTitle}>{product.name}</p>

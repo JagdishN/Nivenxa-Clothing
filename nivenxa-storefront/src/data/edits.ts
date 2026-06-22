@@ -97,7 +97,7 @@ export const edits: Edit[] = [
       {
         name: 'Bio-Washed Essentials',
         slug: 'bio-washed-essentials',
-        productHandles: ['over-tee-shirts', 'cargo-pants', 'a-line-kurta', 'kids-rest-sleep-set'],
+        productHandles: ['over-tee-shirts', 'cargo-pants', 'a-line-kurta'],
         editorial: 'The full everyday toolkit',
       },
     ],
@@ -171,12 +171,6 @@ export const edits: Edit[] = [
         slug: 'womens-sleepwear',
         productHandles: ['women-sleep-set'],
         editorial: 'Soft enough to sleep in. Beautiful enough to wear at home.',
-      },
-      {
-        name: 'Kids Sleepwear',
-        slug: 'kids-sleepwear',
-        productHandles: ['kids-rest-sleep-set', 'kids-summer-sleep-set'],
-        editorial: 'Sized 4Y to 12Y. Organic cotton, every night.',
       },
       {
         name: 'Unisex Lounge Sets',

@@ -19,8 +19,6 @@ const DESCRIPTORS: Record<string, string> = {
     'Designed for Indian cities — built for the distance between home and everywhere else.',
   'womens-sleepwear':
     'Ultra-soft fabrications for considered rest.',
-  'kids-sleepwear':
-    'Organic cotton sleepwear for every season. OEKO-TEX certified. Soft from first wear.',
   'unisex-lounge-sets':
     'Sets designed to be worn together or separately — for everyone.',
   'a-line-kurta':
