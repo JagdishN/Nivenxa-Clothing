@@ -35,7 +35,7 @@ export interface ProductColour {
   styleImage?: ProductImage   // "Style it with" editorial shot — shown after Add to Bag, not in the image stack
   pantone?: string            // confirmed brand reference code, e.g. '11-0601 TCX'
   isUnique?: boolean          // true if this colourway is exclusive to this product, not shared across the line
-  finish?: 'plain' | 'tonal-print'  // print treatment, when relevant
+  finish?: 'plain' | 'tonal-print' | 'tonal-botanical-print' | 'tonal-micro-stripe' | 'dabu-atelier-print'  // print treatment, when relevant
 }
 
 export interface ProductSize {
@@ -135,6 +135,7 @@ export interface Product {
   collectionItems: CollectionItem[]
   collectionName?: string   // e.g. "Men's Essentials" — shown in breadcrumb
   collectionSlug?: string   // e.g. "mens-essentials" — used in breadcrumb href
+  cardDescriptor?: string   // short line shown on collection-grid cards, overrides the fabricPillars-derived line when set
   styledWith?: StyledWith         // optional cross-sell pairing, colour-aware
   editorial?: ProductEditorial    // optional editorial data for zoom overlay panel
 }

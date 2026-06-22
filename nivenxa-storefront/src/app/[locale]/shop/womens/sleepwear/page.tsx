@@ -1,14 +1,15 @@
-import ProductColourPage from '@/components/pages/ProductColourPage'
-import { getProductByHandle } from '@/data/products'
+import CollectionPage from '@/components/pages/CollectionPage'
+import { getProductsByCategory } from '@/data/products'
 
-export default function WomensSleepwearPage() {
-  const product = getProductByHandle('women-sleepwear')
+export default function WomensSleepwearCategoryPage() {
+  const products = getProductsByCategory('Sleepwear')
   return (
-    <ProductColourPage
-      product={product}
-      collectionName="Women's"
+    <CollectionPage
+      collectionName="Sleepwear"
       collectionSlug="womens"
-      backHref="/shop/womens"
+      eyebrow="Women's"
+      intro="Cotton-Modal sleep sets for every season."
+      products={products}
     />
   )
 }

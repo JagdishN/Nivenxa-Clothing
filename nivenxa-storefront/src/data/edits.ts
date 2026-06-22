@@ -23,6 +23,55 @@ export interface Edit {
 
 export const edits: Edit[] = [
   {
+    name: "The Indian Edit",
+    slug: 'womens-edit',
+    heroImageUrl: '',
+    headline: 'Indo-Western for\neveryday India.',
+    story:
+      'Cotton-Modal silhouettes designed for the contemporary Indian woman. Not occasion wear. Not casual wear. The space between — for every day that deserves both.',
+    featuredProductHandle: 'a-line-kurta',
+    featuredColourSlug: 'warm-ivory',
+    // A-line Kurta is index 0 — always the default tab
+    subItems: [
+      {
+        name: 'A-line Kurta',
+        slug: 'a-line-kurta',
+        productHandles: ['a-line-kurta'],
+        editorial: 'The everyday Indian silhouette, elevated.',
+      },
+      {
+        name: 'Co-ord Set',
+        slug: 'co-ord-set',
+        productHandles: ['women-lounge-sets'],
+        editorial: 'Matched fabric, unmatched ease.',
+      },
+      {
+        name: 'Sleepwear',
+        slug: 'sleepwear',
+        productHandles: ['women-sleepwear'],
+        editorial: 'Ultra-soft fabrications for considered rest.',
+      },
+    ],
+  },
+  {
+    name: 'The Ease Edit',
+    slug: 'ease-edit',
+    heroImageUrl: '',
+    headline: 'Ease,\nconsidered.',
+    story:
+      'Linen and cotton in easy, relaxed pieces. Designed to be worn together or apart.',
+    featuredProductHandle: 'women-lounge-sets',
+    featuredColourSlug: 'meadow-sage',
+    subItems: [
+      {
+        name: 'Co-ord Set',
+        slug: 'co-ord-set',
+        productHandles: ['women-lounge-sets'],
+        editorial: 'Linen-cotton sets, styled together or apart.',
+      },
+    ],
+  },
+  {
     name: 'The Everyday Edit',
     slug: 'everyday-edit',
     heroImageUrl: '',
@@ -48,7 +97,7 @@ export const edits: Edit[] = [
       {
         name: 'Bio-Washed Essentials',
         slug: 'bio-washed-essentials',
-        productHandles: ['over-tee-shirts', 'cargo-pants', 'a-line-kurta', 'kids-rest-sleep-set'],
+        productHandles: ['over-tee-shirts', 'cargo-pants', 'a-line-kurta'],
         editorial: 'The full everyday toolkit',
       },
     ],
@@ -84,63 +133,56 @@ export const edits: Edit[] = [
     ],
   },
   {
+    name: 'The Dream Edit',
+    slug: 'dream-edit',
+    heroImageUrl: '',
+    headline: 'Soft rest,\nevery season.',
+    story:
+      'Soft organic sleepwear for every season. Made for rest, designed to last.',
+    featuredProductHandle: 'kids-rest-sleep-set',
+    featuredColourSlug: 'cloud',
+    subItems: [
+      {
+        name: 'The Rest Sleep Set',
+        slug: 'kids-rest-sleep-set',
+        productHandles: ['kids-rest-sleep-set'],
+        editorial: 'Full-sleeve comfort for cooler nights and AC rooms.',
+      },
+      {
+        name: 'The Summer Sleep Set',
+        slug: 'kids-summer-sleep-set',
+        productHandles: ['kids-summer-sleep-set'],
+        editorial: 'Lightweight cotton for warm-weather rest.',
+      },
+    ],
+  },
+  {
     name: 'The Rest Edit',
     slug: 'rest-edit',
     heroImageUrl: '',
     headline: 'Considered\nrest.',
     story:
       'Ultra-soft French Terry and combed cotton. Designed for the hours before and after sleep — and everything in between. For Indian nights that deserve better fabric.',
-    featuredProductHandle: 'women-sleepwear',
-    featuredColourSlug: 'soft-cream',
+    featuredProductHandle: 'women-sleep-set',
+    featuredColourSlug: 'morning-cream',
     subItems: [
       {
         name: "Women's Sleepwear",
         slug: 'womens-sleepwear',
-        productHandles: ['women-sleepwear'],
+        productHandles: ['women-sleep-set'],
         editorial: 'Soft enough to sleep in. Beautiful enough to wear at home.',
-      },
-      {
-        name: 'Kids Sleepwear',
-        slug: 'kids-sleepwear',
-        productHandles: ['kids-rest-sleep-set', 'kids-summer-sleep-set'],
-        editorial: 'Sized 4Y to 12Y. Organic cotton, every night.',
       },
       {
         name: 'Unisex Lounge Sets',
         slug: 'unisex-lounge-sets',
-        productHandles: ['women-lounge-sets', 'women-sleepwear'],
+        productHandles: ['women-lounge-sets', 'women-sleep-set'],
         editorial: 'The between hours — neither sleep nor waking.',
       },
-    ],
-  },
-  {
-    name: "The Indian Edit",
-    slug: 'womens-edit',
-    heroImageUrl: '',
-    headline: 'Indo-Western for\neveryday India.',
-    story:
-      'Cotton-Modal silhouettes designed for the contemporary Indian woman. Not occasion wear. Not casual wear. The space between — for every day that deserves both.',
-    featuredProductHandle: 'a-line-kurta',
-    featuredColourSlug: 'warm-ivory',
-    // A-line Kurta is index 0 — always the default tab
-    subItems: [
       {
-        name: 'A-line Kurta',
-        slug: 'a-line-kurta',
-        productHandles: ['a-line-kurta'],
-        editorial: 'The everyday Indian silhouette, elevated.',
-      },
-      {
-        name: 'Co-ord Set',
-        slug: 'co-ord-set',
-        productHandles: ['women-lounge-sets'],
-        editorial: 'Matched fabric, unmatched ease.',
-      },
-      {
-        name: 'Sleepwear',
-        slug: 'sleepwear',
-        productHandles: ['women-sleepwear'],
-        editorial: 'Ultra-soft fabrications for considered rest.',
+        name: 'The Rest Set',
+        slug: 'the-rest-set',
+        productHandles: ['women-sleep-set'],
+        editorial: 'Long sleeve, wide-leg ease — built for cooler nights.',
       },
     ],
   },

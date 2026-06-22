@@ -95,7 +95,7 @@ export default function CategoryBanner() {
             <Link href="/shop/youth-studio" className={styles.card} aria-label="Shop Youth Studio collection">
               <div className={styles.cardImage}>
                 <Image
-                  src="/images/Kids/unisex%20sleeper%20wear/soft_charcoal_mist/font_view.webp"
+                  src="/images/Kids/unisex%20sleeper%20wear/Rest%20Set/SOFT%20CLOUD%20WHITE/front_studio_view.webp"
                   alt=""
                   fill
                   className={styles.cardImg}

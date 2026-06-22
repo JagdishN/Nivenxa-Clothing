@@ -6,7 +6,8 @@ import styles from './EditsSection.module.css'
 const TEE_OAT_WALKING     = "/images/Men/OversizedTee's/OAT%20BEIGE/walking_view.webp"
 const CARGO_OLIVE_SITTING = '/images/Unisex/cargos/DARKOLIVE/sittingorLearning_studio_view.webp'
 const KURTA_IVORY_WALKING = '/images/Wonmen/A-line%20Kurta/MORNING%20IVORY/walking_view.webp'
-const KIDS_SAND_WALKING   = '/images/Kids/unisex%20sleeper%20wear/warm_sand/walking_view.png'
+const KIDS_CLOUD_WALKING  = '/images/Kids/unisex%20sleeper%20wear/Rest%20Set/SOFT%20CLOUD%20WHITE/walking_view.webp'
+const COORD_SAGE_WALKING  = '/images/Wonmen/Co-ord%20Sets/MEADOW%20SAGE/walking_view.webp'
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
@@ -23,39 +24,8 @@ interface EditCard {
 }
 
 const CARDS: EditCard[] = [
-  // ── Row 1 ────────────────────────────────────────────────────────────────
   {
     num: '01',
-    editName: 'The Everyday Edit',
-    productName: 'Oversized Tee',
-    fabricLine: '240 GSM combed cotton',
-    href: '/edits/everyday-edit',
-    imageSrc: TEE_OAT_WALKING,
-    imageAlt: 'Oversized Tee — Oat Beige — walking view',
-    ghostColor: 'rgba(0,0,0,0.08)',
-  },
-  {
-    num: '02',
-    editName: 'The Utility Edit',
-    productName: 'Cargo Pant',
-    fabricLine: '300 GSM enzyme canvas',
-    href: '/edits/utility-edit',
-    imageSrc: CARGO_OLIVE_SITTING,
-    imageAlt: 'Cargo Pant — Dark Olive — sitting view',
-    ghostColor: 'rgba(255,255,255,0.10)',
-  },
-  {
-    num: '03',
-    editName: 'The Rest Edit',
-    productName: 'Long Sleeve Lounge Set',
-    fabricLine: '280 GSM French Terry',
-    href: '/edits/rest-edit',
-    placeholderBg: '#F5F0E8',
-    ghostColor: 'rgba(0,0,0,0.08)',
-  },
-  // ── Row 2 ────────────────────────────────────────────────────────────────
-  {
-    num: '04',
     editName: "The Indian Edit",
     productName: 'A-line Kurta',
     fabricLine: '160 GSM Cotton-Modal slub',
@@ -65,13 +35,52 @@ const CARDS: EditCard[] = [
     ghostColor: 'rgba(0,0,0,0.08)',
   },
   {
+    num: '02',
+    editName: 'The Ease Edit',
+    productName: 'Co-ord Set',
+    fabricLine: 'Linen-cotton blend',
+    href: '/edits/ease-edit',
+    imageSrc: COORD_SAGE_WALKING,
+    imageAlt: 'Co-ord Set — Meadow Sage — walking view',
+    ghostColor: 'rgba(0,0,0,0.08)',
+  },
+  {
+    num: '03',
+    editName: 'The Everyday Edit',
+    productName: 'Oversized Tee',
+    fabricLine: '240 GSM combed cotton',
+    href: '/edits/everyday-edit',
+    imageSrc: TEE_OAT_WALKING,
+    imageAlt: 'Oversized Tee — Oat Beige — walking view',
+    ghostColor: 'rgba(0,0,0,0.08)',
+  },
+  {
+    num: '04',
+    editName: 'The Utility Edit',
+    productName: 'Cargo Pant',
+    fabricLine: '300 GSM enzyme canvas',
+    href: '/edits/utility-edit',
+    imageSrc: CARGO_OLIVE_SITTING,
+    imageAlt: 'Cargo Pant — Dark Olive — sitting view',
+    ghostColor: 'rgba(255,255,255,0.10)',
+  },
+  {
     num: '05',
     editName: 'The Dream Edit',
     productName: 'Kids Sleepwear Set',
     fabricLine: 'Soft organic sleepwear',
-    href: '/shop/youth-studio/kids-sleepwear',
-    imageSrc: KIDS_SAND_WALKING,
-    imageAlt: 'Kids Sleepwear Set — Warm Sand — walking view',
+    href: '/edits/dream-edit',
+    imageSrc: KIDS_CLOUD_WALKING,
+    imageAlt: 'Kids Sleepwear Set — Cloud — walking view',
+    ghostColor: 'rgba(0,0,0,0.08)',
+  },
+  {
+    num: '06',
+    editName: 'The Rest Edit',
+    productName: 'Long Sleeve Sleep Set',
+    fabricLine: '200–220 GSM Cotton-Modal',
+    href: '/edits/rest-edit',
+    placeholderBg: '#F5F0E8',
     ghostColor: 'rgba(0,0,0,0.08)',
   },
 ]
@@ -91,11 +100,11 @@ export default function EditsSection() {
           </h2>
         </div>
         <div className={styles.sectionMeta}>
-          <span className={styles.editCount}>05 edits · 14 pieces</span>
+          <span className={styles.editCount}>06 edits · 15 pieces</span>
         </div>
       </div>
 
-      {/* 4-column grid — 5 product cards + explore panel */}
+      {/* 4-column grid — 6 product cards + explore panel */}
       <div className={styles.cardGrid}>
 
         {CARDS.map((card) => (
