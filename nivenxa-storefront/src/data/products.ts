@@ -1323,7 +1323,53 @@ const restSleepColourSlugs: Array<{
   { slug: 'sage-atelier',  hex: '8C9E84', label: 'Sage Atelier',  pantone: '16-5803 TCX', isUnique: true,  finish: 'dabu-atelier-print' },
 ]
 
-// ─── Product 9: Short Sleeve Sleep Set (SS2026) ───────────────────────────────
+// ─── Product 9: Short Sleeve Sleep Set (SS2026) — real photography ───────────
+interface ShortSleeveSleepFiles {
+  front:   string   // front_studio_view — hero
+  back:    string   // back_studio_view  — stack
+  sitting: string   // sittingorLearning_studio_view — stack
+  walk:    string   // walking_view      — stack
+  fabric:  string   // fabric_close_up   — stack
+}
+
+// Delivered as all .webp for Blush Field; every other colour has .webp only
+// for the front shot and .png for the rest.
+const SHORT_SLEEVE_FILES_WEBP: ShortSleeveSleepFiles = {
+  front:   'front_studio_view.webp',
+  back:    'back_studio_view.webp',
+  sitting: 'sittingorLearning_studio_view.webp',
+  walk:    'walking_view.webp',
+  fabric:  'fabric_close_up.webp',
+}
+
+const SHORT_SLEEVE_FILES_MIXED: ShortSleeveSleepFiles = {
+  front:   'front_studio_view.webp',
+  back:    'back_studio_view.png',
+  sitting: 'sittingorLearning_studio_view.png',
+  walk:    'walking_view.png',
+  fabric:  'fabric_close_up.png',
+}
+
+const SHORT_SLEEVE_FOLDERS: Record<string, string> = {
+  'morning-cream': 'Wonmen/SLEEPWEAR/Short Sleeve/MORNING CREAM',
+  'dark-earth':    'Wonmen/SLEEPWEAR/Short Sleeve/DARK EARTH',
+  'blush-field':   'Wonmen/SLEEPWEAR/Short Sleeve/BLUSH FIELD',
+  'dusk-lavender': 'Wonmen/SLEEPWEAR/Short Sleeve/DUSK LAVENDER',
+  'sage-atelier':  'Wonmen/SLEEPWEAR/Short Sleeve/SAGE ATELIER',
+}
+
+function buildShortSleeveSleepImages(slug: string): ProductImage[] {
+  const folder = SHORT_SLEEVE_FOLDERS[slug]
+  const files  = slug === 'blush-field' ? SHORT_SLEEVE_FILES_WEBP : SHORT_SLEEVE_FILES_MIXED
+  return [
+    localImg(`p9-${slug}-sf`, folder, files.front,   'studio-front', 'Short Sleeve Sleep Set', slug), // hero
+    localImg(`p9-${slug}-sb`, folder, files.back,    'studio-back',  'Short Sleeve Sleep Set', slug), // stack
+    localImg(`p9-${slug}-st`, folder, files.sitting, 'editorial',    'Short Sleeve Sleep Set', slug), // stack
+    localImg(`p9-${slug}-wk`, folder, files.walk,    'walking',      'Short Sleeve Sleep Set', slug), // stack
+    localImg(`p9-${slug}-fc`, folder, files.fabric,  'detail',       'Short Sleeve Sleep Set', slug), // stack
+  ]
+}
+
 const womenShortSleeveSleepSet: Product = {
   id: 'prod-009',
   name: 'Short Sleeve Sleep Set',
@@ -1347,7 +1393,7 @@ const womenShortSleeveSleepSet: Product = {
     pantone:   c.pantone,
     isUnique:  c.isUnique,
     finish:    c.finish,
-    images:    buildPlaceholderImages('p9', 'Short Sleeve Sleep Set', c.slug, c.hex),
+    images:    buildShortSleeveSleepImages(c.slug),
   })),
 
   sizes: [
@@ -1474,8 +1520,8 @@ const womenShortSleeveSleepSet: Product = {
       price: 1499,
       currency: '₹',
       images: [
-        { id: 'col-p9-001-sf', src: phImg('F5F0E8', 2000, 2500, 'Short Sleeve Sleep Set studio-front'), alt: 'Short Sleeve Sleep Set — studio-front — morning-cream', type: 'studio-front', colourSlug: 'morning-cream' },
-        { id: 'col-p9-001-wk', src: phImg('F5F0E8', 1200, 1500, 'Short Sleeve Sleep Set walking'),      alt: 'Short Sleeve Sleep Set — walking — morning-cream',      type: 'walking',      colourSlug: 'morning-cream' },
+        localImg('col-p9-001-sf', SHORT_SLEEVE_FOLDERS['morning-cream'], SHORT_SLEEVE_FILES_MIXED.front, 'studio-front', 'Short Sleeve Sleep Set', 'morning-cream'),
+        localImg('col-p9-001-wk', SHORT_SLEEVE_FOLDERS['morning-cream'], SHORT_SLEEVE_FILES_MIXED.walk,  'walking',      'Short Sleeve Sleep Set', 'morning-cream'),
       ],
     },
     {
@@ -1486,8 +1532,8 @@ const womenShortSleeveSleepSet: Product = {
       price: 1499,
       currency: '₹',
       images: [
-        { id: 'col-p9-002-sf', src: phImg('D4A8A0', 2000, 2500, 'Short Sleeve Sleep Set studio-front'), alt: 'Short Sleeve Sleep Set — studio-front — blush-field', type: 'studio-front', colourSlug: 'blush-field' },
-        { id: 'col-p9-002-wk', src: phImg('D4A8A0', 1200, 1500, 'Short Sleeve Sleep Set walking'),      alt: 'Short Sleeve Sleep Set — walking — blush-field',      type: 'walking',      colourSlug: 'blush-field' },
+        localImg('col-p9-002-sf', SHORT_SLEEVE_FOLDERS['blush-field'], SHORT_SLEEVE_FILES_WEBP.front, 'studio-front', 'Short Sleeve Sleep Set', 'blush-field'),
+        localImg('col-p9-002-wk', SHORT_SLEEVE_FOLDERS['blush-field'], SHORT_SLEEVE_FILES_WEBP.walk,  'walking',      'Short Sleeve Sleep Set', 'blush-field'),
       ],
     },
   ],
