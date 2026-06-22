@@ -144,6 +144,24 @@ export const edits: Edit[] = [
       },
     ],
   },
+  {
+    name: 'The Ease Edit',
+    slug: 'ease-edit',
+    heroImageUrl: '',
+    headline: 'Ease,\nconsidered.',
+    story:
+      'Linen and cotton in easy, relaxed pieces. Designed to be worn together or apart.',
+    featuredProductHandle: 'women-lounge-sets',
+    featuredColourSlug: 'meadow-sage',
+    subItems: [
+      {
+        name: 'Co-ord Set',
+        slug: 'co-ord-set',
+        productHandles: ['women-lounge-sets'],
+        editorial: 'Linen-cotton sets, styled together or apart.',
+      },
+    ],
+  },
 ]
 
 export function getEditBySlug(slug: string): Edit {

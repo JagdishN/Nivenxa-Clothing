@@ -74,6 +74,16 @@ const CARDS: EditCard[] = [
     imageAlt: 'Kids Sleepwear Set — Cloud — walking view',
     ghostColor: 'rgba(0,0,0,0.08)',
   },
+  {
+    num: '06',
+    editName: 'The Ease Edit',
+    productName: 'Co-ord Set',
+    fabricLine: 'Linen-cotton blend',
+    href: '/edits/ease-edit',
+    // No real photography for this product yet — placeholder, same as Rest Edit.
+    placeholderBg: '#8C9E84',
+    ghostColor: 'rgba(0,0,0,0.08)',
+  },
 ]
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -91,11 +101,11 @@ export default function EditsSection() {
           </h2>
         </div>
         <div className={styles.sectionMeta}>
-          <span className={styles.editCount}>05 edits · 14 pieces</span>
+          <span className={styles.editCount}>06 edits · 15 pieces</span>
         </div>
       </div>
 
-      {/* 4-column grid — 5 product cards + explore panel */}
+      {/* 4-column grid — 6 product cards + explore panel */}
       <div className={styles.cardGrid}>
 
         {CARDS.map((card) => (

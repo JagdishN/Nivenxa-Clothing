@@ -194,6 +194,19 @@ export const NAV_ITEMS: NavItem[] = [
           { label: 'Sleepwear',    href: '/edits/womens-edit/sleepwear'    },
         ],
       },
+      {
+        label: 'The Ease Edit',
+        href: '/edits/ease-edit',
+        descriptor: 'Relaxed linen-cotton co-ords',
+        atmosphere: {
+          gradient: 'linear-gradient(150deg, #E5E8DD 0%, #C9CDB8 50%, #AEB39A 100%)',
+          text: 'Linen-cotton co-ords\nworn together or apart.',
+          ghost: 'EASE',
+        },
+        children: [
+          { label: 'Co-ord Set', href: '/edits/ease-edit/co-ord-set' },
+        ],
+      },
     ],
   },
 
