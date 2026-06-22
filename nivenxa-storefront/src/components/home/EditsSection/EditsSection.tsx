@@ -23,9 +23,28 @@ interface EditCard {
 }
 
 const CARDS: EditCard[] = [
-  // ── Row 1 ────────────────────────────────────────────────────────────────
   {
     num: '01',
+    editName: "The Indian Edit",
+    productName: 'A-line Kurta',
+    fabricLine: '160 GSM Cotton-Modal slub',
+    href: '/edits/womens-edit',
+    imageSrc: KURTA_IVORY_WALKING,
+    imageAlt: 'A-line Kurta — Morning Ivory — walking view',
+    ghostColor: 'rgba(0,0,0,0.08)',
+  },
+  {
+    num: '02',
+    editName: 'The Ease Edit',
+    productName: 'Co-ord Set',
+    fabricLine: 'Linen-cotton blend',
+    href: '/edits/ease-edit',
+    // No real photography for this product yet — placeholder, same as Rest Edit.
+    placeholderBg: '#8C9E84',
+    ghostColor: 'rgba(0,0,0,0.08)',
+  },
+  {
+    num: '03',
     editName: 'The Everyday Edit',
     productName: 'Oversized Tee',
     fabricLine: '240 GSM combed cotton',
@@ -35,7 +54,7 @@ const CARDS: EditCard[] = [
     ghostColor: 'rgba(0,0,0,0.08)',
   },
   {
-    num: '02',
+    num: '04',
     editName: 'The Utility Edit',
     productName: 'Cargo Pant',
     fabricLine: '300 GSM enzyme canvas',
@@ -43,26 +62,6 @@ const CARDS: EditCard[] = [
     imageSrc: CARGO_OLIVE_SITTING,
     imageAlt: 'Cargo Pant — Dark Olive — sitting view',
     ghostColor: 'rgba(255,255,255,0.10)',
-  },
-  {
-    num: '03',
-    editName: 'The Rest Edit',
-    productName: 'Long Sleeve Lounge Set',
-    fabricLine: '280 GSM French Terry',
-    href: '/edits/rest-edit',
-    placeholderBg: '#F5F0E8',
-    ghostColor: 'rgba(0,0,0,0.08)',
-  },
-  // ── Row 2 ────────────────────────────────────────────────────────────────
-  {
-    num: '04',
-    editName: "The Indian Edit",
-    productName: 'A-line Kurta',
-    fabricLine: '160 GSM Cotton-Modal slub',
-    href: '/edits/womens-edit',
-    imageSrc: KURTA_IVORY_WALKING,
-    imageAlt: 'A-line Kurta — Morning Ivory — walking view',
-    ghostColor: 'rgba(0,0,0,0.08)',
   },
   {
     num: '05',
@@ -76,12 +75,11 @@ const CARDS: EditCard[] = [
   },
   {
     num: '06',
-    editName: 'The Ease Edit',
-    productName: 'Co-ord Set',
-    fabricLine: 'Linen-cotton blend',
-    href: '/edits/ease-edit',
-    // No real photography for this product yet — placeholder, same as Rest Edit.
-    placeholderBg: '#8C9E84',
+    editName: 'The Rest Edit',
+    productName: 'Long Sleeve Lounge Set',
+    fabricLine: '280 GSM French Terry',
+    href: '/edits/rest-edit',
+    placeholderBg: '#F5F0E8',
     ghostColor: 'rgba(0,0,0,0.08)',
   },
 ]

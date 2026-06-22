@@ -23,6 +23,55 @@ export interface Edit {
 
 export const edits: Edit[] = [
   {
+    name: "The Indian Edit",
+    slug: 'womens-edit',
+    heroImageUrl: '',
+    headline: 'Indo-Western for\neveryday India.',
+    story:
+      'Cotton-Modal silhouettes designed for the contemporary Indian woman. Not occasion wear. Not casual wear. The space between — for every day that deserves both.',
+    featuredProductHandle: 'a-line-kurta',
+    featuredColourSlug: 'warm-ivory',
+    // A-line Kurta is index 0 — always the default tab
+    subItems: [
+      {
+        name: 'A-line Kurta',
+        slug: 'a-line-kurta',
+        productHandles: ['a-line-kurta'],
+        editorial: 'The everyday Indian silhouette, elevated.',
+      },
+      {
+        name: 'Co-ord Set',
+        slug: 'co-ord-set',
+        productHandles: ['women-lounge-sets'],
+        editorial: 'Matched fabric, unmatched ease.',
+      },
+      {
+        name: 'Sleepwear',
+        slug: 'sleepwear',
+        productHandles: ['women-sleepwear'],
+        editorial: 'Ultra-soft fabrications for considered rest.',
+      },
+    ],
+  },
+  {
+    name: 'The Ease Edit',
+    slug: 'ease-edit',
+    heroImageUrl: '',
+    headline: 'Ease,\nconsidered.',
+    story:
+      'Linen and cotton in easy, relaxed pieces. Designed to be worn together or apart.',
+    featuredProductHandle: 'women-lounge-sets',
+    featuredColourSlug: 'meadow-sage',
+    subItems: [
+      {
+        name: 'Co-ord Set',
+        slug: 'co-ord-set',
+        productHandles: ['women-lounge-sets'],
+        editorial: 'Linen-cotton sets, styled together or apart.',
+      },
+    ],
+  },
+  {
     name: 'The Everyday Edit',
     slug: 'everyday-edit',
     heroImageUrl: '',
@@ -110,55 +159,6 @@ export const edits: Edit[] = [
         slug: 'unisex-lounge-sets',
         productHandles: ['women-lounge-sets', 'women-sleepwear'],
         editorial: 'The between hours — neither sleep nor waking.',
-      },
-    ],
-  },
-  {
-    name: "The Indian Edit",
-    slug: 'womens-edit',
-    heroImageUrl: '',
-    headline: 'Indo-Western for\neveryday India.',
-    story:
-      'Cotton-Modal silhouettes designed for the contemporary Indian woman. Not occasion wear. Not casual wear. The space between — for every day that deserves both.',
-    featuredProductHandle: 'a-line-kurta',
-    featuredColourSlug: 'warm-ivory',
-    // A-line Kurta is index 0 — always the default tab
-    subItems: [
-      {
-        name: 'A-line Kurta',
-        slug: 'a-line-kurta',
-        productHandles: ['a-line-kurta'],
-        editorial: 'The everyday Indian silhouette, elevated.',
-      },
-      {
-        name: 'Co-ord Set',
-        slug: 'co-ord-set',
-        productHandles: ['women-lounge-sets'],
-        editorial: 'Matched fabric, unmatched ease.',
-      },
-      {
-        name: 'Sleepwear',
-        slug: 'sleepwear',
-        productHandles: ['women-sleepwear'],
-        editorial: 'Ultra-soft fabrications for considered rest.',
-      },
-    ],
-  },
-  {
-    name: 'The Ease Edit',
-    slug: 'ease-edit',
-    heroImageUrl: '',
-    headline: 'Ease,\nconsidered.',
-    story:
-      'Linen and cotton in easy, relaxed pieces. Designed to be worn together or apart.',
-    featuredProductHandle: 'women-lounge-sets',
-    featuredColourSlug: 'meadow-sage',
-    subItems: [
-      {
-        name: 'Co-ord Set',
-        slug: 'co-ord-set',
-        productHandles: ['women-lounge-sets'],
-        editorial: 'Linen-cotton sets, styled together or apart.',
       },
     ],
   },

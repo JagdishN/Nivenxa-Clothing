@@ -124,6 +124,38 @@ export const NAV_ITEMS: NavItem[] = [
     },
     submenu: [
       {
+        label: "The Indian Edit",
+        href: '/edits/womens-edit',
+        descriptor: 'Relaxed Indian Comfortwear',
+        atmosphere: {
+          gradient: 'linear-gradient(140deg, #C87060 0%, #A85848 60%, #8A4538 100%)',
+          text: 'Modern Indo-western forms\nfor elevated everyday ease.',
+          ghost: 'WOMEN',
+          editorial: [
+            'Indo-Western comfortwear designed for contemporary Indian wardrobes.',
+            'Relaxed silhouettes balanced with softness and quiet elegance.',
+          ],
+        },
+        children: [
+          { label: 'A-line Kurta', href: '/edits/womens-edit/a-line-kurta' },
+          { label: 'Co-ord Set',   href: '/edits/womens-edit/co-ord-set'   },
+          { label: 'Sleepwear',    href: '/edits/womens-edit/sleepwear'    },
+        ],
+      },
+      {
+        label: 'The Ease Edit',
+        href: '/edits/ease-edit',
+        descriptor: 'Relaxed linen-cotton co-ords',
+        atmosphere: {
+          gradient: 'linear-gradient(150deg, #E5E8DD 0%, #C9CDB8 50%, #AEB39A 100%)',
+          text: 'Linen-cotton co-ords\nworn together or apart.',
+          ghost: 'EASE',
+        },
+        children: [
+          { label: 'Co-ord Set', href: '/edits/ease-edit/co-ord-set' },
+        ],
+      },
+      {
         label: 'The Everyday Edit',
         href: '/edits/everyday-edit',
         descriptor: 'Bio-washed comfortwear for daily wear',
@@ -173,38 +205,6 @@ export const NAV_ITEMS: NavItem[] = [
         children: [
           { label: "Women's Sleepwear", href: '/edits/rest-edit/womens-sleepwear' },
           { label: 'Kids Sleepwear',    href: '/edits/rest-edit/kids-sleepwear'   },
-        ],
-      },
-      {
-        label: "The Indian Edit",
-        href: '/edits/womens-edit',
-        descriptor: 'Relaxed Indian Comfortwear',
-        atmosphere: {
-          gradient: 'linear-gradient(140deg, #C87060 0%, #A85848 60%, #8A4538 100%)',
-          text: 'Modern Indo-western forms\nfor elevated everyday ease.',
-          ghost: 'WOMEN',
-          editorial: [
-            'Indo-Western comfortwear designed for contemporary Indian wardrobes.',
-            'Relaxed silhouettes balanced with softness and quiet elegance.',
-          ],
-        },
-        children: [
-          { label: 'A-line Kurta', href: '/edits/womens-edit/a-line-kurta' },
-          { label: 'Co-ord Set',   href: '/edits/womens-edit/co-ord-set'   },
-          { label: 'Sleepwear',    href: '/edits/womens-edit/sleepwear'    },
-        ],
-      },
-      {
-        label: 'The Ease Edit',
-        href: '/edits/ease-edit',
-        descriptor: 'Relaxed linen-cotton co-ords',
-        atmosphere: {
-          gradient: 'linear-gradient(150deg, #E5E8DD 0%, #C9CDB8 50%, #AEB39A 100%)',
-          text: 'Linen-cotton co-ords\nworn together or apart.',
-          ghost: 'EASE',
-        },
-        children: [
-          { label: 'Co-ord Set', href: '/edits/ease-edit/co-ord-set' },
         ],
       },
     ],
