@@ -89,7 +89,6 @@ export const NAV_ITEMS: NavItem[] = [
         },
         children: [
           { label: 'Cargo Pants', href: '/shop/unisex/cargo-pants' },
-          { label: 'Lounge Sets', href: '/shop/unisex/lounge-sets' },
         ],
       },
       {
