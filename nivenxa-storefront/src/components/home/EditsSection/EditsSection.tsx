@@ -6,7 +6,7 @@ import styles from './EditsSection.module.css'
 const TEE_OAT_WALKING     = "/images/Men/OversizedTee's/OAT%20BEIGE/walking_view.webp"
 const CARGO_OLIVE_SITTING = '/images/Unisex/cargos/DARKOLIVE/sittingorLearning_studio_view.webp'
 const KURTA_IVORY_WALKING = '/images/Wonmen/A-line%20Kurta/MORNING%20IVORY/walking_view.webp'
-const KIDS_SAND_WALKING   = '/images/Kids/unisex%20sleeper%20wear/warm_sand/walking_view.png'
+const KIDS_CLOUD_WALKING  = '/images/Kids/unisex%20sleeper%20wear/Rest%20Set/SOFT%20CLOUD%20WHITE/walking_view.webp'
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
@@ -70,8 +70,8 @@ const CARDS: EditCard[] = [
     productName: 'Kids Sleepwear Set',
     fabricLine: 'Soft organic sleepwear',
     href: '/shop/youth-studio/kids-sleepwear',
-    imageSrc: KIDS_SAND_WALKING,
-    imageAlt: 'Kids Sleepwear Set — Warm Sand — walking view',
+    imageSrc: KIDS_CLOUD_WALKING,
+    imageAlt: 'Kids Sleepwear Set — Cloud — walking view',
     ghostColor: 'rgba(0,0,0,0.08)',
   },
 ]
