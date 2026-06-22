@@ -29,6 +29,10 @@ const DESCRIPTORS: Record<string, string> = {
     'Relaxed sets that work as a complete look or as separates.',
   'sleepwear':
     'Ultra-soft fabrications for considered rest.',
+  'kids-rest-sleep-set':
+    '220 GSM Organic Cotton-Bamboo. Full-sleeve comfort for cooler nights and AC rooms.',
+  'kids-summer-sleep-set':
+    '180–200 GSM organic cotton. Lightweight half-sleeve comfort for warm weather.',
 }
 
 function getGridClass(count: number): string {

@@ -133,6 +133,30 @@ export const edits: Edit[] = [
     ],
   },
   {
+    name: 'The Dream Edit',
+    slug: 'dream-edit',
+    heroImageUrl: '',
+    headline: 'Soft rest,\nevery season.',
+    story:
+      'Soft organic sleepwear for every season. Made for rest, designed to last.',
+    featuredProductHandle: 'kids-rest-sleep-set',
+    featuredColourSlug: 'cloud',
+    subItems: [
+      {
+        name: 'The Rest Sleep Set',
+        slug: 'kids-rest-sleep-set',
+        productHandles: ['kids-rest-sleep-set'],
+        editorial: 'Full-sleeve comfort for cooler nights and AC rooms.',
+      },
+      {
+        name: 'The Summer Sleep Set',
+        slug: 'kids-summer-sleep-set',
+        productHandles: ['kids-summer-sleep-set'],
+        editorial: 'Lightweight cotton for warm-weather rest.',
+      },
+    ],
+  },
+  {
     name: 'The Rest Edit',
     slug: 'rest-edit',
     heroImageUrl: '',

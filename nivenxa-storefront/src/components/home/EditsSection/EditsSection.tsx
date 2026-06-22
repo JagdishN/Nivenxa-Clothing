@@ -68,7 +68,7 @@ const CARDS: EditCard[] = [
     editName: 'The Dream Edit',
     productName: 'Kids Sleepwear Set',
     fabricLine: 'Soft organic sleepwear',
-    href: '/shop/youth-studio/kids-sleepwear',
+    href: '/edits/dream-edit',
     imageSrc: KIDS_CLOUD_WALKING,
     imageAlt: 'Kids Sleepwear Set — Cloud — walking view',
     ghostColor: 'rgba(0,0,0,0.08)',

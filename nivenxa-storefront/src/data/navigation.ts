@@ -194,6 +194,20 @@ export const NAV_ITEMS: NavItem[] = [
         ],
       },
       {
+        label: 'The Dream Edit',
+        href: '/edits/dream-edit',
+        descriptor: 'Soft organic sleepwear',
+        atmosphere: {
+          gradient: 'linear-gradient(148deg, #E2DCD0 0%, #CFC8B6 50%, #B8B098 100%)',
+          text: 'Soft organic sleepwear\nfor every season.',
+          ghost: 'DREAM',
+        },
+        children: [
+          { label: 'The Rest Sleep Set',   href: '/edits/dream-edit/kids-rest-sleep-set'   },
+          { label: 'The Summer Sleep Set', href: '/edits/dream-edit/kids-summer-sleep-set' },
+        ],
+      },
+      {
         label: 'The Rest Edit',
         href: '/edits/rest-edit',
         descriptor: 'Considered rest. Ultra-soft fabrics.',
