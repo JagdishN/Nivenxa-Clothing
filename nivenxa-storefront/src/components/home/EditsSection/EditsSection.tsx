@@ -7,6 +7,7 @@ const TEE_OAT_WALKING     = "/images/Men/OversizedTee's/OAT%20BEIGE/walking_view
 const CARGO_OLIVE_SITTING = '/images/Unisex/cargos/DARKOLIVE/sittingorLearning_studio_view.webp'
 const KURTA_IVORY_WALKING = '/images/Wonmen/A-line%20Kurta/MORNING%20IVORY/walking_view.webp'
 const KIDS_CLOUD_WALKING  = '/images/Kids/unisex%20sleeper%20wear/Rest%20Set/SOFT%20CLOUD%20WHITE/walking_view.webp'
+const COORD_SAGE_WALKING  = '/images/Wonmen/Co-ord%20Sets/MEADOW%20SAGE/walking_view.webp'
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
@@ -39,8 +40,8 @@ const CARDS: EditCard[] = [
     productName: 'Co-ord Set',
     fabricLine: 'Linen-cotton blend',
     href: '/edits/ease-edit',
-    // No real photography for this product yet — placeholder, same as Rest Edit.
-    placeholderBg: '#8C9E84',
+    imageSrc: COORD_SAGE_WALKING,
+    imageAlt: 'Co-ord Set — Meadow Sage — walking view',
     ghostColor: 'rgba(0,0,0,0.08)',
   },
   {

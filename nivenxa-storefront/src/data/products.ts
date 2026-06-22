@@ -1023,12 +1023,61 @@ const aLineKurta: Product = {
 }
 
 // ─── Product 4: Women's Co-ord Set ────────────────────────────────────────────
-const coordColourSlugs: Array<{ slug: string; hex: string; label: string }> = [
-  { slug: 'raw-ivory',   hex: 'F0EBE0', label: 'Raw Ivory'   }, // Pantone 11-0602 TCX
-  { slug: 'flax',        hex: 'C8B89A', label: 'Flax'        }, // Pantone 12-0712 TCX
-  { slug: 'meadow-sage', hex: '8C9E84', label: 'Meadow Sage' }, // Pantone 16-0430 TCX
-  { slug: 'rose-dust',   hex: 'D4A8A0', label: 'Rose Dust'   }, // Pantone 14-1911 TCX
+interface CoordFiles {
+  front:     string   // front_studio_view.webp           — hero
+  back:      string   // back_studio_view.webp            — stack
+  side:      string   // side_studio_view.webp            — stack
+  sitting:   string   // sittingorLearning_studio_view.webp — stack
+  stylewith: string   // stylewith_view.webp              — stack
+  walk:      string   // walking_view.webp                — stack
+  fabric:    string   // fabric_close_up.webp             — stack
+}
+
+interface CoordConfig {
+  slug:   string
+  hex:    string
+  label:  string
+  folder: string
+  files:  CoordFiles
+}
+
+const COORD_COMMON_FILES: CoordFiles = {
+  front:     'front_studio_view.webp',
+  back:      'back_studio_view.webp',
+  side:      'side_studio_view.webp',
+  sitting:   'sittingorLearning_studio_view.webp',
+  stylewith: 'stylewith_view.webp',
+  walk:      'walking_view.webp',
+  fabric:    'fabric_close_up.webp',
+}
+
+const coordColourSlugs: CoordConfig[] = [
+  {
+    slug: 'raw-ivory', hex: 'F0EBE0', label: 'Raw Ivory', // Pantone 11-0602 TCX
+    folder: 'Wonmen/Co-ord Sets/RAWIVORY',
+    files: {
+      ...COORD_COMMON_FILES,
+      // This colour's walking and sitting shots were delivered as .png, not .webp.
+      walk:    'walking_view.png',
+      sitting: 'sittingorLearning_studio_view.png',
+    },
+  },
+  { slug: 'flax',        hex: 'C8B89A', label: 'Flax',        folder: 'Wonmen/Co-ord Sets/FLAX',        files: COORD_COMMON_FILES }, // Pantone 12-0712 TCX
+  { slug: 'meadow-sage', hex: '8C9E84', label: 'Meadow Sage', folder: 'Wonmen/Co-ord Sets/MEADOW SAGE', files: COORD_COMMON_FILES }, // Pantone 16-0430 TCX
+  { slug: 'rose-dust',   hex: 'D4A8A0', label: 'Rose Dust',   folder: 'Wonmen/Co-ord Sets/ROSE DUST',   files: COORD_COMMON_FILES }, // Pantone 14-1911 TCX
 ]
+
+function buildCoordImages(c: CoordConfig): ProductImage[] {
+  return [
+    localImg(`coord-${c.slug}-sf`, c.folder, c.files.front,     'studio-front', 'Relaxed Co-ord Set', c.slug), // hero
+    localImg(`coord-${c.slug}-sb`, c.folder, c.files.back,      'studio-back',  'Relaxed Co-ord Set', c.slug), // stack
+    localImg(`coord-${c.slug}-ss`, c.folder, c.files.side,      'studio-side',  'Relaxed Co-ord Set', c.slug), // stack
+    localImg(`coord-${c.slug}-st`, c.folder, c.files.sitting,   'editorial',    'Relaxed Co-ord Set', c.slug), // stack
+    localImg(`coord-${c.slug}-sw`, c.folder, c.files.stylewith, 'editorial',    'Relaxed Co-ord Set', c.slug), // stack
+    localImg(`coord-${c.slug}-wk`, c.folder, c.files.walk,      'walking',      'Relaxed Co-ord Set', c.slug), // stack
+    localImg(`coord-${c.slug}-fc`, c.folder, c.files.fabric,    'detail',       'Relaxed Co-ord Set', c.slug), // stack
+  ]
+}
 
 const womenCoordSet: Product = {
   id: 'prod-004',
@@ -1050,7 +1099,7 @@ const womenCoordSet: Product = {
     label:     c.label,
     hex:       `#${c.hex}`,
     available: true,
-    images:    buildPlaceholderImages('p4', 'Relaxed Co-ord Set', c.slug, c.hex),
+    images:    buildCoordImages(c),
   })),
 
   sizes: [
@@ -1177,8 +1226,8 @@ const womenCoordSet: Product = {
       price: 3299,
       currency: '₹',
       images: [
-        { id: 'col-p4-001-sf', src: phImg('8C9E84', 2000, 2500, 'Relaxed Co-ord Set studio-front'), alt: 'Relaxed Co-ord Set — studio-front — meadow-sage', type: 'studio-front', colourSlug: 'meadow-sage' },
-        { id: 'col-p4-001-wk', src: phImg('8C9E84', 1200, 1500, 'Relaxed Co-ord Set walking'),      alt: 'Relaxed Co-ord Set — walking — meadow-sage',      type: 'walking',      colourSlug: 'meadow-sage' },
+        localImg('col-p4-001-sf', 'Wonmen/Co-ord Sets/MEADOW SAGE', 'front_studio_view.webp', 'studio-front', 'Relaxed Co-ord Set', 'meadow-sage'),
+        localImg('col-p4-001-wk', 'Wonmen/Co-ord Sets/MEADOW SAGE', 'walking_view.webp',      'walking',      'Relaxed Co-ord Set', 'meadow-sage'),
       ],
     },
     {
@@ -1189,8 +1238,8 @@ const womenCoordSet: Product = {
       price: 3299,
       currency: '₹',
       images: [
-        { id: 'col-p4-002-sf', src: phImg('D4A8A0', 2000, 2500, 'Relaxed Co-ord Set studio-front'), alt: 'Relaxed Co-ord Set — studio-front — rose-dust', type: 'studio-front', colourSlug: 'rose-dust' },
-        { id: 'col-p4-002-wk', src: phImg('D4A8A0', 1200, 1500, 'Relaxed Co-ord Set walking'),      alt: 'Relaxed Co-ord Set — walking — rose-dust',      type: 'walking',      colourSlug: 'rose-dust' },
+        localImg('col-p4-002-sf', 'Wonmen/Co-ord Sets/ROSE DUST', 'front_studio_view.webp', 'studio-front', 'Relaxed Co-ord Set', 'rose-dust'),
+        localImg('col-p4-002-wk', 'Wonmen/Co-ord Sets/ROSE DUST', 'walking_view.webp',      'walking',      'Relaxed Co-ord Set', 'rose-dust'),
       ],
     },
   ],
