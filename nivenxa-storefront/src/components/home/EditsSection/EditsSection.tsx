@@ -77,8 +77,8 @@ const CARDS: EditCard[] = [
   {
     num: '06',
     editName: 'The Rest Edit',
-    productName: 'Long Sleeve Lounge Set',
-    fabricLine: '280 GSM French Terry',
+    productName: 'Long Sleeve Sleep Set',
+    fabricLine: '200–220 GSM Cotton-Modal',
     href: '/edits/rest-edit',
     placeholderBg: '#F5F0E8',
     ghostColor: 'rgba(0,0,0,0.08)',

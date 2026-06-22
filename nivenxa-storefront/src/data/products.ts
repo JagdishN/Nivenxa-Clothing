@@ -4,7 +4,7 @@
 // No component file needs to change — only the data source import in
 // src/hooks/useProduct.ts changes.
 
-import type { Product, ProductImage, ImageType } from '@/types/product'
+import type { Product, ProductImage, ImageType, ProductColour } from '@/types/product'
 
 
 // ─── Sized placeholder — hero 2000×2500, stack 1200×1500, text always F2EDE6 ──
@@ -1302,98 +1302,114 @@ const womenCoordSet: Product = {
   },
 }
 
-// ─── Product 5: Women's Sleepwear ─────────────────────────────────────────────
-const sleepwearColourSlugs: Array<{ slug: string; hex: string; label: string }> = [
-  { slug: 'morning-cream', hex: 'F5F0E8', label: 'Morning Cream' }, // Pantone 11-0602 TCX — print: micro-botanical
-  { slug: 'blush-field',   hex: 'D4A8A0', label: 'Blush Field'   }, // Pantone 14-1911 TCX — print: micro-botanical
-  { slug: 'sage-atelier',  hex: '8C9E84', label: 'Sage Atelier'  }, // Pantone 16-5803 TCX — print: dabu-block
-  { slug: 'dusk-lavender', hex: 'B8B0C8', label: 'Dusk Lavender' }, // Pantone 14-3812 TCX — print: micro-stripe
-  { slug: 'dark-earth',    hex: '7B5B3A', label: 'Dark Earth'    }, // Pantone 18-1048 TCX — print: plain
+// ─── Products 5 & 9: Women's Sleep Sets ───────────────────────────────────────
+// Short Sleeve (SS2026, handle women-sleepwear) and Long Sleeve (AW2026,
+// handle women-sleep-set) — two separate products sharing one 5-colour
+// palette. Each maps the shared spec independently below, so every
+// ProductColour object (and its images) is its own instance — no shared
+// references between the two products despite identical values.
+const restSleepColourSlugs: Array<{
+  slug: string
+  hex: string
+  label: string
+  pantone: string
+  isUnique: boolean
+  finish: NonNullable<ProductColour['finish']>
+}> = [
+  { slug: 'morning-cream', hex: 'F5F0E8', label: 'Morning Cream', pantone: '11-0602 TCX', isUnique: false, finish: 'plain' },
+  { slug: 'dark-earth',    hex: '7B5B3A', label: 'Dark Earth',    pantone: '18-1048 TCX', isUnique: false, finish: 'plain' },
+  { slug: 'blush-field',   hex: 'D4A8A0', label: 'Blush Field',   pantone: '14-1911 TCX', isUnique: false, finish: 'tonal-botanical-print' },
+  { slug: 'dusk-lavender', hex: 'B8B0C8', label: 'Dusk Lavender', pantone: '14-3812 TCX', isUnique: false, finish: 'tonal-micro-stripe' },
+  { slug: 'sage-atelier',  hex: '8C9E84', label: 'Sage Atelier',  pantone: '16-5803 TCX', isUnique: true,  finish: 'dabu-atelier-print' },
 ]
 
-const womenSleepwear: Product = {
-  id: 'prod-005',
-  name: 'Long Sleeve Lounge Set',
+// ─── Product 9: Short Sleeve Sleep Set (SS2026) ───────────────────────────────
+const womenShortSleeveSleepSet: Product = {
+  id: 'prod-009',
+  name: 'Short Sleeve Sleep Set',
   category: 'Sleepwear',
   handle: 'women-sleepwear',
   collectionName: "Women's",
   collectionSlug: 'womens',
   badge: null,
-  compositionQuote: '280 GSM French Terry — bio-polished for softness from first wear. Considered rest for Indian nights.',
-  price: 2499,
+  compositionQuote: '60% Cotton / 40% Modal — 160–180 GSM. Short sleeve top and wide-leg pant for warm-weather rest.',
+  price: 1499,
   currency: '₹',
   trustLine: 'Inclusive of all taxes · Free delivery above ₹999',
   sizeUnit: null,
   modelNote: "Model is 5'6\" wearing size S.",
 
-  colours: sleepwearColourSlugs.map(c => ({
+  colours: restSleepColourSlugs.map(c => ({
     slug:      c.slug,
     label:     c.label,
     hex:       `#${c.hex}`,
     available: true,
-    images:    buildPlaceholderImages('p5', 'Long Sleeve Lounge Set', c.slug, c.hex),
+    pantone:   c.pantone,
+    isUnique:  c.isUnique,
+    finish:    c.finish,
+    images:    buildPlaceholderImages('p9', 'Short Sleeve Sleep Set', c.slug, c.hex),
   })),
 
   sizes: [
-    { label: 'XS', available: true },
-    { label: 'S',  available: true },
-    { label: 'M',  available: true },
-    { label: 'L',  available: true },
-    { label: 'XL', available: true },
+    { label: 'XS',  available: true },
+    { label: 'S',   available: true },
+    { label: 'M',   available: true },
+    { label: 'L',   available: true },
+    { label: 'XL',  available: true },
+    { label: 'XXL', available: true },
   ],
 
   featureBullets: [
-    '280 GSM French Terry',
-    '95% Combed Cotton / 5% Elastane',
-    'Ribbed cuffs on sleeve and ankle',
-    'Bio-polished for softness',
-    'OEKO-TEX Standard 100 certified',
+    '60% Cotton / 40% Modal blend',
+    '160–180 GSM — lightweight, breathable',
+    'Variant A — short sleeve top + wide-leg pant',
+    'Launching SS2026',
+    'OEKO-TEX Standard 100 Class II certified',
   ],
 
   specs: [
-    { group: 'Material',     label: 'Fabric',        value: '280 GSM French Terry'          },
-    { group: 'Material',     label: 'Composition',   value: '95% Cotton 5% Elastane'        },
-    { group: 'Material',     label: 'Certification', value: 'OEKO-TEX Standard 100'         },
-    { group: 'Construction', label: 'Set',           value: 'Long sleeve top + jogger'      },
-    { group: 'Construction', label: 'Cuffs',         value: '4×4 ribbed at sleeve + ankle'  },
-    { group: 'Construction', label: 'Waistband',     value: 'Elastic + internal drawcord'   },
-    { group: 'Production',   label: 'Finish',        value: 'Bio-polished'                  },
-    { group: 'Production',   label: 'Origin',        value: 'Made in India'                 },
+    { group: 'Material',     label: 'Fabric',        value: '60% Cotton / 40% Modal'         },
+    { group: 'Material',     label: 'Weight',        value: '160–180 GSM'                    },
+    { group: 'Material',     label: 'Certification', value: 'OEKO-TEX Standard 100 Class II'  },
+    { group: 'Construction', label: 'Variant',       value: 'A — Short sleeve + wide-leg pant'},
+    { group: 'Construction', label: 'Set',           value: 'Top + wide-leg pant'             },
+    { group: 'Production',   label: 'Season',        value: 'SS2026'                         },
+    { group: 'Production',   label: 'Origin',        value: 'Made in India'                  },
   ],
 
   fabricPillars: [
     {
-      value: '280',
-      unit: 'GSM',
-      subLabel: 'French Terry weight',
-      description: 'Substantial enough to feel premium. Soft enough to sleep in. Holds warmth without overheating.',
-    },
-    {
-      value: '95/5',
+      value: '60/40',
       unit: '',
-      subLabel: 'Cotton-Elastane',
-      description: '95% combed cotton, 5% elastane. Moves with the body. Returns to shape after each wear.',
+      subLabel: 'Cotton-Modal blend',
+      description: "Cotton breathability with Modal's soft drape. Light enough for warm nights, durable enough for daily wear.",
     },
     {
-      value: 'Bio',
-      unit: '-polish',
-      subLabel: 'Surface finish',
-      description: 'Bio-polishing removes surface fibres. Prevents pilling. Stays smooth after repeated washing.',
+      value: '160',
+      unit: 'GSM',
+      subLabel: 'Lightweight weave',
+      description: 'Light enough to wear through warm-weather nights without overheating.',
+    },
+    {
+      value: 'OEKO',
+      unit: '-TEX',
+      subLabel: 'Class II certified',
+      description: 'Tested and certified against harmful substances for garments worn in direct, extended skin contact.',
     },
   ],
 
   fitBars: [
-    { label: 'Top fit',   value: 50, descriptor: 'Relaxed' },
-    { label: 'Leg taper', value: 40, descriptor: 'Tapered' },
-    { label: 'Length',    value: 70, descriptor: 'Full'    },
-    { label: 'Cuff ease', value: 30, descriptor: 'Fitted'  },
+    { label: 'Top fit',  value: 50, descriptor: 'Relaxed'  },
+    { label: 'Pant leg', value: 65, descriptor: 'Wide leg' },
+    { label: 'Length',   value: 55, descriptor: 'Regular'  },
+    { label: 'Sleeve',   value: 20, descriptor: 'Short'    },
   ],
 
   care: [
-    { icon: 'wash',      label: 'Machine wash 30°C gentle'   },
-    { icon: 'sun-off',   label: 'Dry in shade. Not direct sun'},
-    { icon: 'flame-off', label: 'Do not iron cuffs directly'  },
-    { icon: 'ban',       label: 'Do not bleach or dry clean'  },
+    { icon: 'wash',      label: 'Machine wash 30°C gentle' },
+    { icon: 'sun-off',   label: 'Dry in shade'             },
+    { icon: 'flame-off', label: 'Cool iron only'           },
+    { icon: 'ban',       label: 'Do not bleach'            },
   ],
 
   accordions: [
@@ -1407,7 +1423,226 @@ const womenSleepwear: Product = {
     },
     {
       title: 'Care note',
-      content: 'Turn inside out before washing. Tumble dry low if needed — remove promptly to preserve softness.',
+      content: 'Turn inside out before washing. Wash separately for the first wash.',
+    },
+    {
+      title: 'Size guide',
+      content: `<p style="margin:0 0 6px;font-size:11px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase">Top</p>
+<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px">
+  <thead><tr>
+    <th style="text-align:left;padding:6px 4px 6px 0;border-bottom:1px solid rgba(0,0,0,0.10)">Size</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Body Length (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Chest ½ (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Shoulder (in)</th>
+  </tr></thead>
+  <tbody>
+    <tr><td style="padding:6px 4px 6px 0">XS</td><td style="padding:6px 4px">24</td><td style="padding:6px 4px">18.5</td><td style="padding:6px 4px">15</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">S</td><td style="padding:6px 4px">25</td><td style="padding:6px 4px">19.5</td><td style="padding:6px 4px">15.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">M</td><td style="padding:6px 4px">26</td><td style="padding:6px 4px">21</td><td style="padding:6px 4px">16.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">L</td><td style="padding:6px 4px">27</td><td style="padding:6px 4px">22.5</td><td style="padding:6px 4px">17.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">XL</td><td style="padding:6px 4px">28</td><td style="padding:6px 4px">24</td><td style="padding:6px 4px">18.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">XXL</td><td style="padding:6px 4px">29</td><td style="padding:6px 4px">25.5</td><td style="padding:6px 4px">19.5</td></tr>
+  </tbody>
+</table>
+<p style="margin:0 0 6px;font-size:11px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase">Pant</p>
+<table style="width:100%;border-collapse:collapse;font-size:13px">
+  <thead><tr>
+    <th style="text-align:left;padding:6px 4px 6px 0;border-bottom:1px solid rgba(0,0,0,0.10)">Size</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Outseam (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Waist ½ (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Hip ½ (in)</th>
+  </tr></thead>
+  <tbody>
+    <tr><td style="padding:6px 4px 6px 0">XS</td><td style="padding:6px 4px">40.5</td><td style="padding:6px 4px">12.5</td><td style="padding:6px 4px">19.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">S</td><td style="padding:6px 4px">41</td><td style="padding:6px 4px">13.5</td><td style="padding:6px 4px">21</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">M</td><td style="padding:6px 4px">41.5</td><td style="padding:6px 4px">14.5</td><td style="padding:6px 4px">22.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">L</td><td style="padding:6px 4px">42</td><td style="padding:6px 4px">15.75</td><td style="padding:6px 4px">24</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">XL</td><td style="padding:6px 4px">42.5</td><td style="padding:6px 4px">17</td><td style="padding:6px 4px">25.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">XXL</td><td style="padding:6px 4px">43</td><td style="padding:6px 4px">18.25</td><td style="padding:6px 4px">27</td></tr>
+  </tbody>
+</table>
+<p style="margin:8px 0 0;font-size:11px;color:rgba(0,0,0,0.45)">All measurements are garment measurements in inches (half body where applicable). XXL extrapolated from the existing size progression.</p>`,
+    },
+  ],
+
+  collectionItems: [
+    {
+      id: 'col-sw-001',
+      slug: 'women-sleepwear/morning-cream',
+      name: 'Short Sleeve Sleep Set',
+      colourLabel: 'Morning Cream',
+      price: 1499,
+      currency: '₹',
+      images: [
+        { id: 'col-p9-001-sf', src: phImg('F5F0E8', 2000, 2500, 'Short Sleeve Sleep Set studio-front'), alt: 'Short Sleeve Sleep Set — studio-front — morning-cream', type: 'studio-front', colourSlug: 'morning-cream' },
+        { id: 'col-p9-001-wk', src: phImg('F5F0E8', 1200, 1500, 'Short Sleeve Sleep Set walking'),      alt: 'Short Sleeve Sleep Set — walking — morning-cream',      type: 'walking',      colourSlug: 'morning-cream' },
+      ],
+    },
+    {
+      id: 'col-sw-002',
+      slug: 'women-sleepwear/blush-field',
+      name: 'Short Sleeve Sleep Set',
+      colourLabel: 'Blush Field',
+      price: 1499,
+      currency: '₹',
+      images: [
+        { id: 'col-p9-002-sf', src: phImg('D4A8A0', 2000, 2500, 'Short Sleeve Sleep Set studio-front'), alt: 'Short Sleeve Sleep Set — studio-front — blush-field', type: 'studio-front', colourSlug: 'blush-field' },
+        { id: 'col-p9-002-wk', src: phImg('D4A8A0', 1200, 1500, 'Short Sleeve Sleep Set walking'),      alt: 'Short Sleeve Sleep Set — walking — blush-field',      type: 'walking',      colourSlug: 'blush-field' },
+      ],
+    },
+  ],
+
+  editorial: {
+    quote: '60% Cotton / 40% Modal — 160–180 GSM. Short sleeve top and wide-leg pant for warm-weather rest.',
+    specs: [
+      { label: 'Fabric',        value: '60% Cotton / 40% Modal'         },
+      { label: 'Weight',        value: '160–180 GSM'                   },
+      { label: 'Variant',       value: 'A — Short sleeve + wide-leg'    },
+      { label: 'Certification', value: 'OEKO-TEX Standard 100 Class II' },
+    ],
+    byImage: {
+      'studio-front': {
+        headline: "Short sleeve.\nWide-leg ease.",
+        body: 'A lighter-weight Cotton-Modal blend cut for warm-weather rest. Short sleeve top paired with a wide-leg pant — relaxed through the body, breathable enough for the warmest nights.',
+        specs: [
+          { label: 'Fabric', value: '60% Cotton / 40% Modal' },
+          { label: 'Weight', value: '160–180 GSM'            },
+          { label: 'Set',    value: 'Top + wide-leg pant'    },
+        ],
+      },
+      'walking': {
+        headline: "Built for\nwarm nights.",
+        body: 'Lightweight enough to move without restriction through the hottest part of the year. Soft against the skin, breathable through the night.',
+        specs: [
+          { label: 'Season',   value: 'SS2026'         },
+          { label: 'Occasion', value: 'Lounge + sleep' },
+          { label: 'Movement', value: 'Unrestricted'   },
+        ],
+      },
+      'detail': {
+        headline: "OEKO-TEX\ncertified.",
+        body: 'Certified Class II — tested and verified safe for garments worn in direct, extended skin contact.',
+        specs: [
+          { label: 'Certification', value: 'OEKO-TEX Standard 100 Class II' },
+          { label: 'Origin',        value: 'Made in India'                  },
+        ],
+      },
+    },
+  },
+}
+
+// ─── Product 5: Long Sleeve Sleep Set (AW2026) — "The Rest Set" in The Rest Edit ──
+// Migrated from the former single "Long Sleeve Lounge Set" SKU (id/colours
+// carried forward), repositioned to the Cotton-Modal AW2026 variant and moved
+// off the women-sleepwear handle so that handle is free for the new Short
+// Sleeve product above.
+const womenLongSleeveSleepSet: Product = {
+  id: 'prod-005',
+  name: 'Long Sleeve Sleep Set',
+  category: 'Sleepwear',
+  handle: 'women-sleep-set',
+  collectionName: "Women's",
+  collectionSlug: 'womens',
+  // "Coming AW2026" — visual only; nothing currently renders Product.badge
+  // anywhere in the UI (confirmed: it's set on other products too but never
+  // read by any component). The functional gate is every size below being
+  // unavailable, which SizeSelector already disables on render. A real
+  // "coming soon" banner is a separate UI piece, not implemented here.
+  badge: 'Coming AW2026',
+  compositionQuote: '60% Cotton / 40% Modal — 200–220 GSM. Long sleeve top and wide-leg pant for AW2026.',
+  price: 2499,
+  currency: '₹',
+  trustLine: 'Inclusive of all taxes · Free delivery above ₹999',
+  sizeUnit: null,
+  modelNote: "Model is 5'6\" wearing size S.",
+
+  colours: restSleepColourSlugs.map(c => ({
+    slug:      c.slug,
+    label:     c.label,
+    hex:       `#${c.hex}`,
+    available: true,
+    pantone:   c.pantone,
+    isUnique:  c.isUnique,
+    finish:    c.finish,
+    images:    buildPlaceholderImages('p5', 'Long Sleeve Sleep Set', c.slug, c.hex),
+  })),
+
+  sizes: [
+    // AW2026 — not yet available. All sizes disabled (SizeSelector renders
+    // these as disabled/"Out of stock") until launch.
+    { label: 'XS',  available: false },
+    { label: 'S',   available: false },
+    { label: 'M',   available: false },
+    { label: 'L',   available: false },
+    { label: 'XL',  available: false },
+    { label: 'XXL', available: false },
+  ],
+
+  featureBullets: [
+    '60% Cotton / 40% Modal blend',
+    '200–220 GSM — substantial, cold-weather weight',
+    'Variant B — long sleeve top + wide-leg pant',
+    'Launching AW2026',
+    'OEKO-TEX Standard 100 Class II certified',
+  ],
+
+  specs: [
+    { group: 'Material',     label: 'Fabric',        value: '60% Cotton / 40% Modal'          },
+    { group: 'Material',     label: 'Weight',        value: '200–220 GSM'                     },
+    { group: 'Material',     label: 'Certification', value: 'OEKO-TEX Standard 100 Class II'   },
+    { group: 'Construction', label: 'Variant',       value: 'B — Long sleeve + wide-leg pant'  },
+    { group: 'Construction', label: 'Set',           value: 'Top + wide-leg pant'              },
+    { group: 'Production',   label: 'Season',        value: 'AW2026'                          },
+    { group: 'Production',   label: 'Origin',        value: 'Made in India'                   },
+  ],
+
+  fabricPillars: [
+    {
+      value: '60/40',
+      unit: '',
+      subLabel: 'Cotton-Modal blend',
+      description: "Cotton structure with Modal's soft drape. Substantial enough for cooler nights and AC rooms.",
+    },
+    {
+      value: '200',
+      unit: 'GSM',
+      subLabel: 'Cold-weather weight',
+      description: 'Heavier hand than the short sleeve variant — built for AW2026 and cooler months.',
+    },
+    {
+      value: 'OEKO',
+      unit: '-TEX',
+      subLabel: 'Class II certified',
+      description: 'Tested and certified against harmful substances for garments worn in direct, extended skin contact.',
+    },
+  ],
+
+  fitBars: [
+    { label: 'Top fit',  value: 50, descriptor: 'Relaxed'  },
+    { label: 'Pant leg', value: 65, descriptor: 'Wide leg' },
+    { label: 'Length',   value: 70, descriptor: 'Full'     },
+    { label: 'Sleeve',   value: 70, descriptor: 'Full'     },
+  ],
+
+  care: [
+    { icon: 'wash',      label: 'Machine wash 30°C gentle' },
+    { icon: 'sun-off',   label: 'Dry in shade'             },
+    { icon: 'flame-off', label: 'Cool iron only'           },
+    { icon: 'ban',       label: 'Do not bleach'            },
+  ],
+
+  accordions: [
+    {
+      title: 'Shipping & delivery',
+      content: 'Free delivery on orders above ₹999. Standard delivery 3–5 business days. Express delivery available at checkout. Tracking link shared via WhatsApp once dispatched.',
+    },
+    {
+      title: 'Exchange & returns',
+      content: 'Free returns within 30 days of delivery. Items must be unworn, unwashed, tags intact. Initiate via the Returns Portal. Refund processed within 5–7 business days.',
+    },
+    {
+      title: 'Care note',
+      content: 'Turn inside out before washing. Wash separately for the first wash.',
     },
     {
       title: 'Size guide',
@@ -1426,6 +1661,7 @@ const womenSleepwear: Product = {
     <tr><td style="padding:6px 4px 6px 0">M</td><td style="padding:6px 4px">26</td><td style="padding:6px 4px">21</td><td style="padding:6px 4px">16.5</td><td style="padding:6px 4px">9</td></tr>
     <tr><td style="padding:6px 4px 6px 0">L</td><td style="padding:6px 4px">27</td><td style="padding:6px 4px">22.5</td><td style="padding:6px 4px">17.5</td><td style="padding:6px 4px">9.5</td></tr>
     <tr><td style="padding:6px 4px 6px 0">XL</td><td style="padding:6px 4px">28</td><td style="padding:6px 4px">24</td><td style="padding:6px 4px">18.5</td><td style="padding:6px 4px">10</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">XXL</td><td style="padding:6px 4px">29</td><td style="padding:6px 4px">25.5</td><td style="padding:6px 4px">19.5</td><td style="padding:6px 4px">10.5</td></tr>
   </tbody>
 </table>
 <p style="margin:0 0 6px;font-size:11px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase">Pant</p>
@@ -1443,92 +1679,73 @@ const womenSleepwear: Product = {
     <tr><td style="padding:6px 4px 6px 0">M</td><td style="padding:6px 4px">41.5</td><td style="padding:6px 4px">14.5</td><td style="padding:6px 4px">22.5</td><td style="padding:6px 4px">29</td></tr>
     <tr><td style="padding:6px 4px 6px 0">L</td><td style="padding:6px 4px">42</td><td style="padding:6px 4px">15.75</td><td style="padding:6px 4px">24</td><td style="padding:6px 4px">29.5</td></tr>
     <tr><td style="padding:6px 4px 6px 0">XL</td><td style="padding:6px 4px">42.5</td><td style="padding:6px 4px">17</td><td style="padding:6px 4px">25.5</td><td style="padding:6px 4px">30</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">XXL</td><td style="padding:6px 4px">43</td><td style="padding:6px 4px">18.25</td><td style="padding:6px 4px">27</td><td style="padding:6px 4px">30.5</td></tr>
   </tbody>
 </table>
-<p style="margin:8px 0 0;font-size:11px;color:rgba(0,0,0,0.45)">All measurements are garment measurements in inches (half body where applicable).</p>`,
+<p style="margin:8px 0 0;font-size:11px;color:rgba(0,0,0,0.45)">All measurements are garment measurements in inches (half body where applicable). XXL extrapolated from the existing size progression.</p>`,
     },
   ],
 
   collectionItems: [
     {
       id: 'col-sw-001',
-      slug: 'women-sleepwear/morning-cream',
-      name: 'Long Sleeve Lounge Set',
+      slug: 'women-sleep-set/morning-cream',
+      name: 'Long Sleeve Sleep Set',
       colourLabel: 'Morning Cream',
       price: 2499,
       currency: '₹',
       images: [
-        { id: 'col-p5-001-sf', src: phImg('F5F0E8', 2000, 2500, 'Long Sleeve Lounge Set studio-front'), alt: 'Long Sleeve Lounge Set — studio-front — morning-cream', type: 'studio-front', colourSlug: 'morning-cream' },
-        { id: 'col-p5-001-wk', src: phImg('F5F0E8', 1200, 1500, 'Long Sleeve Lounge Set walking'),      alt: 'Long Sleeve Lounge Set — walking — morning-cream',      type: 'walking',      colourSlug: 'morning-cream' },
+        { id: 'col-p5-001-sf', src: phImg('F5F0E8', 2000, 2500, 'Long Sleeve Sleep Set studio-front'), alt: 'Long Sleeve Sleep Set — studio-front — morning-cream', type: 'studio-front', colourSlug: 'morning-cream' },
+        { id: 'col-p5-001-wk', src: phImg('F5F0E8', 1200, 1500, 'Long Sleeve Sleep Set walking'),      alt: 'Long Sleeve Sleep Set — walking — morning-cream',      type: 'walking',      colourSlug: 'morning-cream' },
       ],
     },
     {
       id: 'col-sw-002',
-      slug: 'women-sleepwear/blush-field',
-      name: 'Long Sleeve Lounge Set',
+      slug: 'women-sleep-set/blush-field',
+      name: 'Long Sleeve Sleep Set',
       colourLabel: 'Blush Field',
       price: 2499,
       currency: '₹',
       images: [
-        { id: 'col-p5-002-sf', src: phImg('D4A8A0', 2000, 2500, 'Long Sleeve Lounge Set studio-front'), alt: 'Long Sleeve Lounge Set — studio-front — blush-field', type: 'studio-front', colourSlug: 'blush-field' },
-        { id: 'col-p5-002-wk', src: phImg('D4A8A0', 1200, 1500, 'Long Sleeve Lounge Set walking'),      alt: 'Long Sleeve Lounge Set — walking — blush-field',      type: 'walking',      colourSlug: 'blush-field' },
+        { id: 'col-p5-002-sf', src: phImg('D4A8A0', 2000, 2500, 'Long Sleeve Sleep Set studio-front'), alt: 'Long Sleeve Sleep Set — studio-front — blush-field', type: 'studio-front', colourSlug: 'blush-field' },
+        { id: 'col-p5-002-wk', src: phImg('D4A8A0', 1200, 1500, 'Long Sleeve Sleep Set walking'),      alt: 'Long Sleeve Sleep Set — walking — blush-field',      type: 'walking',      colourSlug: 'blush-field' },
       ],
     },
   ],
 
   editorial: {
-    quote: '280 GSM French Terry — bio-polished for softness from first wear. Considered rest for Indian nights.',
+    quote: '60% Cotton / 40% Modal — 200–220 GSM. Long sleeve top and wide-leg pant for AW2026.',
     specs: [
-      { label: 'Fabric',        value: '280 GSM French Terry'   },
-      { label: 'Composition',   value: '95% Cotton 5% Elastane' },
-      { label: 'Cuffs',         value: 'Ribbed sleeve + ankle'  },
-      { label: 'Finish',        value: 'Bio-polished'           },
-      { label: 'Certification', value: 'OEKO-TEX Standard 100'  },
+      { label: 'Fabric',        value: '60% Cotton / 40% Modal'         },
+      { label: 'Weight',        value: '200–220 GSM'                   },
+      { label: 'Variant',       value: 'B — Long sleeve + wide-leg'     },
+      { label: 'Certification', value: 'OEKO-TEX Standard 100 Class II' },
     ],
     byImage: {
       'studio-front': {
-        headline: "Ribbed cuffs.\nSoft French Terry.",
-        body: 'The ribbed cuffs at sleeve and ankle are the detail that defines this set. 280 GSM French Terry — substantial enough to feel premium, soft enough to sleep in.',
+        headline: "Long sleeve.\nWide-leg ease.",
+        body: 'A heavier Cotton-Modal blend cut for cooler-weather rest. Long sleeve top paired with a wide-leg pant — substantial enough for AC rooms and cold nights.',
         specs: [
-          { label: 'Fabric',      value: '280 GSM French Terry'        },
-          { label: 'Composition', value: '95% Cotton 5% Elastane'      },
-          { label: 'Cuffs',       value: 'Ribbed at sleeve + ankle'    },
+          { label: 'Fabric', value: '60% Cotton / 40% Modal' },
+          { label: 'Weight', value: '200–220 GSM'            },
+          { label: 'Set',    value: 'Top + wide-leg pant'    },
         ],
       },
       'walking': {
         headline: "Considered\nrest.",
         body: 'Designed for the hours before and after sleep — not just sleep itself. Moves without restriction. Looks deliberate enough for the morning after.',
         specs: [
-          { label: 'Set',       value: 'Top + jogger'   },
-          { label: 'Occasion',  value: 'Lounge + sleep' },
-          { label: 'Movement',  value: 'Unrestricted'   },
-        ],
-      },
-      'studio-back': {
-        headline: "The jogger\nproportion.",
-        body: 'Elasticated waistband with internal drawcord. Tapered through the leg to the ribbed ankle cuff. The proportion is intentional — not sloppy.',
-        specs: [
-          { label: 'Waistband', value: 'Elastic + drawcord'    },
-          { label: 'Leg',       value: 'Tapered to ankle cuff' },
-          { label: 'Cuff',      value: '4×4 wide rib'          },
-        ],
-      },
-      'studio-side': {
-        headline: "Sleeve\ndetail.",
-        body: 'Long sleeve with 4×4 ribbed cuff. The sleeve length is sized for full coverage without bunching. The cuff sits cleanly at the wrist.',
-        specs: [
-          { label: 'Sleeve', value: 'Full length'               },
-          { label: 'Cuff',   value: '4×4 rib'                   },
-          { label: 'Fit',    value: 'Relaxed through shoulder'  },
+          { label: 'Season',   value: 'AW2026'         },
+          { label: 'Occasion', value: 'Lounge + sleep' },
+          { label: 'Movement', value: 'Unrestricted'   },
         ],
       },
       'detail': {
-        headline: "Bio-polished\nsoftness.",
-        body: 'Bio-polishing removes surface fibres that cause pilling and roughness. The result is a fabric that feels smoother and softer — and stays that way after repeated washing.',
+        headline: "OEKO-TEX\ncertified.",
+        body: 'Certified Class II — tested and verified safe for garments worn in direct, extended skin contact.',
         specs: [
-          { label: 'Finish',        value: 'Bio-polished'          },
-          { label: 'Certification', value: 'OEKO-TEX Standard 100' },
-          { label: 'Wash',          value: 'Open-loop wrinkle control' },
+          { label: 'Certification', value: 'OEKO-TEX Standard 100 Class II' },
+          { label: 'Origin',        value: 'Made in India'                  },
         ],
       },
     },
@@ -2143,7 +2360,8 @@ export const products: Product[] = [
   cargoPants,
   aLineKurta,
   womenCoordSet,
-  womenSleepwear,
+  womenShortSleeveSleepSet,
+  womenLongSleeveSleepSet,
   kidsRestSleepSet,
   kurtaStraightPant,
   kidsSummerSleepSet,

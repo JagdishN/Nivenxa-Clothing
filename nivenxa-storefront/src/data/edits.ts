@@ -163,13 +163,13 @@ export const edits: Edit[] = [
     headline: 'Considered\nrest.',
     story:
       'Ultra-soft French Terry and combed cotton. Designed for the hours before and after sleep — and everything in between. For Indian nights that deserve better fabric.',
-    featuredProductHandle: 'women-sleepwear',
-    featuredColourSlug: 'soft-cream',
+    featuredProductHandle: 'women-sleep-set',
+    featuredColourSlug: 'morning-cream',
     subItems: [
       {
         name: "Women's Sleepwear",
         slug: 'womens-sleepwear',
-        productHandles: ['women-sleepwear'],
+        productHandles: ['women-sleep-set'],
         editorial: 'Soft enough to sleep in. Beautiful enough to wear at home.',
       },
       {
@@ -181,8 +181,14 @@ export const edits: Edit[] = [
       {
         name: 'Unisex Lounge Sets',
         slug: 'unisex-lounge-sets',
-        productHandles: ['women-lounge-sets', 'women-sleepwear'],
+        productHandles: ['women-lounge-sets', 'women-sleep-set'],
         editorial: 'The between hours — neither sleep nor waking.',
+      },
+      {
+        name: 'The Rest Set',
+        slug: 'the-rest-set',
+        productHandles: ['women-sleep-set'],
+        editorial: 'Long sleeve, wide-leg ease — built for cooler nights.',
       },
     ],
   },

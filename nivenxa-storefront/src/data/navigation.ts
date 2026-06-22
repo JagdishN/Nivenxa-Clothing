@@ -72,6 +72,7 @@ export const NAV_ITEMS: NavItem[] = [
           { label: 'A-line Kurta', href: '/shop/womens/a-line-kurta' },
           { label: 'Co-ord Set',   href: '/shop/womens/co-ord-set'   },
           { label: 'Sleepwear',    href: '/shop/womens/sleepwear'     },
+          { label: 'Sleep Set',    href: '/shop/womens/sleep-set'     },
         ],
       },
       {
@@ -219,6 +220,7 @@ export const NAV_ITEMS: NavItem[] = [
         children: [
           { label: "Women's Sleepwear", href: '/edits/rest-edit/womens-sleepwear' },
           { label: 'Kids Sleepwear',    href: '/edits/rest-edit/kids-sleepwear'   },
+          { label: 'The Rest Set',      href: '/edits/rest-edit/the-rest-set'     },
         ],
       },
     ],

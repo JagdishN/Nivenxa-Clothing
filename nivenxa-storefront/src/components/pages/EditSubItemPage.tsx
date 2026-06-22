@@ -33,6 +33,8 @@ const DESCRIPTORS: Record<string, string> = {
     '220 GSM Organic Cotton-Bamboo. Full-sleeve comfort for cooler nights and AC rooms.',
   'kids-summer-sleep-set':
     '180–200 GSM organic cotton. Lightweight half-sleeve comfort for warm weather.',
+  'the-rest-set':
+    '60% Cotton / 40% Modal — 200–220 GSM. Long sleeve top and wide-leg pant for AW2026.',
 }
 
 function getGridClass(count: number): string {

@@ -12,6 +12,7 @@ const PRODUCT_SUBPATH: Record<string, string> = {
   'a-line-kurta':         'a-line-kurta',
   'women-lounge-sets':    'co-ord-set',
   'women-sleepwear':      'sleepwear',
+  'women-sleep-set':      'sleep-set',
   'kids-rest-sleep-set':  'kids-rest-sleep-set',
   'kids-summer-sleep-set':'kids-summer-sleep-set',
 }
