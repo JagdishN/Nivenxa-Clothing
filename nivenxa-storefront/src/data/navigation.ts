@@ -106,7 +106,6 @@ export const NAV_ITEMS: NavItem[] = [
         },
         children: [
           { label: 'Sleepwear', href: '/shop/youth-studio/kids-sleepwear' },
-          { label: 'Kids Tee',  href: '/shop/youth-studio/kids-tee'       },
         ],
       },
     ],
