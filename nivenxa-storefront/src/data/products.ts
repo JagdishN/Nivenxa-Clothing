@@ -1020,6 +1020,255 @@ const aLineKurta: Product = {
       },
     },
   },
+
+  // Reciprocal cross-sell — see matching styledWith on kurtaContrastPant below.
+  // Pairing is a perfect bijection sourced entirely from the confirmed two-option
+  // pairing table (e.g. ivory's options were {sage, sand} — sage was free, so it
+  // got ivory; sand went to rose); single-valued because StyledWith only supports
+  // one paired colour per active colour.
+  styledWith: {
+    productHandle: 'kurta-contrast-pant',
+    productName: 'The Contrast Pant',
+    price: '₹1,499',
+    pairings: {
+      'ivory': { colourSlug: 'wild-sage',     colourName: 'Wild Sage',     hex: '#8C9E84' },
+      'sand':  { colourSlug: 'dusk-rose',     colourName: 'Dusk Rose',     hex: '#D4A8A0' },
+      'sage':  { colourSlug: 'baked-clay',    colourName: 'Baked Clay',    hex: '#8B5E3C' },
+      'rose':  { colourSlug: 'desert-sand',   colourName: 'Desert Sand',   hex: '#C8B89A' },
+      'clay':  { colourSlug: 'morning-ivory', colourName: 'Morning Ivory', hex: '#F1EEE6' },
+    },
+  },
+}
+
+// ─── Product 3b: The Contrast Pant ────────────────────────────────────────────
+// Launch product — fully active, no coming-soon state. Pairs exclusively with
+// the A-line Kurta Set (same fabric family, independent colour palette/slugs).
+// subtitle ("For the A-line Kurta Set") and pairingNote have no dedicated field
+// or UI slot on Product/ProductInfo — folded into compositionQuote instead,
+// which is the one description block that already renders on the page.
+interface ContrastPantColourSpec {
+  slug: string
+  hex: string
+  label: string
+  pantone: string
+  isUnique: boolean
+}
+
+const contrastPantColourSlugs: ContrastPantColourSpec[] = [
+  { slug: 'morning-ivory', hex: 'F1EEE6', label: 'Morning Ivory', pantone: '11-0608 TCX', isUnique: false },
+  { slug: 'desert-sand',   hex: 'C8B89A', label: 'Desert Sand',   pantone: '14-1116 TCX', isUnique: false },
+  { slug: 'wild-sage',     hex: '8C9E84', label: 'Wild Sage',     pantone: '16-5803 TCX', isUnique: false },
+  { slug: 'dusk-rose',     hex: 'D4A8A0', label: 'Dusk Rose',     pantone: '14-1911 TCX', isUnique: false },
+  { slug: 'baked-clay',    hex: '8B5E3C', label: 'Baked Clay',    pantone: '18-1441 TCX', isUnique: true  },
+]
+
+const kurtaContrastPant: Product = {
+  id: 'prod-010',
+  name: 'The Contrast Pant',
+  category: 'Pant',
+  handle: 'kurta-contrast-pant',
+  collectionName: "Women's",
+  collectionSlug: 'womens',
+  badge: null,
+  cardDescriptor: 'Relaxed straight · 220–240 GSM',
+  compositionQuote: 'For the A-line Kurta Set. 220–240 GSM Cotton-Modal Slub. A contrast-coloured pant designed to pair with the NIVENXA A-line Kurta Set — not a standalone bottom or general pairing piece.',
+  price: 1499,
+  currency: '₹',
+  trustLine: 'Inclusive of all taxes · Free delivery above ₹999',
+  sizeUnit: null,
+  modelNote: "Model is 5'6\" wearing size S.",
+
+  colours: contrastPantColourSlugs.map(c => ({
+    slug:      c.slug,
+    label:     c.label,
+    hex:       `#${c.hex}`,
+    available: true,
+    pantone:   c.pantone,
+    isUnique:  c.isUnique,
+    images:    buildPlaceholderImages('p10', 'The Contrast Pant', c.slug, c.hex),
+  })),
+
+  sizes: [
+    { label: 'XS',  available: true },
+    { label: 'S',   available: true },
+    { label: 'M',   available: true },
+    { label: 'L',   available: true },
+    { label: 'XL',  available: true },
+    { label: 'XXL', available: true },
+  ],
+
+  featureBullets: [
+    '220–240 GSM Cotton-Modal Slub',
+    'Relaxed hip, straight thigh, clean hem',
+    'Fully elasticated waistband',
+    'Tonal flat cotton drawstring 8–10mm',
+    'Front-only drawstring threading',
+    'Clean folded drawstring ends (no metal tips)',
+    'OEKO-TEX Standard 100 Class II',
+  ],
+
+  specs: [
+    { group: 'Material',     label: 'Fabric',         value: '220–240 GSM Cotton-Modal Slub' },
+    { group: 'Construction', label: 'Silhouette',     value: 'Relaxed hip, straight thigh, clean hem' },
+    { group: 'Construction', label: 'Waistband',      value: 'Fully elasticated + tonal flat cotton drawstring' },
+    { group: 'Construction', label: 'Drawstring',     value: '8–10mm width, front-only threading, 2 eyelets centre front' },
+    { group: 'Construction', label: 'Leg opening',    value: '13.0–14.5" (relaxed straight)' },
+    { group: 'Production',   label: 'SKU',            value: 'KPT' },
+    { group: 'Production',   label: 'Certification',  value: 'OEKO-TEX Standard 100 Class II' },
+    { group: 'Production',   label: 'Origin',         value: 'Made in India' },
+    { group: 'Production',   label: 'Pairs with',     value: 'A-line Kurta Set only' },
+  ],
+
+  fabricPillars: [
+    {
+      value: '220–240',
+      unit: 'GSM',
+      subLabel: 'Cotton-Modal Slub',
+      description: 'Same fabric family as the A-line Kurta Set — natural slub character, breathable enough for daily Indian wear.',
+    },
+    {
+      value: 'Relaxed',
+      unit: '',
+      subLabel: 'Hip & thigh',
+      description: 'Relaxed through the hip and thigh, straight to a clean hem — no taper, no flare.',
+    },
+    {
+      value: 'Front',
+      unit: '-only',
+      subLabel: 'Drawstring threading',
+      description: 'Tonal flat cotton drawstring threads through two centre-front eyelets only, with clean folded ends — no metal tips.',
+    },
+  ],
+
+  fitBars: [
+    { label: 'Hip ease',     value: 55, descriptor: 'Relaxed'   },
+    { label: 'Thigh',        value: 50, descriptor: 'Straight'  },
+    { label: 'Leg opening',  value: 45, descriptor: 'Clean hem' },
+    { label: 'Rise',         value: 50, descriptor: 'Mid-rise'  },
+  ],
+
+  care: [
+    { icon: 'wash',      label: 'Machine wash 30°C gentle'   },
+    { icon: 'sun-off',   label: 'Dry in shade. Not direct sun' },
+    { icon: 'flame-off', label: 'Cool iron reverse side'      },
+    { icon: 'ban',       label: 'Do not bleach or dry clean'  },
+  ],
+
+  accordions: [
+    {
+      title: 'Shipping & delivery',
+      content: 'Free delivery on orders above ₹999. Standard delivery 3–5 business days. Express delivery available at checkout. Tracking link shared via WhatsApp once dispatched.',
+    },
+    {
+      title: 'Exchange & returns',
+      content: 'Free returns within 30 days of delivery. Items must be unworn, unwashed, tags intact. Initiate via the Returns Portal. Refund processed within 5–7 business days.',
+    },
+    {
+      title: 'Care note',
+      content: 'Wash dark and light colourways separately for the first three washes. Garment softens further with each wash.',
+    },
+    {
+      title: 'Size guide',
+      content: `<p style="margin:0 0 6px;font-size:11px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase">Pant</p>
+<table style="width:100%;border-collapse:collapse;font-size:13px">
+  <thead><tr>
+    <th style="text-align:left;padding:6px 4px 6px 0;border-bottom:1px solid rgba(0,0,0,0.10)">Size</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Outseam (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Waist ½ (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Hip ½ (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Leg Open ½ (in)</th>
+  </tr></thead>
+  <tbody>
+    <tr><td style="padding:6px 4px 6px 0">XS</td><td style="padding:6px 4px">37</td><td style="padding:6px 4px">13.25</td><td style="padding:6px 4px">18</td><td style="padding:6px 4px">12.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">S</td><td style="padding:6px 4px">38</td><td style="padding:6px 4px">14.75</td><td style="padding:6px 4px">19.5</td><td style="padding:6px 4px">13</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">M</td><td style="padding:6px 4px">39</td><td style="padding:6px 4px">16.25</td><td style="padding:6px 4px">21</td><td style="padding:6px 4px">13.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">L</td><td style="padding:6px 4px">40</td><td style="padding:6px 4px">17.75</td><td style="padding:6px 4px">22.5</td><td style="padding:6px 4px">14</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">XL</td><td style="padding:6px 4px">41</td><td style="padding:6px 4px">19.25</td><td style="padding:6px 4px">24</td><td style="padding:6px 4px">14.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">XXL</td><td style="padding:6px 4px">42</td><td style="padding:6px 4px">20.75</td><td style="padding:6px 4px">25.5</td><td style="padding:6px 4px">15</td></tr>
+  </tbody>
+</table>
+<p style="margin:8px 0 0;font-size:11px;color:rgba(0,0,0,0.45)">All measurements are garment measurements in inches (half body where applicable). XS and XXL extrapolated from the existing size progression.</p>`,
+    },
+  ],
+
+  collectionItems: [
+    {
+      id: 'col-kpt-001',
+      slug: 'kurta-contrast-pant/morning-ivory',
+      name: 'The Contrast Pant',
+      colourLabel: 'Morning Ivory',
+      price: 1499,
+      currency: '₹',
+      images: [
+        { id: 'col-p10-001-sf', src: phImg('F1EEE6', 2000, 2500, 'The Contrast Pant studio-front'), alt: 'The Contrast Pant — studio-front — morning-ivory', type: 'studio-front', colourSlug: 'morning-ivory' },
+        { id: 'col-p10-001-wk', src: phImg('F1EEE6', 1200, 1500, 'The Contrast Pant walking'),      alt: 'The Contrast Pant — walking — morning-ivory',      type: 'walking',      colourSlug: 'morning-ivory' },
+      ],
+    },
+    {
+      id: 'col-kpt-002',
+      slug: 'kurta-contrast-pant/wild-sage',
+      name: 'The Contrast Pant',
+      colourLabel: 'Wild Sage',
+      price: 1499,
+      currency: '₹',
+      images: [
+        { id: 'col-p10-002-sf', src: phImg('8C9E84', 2000, 2500, 'The Contrast Pant studio-front'), alt: 'The Contrast Pant — studio-front — wild-sage', type: 'studio-front', colourSlug: 'wild-sage' },
+        { id: 'col-p10-002-wk', src: phImg('8C9E84', 1200, 1500, 'The Contrast Pant walking'),      alt: 'The Contrast Pant — walking — wild-sage',      type: 'walking',      colourSlug: 'wild-sage' },
+      ],
+    },
+  ],
+
+  // Reciprocal cross-sell — see matching styledWith on aLineKurta above.
+  styledWith: {
+    productHandle: 'a-line-kurta',
+    productName: 'A-line Kurta',
+    price: '₹3,999',
+    pairings: {
+      'wild-sage':     { colourSlug: 'ivory', colourName: 'Ivory', hex: '#F0EBE0' },
+      'dusk-rose':     { colourSlug: 'sand',  colourName: 'Sand',  hex: '#C8A882' },
+      'baked-clay':    { colourSlug: 'sage',  colourName: 'Sage',  hex: '#8C9E84' },
+      'desert-sand':   { colourSlug: 'rose',  colourName: 'Rose',  hex: '#D4A8A0' },
+      'morning-ivory': { colourSlug: 'clay',  colourName: 'Clay',  hex: '#C47A4E' },
+    },
+  },
+
+  editorial: {
+    quote: 'For the A-line Kurta Set. 220–240 GSM Cotton-Modal Slub — relaxed hip, straight thigh, clean hem.',
+    specs: [
+      { label: 'Fabric',     value: '220–240 GSM Cotton-Modal Slub' },
+      { label: 'Silhouette', value: 'Relaxed straight'              },
+      { label: 'Waistband',  value: 'Elasticated + drawstring'      },
+      { label: 'Pairs with', value: 'A-line Kurta Set'              },
+    ],
+    byImage: {
+      'studio-front': {
+        headline: "Built to pair.\nNot to stand alone.",
+        body: 'Designed specifically as an extended A-line Kurta Set wardrobe piece. Five tones, each paired to a Kurta colourway — not designed to pair with the Co-ord Set or other NIVENXA products.',
+        specs: [
+          { label: 'Pairs with', value: 'A-line Kurta Set only' },
+          { label: 'Colours',    value: '5 — one per Kurta tone' },
+        ],
+      },
+      'walking': {
+        headline: "Relaxed hip.\nClean hem.",
+        body: 'Relaxed through the hip and straight through the thigh, with no taper and no flare. Leg opening 13.0–14.5" for a clean, considered drop.',
+        specs: [
+          { label: 'Silhouette',   value: 'Relaxed straight' },
+          { label: 'Leg opening',  value: '13.0–14.5"'       },
+          { label: 'Hem',          value: 'Clean, no taper'  },
+        ],
+      },
+      'detail': {
+        headline: "Front-only\ndrawstring.",
+        body: 'Tonal flat cotton drawstring, 8–10mm width, threaded through two centre-front eyelets only. Clean folded ends — no metal tips to catch or show through.',
+        specs: [
+          { label: 'Drawstring', value: '8–10mm, front-only' },
+          { label: 'Ends',       value: 'Clean folded, no metal tips' },
+          { label: 'Certification', value: 'OEKO-TEX Standard 100 Class II' },
+        ],
+      },
+    },
+  },
 }
 
 // ─── Product 4: Women's Co-ord Set ────────────────────────────────────────────
@@ -2405,6 +2654,7 @@ export const products: Product[] = [
   oversizedTee,
   cargoPants,
   aLineKurta,
+  kurtaContrastPant,
   womenCoordSet,
   womenShortSleeveSleepSet,
   womenLongSleeveSleepSet,

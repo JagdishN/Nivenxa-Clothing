@@ -23,6 +23,8 @@ const DESCRIPTORS: Record<string, string> = {
     'Sets designed to be worn together or separately — for everyone.',
   'a-line-kurta':
     'The Indo-Western silhouette for everyday India.',
+  'kurta-contrast-pant':
+    '220–240 GSM Cotton-Modal Slub. Five tones, each paired to an A-line Kurta Set colourway.',
   'co-ord-set':
     'Relaxed sets that work as a complete look or as separates.',
   'sleepwear':

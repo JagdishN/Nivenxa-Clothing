@@ -69,9 +69,10 @@ export const NAV_ITEMS: NavItem[] = [
           ],
         },
         children: [
-          { label: 'A-line Kurta', href: '/shop/womens/a-line-kurta' },
-          { label: 'Co-ord Set',   href: '/shop/womens/co-ord-set'   },
-          { label: 'Sleepwear',    href: '/shop/womens/sleepwear'     },
+          { label: 'A-line Kurta',     href: '/shop/womens/a-line-kurta'        },
+          { label: 'The Contrast Pant', href: '/shop/womens/kurta-contrast-pant' },
+          { label: 'Co-ord Set',       href: '/shop/womens/co-ord-set'          },
+          { label: 'Sleepwear',        href: '/shop/womens/sleepwear'           },
         ],
       },
       {
@@ -135,9 +136,10 @@ export const NAV_ITEMS: NavItem[] = [
           ],
         },
         children: [
-          { label: 'A-line Kurta', href: '/edits/womens-edit/a-line-kurta' },
-          { label: 'Co-ord Set',   href: '/edits/womens-edit/co-ord-set'   },
-          { label: 'Sleepwear',    href: '/edits/womens-edit/sleepwear'    },
+          { label: 'A-line Kurta',      href: '/edits/womens-edit/a-line-kurta'      },
+          { label: 'The Contrast Pant', href: '/edits/womens-edit/kurta-contrast-pant' },
+          { label: 'Co-ord Set',        href: '/edits/womens-edit/co-ord-set'        },
+          { label: 'Sleepwear',         href: '/edits/womens-edit/sleepwear'         },
         ],
       },
       {

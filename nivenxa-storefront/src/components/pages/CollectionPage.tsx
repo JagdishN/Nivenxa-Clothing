@@ -10,6 +10,7 @@ const PRODUCT_SUBPATH: Record<string, string> = {
   'over-tee-shirts':      'oversized-tee',
   'cargo-pants':          'cargo-pants',
   'a-line-kurta':         'a-line-kurta',
+  'kurta-contrast-pant':  'kurta-contrast-pant',
   'women-lounge-sets':    'co-ord-set',
   'women-sleepwear':      'short-sleeve-sleep-set',
   'women-sleep-set':      'sleep-set',

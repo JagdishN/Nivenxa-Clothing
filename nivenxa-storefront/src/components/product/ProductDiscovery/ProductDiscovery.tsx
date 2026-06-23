@@ -15,6 +15,7 @@ const HERO_SLUG: Record<string, string> = {
   'over-tee-shirts':       'bone',
   'cargo-pants':           'chalk-stone',
   'a-line-kurta':          'ivory',
+  'kurta-contrast-pant':   'wild-sage',
   'women-lounge-sets':     'meadow-sage',
   'women-sleepwear':       'morning-cream',
   'women-sleep-set':       'morning-cream',

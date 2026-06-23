@@ -40,6 +40,12 @@ export const edits: Edit[] = [
         editorial: 'The everyday Indian silhouette, elevated.',
       },
       {
+        name: 'The Contrast Pant',
+        slug: 'kurta-contrast-pant',
+        productHandles: ['kurta-contrast-pant'],
+        editorial: 'For the A-line Kurta Set — five tones, one pairing.',
+      },
+      {
         name: 'Co-ord Set',
         slug: 'co-ord-set',
         productHandles: ['women-lounge-sets'],
