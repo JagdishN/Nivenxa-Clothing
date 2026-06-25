@@ -2310,9 +2310,12 @@ const kidsRestSleepSet: Product = {
   },
 }
 
-// ─── Product 7: Kurta Straight Pant ──────────────────────────────────────────
-// Colours shared with A-line Kurta — references kurta3ColourSlugs directly.
-const kurtaStraightPant: Product = {
+// ─── Product 7: Kurta Straight Pant — REMOVED ────────────────────────────────
+// Superseded by The Contrast Pant (kurta-contrast-pant): same price, same
+// 160→220-240 GSM Cotton-Modal slub positioning, same "pairs with A-line
+// Kurta" concept, same colour family. Its /shop/womens card already linked
+// to a 404 (no dedicated static route was ever built for it).
+/* const kurtaStraightPant: Product = {
   id: 'prod-007',
   name: 'Kurta Straight Pant',
   category: 'Kurta',
@@ -2455,7 +2458,7 @@ const kurtaStraightPant: Product = {
       ],
     },
   ],
-}
+} */
 
 // ─── Kids Summer Sleep Set colour slugs ──────────────────────────────────────
 const KIDS_SUMMER_COMMON_FILES: KidsSleepFiles = {
@@ -2659,7 +2662,6 @@ export const products: Product[] = [
   womenShortSleeveSleepSet,
   womenLongSleeveSleepSet,
   kidsRestSleepSet,
-  kurtaStraightPant,
   kidsSummerSleepSet,
 ]
 

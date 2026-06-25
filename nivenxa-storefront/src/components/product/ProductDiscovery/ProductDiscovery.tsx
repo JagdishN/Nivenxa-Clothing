@@ -10,7 +10,6 @@ import styles from './ProductDiscovery.module.css'
 // These are the S1 studio-front colourways shown in this section.
 // NOTE: spec says a-line-kurta → "Morning Ivory" but no such colour exists in
 // products.ts; nearest match is slug 'ivory' (label "Ivory"). Mapped accordingly.
-// kurta-straight-pant is not listed in the launch spec; falls back to first colour.
 const HERO_SLUG: Record<string, string> = {
   'over-tee-shirts':       'bone',
   'cargo-pants':           'chalk-stone',
@@ -21,7 +20,6 @@ const HERO_SLUG: Record<string, string> = {
   'women-sleep-set':       'morning-cream',
   'kids-rest-sleep-set':   'cloud',
   'kids-summer-sleep-set': 'cloud',
-  'kurta-straight-pant':   'ivory',
 }
 
 // ─── localStorage ─────────────────────────────────────────────────────────────
