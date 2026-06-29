@@ -1,8 +1,10 @@
-import { Link } from '@/i18n/routing'
+'use client'
+
 import type { Product } from '@/types/product'
 import type { Edit, EditSubItem } from '@/data/edits'
 import ProductCard from '@/components/collection/ProductCard/ProductCard'
 import FeaturedProductCard from '@/components/collection/ProductCard/FeaturedProductCard'
+import BackLink from '@/components/global/BackLink/BackLink'
 import styles from './EditSubItemPage.module.css'
 
 // Short descriptor per sub-item slug — explains what unites the products
@@ -25,14 +27,16 @@ const DESCRIPTORS: Record<string, string> = {
     'The Indo-Western silhouette for everyday India.',
   'kurta-contrast-pant':
     '220–240 GSM Cotton-Modal Slub. Five tones, each paired to an A-line Kurta Set colourway.',
-  'co-ord-set':
-    'Relaxed sets that work as a complete look or as separates.',
   'sleepwear':
     'Ultra-soft fabrications for considered rest.',
   'kids-rest-sleep-set':
     '220 GSM Organic Cotton-Bamboo. Full-sleeve comfort for cooler nights and AC rooms.',
   'kids-summer-sleep-set':
     '180–200 GSM organic cotton. Lightweight half-sleeve comfort for warm weather.',
+  'kids-unisex-tee':
+    '160–180 GSM combed cotton jersey. Crew neck, short sleeve, sizes 4Y to 12Y.',
+  'womens-relaxed-shirt':
+    '200–220 GSM combed cotton jersey. Grandad collar, no pocket.',
   'the-rest-set':
     '60% Cotton / 40% Modal — 200–220 GSM. Long sleeve top and wide-leg pant for AW2026.',
 }
@@ -48,20 +52,14 @@ interface Props {
   products: Product[]
 }
 
-export default function EditSubItemPage({ edit, subItem, products }: Props) {
+export default function EditSubItemPage({ subItem, products }: Props) {
   const descriptor = DESCRIPTORS[subItem.slug] ?? ''
 
   return (
     <div className={styles.section}>
 
-      {/* Back link */}
-      <Link
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        href={`/edits/${edit.slug}` as any}
-        className={styles.backLink}
-      >
-        ← {edit.name}
-      </Link>
+      {/* Back link — shows the page the user navigated from, or nothing */}
+      <BackLink />
 
       {/* Header */}
       <div className={styles.header}>
@@ -72,11 +70,11 @@ export default function EditSubItemPage({ edit, subItem, products }: Props) {
 
       {/* Product grid — mixed regardless of gender */}
       {products.length === 1 ? (
-        <FeaturedProductCard product={products[0]} />
+        <FeaturedProductCard product={products[0]} navLabel={subItem.name} />
       ) : (
         <div className={`${styles.productGrid} ${getGridClass(products.length)}`}>
           {products.map(product => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product.id} product={product} navLabel={subItem.name} />
           ))}
         </div>
       )}

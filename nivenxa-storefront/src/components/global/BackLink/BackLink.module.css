@@ -1,0 +1,16 @@
+.backLink {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--nivenxa-text-muted);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin: -12px 0 4px;
+  padding: 12px 0;
+}
+
+.backLink:hover {
+  color: var(--nivenxa-text-primary);
+}

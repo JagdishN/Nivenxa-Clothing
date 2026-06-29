@@ -3,12 +3,5 @@ import { getProductByHandle } from '@/data/products'
 
 export default function WomensSleepSetPage() {
   const product = getProductByHandle('women-sleep-set')
-  return (
-    <ProductColourPage
-      product={product}
-      collectionName="Women's"
-      collectionSlug="womens"
-      backHref="/shop/womens/sleepwear"
-    />
-  )
+  return <ProductColourPage product={product} />
 }

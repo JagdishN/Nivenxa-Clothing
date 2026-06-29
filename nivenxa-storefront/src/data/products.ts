@@ -1333,6 +1333,7 @@ const womenCoordSet: Product = {
   name: 'Relaxed Co-ord Set',
   category: 'Co-ord Set',
   handle: 'women-lounge-sets',
+  archived: true,
   collectionName: "Women's",
   collectionSlug: 'womens',
   badge: null,
@@ -2652,6 +2653,277 @@ const kidsSummerSleepSet: Product = {
   ],
 }
 
+// ─── Product 11: Women's Relaxed Shirt ────────────────────────────────────────
+// No real photography yet — placeholder images via buildPlaceholderImages().
+// Coming Soon: all sizes unavailable until product photography is shot.
+const womensRelaxedShirtColours: Array<{ slug: string; hex: string; label: string; pantone: string; isUnique: boolean }> = [
+  { slug: 'bone',        hex: 'F0EBE0', label: 'Bone',        pantone: '11-0507 TCX', isUnique: false },
+  { slug: 'mushroom',    hex: 'A89888', label: 'Mushroom',    pantone: '17-1210 TCX', isUnique: false },
+  { slug: 'charcoal',    hex: '6B6560', label: 'Charcoal',    pantone: '18-0601 TCX', isUnique: false },
+  { slug: 'green-olive', hex: '8D8B55', label: 'Green Olive', pantone: '17-0535 TCX', isUnique: false },
+  { slug: 'warm-clay',   hex: 'C4A882', label: 'Warm Clay',   pantone: '17-1340 TCX', isUnique: true  },
+]
+
+const womensRelaxedShirt: Product = {
+  id: 'prod-011',
+  name: "Women's Relaxed Shirt",
+  category: 'Relaxed Shirt',
+  handle: 'womens-relaxed-shirt',
+  collectionName: "Women's",
+  collectionSlug: 'womens',
+  badge: 'Coming Soon',
+  compositionQuote: '200–220 GSM Combed Cotton Jersey — grandad collar, no pocket. Pairs with Cargo Pants and The Contrast Pant.',
+  price: 1999,
+  currency: '₹',
+  trustLine: 'Inclusive of all taxes · Free delivery above ₹999',
+  sizeUnit: null,
+  modelNote: null,
+
+  colours: womensRelaxedShirtColours.map(c => ({
+    slug:      c.slug,
+    label:     c.label,
+    hex:       `#${c.hex}`,
+    available: false,
+    pantone:   c.pantone,
+    isUnique:  c.isUnique,
+    finish:    'plain',
+    images:    buildPlaceholderImages('shirt-' + c.slug, "Women's Relaxed Shirt", c.slug, c.hex),
+  })),
+
+  sizes: [
+    { label: 'XS',  available: false },
+    { label: 'S',   available: false },
+    { label: 'M',   available: false },
+    { label: 'L',   available: false },
+    { label: 'XL',  available: false },
+    { label: 'XXL', available: false },
+  ],
+
+  featureBullets: [
+    '200–220 GSM combed cotton jersey',
+    'Relaxed short-sleeve shirt',
+    'Grandad collar',
+    'No pocket',
+    'OEKO-TEX Standard 100 Class II certified',
+  ],
+
+  specs: [
+    { group: 'Material',     label: 'Fabric',        value: 'Combed Cotton Jersey'           },
+    { group: 'Material',     label: 'Weight',        value: '200–220 GSM'                    },
+    { group: 'Material',     label: 'Certification', value: 'OEKO-TEX Standard 100 Class II' },
+    { group: 'Construction', label: 'Collar',        value: 'Grandad collar'                 },
+    { group: 'Construction', label: 'Sleeve',        value: 'Short sleeve'                   },
+    { group: 'Construction', label: 'Pocket',        value: 'None'                           },
+    { group: 'Production',   label: 'Origin',        value: 'Made in India'                  },
+  ],
+
+  fabricPillars: [
+    {
+      value: '200–220',
+      unit: 'GSM',
+      subLabel: 'Combed cotton jersey',
+      description: 'Soft, breathable jersey with a relaxed drape — light enough for daily wear, substantial enough to feel considered.',
+    },
+    {
+      value: 'Grandad',
+      unit: '',
+      subLabel: 'Collar construction',
+      description: 'Collarless-style grandad collar — relaxed neckline that works buttoned or open.',
+    },
+    {
+      value: '5',
+      unit: 'tones',
+      subLabel: 'Colour range',
+      description: 'Five tones designed to pair with Cargo Pants and The Contrast Pant.',
+    },
+  ],
+
+  fitBars: [
+    { label: 'Body fit',  value: 50, descriptor: 'Relaxed' },
+    { label: 'Length',    value: 45, descriptor: 'Regular' },
+    { label: 'Sleeve',    value: 30, descriptor: 'Short'   },
+    { label: 'Shoulder',  value: 50, descriptor: 'Regular' },
+  ],
+
+  care: [
+    { icon: 'wash',      label: 'Machine wash 30°C gentle' },
+    { icon: 'sun-off',   label: 'Dry in shade'             },
+    { icon: 'flame-off', label: 'Cool iron only'           },
+    { icon: 'ban',       label: 'Do not bleach'            },
+  ],
+
+  accordions: [
+    {
+      title: 'Shipping & delivery',
+      content: 'Free delivery on orders above ₹999. Standard delivery 3–5 business days. Express delivery available at checkout. Tracking link shared via WhatsApp once dispatched.',
+    },
+    {
+      title: 'Exchange & returns',
+      content: 'Free returns within 30 days of delivery. Items must be unworn, unwashed, tags intact. Initiate via the Returns Portal. Refund processed within 5–7 business days.',
+    },
+    {
+      title: 'Care note',
+      content: 'Machine washable. Cool iron only. Do not bleach.',
+    },
+    {
+      title: 'Size guide',
+      content: `<table style="width:100%;border-collapse:collapse;font-size:13px">
+  <thead><tr>
+    <th style="text-align:left;padding:6px 4px 6px 0;border-bottom:1px solid rgba(0,0,0,0.10)">Size</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Chest ½ (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Length (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Shoulder (in)</th>
+  </tr></thead>
+  <tbody>
+    <tr><td style="padding:6px 4px 6px 0">XS</td><td style="padding:6px 4px">18.5</td><td style="padding:6px 4px">26</td><td style="padding:6px 4px">15</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">S</td><td style="padding:6px 4px">19.5</td><td style="padding:6px 4px">27</td><td style="padding:6px 4px">15.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">M</td><td style="padding:6px 4px">21</td><td style="padding:6px 4px">28</td><td style="padding:6px 4px">16.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">L</td><td style="padding:6px 4px">22.5</td><td style="padding:6px 4px">29</td><td style="padding:6px 4px">17.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">XL</td><td style="padding:6px 4px">24</td><td style="padding:6px 4px">30</td><td style="padding:6px 4px">18.5</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">XXL</td><td style="padding:6px 4px">25.5</td><td style="padding:6px 4px">31</td><td style="padding:6px 4px">19.5</td></tr>
+  </tbody>
+</table>
+<p style="margin:8px 0 0;font-size:11px;color:rgba(0,0,0,0.45)">All measurements are garment measurements in inches (half body where applicable).</p>`,
+    },
+  ],
+
+  collectionItems: [],
+}
+
+// ─── Product 12: Kids Unisex Tee ──────────────────────────────────────────────
+// No real photography yet — placeholder images via buildPlaceholderImages().
+// Coming Soon: all sizes unavailable until product photography is shot.
+const kidsUnisexTeeColours: Array<{ slug: string; hex: string; label: string; pantone: string; isUnique: boolean }> = [
+  { slug: 'cloud',      hex: 'F5F2EC', label: 'Cloud',      pantone: '11-0601 TCX', isUnique: false },
+  { slug: 'warm-sand',  hex: 'CBC3B4', label: 'Warm Sand',  pantone: '13-0401 TCX', isUnique: false },
+  { slug: 'little-sage',hex: '9EAA8C', label: 'Little Sage',pantone: '16-0213 TCX', isUnique: false },
+  { slug: 'mist-blue',  hex: 'A8B8C8', label: 'Mist Blue',  pantone: '14-4112 TCX', isUnique: false },
+  { slug: 'butter',     hex: 'F5E6C8', label: 'Butter',     pantone: '12-0712 TCX', isUnique: true  },
+]
+
+const kidsUnisexTee: Product = {
+  id: 'prod-012',
+  name: 'Kids Unisex Tee',
+  category: 'Kids Tee',
+  handle: 'kids-unisex-tee',
+  collectionName: 'Youth Studio',
+  collectionSlug: 'youth-studio',
+  badge: 'Coming Soon',
+  compositionQuote: '160–180 GSM Combed Cotton Jersey — crew neck, short sleeve. Sizes 4Y to 12Y. OEKO-TEX Class I.',
+  price: 999,
+  currency: '₹',
+  trustLine: 'Inclusive of all taxes · Free delivery above ₹999',
+  sizeUnit: null,
+  modelNote: null,
+
+  colours: kidsUnisexTeeColours.map(c => ({
+    slug:      c.slug,
+    label:     c.label,
+    hex:       `#${c.hex}`,
+    available: false,
+    pantone:   c.pantone,
+    isUnique:  c.isUnique,
+    finish:    'plain',
+    images:    buildPlaceholderImages('kids-tee-' + c.slug, 'Kids Unisex Tee', c.slug, c.hex),
+  })),
+
+  sizes: [
+    { label: '4Y',  available: false },
+    { label: '6Y',  available: false },
+    { label: '8Y',  available: false },
+    { label: '10Y', available: false },
+    { label: '12Y', available: false },
+  ],
+
+  featureBullets: [
+    '160–180 GSM combed cotton jersey',
+    'Relaxed unisex tee',
+    'Crew neck, short sleeve',
+    'Sizes 4Y to 12Y',
+    'OEKO-TEX Standard 100 Class I certified',
+  ],
+
+  specs: [
+    { group: 'Material',     label: 'Fabric',        value: 'Combed Cotton Jersey'          },
+    { group: 'Material',     label: 'Weight',        value: '160–180 GSM'                   },
+    { group: 'Material',     label: 'Certification', value: 'OEKO-TEX Standard 100 Class I' },
+    { group: 'Construction', label: 'Neck',          value: 'Crew neck'                      },
+    { group: 'Construction', label: 'Sleeve',        value: 'Short sleeve'                   },
+    { group: 'Construction', label: 'Sizes',         value: '4Y – 12Y unisex'                },
+    { group: 'Production',   label: 'Origin',        value: 'Made in India'                  },
+  ],
+
+  fabricPillars: [
+    {
+      value: '160–180',
+      unit: 'GSM',
+      subLabel: 'Combed cotton jersey',
+      description: 'Light, breathable jersey built for everyday play. Soft against skin, easy to move in.',
+    },
+    {
+      value: 'OEKO',
+      unit: '-TEX',
+      subLabel: 'Class I certified',
+      description: 'The strictest OEKO-TEX certification class — tested safe for the most sensitive skin, including babies.',
+    },
+    {
+      value: '5',
+      unit: 'tones',
+      subLabel: 'Colour range',
+      description: 'Five tones from soft neutrals to a brighter Butter — sized 4Y to 12Y.',
+    },
+  ],
+
+  fitBars: [
+    { label: 'Body ease', value: 55, descriptor: 'Relaxed' },
+    { label: 'Length',    value: 50, descriptor: 'Regular' },
+    { label: 'Sleeve',    value: 30, descriptor: 'Short'   },
+    { label: 'Neck ease', value: 45, descriptor: 'Regular' },
+  ],
+
+  care: [
+    { icon: 'wash',      label: 'Machine wash 30°C gentle' },
+    { icon: 'sun-off',   label: 'Dry in shade'             },
+    { icon: 'flame-off', label: 'Warm iron only'           },
+    { icon: 'ban',       label: 'Do not bleach'            },
+  ],
+
+  accordions: [
+    {
+      title: 'Shipping & delivery',
+      content: 'Free delivery on orders above ₹999. Standard delivery 3–5 business days. Express delivery available at checkout. Tracking link shared via WhatsApp once dispatched.',
+    },
+    {
+      title: 'Exchange & returns',
+      content: 'Free returns within 30 days of delivery. Items must be unworn, unwashed, tags intact. Initiate via the Returns Portal. Refund processed within 5–7 business days.',
+    },
+    {
+      title: 'Care note',
+      content: 'Wash before first use. All components are skin-safe and certified OEKO-TEX Standard 100 Class I.',
+    },
+    {
+      title: 'Size guide',
+      content: `<table style="width:100%;border-collapse:collapse;font-size:13px">
+  <thead><tr>
+    <th style="text-align:left;padding:6px 4px 6px 0;border-bottom:1px solid rgba(0,0,0,0.10)">Size</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Chest (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Length (in)</th>
+    <th style="text-align:left;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.10)">Height</th>
+  </tr></thead>
+  <tbody>
+    <tr><td style="padding:6px 4px 6px 0">4Y</td><td style="padding:6px 4px">21–22</td><td style="padding:6px 4px">15</td><td style="padding:6px 4px">95–105cm</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">6Y</td><td style="padding:6px 4px">22–24</td><td style="padding:6px 4px">16</td><td style="padding:6px 4px">105–115cm</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">8Y</td><td style="padding:6px 4px">24–26</td><td style="padding:6px 4px">17</td><td style="padding:6px 4px">115–125cm</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">10Y</td><td style="padding:6px 4px">26–28</td><td style="padding:6px 4px">18</td><td style="padding:6px 4px">125–135cm</td></tr>
+    <tr><td style="padding:6px 4px 6px 0">12Y</td><td style="padding:6px 4px">28–30</td><td style="padding:6px 4px">19</td><td style="padding:6px 4px">135–145cm</td></tr>
+  </tbody>
+</table>`,
+    },
+  ],
+
+  collectionItems: [],
+}
+
 // ─── Exported array ────────────────────────────────────────────────────────────
 export const products: Product[] = [
   oversizedTee,
@@ -2663,6 +2935,8 @@ export const products: Product[] = [
   womenLongSleeveSleepSet,
   kidsRestSleepSet,
   kidsSummerSleepSet,
+  womensRelaxedShirt,
+  kidsUnisexTee,
 ]
 
 // ─── Helper: look up by URL handle ────────────────────────────────────────────
@@ -2676,12 +2950,12 @@ export function getProductByHandle(handle: string): Product {
 // collection matches product.collectionSlug:
 //   'mens' | 'womens' | 'unisex' | 'youth-studio'
 export function getProductsByCollection(collection: string): Product[] {
-  return products.filter(p => p.collectionSlug === collection)
+  return products.filter(p => p.collectionSlug === collection && !p.archived)
 }
 
 // ─── Helper: filter by product category ───────────────────────────────────────
 // category matches product.category — used by sub-category pages
 // e.g. getProductsByCategory('Kids Sleepwear')
 export function getProductsByCategory(category: string): Product[] {
-  return products.filter(p => p.category === category)
+  return products.filter(p => p.category === category && !p.archived)
 }

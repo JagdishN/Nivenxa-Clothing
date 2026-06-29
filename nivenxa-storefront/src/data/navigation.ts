@@ -4,6 +4,7 @@ export interface Atmosphere {
   ghost?: string
   editorial?: string[]
   tags?: string[]
+  image?: string   // real model/product photo — shown instead of the fabric-texture gradient when set
 }
 
 export interface ChildItem {
@@ -49,6 +50,7 @@ export const NAV_ITEMS: NavItem[] = [
             'Oversized tees and utility cargo in heavyweight fabrics.',
             'Designed for repeat wear and considered daily movement.',
           ],
+          image: "/images/Men/OversizedTee's/MINERAL%20BROWN/walking_view.webp",
         },
         children: [
           { label: 'Oversized Tee', href: '/shop/mens/oversized-tee' },
@@ -67,12 +69,13 @@ export const NAV_ITEMS: NavItem[] = [
             'Relaxed silhouettes rooted in softness, movement, and quiet structure.',
             'Designed for contemporary Indian wardrobes where comfort and everyday elegance coexist naturally.',
           ],
+          image: '/images/Wonmen/A-line%20Kurta/DUSK%20ROSE/front_studio_view.webp',
         },
         children: [
-          { label: 'A-line Kurta',     href: '/shop/womens/a-line-kurta'        },
-          { label: 'The Contrast Pant', href: '/shop/womens/kurta-contrast-pant' },
-          { label: 'Co-ord Set',       href: '/shop/womens/co-ord-set'          },
-          { label: 'Sleepwear',        href: '/shop/womens/sleepwear'           },
+          { label: 'A-line Kurta',          href: '/shop/womens/a-line-kurta'         },
+          { label: 'The Contrast Pant',     href: '/shop/womens/kurta-contrast-pant'  },
+          { label: "Women's Relaxed Shirt", href: '/shop/womens/womens-relaxed-shirt' },
+          { label: 'Sleepwear',             href: '/shop/womens/sleepwear'            },
         ],
       },
       {
@@ -87,6 +90,7 @@ export const NAV_ITEMS: NavItem[] = [
             'Heavyweight everyday silhouettes built around movement, utility, and repetition.',
             'Oversized fits, washed textures, and structured fabrics designed to soften naturally over time.',
           ],
+          image: '/images/Unisex/cargos/SANDBEIGE/walking_view.webp',
         },
         children: [
           { label: 'Cargo Pants', href: '/shop/unisex/cargo-pants' },
@@ -104,9 +108,11 @@ export const NAV_ITEMS: NavItem[] = [
             'Soft everyday essentials designed for comfort, ease, and playful movement.',
             'Relaxed forms and breathable fabrics made for daily life and growing individuality.',
           ],
+          image: '/images/Kids/unisex%20sleeper%20wear/Rest%20Set/DUSTY%20SAGE/walking_view.webp',
         },
         children: [
-          { label: 'Sleepwear', href: '/shop/youth-studio/kids-sleepwear' },
+          { label: 'Sleepwear',       href: '/shop/youth-studio/kids-sleepwear' },
+          { label: 'Kids Unisex Tee', href: '/shop/youth-studio/kids-unisex-tee' },
         ],
       },
     ],
@@ -134,25 +140,25 @@ export const NAV_ITEMS: NavItem[] = [
             'Indo-Western comfortwear designed for contemporary Indian wardrobes.',
             'Relaxed silhouettes balanced with softness and quiet elegance.',
           ],
+          image: '/images/Wonmen/A-line%20Kurta/DESERT%20SAND/walking_view.webp',
         },
         children: [
-          { label: 'A-line Kurta',      href: '/edits/womens-edit/a-line-kurta'      },
+          { label: 'A-line Kurta',      href: '/edits/womens-edit/a-line-kurta'        },
           { label: 'The Contrast Pant', href: '/edits/womens-edit/kurta-contrast-pant' },
-          { label: 'Co-ord Set',        href: '/edits/womens-edit/co-ord-set'        },
-          { label: 'Sleepwear',         href: '/edits/womens-edit/sleepwear'         },
+          { label: 'Sleepwear',         href: '/edits/womens-edit/sleepwear'           },
         ],
       },
       {
         label: 'The Ease Edit',
         href: '/edits/ease-edit',
-        descriptor: 'Relaxed linen-cotton co-ords',
+        descriptor: 'Relaxed cotton jersey shirt',
         atmosphere: {
           gradient: 'linear-gradient(150deg, #E5E8DD 0%, #C9CDB8 50%, #AEB39A 100%)',
-          text: 'Linen-cotton co-ords\nworn together or apart.',
+          text: 'Relaxed cotton jersey,\nworn through every season.',
           ghost: 'EASE',
         },
         children: [
-          { label: 'Co-ord Set', href: '/edits/ease-edit/co-ord-set' },
+          { label: "Women's Relaxed Shirt", href: '/edits/ease-edit/womens-relaxed-shirt' },
         ],
       },
       {
@@ -167,6 +173,7 @@ export const NAV_ITEMS: NavItem[] = [
             'Bio-washed essentials for the unhurried wardrobe.',
             'Designed for comfort, ease, and the rhythm of daily life.',
           ],
+          image: "/images/Men/OversizedTee's/CHARCOAL%20EARTH/walking_view.webp",
         },
         children: [
           { label: 'Relaxed Utility',       href: '/edits/everyday-edit/relaxed-utility'       },
@@ -186,6 +193,7 @@ export const NAV_ITEMS: NavItem[] = [
             'Utility-focused silhouettes designed with washed structure, oversized proportions, and heavyweight movement.',
           ],
           tags: ['240–340 GSM cottons', 'Bio-washed finishes', 'Built for repetition'],
+          image: '/images/Unisex/cargos/JETBLACK/front_studio_view.webp',
         },
         children: [
           { label: 'Relaxed Utility',    href: '/edits/utility-edit/relaxed-utility'    },
@@ -201,10 +209,12 @@ export const NAV_ITEMS: NavItem[] = [
           gradient: 'linear-gradient(148deg, #E2DCD0 0%, #CFC8B6 50%, #B8B098 100%)',
           text: 'Soft organic sleepwear\nfor every season.',
           ghost: 'DREAM',
+          image: '/images/Kids/unisex%20sleeper%20wear/Rest%20Set/PALE%20OAT/walking_view.webp',
         },
         children: [
           { label: 'The Rest Sleep Set',   href: '/edits/dream-edit/kids-rest-sleep-set'   },
           { label: 'The Summer Sleep Set', href: '/edits/dream-edit/kids-summer-sleep-set' },
+          { label: 'Kids Unisex Tee',      href: '/edits/dream-edit/kids-unisex-tee'       },
         ],
       },
       {
@@ -215,6 +225,7 @@ export const NAV_ITEMS: NavItem[] = [
           gradient: 'linear-gradient(148deg, #EAE6DC 0%, #DEDAD0 50%, #CCC8C0 100%)',
           text: 'Ultra-soft nightwear\nfor considered rest.',
           ghost: 'REST',
+          image: '/images/Wonmen/SLEEPWEAR/Short%20Sleeve/MORNING%20CREAM/walking_view.png',
         },
         children: [
           { label: "Women's Sleepwear", href: '/edits/rest-edit/womens-sleepwear' },

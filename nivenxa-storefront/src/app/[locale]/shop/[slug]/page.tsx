@@ -48,7 +48,7 @@ export default async function ShopCollectionPage({
   const config = COLLECTIONS.find(c => c.slug === (slug as CollectionSlug))
   if (!config) notFound()
 
-  const collectionProducts = products.filter(p => p.collectionSlug === slug)
+  const collectionProducts = products.filter(p => p.collectionSlug === slug && !p.archived)
   if (collectionProducts.length === 0) notFound()
 
   return (

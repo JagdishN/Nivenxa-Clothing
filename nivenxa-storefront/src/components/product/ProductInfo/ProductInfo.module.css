@@ -40,20 +40,6 @@
 }
 
 /* ── Content items ── */
-.breadcrumb {
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  color: var(--nivenxa-text-muted);
-  text-decoration: none;
-  margin-bottom: 16px;
-  display: block;
-}
-
-.breadcrumb:hover {
-  color: var(--nivenxa-text-primary);
-}
-
 .badge {
   font-family: system-ui, -apple-system, sans-serif;
   font-size: 11px;

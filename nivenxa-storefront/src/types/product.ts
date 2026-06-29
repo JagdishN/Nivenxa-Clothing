@@ -138,6 +138,7 @@ export interface Product {
   cardDescriptor?: string   // short line shown on collection-grid cards, overrides the fabricPillars-derived line when set
   styledWith?: StyledWith         // optional cross-sell pairing, colour-aware
   editorial?: ProductEditorial    // optional editorial data for zoom overlay panel
+  archived?: boolean              // true = suppressed from menus/category/discovery, page still reachable directly
 }
 
 /*
