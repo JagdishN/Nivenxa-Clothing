@@ -4,23 +4,25 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { IconArrowLeft, IconArrowRight } from '@tabler/icons-react'
 import { Link } from '@/i18n/routing'
 import { products } from '@/data/products'
+import { writeNavSource } from '@/lib/navSource'
 import styles from './ProductDiscovery.module.css'
 
 // ─── Hero colourway per product (confirmed by product brief) ─────────────────
 // These are the S1 studio-front colourways shown in this section.
 // NOTE: spec says a-line-kurta → "Morning Ivory" but no such colour exists in
 // products.ts; nearest match is slug 'ivory' (label "Ivory"). Mapped accordingly.
-// kurta-straight-pant is not listed in the launch spec; falls back to first colour.
 const HERO_SLUG: Record<string, string> = {
   'over-tee-shirts':       'bone',
   'cargo-pants':           'chalk-stone',
   'a-line-kurta':          'ivory',
+  'kurta-contrast-pant':   'wild-sage',
   'women-lounge-sets':     'meadow-sage',
   'women-sleepwear':       'morning-cream',
   'women-sleep-set':       'morning-cream',
   'kids-rest-sleep-set':   'cloud',
   'kids-summer-sleep-set': 'cloud',
-  'kurta-straight-pant':   'ivory',
+  'womens-relaxed-shirt':  'bone',
+  'kids-unisex-tee':       'cloud',
 }
 
 // ─── localStorage ─────────────────────────────────────────────────────────────
@@ -61,7 +63,9 @@ interface DiscoveryCard {
 }
 
 // ─── Stable catalogue handle order ───────────────────────────────────────────
-const CATALOGUE_HANDLES = products.map(p => p.handle)
+// Archived products (e.g. discontinued/retired) are excluded from discovery.
+const CATALOGUE_HANDLES = products.filter(p => !p.archived).map(p => p.handle)
+const ARCHIVED_HANDLES  = products.filter(p => p.archived).map(p => p.handle)
 
 const MAX_CARDS = 6
 const MIN_CARDS = 4
@@ -94,8 +98,8 @@ function resolveCards(
   currentHandle: string,
   viewedHandles: string[],
 ): { heading: string; cards: DiscoveryCard[] } {
-  // Exclude current product from the viewed list to determine visit state
-  const othersViewed = viewedHandles.filter(h => h !== currentHandle)
+  // Exclude current product and any archived products from the viewed list
+  const othersViewed = viewedHandles.filter(h => h !== currentHandle && !ARCHIVED_HANDLES.includes(h))
   const isReturnVisit = othersViewed.length > 0
 
   if (!isReturnVisit) {
@@ -130,6 +134,7 @@ interface Props {
 }
 
 export default function ProductDiscovery({ currentHandle }: Props) {
+  const currentProductName = products.find(p => p.handle === currentHandle)?.name ?? ''
   const [heading, setHeading] = useState<string>('')
   const [cards,   setCards]   = useState<DiscoveryCard[]>([])
 
@@ -215,6 +220,7 @@ export default function ProductDiscovery({ currentHandle }: Props) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             href={`/shop/${card.handle}/${card.colourSlug}` as any}
             className={styles.card}
+            onClick={() => writeNavSource(currentProductName, window.location.pathname)}
           >
             <div className={styles.imageWrapper}>
               <img

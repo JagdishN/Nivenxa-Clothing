@@ -1,12 +1,11 @@
 'use client'
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { createPortal } from 'react-dom'
-import { Link } from '@/i18n/routing'
 import type { Product, ProductColour } from '@/types/product'
 import { getPrimaryImage } from '@/utils/getProductImages'
 import { useCart } from '@/context/CartContext'
 import Toast from '@/components/global/Toast/Toast'
+import BackLink from '@/components/global/BackLink/BackLink'
 import ColourSwatch from '../ColourSwatch/ColourSwatch'
 import SizeSelector from '../SizeSelector/SizeSelector'
 import StyledWithBlock from '../StyledWith/StyledWith'
@@ -38,10 +37,6 @@ export default function ProductInfo({
   const [toastMessage,  setToastMessage]  = useState('')
   const [toastSub,      setToastSub]      = useState('')
   const closeRef = useRef<HTMLButtonElement>(null)
-  const searchParams = useSearchParams()
-  const refFrom    = searchParams.get('from')
-  const refSlug    = searchParams.get('refSlug')
-  const refName    = searchParams.get('refName')
   const { addItem, openDrawer } = useCart()
 
   const closeToast = useCallback(() => setToastVisible(false), [])
@@ -117,39 +112,8 @@ export default function ProductInfo({
   return (
     <div className={styles.panel}>
 
-      {/* 1. Breadcrumb — above title, anchors context */}
-      {(() => {
-        // Edit referrer takes precedence over default collection breadcrumb
-        if (refFrom === 'edit' && refSlug && refName) {
-          return (
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            <Link href={`/edits/${refSlug}` as any} className={styles.breadcrumb}>
-              ← {decodeURIComponent(refName)}
-            </Link>
-          )
-        }
-        const COLLECTION_HREF: Record<string, string> = {
-          'mens':          '/shop/mens',
-          'womens':        '/shop/womens',
-          'unisex':        '/shop/unisex',
-          'youth-studio':  '/shop/youth-studio',
-        }
-        const COLLECTION_LABEL: Record<string, string> = {
-          'mens':          "Men's",
-          'womens':        "Women's",
-          'unisex':        'Unisex',
-          'youth-studio':  'Youth Studio',
-        }
-        const slug   = product.collectionSlug ?? product.handle
-        const href   = COLLECTION_HREF[slug]  ?? `/shop/${slug}`
-        const label  = COLLECTION_LABEL[slug] ?? product.collectionName ?? 'Collection'
-        return (
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          <Link href={href as any} className={styles.breadcrumb}>
-            ← {label}
-          </Link>
-        )
-      })()}
+      {/* 1. Back link — shows the page the user navigated from, or nothing */}
+      <BackLink />
 
       {/* 2. Product title */}
       <h1 className={styles.title}>{product.name}</h1>

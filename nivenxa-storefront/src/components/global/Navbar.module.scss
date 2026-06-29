@@ -324,8 +324,8 @@
   overflow: hidden;
   flex-shrink: 0;
 
-  // Fabric weave texture overlay
-  &::after {
+  // Fabric weave texture overlay — only shown when there's no real photo
+  &:not(:has(.submenuAtmosphereImg))::after {
     content: '';
     position: absolute;
     inset: 0;
@@ -342,6 +342,14 @@
       );
     pointer-events: none;
   }
+}
+
+.submenuAtmosphereImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .submenuAtmosphereText {

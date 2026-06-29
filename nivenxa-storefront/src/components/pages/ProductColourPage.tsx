@@ -1,20 +1,17 @@
+'use client'
+
 import { Link } from '@/i18n/routing'
 import type { Product } from '@/types/product'
 import { getPrimaryImage } from '@/utils/getProductImages'
+import { writeNavSource } from '@/lib/navSource'
+import BackLink from '@/components/global/BackLink/BackLink'
 import styles from './ProductColourPage.module.css'
 
 interface Props {
   product: Product
-  collectionName: string
-  collectionSlug: string
-  backHref: string
 }
 
-export default function ProductColourPage({
-  product,
-  collectionName,
-  backHref,
-}: Props) {
+export default function ProductColourPage({ product }: Props) {
   const fp0 = product.fabricPillars[0]
   const fabricLine = fp0
     ? [fp0.value, fp0.unit].filter(Boolean).join(' ')
@@ -23,11 +20,8 @@ export default function ProductColourPage({
   return (
     <div className={styles.section}>
 
-      {/* Back link */}
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-      <Link href={backHref as any} className={styles.backLink}>
-        ← {collectionName}
-      </Link>
+      {/* Back link — shows the page the user navigated from, or nothing */}
+      <BackLink />
 
       {/* Header */}
       <div className={styles.header}>
@@ -43,8 +37,13 @@ export default function ProductColourPage({
           const productHref  = `/shop/${product.handle}/${colour.slug}`
 
           return (
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            <Link key={colour.slug} href={productHref as any} className={styles.colourCard}>
+            <Link
+              key={colour.slug}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              href={productHref as any}
+              className={styles.colourCard}
+              onClick={() => writeNavSource(product.name, window.location.pathname)}
+            >
               <div className={styles.cardImageWrap}>
                 <img
                   src={primaryImage.src}

@@ -4,24 +4,19 @@ import { useState } from 'react'
 import { Link } from '@/i18n/routing'
 import type { Product } from '@/types/product'
 import { getPrimaryImage } from '@/utils/getProductImages'
+import { writeNavSource } from '@/lib/navSource'
 import styles from './ProductCard.module.css'
-
-interface Referrer {
-  from: 'edit' | 'shop'
-  slug: string
-  name: string
-}
 
 interface ProductCardProps {
   product: Product
   defaultColourSlug?: string
-  referrer?: Referrer
+  navLabel?: string   // label shown on the next page's back link, e.g. an Edit name
 }
 
 export default function ProductCard({
   product,
   defaultColourSlug,
-  referrer,
+  navLabel,
 }: ProductCardProps) {
   const defaultColour =
     product.colours.find(c => c.slug === defaultColourSlug) ||
@@ -32,9 +27,11 @@ export default function ProductCard({
   const heroImage = getPrimaryImage(activeColour.images)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const productHref = (referrer
-    ? `/shop/${product.handle}/${activeColour.slug}?from=${referrer.from}&refSlug=${referrer.slug}&refName=${encodeURIComponent(referrer.name)}`
-    : `/shop/${product.handle}/${activeColour.slug}`) as any
+  const productHref = `/shop/${product.handle}/${activeColour.slug}` as any
+
+  const handleNavigate = () => {
+    if (navLabel) writeNavSource(navLabel, window.location.pathname)
+  }
 
   // First segment of compositionQuote up to the first em dash
   const fabricLine = product.compositionQuote.split('—')[0].trim()
@@ -42,7 +39,7 @@ export default function ProductCard({
   return (
     <div className={styles.card}>
 
-      <Link href={productHref} className={styles.imageWrap}>
+      <Link href={productHref} className={styles.imageWrap} onClick={handleNavigate}>
         {heroImage.src ? (
           <img
             src={heroImage.src}
@@ -87,7 +84,7 @@ export default function ProductCard({
           </span>
         </div>
 
-        <Link href={productHref} className={styles.viewCta}>
+        <Link href={productHref} className={styles.viewCta} onClick={handleNavigate}>
           View product →
         </Link>
 

@@ -40,10 +40,10 @@ export const edits: Edit[] = [
         editorial: 'The everyday Indian silhouette, elevated.',
       },
       {
-        name: 'Co-ord Set',
-        slug: 'co-ord-set',
-        productHandles: ['women-lounge-sets'],
-        editorial: 'Matched fabric, unmatched ease.',
+        name: 'The Contrast Pant',
+        slug: 'kurta-contrast-pant',
+        productHandles: ['kurta-contrast-pant'],
+        editorial: 'For the A-line Kurta Set — five tones, one pairing.',
       },
       {
         name: 'Sleepwear',
@@ -59,15 +59,15 @@ export const edits: Edit[] = [
     heroImageUrl: '',
     headline: 'Ease,\nconsidered.',
     story:
-      'Linen and cotton in easy, relaxed pieces. Designed to be worn together or apart.',
-    featuredProductHandle: 'women-lounge-sets',
-    featuredColourSlug: 'meadow-sage',
+      'Relaxed cotton jersey, designed for everyday wear. Pairs with Cargo Pants and The Contrast Pant.',
+    featuredProductHandle: 'womens-relaxed-shirt',
+    featuredColourSlug: 'bone',
     subItems: [
       {
-        name: 'Co-ord Set',
-        slug: 'co-ord-set',
-        productHandles: ['women-lounge-sets'],
-        editorial: 'Linen-cotton sets, styled together or apart.',
+        name: "Women's Relaxed Shirt",
+        slug: 'womens-relaxed-shirt',
+        productHandles: ['womens-relaxed-shirt'],
+        editorial: 'Relaxed cotton jersey, grandad collar, made to layer.',
       },
     ],
   },
@@ -154,6 +154,12 @@ export const edits: Edit[] = [
         productHandles: ['kids-summer-sleep-set'],
         editorial: 'Lightweight cotton for warm-weather rest.',
       },
+      {
+        name: 'Kids Unisex Tee',
+        slug: 'kids-unisex-tee',
+        productHandles: ['kids-unisex-tee'],
+        editorial: 'Relaxed crew neck comfort, 4Y to 12Y.',
+      },
     ],
   },
   {
@@ -175,7 +181,7 @@ export const edits: Edit[] = [
       {
         name: 'Unisex Lounge Sets',
         slug: 'unisex-lounge-sets',
-        productHandles: ['women-lounge-sets', 'women-sleep-set'],
+        productHandles: ['women-sleep-set'],
         editorial: 'The between hours — neither sleep nor waking.',
       },
       {

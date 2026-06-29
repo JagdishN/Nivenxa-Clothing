@@ -4,13 +4,15 @@ import { useState } from 'react'
 import { Link } from '@/i18n/routing'
 import type { Product } from '@/types/product'
 import { getPrimaryImage } from '@/utils/getProductImages'
+import { writeNavSource } from '@/lib/navSource'
 import styles from './FeaturedProductCard.module.css'
 
 interface Props {
   product: Product
+  navLabel?: string   // label shown on the next page's back link
 }
 
-export default function FeaturedProductCard({ product }: Props) {
+export default function FeaturedProductCard({ product, navLabel }: Props) {
   const [activeColour, setActiveColour] = useState(product.colours[0])
 
   const heroImage = getPrimaryImage(activeColour.images)
@@ -18,13 +20,17 @@ export default function FeaturedProductCard({ product }: Props) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const productHref = `/shop/${product.handle}/${activeColour.slug}` as any
 
+  const handleNavigate = () => {
+    if (navLabel) writeNavSource(navLabel, window.location.pathname)
+  }
+
   const fabricLine = product.compositionQuote.split('—')[0].trim()
 
   return (
     <div className={styles.featuredCard}>
 
       {/* Left — large image */}
-      <Link href={productHref} className={styles.featuredImageWrap}>
+      <Link href={productHref} className={styles.featuredImageWrap} onClick={handleNavigate}>
         {heroImage.src ? (
           <img
             src={heroImage.src}
@@ -76,7 +82,7 @@ export default function FeaturedProductCard({ product }: Props) {
           </div>
         </div>
 
-        <Link href={productHref} className={styles.featuredCta}>
+        <Link href={productHref} className={styles.featuredCta} onClick={handleNavigate}>
           View product →
         </Link>
 

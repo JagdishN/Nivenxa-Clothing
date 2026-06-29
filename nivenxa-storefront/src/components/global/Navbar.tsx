@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import LanguageSwitcher from './LanguageSwitcher'
 import { NAV_ITEMS } from '@/data/navigation'
 import { EASE_OUT_EXPO, DURATION } from '@/lib/motion'
+import { writeNavSource } from '@/lib/navSource'
 import { useAuth } from '@/context/AuthContext'
 import { useCart } from '@/context/CartContext'
 import SignInDrawer from './SignInDrawer'
@@ -220,7 +221,11 @@ export default function Navbar() {
                               // eslint-disable-next-line @typescript-eslint/no-explicit-any
                               href={child.href as any}
                               className={styles.submenuChildLink}
-                              onClick={() => { setActiveMenu(null); setHoveredSubItem(null) }}
+                              onClick={() => {
+                                if (hoveredSub.href) writeNavSource(hoveredSub.label, hoveredSub.href)
+                                setActiveMenu(null)
+                                setHoveredSubItem(null)
+                              }}
                             >
                               <span className={styles.submenuIndex}>0{i + 1}</span>
                               <span className={styles.submenuChildLinkLabel}>{child.label}</span>
@@ -273,8 +278,18 @@ export default function Navbar() {
                         >
                           <div
                             className={styles.submenuAtmosphereFragment}
-                            style={{ background: atmosphere.gradient }}
-                          />
+                            style={atmosphere.image ? undefined : { background: atmosphere.gradient }}
+                          >
+                            {atmosphere.image && (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={atmosphere.image}
+                                alt=""
+                                aria-hidden="true"
+                                className={styles.submenuAtmosphereImg}
+                              />
+                            )}
+                          </div>
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -345,7 +360,12 @@ export default function Navbar() {
                                             // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                             href={child.href as any}
                                             className={styles.mobileSubSubmenuLink}
-                                            onClick={() => { setMenuOpen(false); setMobileExpanded(null); setMobileSubExpanded(null) }}
+                                            onClick={() => {
+                                              if (sub.href) writeNavSource(sub.label, sub.href)
+                                              setMenuOpen(false)
+                                              setMobileExpanded(null)
+                                              setMobileSubExpanded(null)
+                                            }}
                                           >
                                             {child.label}
                                           </Link>

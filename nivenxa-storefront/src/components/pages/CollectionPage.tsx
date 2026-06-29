@@ -1,20 +1,26 @@
+'use client'
+
 import { Link } from '@/i18n/routing'
 import type { Product } from '@/types/product'
 import { getPrimaryImage } from '@/utils/getProductImages'
+import { writeNavSource } from '@/lib/navSource'
 import FeaturedProductCard from '@/components/collection/ProductCard/FeaturedProductCard'
 import styles from './CollectionPage.module.css'
 
 // Maps product handles → the URL sub-segment used under each collection
 // e.g. /shop/mens/oversized-tee, /shop/womens/co-ord-set
 const PRODUCT_SUBPATH: Record<string, string> = {
-  'over-tee-shirts':      'oversized-tee',
-  'cargo-pants':          'cargo-pants',
-  'a-line-kurta':         'a-line-kurta',
-  'women-lounge-sets':    'co-ord-set',
-  'women-sleepwear':      'short-sleeve-sleep-set',
-  'women-sleep-set':      'sleep-set',
-  'kids-rest-sleep-set':  'kids-rest-sleep-set',
-  'kids-summer-sleep-set':'kids-summer-sleep-set',
+  'over-tee-shirts':       'oversized-tee',
+  'cargo-pants':           'cargo-pants',
+  'a-line-kurta':          'a-line-kurta',
+  'kurta-contrast-pant':   'kurta-contrast-pant',
+  'women-lounge-sets':     'co-ord-set',
+  'women-sleepwear':       'short-sleeve-sleep-set',
+  'women-sleep-set':       'sleep-set',
+  'kids-rest-sleep-set':   'kids-rest-sleep-set',
+  'kids-summer-sleep-set': 'kids-summer-sleep-set',
+  'womens-relaxed-shirt':  'womens-relaxed-shirt',
+  'kids-unisex-tee':       'kids-unisex-tee',
 }
 
 function getGridClass(count: number): string {
@@ -47,7 +53,7 @@ export default function CollectionPage({
       </div>
 
       {products.length === 1 ? (
-        <FeaturedProductCard product={products[0]} />
+        <FeaturedProductCard product={products[0]} navLabel={collectionName} />
       ) : (
         <div className={`${styles.productGrid} ${getGridClass(products.length)}`}>
           {products.map(product => {
@@ -71,7 +77,12 @@ export default function CollectionPage({
 
             return (
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              <Link key={product.id} href={href as any} className={styles.productCard}>
+              <Link
+                key={product.id}
+                href={href as any}
+                className={styles.productCard}
+                onClick={() => writeNavSource(collectionName, window.location.pathname)}
+              >
                 <div className={styles.cardImageWrap}>
                   <img
                     src={primaryImage.src}

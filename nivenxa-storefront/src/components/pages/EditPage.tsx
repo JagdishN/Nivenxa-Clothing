@@ -120,18 +120,14 @@ export default function EditPage({ edit, products }: Props) {
       {/* ── Section 5: Product grid ────────────────────────── */}
       <section id="all-products" className={styles.productsSection}>
         {activeProducts.length === 1 ? (
-          <FeaturedProductCard product={activeProducts[0]} />
+          <FeaturedProductCard product={activeProducts[0]} navLabel={edit.name} />
         ) : (
           <div className={`${styles.productGrid} ${getGridClass(activeProducts.length)}`}>
             {activeProducts.map(product => (
               <ProductCard
                 key={product.id}
                 product={product}
-                referrer={{
-                  from: 'edit',
-                  slug: edit.slug,
-                  name: edit.name,
-                }}
+                navLabel={edit.name}
               />
             ))}
           </div>

@@ -2,6 +2,7 @@
 import { Link } from '@/i18n/routing'
 import type { Product } from '@/types/product'
 import { getPrimaryImage } from '@/utils/getProductImages'
+import { writeNavSource } from '@/lib/navSource'
 import styles from './ProductTile.module.css'
 
 interface Props {
@@ -15,7 +16,7 @@ export default function ProductTile({ product }: Props) {
   const href = `/shop/${product.handle}/${firstColour.slug}` as any
 
   return (
-    <Link href={href} className={styles.tile}>
+    <Link href={href} className={styles.tile} onClick={() => writeNavSource('Shop', '/shop')}>
       <div className={styles.imageWrap}>
         <img
           src={primaryImage.src}

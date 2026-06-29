@@ -7,7 +7,6 @@ const TEE_OAT_WALKING     = "/images/Men/OversizedTee's/OAT%20BEIGE/walking_view
 const CARGO_OLIVE_SITTING = '/images/Unisex/cargos/DARKOLIVE/sittingorLearning_studio_view.webp'
 const KURTA_IVORY_WALKING = '/images/Wonmen/A-line%20Kurta/MORNING%20IVORY/walking_view.webp'
 const KIDS_CLOUD_WALKING  = '/images/Kids/unisex%20sleeper%20wear/Rest%20Set/SOFT%20CLOUD%20WHITE/walking_view.webp'
-const COORD_SAGE_WALKING  = '/images/Wonmen/Co-ord%20Sets/MEADOW%20SAGE/walking_view.webp'
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
@@ -37,11 +36,10 @@ const CARDS: EditCard[] = [
   {
     num: '02',
     editName: 'The Ease Edit',
-    productName: 'Co-ord Set',
-    fabricLine: 'Linen-cotton blend',
+    productName: "Women's Relaxed Shirt",
+    fabricLine: 'Relaxed cotton jersey shirt',
     href: '/edits/ease-edit',
-    imageSrc: COORD_SAGE_WALKING,
-    imageAlt: 'Co-ord Set — Meadow Sage — walking view',
+    placeholderBg: '#F0EBE0',
     ghostColor: 'rgba(0,0,0,0.08)',
   },
   {

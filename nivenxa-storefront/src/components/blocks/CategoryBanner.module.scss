@@ -9,7 +9,8 @@
 }
 
 .inner {
-  max-width: var(--max-width);
+  // Full-bleed within the section's own padding — same as The Edits section,
+  // not capped to --max-width (which left a large gap on wide viewports).
 }
 
 // ── Section header ────────────────────────────────────────────────────────────

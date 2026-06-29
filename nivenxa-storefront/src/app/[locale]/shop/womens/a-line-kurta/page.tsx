@@ -3,12 +3,5 @@ import { getProductByHandle } from '@/data/products'
 
 export default function ALineKurtaPage() {
   const product = getProductByHandle('a-line-kurta')
-  return (
-    <ProductColourPage
-      product={product}
-      collectionName="Women's"
-      collectionSlug="womens"
-      backHref="/shop/womens"
-    />
-  )
+  return <ProductColourPage product={product} />
 }

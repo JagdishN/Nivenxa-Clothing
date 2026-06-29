@@ -13,7 +13,7 @@ export default function ShopPage() {
       </AnimatedSection>
 
       <div className={styles.grid}>
-        {products.map((product, i) => (
+        {products.filter(product => !product.archived).map((product, i) => (
           <AnimatedSection key={product.id} delay={i * 0.07}>
             <ProductTile product={product} />
           </AnimatedSection>
