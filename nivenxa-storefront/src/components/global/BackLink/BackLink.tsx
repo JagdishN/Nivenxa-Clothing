@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Link } from '@/i18n/routing'
+import Link from 'next/link'
 import { readNavSource, type NavSource } from '@/lib/navSource'
 import styles from './BackLink.module.css'
 
@@ -15,8 +15,7 @@ export default function BackLink() {
   if (!source) return null
 
   return (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    <Link href={source.path as any} className={styles.backLink}>
+    <Link href={source.path} className={styles.backLink}>
       ← {source.label}
     </Link>
   )

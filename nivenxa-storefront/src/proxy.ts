@@ -1,18 +1,39 @@
 import createMiddleware from 'next-intl/middleware'
+import { type NextRequest, NextResponse } from 'next/server'
 import { routing } from './i18n/routing'
-import type { NextRequest } from 'next/server'
 
 const intlMiddleware = createMiddleware(routing)
 
-// Next.js 16 requires the named export `proxy` (middleware.ts is deprecated).
 export function proxy(request: NextRequest) {
-  return intlMiddleware(request)
+  const { pathname } = request.nextUrl
+
+  // 301: /en/* (and any other bare locale) → /studio/{locale}/*
+  for (const locale of routing.locales) {
+    if (pathname === `/${locale}` || pathname.startsWith(`/${locale}/`)) {
+      const url = request.nextUrl.clone()
+      url.pathname = `/studio${pathname}`
+      return NextResponse.redirect(url, 301)
+    }
+  }
+
+  // /studio/ (no locale) → /studio/en/
+  if (pathname === '/studio' || pathname === '/studio/') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/studio/en'
+    return NextResponse.redirect(url, 301)
+  }
+
+  // Only run intlMiddleware for /studio/* paths.
+  // Let /, /technologies, /chess, /ventures pass straight through.
+  if (pathname.startsWith('/studio/')) {
+    return intlMiddleware(request)
+  }
+
+  return NextResponse.next()
 }
 
 export const config = {
   matcher: [
-    // Run on every path except Next.js internals, static files,
-    // and non-locale app segments: /chess, /ventures (and sub-paths).
-    '/((?!_next|_vercel|chess|ventures|.*\..*).*)',
+    '/((?!api|_next/static|_next/image|favicon\\.ico|.*\\..*).*)',
   ],
 }

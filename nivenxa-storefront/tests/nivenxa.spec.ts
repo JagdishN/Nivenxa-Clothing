@@ -336,8 +336,10 @@ test.describe('Product Page', () => {
     await expect(page.getByRole('button', { name: /ADD TO BAG/i })).toBeVisible()
   })
 
-  test('PP-11 — breadcrumb "← Men\'s" link visible', async ({ page }) => {
-    await expect(page.getByText(/← Men's/i)).toBeVisible()
+  test('PP-11 — no back link on direct URL visit (sessionStorage absent)', async ({ page }) => {
+    // BackLink reads from sessionStorage (nivenxa_nav_source). A direct URL visit
+    // has no sessionStorage value, so the back link must NOT appear.
+    await expect(page.getByText(/← /)).not.toBeVisible({ timeout: 2000 })
   })
 
   test('PP-12 — hero image has zoom trigger [aria-label="Open image zoom"]', async ({ page }) => {
@@ -411,19 +413,29 @@ test.describe('Product Page', () => {
     // badge field exists in data but ProductInfo component does not render it
   })
 
-  test('PP-24 — edit referrer: breadcrumb shows edit name instead of collection', async ({ page }) => {
-    await page.goto(
-      `${BASE}/en/shop/over-tee-shirts/raw-oat?from=edit&refSlug=everyday-edit&refName=The%20Everyday%20Edit`,
-      { waitUntil: 'domcontentloaded' }
-    )
-    await page.waitForTimeout(1000)
+  test('PP-24 — sessionStorage nav source: back link shows written label', async ({ page }) => {
+    // Navigate to the product page, seed sessionStorage with a nav source, then reload
+    // to simulate the user having arrived from an Edit page in the same session.
+    await page.goto(`${BASE}/en/shop/over-tee-shirts/raw-oat`, { waitUntil: 'domcontentloaded' })
+    await page.evaluate(() => {
+      sessionStorage.setItem(
+        'nivenxa_nav_source',
+        JSON.stringify({ label: 'The Everyday Edit', path: '/edits/everyday-edit' })
+      )
+    })
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(800)
     await expect(page.getByText(/← The Everyday Edit/i)).toBeVisible()
   })
 
-  test('PP-25 — no referrer: breadcrumb shows default collection "← Men\'s"', async ({ page }) => {
+  test('PP-25 — direct visit: no back link shown (sessionStorage absent)', async ({ page }) => {
+    // Without sessionStorage, BackLink renders nothing. The old query-param
+    // mechanism (?from=edit&refSlug=...) has been removed; sessionStorage is
+    // the only mechanism now and is empty on a fresh direct-URL visit.
     await page.goto(`${BASE}/en/shop/over-tee-shirts/raw-oat`, { waitUntil: 'domcontentloaded' })
-    await page.waitForTimeout(1000)
-    await expect(page.getByText(/← Men's/i)).toBeVisible()
+    await page.waitForTimeout(800)
+    await expect(page.getByText(/← Men's/i)).not.toBeVisible()
+    await expect(page.getByText(/← /)).not.toBeVisible({ timeout: 500 })
   })
 
   test('PP-26 — CTA reads "ADD TO BAG" (no typo)', async ({ page }) => {
@@ -840,10 +852,26 @@ test.describe('Collection Pages', () => {
     expect(page.url()).toContain('/raw-oat')
   })
 
-  test('COL-06 — Back link "← Men\'s" on colour page', async ({ page }) => {
+  test('COL-06 — no back link on direct visit to colour page (sessionStorage absent)', async ({ page }) => {
+    // ProductColourPage now uses the same sessionStorage-based BackLink as the PDP.
+    // A direct URL visit has no sessionStorage value so no back link appears.
     await page.goto(`${BASE}/en/shop/mens/oversized-tee`, { waitUntil: 'domcontentloaded' })
     await page.waitForTimeout(800)
-    await expect(page.getByText(/← Men's/i)).toBeVisible()
+    await expect(page.getByText(/← /)).not.toBeVisible({ timeout: 2000 })
+  })
+
+  test('COL-06b — back link shows "← Women\'s" after navigating from Women\'s category', async ({ page }) => {
+    // Seed sessionStorage the way CollectionPage does on card click.
+    await page.goto(`${BASE}/en/shop/womens/a-line-kurta`, { waitUntil: 'domcontentloaded' })
+    await page.evaluate(() => {
+      sessionStorage.setItem(
+        'nivenxa_nav_source',
+        JSON.stringify({ label: "Women's", path: '/shop/womens' })
+      )
+    })
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(800)
+    await expect(page.getByText(/← Women's/i)).toBeVisible()
   })
 
   test('COL-07 — ProductCard swatch click navigates to new colour', async ({ page }) => {
@@ -1081,5 +1109,211 @@ test.describe('Mobile 375px', () => {
     const editsBox = await editsCta.boundingBox()
     // On mobile CTAs stack vertically — edits CTA must be below shop CTA
     expect(editsBox?.y).toBeGreaterThan((shopBox?.y ?? 0) + (shopBox?.height ?? 0))
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GROUP 8 — ARCHIVED & NEW PRODUCTS (catalogue changes June–July 2026)
+// ─────────────────────────────────────────────────────────────────────────────
+test.describe('Archived & New Products', () => {
+  // ── Co-ord Set archived ───────────────────────────────────────────────────
+
+  test('ARCH-01 — Co-ord Set NOT on Women\'s category page', async ({ page }) => {
+    await page.goto(`${BASE}/en/shop/womens`, { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(800)
+    await expect(page.getByText(/Relaxed Co-ord Set/i)).not.toBeVisible()
+    await expect(page.getByText(/Co-ord Set/i)).not.toBeVisible()
+  })
+
+  test('ARCH-02 — Co-ord Set NOT on /shop all-products page', async ({ page }) => {
+    await page.goto(`${BASE}/en/shop`, { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(800)
+    await expect(page.getByText(/Relaxed Co-ord Set/i)).not.toBeVisible()
+  })
+
+  test('ARCH-03 — Co-ord Set product page still reachable directly', async ({ page }) => {
+    // Archived = hidden from nav/discovery, NOT deleted. Direct URL still works.
+    const res = await page.goto(`${BASE}/en/shop/womens/co-ord-set`, { waitUntil: 'domcontentloaded' })
+    expect(res?.status()).toBe(200)
+  })
+
+  test('ARCH-04 — Women\'s SHOP menu does NOT contain Co-ord Set', async ({ page }) => {
+    await page.goto(`${BASE}/en`, { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(600)
+    await page.locator('header').getByRole('link', { name: /^SHOP$/i }).hover()
+    await page.waitForTimeout(400)
+    await page.getByText("Women's").first().hover()
+    await page.waitForTimeout(300)
+    await expect(page.getByText(/Co-ord Set/i)).not.toBeVisible()
+  })
+
+  test('ARCH-05 — The Ease Edit features Women\'s Relaxed Shirt (not Co-ord Set)', async ({ page }) => {
+    await page.goto(`${BASE}/en/edits/ease-edit`, { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(800)
+    await expect(page.getByText(/Women's Relaxed Shirt/i).first()).toBeVisible()
+    await expect(page.getByText(/Relaxed Co-ord Set/i)).not.toBeVisible()
+  })
+
+  // ── Women's Relaxed Shirt ─────────────────────────────────────────────────
+
+  test('ARCH-06 — Women\'s Relaxed Shirt colour-grid page renders', async ({ page }) => {
+    const res = await page.goto(`${BASE}/en/shop/womens/womens-relaxed-shirt`, { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(800)
+    expect(res?.status()).toBe(200)
+    await expect(page.getByRole('heading', { name: /Women's Relaxed Shirt/i })).toBeVisible()
+  })
+
+  test('ARCH-07 — Women\'s Relaxed Shirt has 5 colour options', async ({ page }) => {
+    await page.goto(`${BASE}/en/shop/womens/womens-relaxed-shirt`, { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(800)
+    const colourCards = page.locator('a[href*="/womens-relaxed-shirt/"]')
+    const count = await colourCards.count()
+    expect(count).toBe(5)
+  })
+
+  test('ARCH-08 — Women\'s Relaxed Shirt PDP (Bone) shows Coming Soon / OUT OF STOCK', async ({ page }) => {
+    await page.goto(`${BASE}/en/shop/womens-relaxed-shirt/bone`, { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(800)
+    // All sizes unavailable → CTA reads OUT OF STOCK
+    await expect(page.getByRole('button', { name: /out of stock/i })).toBeVisible()
+  })
+
+  test('ARCH-09 — Women\'s category page now includes Women\'s Relaxed Shirt', async ({ page }) => {
+    await page.goto(`${BASE}/en/shop/womens`, { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(800)
+    await expect(page.getByText(/Women's Relaxed Shirt/i).first()).toBeVisible()
+  })
+
+  test('ARCH-10 — Women\'s SHOP menu includes Women\'s Relaxed Shirt link', async ({ page }) => {
+    await page.goto(`${BASE}/en`, { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(600)
+    await page.locator('header').getByRole('link', { name: /^SHOP$/i }).hover()
+    await page.waitForTimeout(400)
+    await page.getByText("Women's").first().hover()
+    await page.waitForTimeout(300)
+    await expect(page.locator('a[href*="womens-relaxed-shirt"]').first()).toBeVisible()
+  })
+
+  // ── Kids Unisex Tee ───────────────────────────────────────────────────────
+
+  test('ARCH-11 — Kids Unisex Tee colour-grid page renders', async ({ page }) => {
+    const res = await page.goto(`${BASE}/en/shop/youth-studio/kids-unisex-tee`, { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(800)
+    expect(res?.status()).toBe(200)
+    await expect(page.getByRole('heading', { name: /Kids Unisex Tee/i })).toBeVisible()
+  })
+
+  test('ARCH-12 — Kids Unisex Tee has 5 colour options', async ({ page }) => {
+    await page.goto(`${BASE}/en/shop/youth-studio/kids-unisex-tee`, { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(800)
+    const colourCards = page.locator('a[href*="/kids-unisex-tee/"]')
+    const count = await colourCards.count()
+    expect(count).toBe(5)
+  })
+
+  test('ARCH-13 — Kids Unisex Tee PDP (Cloud) shows OUT OF STOCK', async ({ page }) => {
+    await page.goto(`${BASE}/en/shop/kids-unisex-tee/cloud`, { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(800)
+    await expect(page.getByRole('button', { name: /out of stock/i })).toBeVisible()
+  })
+
+  test('ARCH-14 — Youth Studio SHOP menu includes Kids Unisex Tee link', async ({ page }) => {
+    await page.goto(`${BASE}/en`, { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(600)
+    await page.locator('header').getByRole('link', { name: /^SHOP$/i }).hover()
+    await page.waitForTimeout(400)
+    await page.getByText('Youth Studio').first().hover()
+    await page.waitForTimeout(300)
+    await expect(page.locator('a[href*="kids-unisex-tee"]').first()).toBeVisible()
+  })
+
+  // ── The Dream Edit — 3 tabs ───────────────────────────────────────────────
+
+  test('ARCH-15 — The Dream Edit has 3 sub-nav tabs including Kids Unisex Tee', async ({ page }) => {
+    await page.goto(`${BASE}/en/edits/dream-edit`, { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(800)
+    const tabs = page.locator('[class*="subNavItem"]')
+    await expect(tabs).toHaveCount(3)
+    await expect(page.getByText('Kids Unisex Tee').first()).toBeVisible()
+  })
+
+  test('ARCH-16 — Dream Edit Kids Unisex Tee sub-item page loads', async ({ page }) => {
+    const res = await page.goto(`${BASE}/en/edits/dream-edit/kids-unisex-tee`, { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(800)
+    expect(res?.status()).toBe(200)
+    await expect(page.getByText(/Kids Unisex Tee/i).first()).toBeVisible()
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GROUP 9 — BACK NAVIGATION (sessionStorage)
+// ─────────────────────────────────────────────────────────────────────────────
+test.describe('Back Navigation', () => {
+  // nivenxa_nav_source key in sessionStorage drives all back links.
+  // BackLink is a client component that reads it on mount.
+
+  test('BACK-01 — PDP: no back link on direct visit', async ({ page }) => {
+    await page.goto(`${BASE}/en/shop/over-tee-shirts/bone`, { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(800)
+    await expect(page.getByText(/← /)).not.toBeVisible({ timeout: 2000 })
+  })
+
+  test('BACK-02 — colour-grid page: no back link on direct visit', async ({ page }) => {
+    await page.goto(`${BASE}/en/shop/womens/a-line-kurta`, { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(800)
+    await expect(page.getByText(/← /)).not.toBeVisible({ timeout: 2000 })
+  })
+
+  test('BACK-03 — PDP: back link shows injected sessionStorage label', async ({ page }) => {
+    await page.goto(`${BASE}/en/shop/over-tee-shirts/bone`, { waitUntil: 'domcontentloaded' })
+    await page.evaluate(() => {
+      sessionStorage.setItem(
+        'nivenxa_nav_source',
+        JSON.stringify({ label: 'The Indian Edit', path: '/edits/womens-edit' })
+      )
+    })
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(800)
+    await expect(page.getByText(/← The Indian Edit/i)).toBeVisible()
+  })
+
+  test('BACK-04 — back link links to the stored path', async ({ page }) => {
+    await page.goto(`${BASE}/en/shop/over-tee-shirts/bone`, { waitUntil: 'domcontentloaded' })
+    await page.evaluate(() => {
+      sessionStorage.setItem(
+        'nivenxa_nav_source',
+        JSON.stringify({ label: "Women's", path: '/shop/womens' })
+      )
+    })
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(800)
+    const backLink = page.getByText(/← Women's/i)
+    await expect(backLink).toBeVisible()
+    const href = await backLink.getAttribute('href')
+    expect(href).toContain('/shop/womens')
+  })
+
+  test('BACK-05 — archived handle in sessionStorage: back link hidden', async ({ page }) => {
+    // ARCHIVED_PATH_FRAGMENTS in navSource.ts includes 'co-ord-set'.
+    // A stale sessionStorage entry pointing at an archived product must be suppressed.
+    await page.goto(`${BASE}/en/shop/over-tee-shirts/bone`, { waitUntil: 'domcontentloaded' })
+    await page.evaluate(() => {
+      sessionStorage.setItem(
+        'nivenxa_nav_source',
+        JSON.stringify({ label: 'Co-ord Set', path: '/shop/womens/co-ord-set' })
+      )
+    })
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(800)
+    await expect(page.getByText(/← Co-ord Set/i)).not.toBeVisible()
+    await expect(page.getByText(/← /)).not.toBeVisible({ timeout: 500 })
+  })
+
+  test('BACK-06 — new tab / fresh context: no back link', async ({ page }) => {
+    // Fresh browser context means empty sessionStorage → back link hidden.
+    // This is the natural Playwright default (each test has fresh context).
+    await page.goto(`${BASE}/en/shop/cargo-pants/chalk-stone`, { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(800)
+    await expect(page.getByText(/← /)).not.toBeVisible({ timeout: 2000 })
   })
 })
