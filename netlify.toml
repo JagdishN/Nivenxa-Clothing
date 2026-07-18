@@ -9,3 +9,24 @@
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+# 301 redirects: /en/* → /studio/en/* (and all other locale prefixes)
+# Next.js middleware handles the redirect at runtime too, but Netlify-level
+# redirects catch pre-flight requests before the function even runs.
+[[redirects]]
+  from   = "/en"
+  to     = "/studio/en"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from   = "/en/*"
+  to     = "/studio/en/:splat"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from   = "/studio"
+  to     = "/studio/en"
+  status = 301
+  force  = true

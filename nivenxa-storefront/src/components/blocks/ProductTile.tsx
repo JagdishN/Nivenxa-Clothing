@@ -17,7 +17,7 @@ export default function ProductTile({ product }: Props) {
   const href = `/shop/${product.handle}/${firstColour.slug}` as any
 
   return (
-    <Link href={href} className={styles.tile} onClick={() => writeNavSource('Shop', '/shop')}>
+    <Link href={href} className={styles.tile} onClick={() => writeNavSource('Shop', window.location.pathname)}>
       <div className={styles.imageWrap}>
         <img
           src={primaryImage.src}

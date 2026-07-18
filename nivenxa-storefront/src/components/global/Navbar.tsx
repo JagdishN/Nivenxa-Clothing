@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { Link } from '@/i18n/routing'
 import { AnimatePresence, motion } from 'framer-motion'
 import LanguageSwitcher from './LanguageSwitcher'
@@ -14,6 +14,7 @@ import styles from './Navbar.module.scss'
 
 export default function Navbar() {
   const t = useTranslations('nav')
+  const locale = useLocale()
   const [scrolled, setScrolled]                   = useState(false)
   const [menuOpen, setMenuOpen]                   = useState(false)
   const [activeMenu, setActiveMenu]               = useState<string | null>(null)
@@ -222,7 +223,7 @@ export default function Navbar() {
                               href={child.href as any}
                               className={styles.submenuChildLink}
                               onClick={() => {
-                                if (hoveredSub.href) writeNavSource(hoveredSub.label, hoveredSub.href)
+                                if (hoveredSub.href) writeNavSource(hoveredSub.label, `/studio/${locale}${hoveredSub.href}`)
                                 setActiveMenu(null)
                                 setHoveredSubItem(null)
                               }}
@@ -361,7 +362,7 @@ export default function Navbar() {
                                             href={child.href as any}
                                             className={styles.mobileSubSubmenuLink}
                                             onClick={() => {
-                                              if (sub.href) writeNavSource(sub.label, sub.href)
+                                              if (sub.href) writeNavSource(sub.label, `/studio/${locale}${sub.href}`)
                                               setMenuOpen(false)
                                               setMobileExpanded(null)
                                               setMobileSubExpanded(null)

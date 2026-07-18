@@ -111,7 +111,7 @@ export default function RootPage() {
               Designed for Indian life.
             </p>
             <Link
-              href="/en"
+              href="/studio/en"
               style={{
                 display: 'inline-block',
                 fontSize: '13px',
