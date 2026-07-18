@@ -23,7 +23,13 @@ export default function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 301)
   }
 
-  return intlMiddleware(request)
+  // Only run intlMiddleware for /studio/* paths.
+  // Let /, /technologies, /chess, /ventures pass straight through to Next.js routing.
+  if (pathname.startsWith('/studio/')) {
+    return intlMiddleware(request)
+  }
+
+  return NextResponse.next()
 }
 
 export const config = {
