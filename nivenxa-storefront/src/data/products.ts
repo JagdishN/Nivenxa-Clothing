@@ -2655,7 +2655,7 @@ const kidsSummerSleepSet: Product = {
 
 // ─── Product 11: Women's Relaxed Shirt ────────────────────────────────────────
 // No real photography yet — placeholder images via buildPlaceholderImages().
-// Coming Soon: all sizes unavailable until product photography is shot.
+// Launch colours: Bone, Green Olive. Other tones pending photography.
 const womensRelaxedShirtColours: Array<{ slug: string; hex: string; label: string; pantone: string; isUnique: boolean }> = [
   { slug: 'bone',        hex: 'F0EBE0', label: 'Bone',        pantone: '11-0507 TCX', isUnique: false },
   { slug: 'mushroom',    hex: 'A89888', label: 'Mushroom',    pantone: '17-1210 TCX', isUnique: false },
@@ -2671,7 +2671,7 @@ const womensRelaxedShirt: Product = {
   handle: 'womens-relaxed-shirt',
   collectionName: "Women's",
   collectionSlug: 'womens',
-  badge: 'Coming Soon',
+  badge: null,
   compositionQuote: '200–220 GSM Combed Cotton Jersey — grandad collar, no pocket. Pairs with Cargo Pants and The Contrast Pant.',
   price: 1999,
   currency: '₹',
@@ -2683,7 +2683,7 @@ const womensRelaxedShirt: Product = {
     slug:      c.slug,
     label:     c.label,
     hex:       `#${c.hex}`,
-    available: false,
+    available: c.slug === 'bone' || c.slug === 'green-olive',
     pantone:   c.pantone,
     isUnique:  c.isUnique,
     finish:    'plain',
@@ -2691,12 +2691,12 @@ const womensRelaxedShirt: Product = {
   })),
 
   sizes: [
-    { label: 'XS',  available: false },
-    { label: 'S',   available: false },
-    { label: 'M',   available: false },
-    { label: 'L',   available: false },
-    { label: 'XL',  available: false },
-    { label: 'XXL', available: false },
+    { label: 'XS',  available: true },
+    { label: 'S',   available: true },
+    { label: 'M',   available: true },
+    { label: 'L',   available: true },
+    { label: 'XL',  available: true },
+    { label: 'XXL', available: true },
   ],
 
   featureBullets: [
@@ -2792,7 +2792,7 @@ const womensRelaxedShirt: Product = {
 
 // ─── Product 12: Kids Unisex Tee ──────────────────────────────────────────────
 // No real photography yet — placeholder images via buildPlaceholderImages().
-// Coming Soon: all sizes unavailable until product photography is shot.
+// Launch colours: Cloud, Mist Blue. Other tones pending photography.
 const kidsUnisexTeeColours: Array<{ slug: string; hex: string; label: string; pantone: string; isUnique: boolean }> = [
   { slug: 'cloud',      hex: 'F5F2EC', label: 'Cloud',      pantone: '11-0601 TCX', isUnique: false },
   { slug: 'warm-sand',  hex: 'CBC3B4', label: 'Warm Sand',  pantone: '13-0401 TCX', isUnique: false },
@@ -2808,7 +2808,7 @@ const kidsUnisexTee: Product = {
   handle: 'kids-unisex-tee',
   collectionName: 'Youth Studio',
   collectionSlug: 'youth-studio',
-  badge: 'Coming Soon',
+  badge: null,
   compositionQuote: '160–180 GSM Combed Cotton Jersey — crew neck, short sleeve. Sizes 4Y to 12Y. OEKO-TEX Class I.',
   price: 999,
   currency: '₹',
@@ -2820,7 +2820,7 @@ const kidsUnisexTee: Product = {
     slug:      c.slug,
     label:     c.label,
     hex:       `#${c.hex}`,
-    available: false,
+    available: c.slug === 'cloud' || c.slug === 'mist-blue',
     pantone:   c.pantone,
     isUnique:  c.isUnique,
     finish:    'plain',
@@ -2828,11 +2828,11 @@ const kidsUnisexTee: Product = {
   })),
 
   sizes: [
-    { label: '4Y',  available: false },
-    { label: '6Y',  available: false },
-    { label: '8Y',  available: false },
-    { label: '10Y', available: false },
-    { label: '12Y', available: false },
+    { label: '4Y',  available: true },
+    { label: '6Y',  available: true },
+    { label: '8Y',  available: true },
+    { label: '10Y', available: true },
+    { label: '12Y', available: true },
   ],
 
   featureBullets: [
