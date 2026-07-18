@@ -13,7 +13,8 @@ interface Props {
 }
 
 export default function FeaturedProductCard({ product, navLabel }: Props) {
-  const [activeColour, setActiveColour] = useState(product.colours[0])
+  const availableColours = product.colours.filter(c => c.available)
+  const [activeColour, setActiveColour] = useState(availableColours[0] ?? product.colours[0])
 
   const heroImage = getPrimaryImage(activeColour.images)
 
@@ -62,7 +63,7 @@ export default function FeaturedProductCard({ product, navLabel }: Props) {
           <span className={styles.featuredSwatchLabel}>Available Tones</span>
 
           <div className={styles.swatchRow}>
-            {product.colours.map(colour => (
+            {availableColours.map(colour => (
               <button
                 key={colour.slug}
                 className={`${styles.swatch} ${colour.slug === activeColour.slug ? styles.swatchActive : ''}`}

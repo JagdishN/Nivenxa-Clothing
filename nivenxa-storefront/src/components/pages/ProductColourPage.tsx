@@ -32,7 +32,7 @@ export default function ProductColourPage({ product }: Props) {
 
       {/* Colour grid */}
       <div className={styles.colourGrid}>
-        {product.colours.map(colour => {
+        {product.colours.filter(c => c.available).map(colour => {
           const primaryImage = getPrimaryImage(colour.images)
           const productHref  = `/shop/${product.handle}/${colour.slug}`
 

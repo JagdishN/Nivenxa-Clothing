@@ -70,6 +70,7 @@ interface TeeConfig {
   side: string      // side_studio_view.webp   → studio-side
   walk: string      // walking_view.webp       → walking
   fabric: string    // fabric_close_up.webp    → detail (last in stack)
+  available?: boolean  // false = hidden from frontend; re-enable for Season 2
 }
 
 // All 6 colours share identical filenames — confirmed on disk 2025-06-03.
@@ -82,16 +83,16 @@ const COMMON_FILES = {
 }
 
 const teeSlugs: TeeConfig[] = [
-  // ── 1. DEFAULT COLOUR (first = default on product page) ───────────────────
-  { slug: 'raw-oat',  hex: 'CBC3B4', textHex: '333333', label: 'Raw Oat',  folder: "Men/OversizedTee's/OAT BEIGE",      ...COMMON_FILES }, // Pantone 13-0401 TCX
-  // ── 2. BONE ───────────────────────────────────────────────────────────────
-  { slug: 'bone',     hex: 'F0EBE0', textHex: '333333', label: 'Bone',     folder: "Men/OversizedTee's/WARM IVORY",     ...COMMON_FILES }, // Pantone 11-0507 TCX
-  // ── 3. ESPRESSO ───────────────────────────────────────────────────────────
-  { slug: 'espresso', hex: '363031', textHex: 'FFFFFF', label: 'Espresso', folder: "Men/OversizedTee's/CHARCOAL EARTH", ...COMMON_FILES }, // Pantone 19-1103 TCX
-  // ── 4. MUSHROOM ───────────────────────────────────────────────────────────
-  { slug: 'mushroom', hex: 'A89888', textHex: 'FFFFFF', label: 'Mushroom', folder: "Men/OversizedTee's/MUSHROOM TAUPE", ...COMMON_FILES }, // Pantone 17-1210 TCX
-  // ── 5. EARTH ──────────────────────────────────────────────────────────────
-  { slug: 'earth',    hex: '8B7355', textHex: 'FFFFFF', label: 'Earth',    folder: "Men/OversizedTee's/MINERAL BROWN",  ...COMMON_FILES }, // Pantone 18-1022 TCX
+  // ── 1. BONE — SS2026 launch ───────────────────────────────────────────────
+  { slug: 'bone',     hex: 'F0EBE0', textHex: '333333', label: 'Bone',     folder: "Men/OversizedTee's/WARM IVORY",     ...COMMON_FILES, available: true  }, // Pantone 11-0507 TCX
+  // ── 2. ESPRESSO — SS2026 launch ───────────────────────────────────────────
+  { slug: 'espresso', hex: '363031', textHex: 'FFFFFF', label: 'Espresso', folder: "Men/OversizedTee's/CHARCOAL EARTH", ...COMMON_FILES, available: true  }, // Pantone 19-1103 TCX
+  // Hidden for SS2026 launch — re-enable for Season 2
+  { slug: 'raw-oat',  hex: 'CBC3B4', textHex: '333333', label: 'Raw Oat',  folder: "Men/OversizedTee's/OAT BEIGE",      ...COMMON_FILES, available: false }, // Pantone 13-0401 TCX
+  // Hidden for SS2026 launch — re-enable for Season 2
+  { slug: 'mushroom', hex: 'A89888', textHex: 'FFFFFF', label: 'Mushroom', folder: "Men/OversizedTee's/MUSHROOM TAUPE", ...COMMON_FILES, available: false }, // Pantone 17-1210 TCX
+  // Hidden for SS2026 launch — re-enable for Season 2
+  { slug: 'earth',    hex: '8B7355', textHex: 'FFFFFF', label: 'Earth',    folder: "Men/OversizedTee's/MINERAL BROWN",  ...COMMON_FILES, available: false }, // Pantone 18-1022 TCX
 ]
 
 function buildTeeImages(c: TeeConfig): ProductImage[] {
@@ -122,32 +123,19 @@ interface CargoFiles {
 }
 
 interface CargoConfig {
-  slug:    string
-  hex:     string
-  textHex: string
-  label:   string
-  folder:  string | null   // null → no real images, use phImg() fallback
-  files?:  CargoFiles
+  slug:      string
+  hex:       string
+  textHex:   string
+  label:     string
+  folder:    string | null   // null → no real images, use phImg() fallback
+  files?:    CargoFiles
+  available?: boolean        // false = hidden from frontend; re-enable for Season 2
 }
 
 const cargoSlugs: CargoConfig[] = [
-  // ── 1. CHARCOALGREY ─────────────────────────────────────────────────────────
+  // ── 1. DARKOLIVE — SS2026 launch ────────────────────────────────────────────
   {
-    slug: 'carbon', hex: '6B6560', textHex: 'FFFFFF', label: 'Carbon',         // Pantone 18-0601 TCX
-    folder: 'Unisex/cargos/CHARCOALGREY',
-    files: {
-      front:     'front_studio_view.webp',
-      back:      'back_studio_view.webp',
-      flatlay:   'flat_lay_view.webp',
-      sitting:   'sittingorLearning_studio_view.webp',
-      stylewith: 'stylewith_view.png',
-      walk:      'walking_view.webp',
-      fabric:    'fabric_close_up.webp',
-    },
-  },
-  // ── 2. DARKOLIVE ────────────────────────────────────────────────────────────
-  {
-    slug: 'forest-floor', hex: '4A5240', textHex: 'FFFFFF', label: 'Forest Floor', // Pantone 19-0417 TCX
+    slug: 'forest-floor', hex: '4A5240', textHex: 'FFFFFF', label: 'Forest Floor', available: true, // Pantone 19-0417 TCX
     folder: 'Unisex/cargos/DARKOLIVE',
     files: {
       front:     'front_studio_view.webp',
@@ -159,9 +147,9 @@ const cargoSlugs: CargoConfig[] = [
       fabric:    'fabric_close_up.webp',
     },
   },
-  // ── 3. SANDBEIGE ────────────────────────────────────────────────────────────
+  // ── 2. SANDBEIGE — SS2026 launch ────────────────────────────────────────────
   {
-    slug: 'chalk-stone', hex: 'C4B49A', textHex: '333333', label: 'Chalk Stone',  // Pantone 12-0712 TCX
+    slug: 'chalk-stone', hex: 'C4B49A', textHex: '333333', label: 'Chalk Stone', available: true,  // Pantone 12-0712 TCX
     folder: 'Unisex/cargos/SANDBEIGE',
     files: {
       front:     'front_studio_view.webp',
@@ -174,9 +162,23 @@ const cargoSlugs: CargoConfig[] = [
     },
   },
   // { slug: 'terracotta', hex: 'B5541C', textHex: 'FFFFFF', label: 'Terracotta', folder: null }, // Pantone 18-1250 TCX — hidden
-  // ── 4. MOCHA BROWN ──────────────────────────────────────────────────────────
+  // Hidden for SS2026 launch — re-enable for Season 2
   {
-    slug: 'tobacco', hex: '7B5B3A', textHex: 'FFFFFF', label: 'Tobacco',         // Pantone 18-1048 TCX
+    slug: 'carbon', hex: '6B6560', textHex: 'FFFFFF', label: 'Carbon', available: false,            // Pantone 18-0601 TCX
+    folder: 'Unisex/cargos/CHARCOALGREY',
+    files: {
+      front:     'front_studio_view.webp',
+      back:      'back_studio_view.webp',
+      flatlay:   'flat_lay_view.webp',
+      sitting:   'sittingorLearning_studio_view.webp',
+      stylewith: 'stylewith_view.png',
+      walk:      'walking_view.webp',
+      fabric:    'fabric_close_up.webp',
+    },
+  },
+  // Hidden for SS2026 launch — re-enable for Season 2
+  {
+    slug: 'tobacco', hex: '7B5B3A', textHex: 'FFFFFF', label: 'Tobacco', available: false,          // Pantone 18-1048 TCX
     folder: 'Unisex/cargos/MOCHA BROWN',
     files: {
       front:     'front_studio_view.webp',
@@ -188,9 +190,9 @@ const cargoSlugs: CargoConfig[] = [
       fabric:    'fabric_close_up.webp',
     },
   },
-  // ── 5. JETBLACK ─────────────────────────────────────────────────────────────
+  // Hidden for SS2026 launch — re-enable for Season 2
   {
-    slug: 'phantom', hex: '1A1A1A', textHex: 'FFFFFF', label: 'Phantom',         // Pantone 19-4005 TCX
+    slug: 'phantom', hex: '1A1A1A', textHex: 'FFFFFF', label: 'Phantom', available: false,          // Pantone 19-4005 TCX
     folder: 'Unisex/cargos/JETBLACK',
     files: {
       front:     'front_studio_view.webp',
@@ -247,7 +249,7 @@ const oversizedTee: Product = {
     slug:      c.slug,
     label:     c.label,
     hex:       `#${c.hex}`,
-    available: true,
+    available: c.available !== false,
     images:    buildTeeImages(c),
   })),
 
@@ -394,11 +396,11 @@ const oversizedTee: Product = {
     productName: 'Cargo Pant',
     price: '₹3,499',
     pairings: {
+      'bone':     { colourSlug: 'forest-floor', colourName: 'Forest Floor', hex: '#4A5240' },
+      'espresso': { colourSlug: 'chalk-stone',  colourName: 'Chalk Stone',  hex: '#C4B49A' },
       'raw-oat':  { colourSlug: 'forest-floor', colourName: 'Forest Floor', hex: '#4A5240' },
-      'bone':     { colourSlug: 'carbon',        colourName: 'Carbon',       hex: '#6B6560' },
-      'espresso': { colourSlug: 'chalk-stone',   colourName: 'Chalk Stone',  hex: '#C4B49A' },
-      'mushroom': { colourSlug: 'forest-floor',  colourName: 'Forest Floor', hex: '#4A5240' },
-      'earth':    { colourSlug: 'phantom',       colourName: 'Phantom',      hex: '#1A1A1A' },
+      'mushroom': { colourSlug: 'forest-floor', colourName: 'Forest Floor', hex: '#4A5240' },
+      'earth':    { colourSlug: 'chalk-stone',  colourName: 'Chalk Stone',  hex: '#C4B49A' },
     },
   },
 
@@ -499,7 +501,7 @@ const cargoPants: Product = {
     slug:      c.slug,
     label:     c.label,
     hex:       `#${c.hex}`,
-    available: true,
+    available: c.available !== false,
     images:    buildCargoImages(c),
   })),
 
@@ -673,11 +675,11 @@ const cargoPants: Product = {
     productName: 'Heavyweight Pocket Tee',
     price: '₹1,999',
     pairings: {
-      'forest-floor': { colourSlug: 'raw-oat',  colourName: 'Raw Oat',  hex: '#CBC3B4' },
-      'carbon':       { colourSlug: 'bone',     colourName: 'Bone',     hex: '#F0EBE0' },
+      'forest-floor': { colourSlug: 'bone',     colourName: 'Bone',     hex: '#F0EBE0' },
       'chalk-stone':  { colourSlug: 'espresso', colourName: 'Espresso', hex: '#363031' },
-      'phantom':      { colourSlug: 'earth',    colourName: 'Earth',    hex: '#8B7355' },
+      'carbon':       { colourSlug: 'bone',     colourName: 'Bone',     hex: '#F0EBE0' },
       'tobacco':      { colourSlug: 'bone',     colourName: 'Bone',     hex: '#F0EBE0' },
+      'phantom':      { colourSlug: 'bone',     colourName: 'Bone',     hex: '#F0EBE0' },
       // 'terracotta' pairing removed — colour hidden
     },
   },
@@ -757,11 +759,12 @@ interface KurtaFiles {
 }
 
 interface KurtaConfig {
-  slug:  string
-  hex:   string
-  label: string
-  folder: string
-  files: KurtaFiles
+  slug:       string
+  hex:        string
+  label:      string
+  folder:     string
+  files:      KurtaFiles
+  available?: boolean   // false = hidden from frontend; re-enable for Season 2
 }
 
 const KURTA_COMMON_FILES: KurtaFiles = {
@@ -774,11 +777,15 @@ const KURTA_COMMON_FILES: KurtaFiles = {
 }
 
 const kurta3ColourSlugs: KurtaConfig[] = [
-  { slug: 'ivory', hex: 'F0EBE0', label: 'Ivory', folder: 'Wonmen/A-line Kurta/MORNING IVORY', files: KURTA_COMMON_FILES }, // Pantone 11-0608 TCX — print: minimal-floral
-  { slug: 'sand',  hex: 'C8A882', label: 'Sand',  folder: 'Wonmen/A-line Kurta/DESERT SAND',    files: KURTA_COMMON_FILES }, // Pantone 14-1116 TCX — print: minimal-floral
-  { slug: 'sage',  hex: '8C9E84', label: 'Sage',  folder: 'Wonmen/A-line Kurta/WILD SAGE',      files: KURTA_COMMON_FILES }, // Pantone 16-5803 TCX — print: plain
-  { slug: 'rose',  hex: 'D4A8A0', label: 'Rose',  folder: 'Wonmen/A-line Kurta/DUSK ROSE',      files: KURTA_COMMON_FILES }, // Pantone 14-1911 TCX — print: plain
-  { slug: 'clay',  hex: 'C47A4E', label: 'Clay',  folder: 'Wonmen/A-line Kurta/BAKED CLAY',     files: KURTA_COMMON_FILES }, // Pantone 18-1441 TCX — print: plain
+  // ── SS2026 launch colours ──────────────────────────────────────────────────
+  { slug: 'ivory', hex: 'F0EBE0', label: 'Ivory', folder: 'Wonmen/A-line Kurta/MORNING IVORY', files: KURTA_COMMON_FILES, available: true  }, // Pantone 11-0608 TCX
+  { slug: 'rose',  hex: 'D4A8A0', label: 'Rose',  folder: 'Wonmen/A-line Kurta/DUSK ROSE',      files: KURTA_COMMON_FILES, available: true  }, // Pantone 14-1911 TCX
+  // Hidden for SS2026 launch — re-enable for Season 2
+  { slug: 'sand',  hex: 'C8A882', label: 'Sand',  folder: 'Wonmen/A-line Kurta/DESERT SAND',    files: KURTA_COMMON_FILES, available: false }, // Pantone 14-1116 TCX
+  // Hidden for SS2026 launch — re-enable for Season 2
+  { slug: 'sage',  hex: '8C9E84', label: 'Sage',  folder: 'Wonmen/A-line Kurta/WILD SAGE',      files: KURTA_COMMON_FILES, available: false }, // Pantone 16-5803 TCX
+  // Hidden for SS2026 launch — re-enable for Season 2
+  { slug: 'clay',  hex: 'C47A4E', label: 'Clay',  folder: 'Wonmen/A-line Kurta/BAKED CLAY',     files: KURTA_COMMON_FILES, available: false }, // Pantone 18-1441 TCX
 ]
 
 function buildKurtaImages(c: KurtaConfig): ProductImage[] {
@@ -815,7 +822,7 @@ const aLineKurta: Product = {
     slug:      c.slug,
     label:     c.label,
     hex:       `#${c.hex}`,
-    available: true,
+    available: c.available !== false,
     images:    buildKurtaImages(c),
     styleImage: buildKurtaStyleImage(c),
   })),
@@ -1021,20 +1028,15 @@ const aLineKurta: Product = {
     },
   },
 
-  // Reciprocal cross-sell — see matching styledWith on kurtaContrastPant below.
-  // Pairing is a perfect bijection sourced entirely from the confirmed two-option
-  // pairing table (e.g. ivory's options were {sage, sand} — sage was free, so it
-  // got ivory; sand went to rose); single-valued because StyledWith only supports
-  // one paired colour per active colour.
   styledWith: {
     productHandle: 'kurta-contrast-pant',
     productName: 'The Contrast Pant',
     price: '₹1,499',
     pairings: {
       'ivory': { colourSlug: 'wild-sage',     colourName: 'Wild Sage',     hex: '#8C9E84' },
-      'sand':  { colourSlug: 'dusk-rose',     colourName: 'Dusk Rose',     hex: '#D4A8A0' },
-      'sage':  { colourSlug: 'baked-clay',    colourName: 'Baked Clay',    hex: '#8B5E3C' },
-      'rose':  { colourSlug: 'desert-sand',   colourName: 'Desert Sand',   hex: '#C8B89A' },
+      'rose':  { colourSlug: 'morning-ivory', colourName: 'Morning Ivory', hex: '#F1EEE6' },
+      'sand':  { colourSlug: 'wild-sage',     colourName: 'Wild Sage',     hex: '#8C9E84' },
+      'sage':  { colourSlug: 'morning-ivory', colourName: 'Morning Ivory', hex: '#F1EEE6' },
       'clay':  { colourSlug: 'morning-ivory', colourName: 'Morning Ivory', hex: '#F1EEE6' },
     },
   },
@@ -1047,19 +1049,24 @@ const aLineKurta: Product = {
 // or UI slot on Product/ProductInfo — folded into compositionQuote instead,
 // which is the one description block that already renders on the page.
 interface ContrastPantColourSpec {
-  slug: string
-  hex: string
-  label: string
-  pantone: string
-  isUnique: boolean
+  slug:       string
+  hex:        string
+  label:      string
+  pantone:    string
+  isUnique:   boolean
+  available?: boolean   // false = hidden from frontend; re-enable for Season 2
 }
 
 const contrastPantColourSlugs: ContrastPantColourSpec[] = [
-  { slug: 'morning-ivory', hex: 'F1EEE6', label: 'Morning Ivory', pantone: '11-0608 TCX', isUnique: false },
-  { slug: 'desert-sand',   hex: 'C8B89A', label: 'Desert Sand',   pantone: '14-1116 TCX', isUnique: false },
-  { slug: 'wild-sage',     hex: '8C9E84', label: 'Wild Sage',     pantone: '16-5803 TCX', isUnique: false },
-  { slug: 'dusk-rose',     hex: 'D4A8A0', label: 'Dusk Rose',     pantone: '14-1911 TCX', isUnique: false },
-  { slug: 'baked-clay',    hex: '8B5E3C', label: 'Baked Clay',    pantone: '18-1441 TCX', isUnique: true  },
+  // ── SS2026 launch colours ──────────────────────────────────────────────────
+  { slug: 'morning-ivory', hex: 'F1EEE6', label: 'Morning Ivory', pantone: '11-0608 TCX', isUnique: false, available: true  },
+  { slug: 'wild-sage',     hex: '8C9E84', label: 'Wild Sage',     pantone: '16-5803 TCX', isUnique: false, available: true  },
+  // Hidden for SS2026 launch — re-enable for Season 2
+  { slug: 'desert-sand',   hex: 'C8B89A', label: 'Desert Sand',   pantone: '14-1116 TCX', isUnique: false, available: false },
+  // Hidden for SS2026 launch — re-enable for Season 2
+  { slug: 'dusk-rose',     hex: 'D4A8A0', label: 'Dusk Rose',     pantone: '14-1911 TCX', isUnique: false, available: false },
+  // Hidden for SS2026 launch — re-enable for Season 2
+  { slug: 'baked-clay',    hex: '8B5E3C', label: 'Baked Clay',    pantone: '18-1441 TCX', isUnique: true,  available: false },
 ]
 
 const kurtaContrastPant: Product = {
@@ -1082,7 +1089,7 @@ const kurtaContrastPant: Product = {
     slug:      c.slug,
     label:     c.label,
     hex:       `#${c.hex}`,
-    available: true,
+    available: c.available !== false,
     pantone:   c.pantone,
     isUnique:  c.isUnique,
     images:    buildPlaceholderImages('p10', 'The Contrast Pant', c.slug, c.hex),
@@ -1218,17 +1225,16 @@ const kurtaContrastPant: Product = {
     },
   ],
 
-  // Reciprocal cross-sell — see matching styledWith on aLineKurta above.
   styledWith: {
     productHandle: 'a-line-kurta',
     productName: 'A-line Kurta',
     price: '₹3,999',
     pairings: {
       'wild-sage':     { colourSlug: 'ivory', colourName: 'Ivory', hex: '#F0EBE0' },
-      'dusk-rose':     { colourSlug: 'sand',  colourName: 'Sand',  hex: '#C8A882' },
-      'baked-clay':    { colourSlug: 'sage',  colourName: 'Sage',  hex: '#8C9E84' },
+      'morning-ivory': { colourSlug: 'rose',  colourName: 'Rose',  hex: '#D4A8A0' },
+      'dusk-rose':     { colourSlug: 'ivory', colourName: 'Ivory', hex: '#F0EBE0' },
+      'baked-clay':    { colourSlug: 'rose',  colourName: 'Rose',  hex: '#D4A8A0' },
       'desert-sand':   { colourSlug: 'rose',  colourName: 'Rose',  hex: '#D4A8A0' },
-      'morning-ivory': { colourSlug: 'clay',  colourName: 'Clay',  hex: '#C47A4E' },
     },
   },
 
@@ -1559,18 +1565,23 @@ const womenCoordSet: Product = {
 // ProductColour object (and its images) is its own instance — no shared
 // references between the two products despite identical values.
 const restSleepColourSlugs: Array<{
-  slug: string
-  hex: string
-  label: string
-  pantone: string
-  isUnique: boolean
-  finish: NonNullable<ProductColour['finish']>
+  slug:      string
+  hex:       string
+  label:     string
+  pantone:   string
+  isUnique:  boolean
+  finish:    NonNullable<ProductColour['finish']>
+  available: boolean   // false = hidden from SS2026 launch; re-enable for Season 2
 }> = [
-  { slug: 'morning-cream', hex: 'F5F0E8', label: 'Morning Cream', pantone: '11-0602 TCX', isUnique: false, finish: 'plain' },
-  { slug: 'dark-earth',    hex: '7B5B3A', label: 'Dark Earth',    pantone: '18-1048 TCX', isUnique: false, finish: 'plain' },
-  { slug: 'blush-field',   hex: 'D4A8A0', label: 'Blush Field',   pantone: '14-1911 TCX', isUnique: false, finish: 'tonal-botanical-print' },
-  { slug: 'dusk-lavender', hex: 'B8B0C8', label: 'Dusk Lavender', pantone: '14-3812 TCX', isUnique: false, finish: 'tonal-micro-stripe' },
-  { slug: 'sage-atelier',  hex: '8C9E84', label: 'Sage Atelier',  pantone: '16-5803 TCX', isUnique: true,  finish: 'dabu-atelier-print' },
+  // ── SS2026 launch colours ──────────────────────────────────────────────────
+  { slug: 'morning-cream', hex: 'F5F0E8', label: 'Morning Cream', pantone: '11-0602 TCX', isUnique: false, finish: 'plain',                   available: true  },
+  { slug: 'dusk-lavender', hex: 'B8B0C8', label: 'Dusk Lavender', pantone: '14-3812 TCX', isUnique: false, finish: 'tonal-micro-stripe',       available: true  },
+  // Hidden for SS2026 launch — re-enable for Season 2
+  { slug: 'dark-earth',    hex: '7B5B3A', label: 'Dark Earth',    pantone: '18-1048 TCX', isUnique: false, finish: 'plain',                   available: false },
+  // Hidden for SS2026 launch — re-enable for Season 2
+  { slug: 'blush-field',   hex: 'D4A8A0', label: 'Blush Field',   pantone: '14-1911 TCX', isUnique: false, finish: 'tonal-botanical-print',   available: false },
+  // Hidden for SS2026 launch — re-enable for Season 2
+  { slug: 'sage-atelier',  hex: '8C9E84', label: 'Sage Atelier',  pantone: '16-5803 TCX', isUnique: true,  finish: 'dabu-atelier-print',       available: false },
 ]
 
 // ─── Product 9: Short Sleeve Sleep Set (SS2026) — real photography ───────────
@@ -1640,7 +1651,7 @@ const womenShortSleeveSleepSet: Product = {
     slug:      c.slug,
     label:     c.label,
     hex:       `#${c.hex}`,
-    available: true,
+    available: c.available,
     pantone:   c.pantone,
     isUnique:  c.isUnique,
     finish:    c.finish,
@@ -2061,14 +2072,15 @@ interface KidsSleepFiles {
 }
 
 interface KidsSleepConfig {
-  slug:     string
-  hex:      string
-  label:    string
-  pantone:  string
-  isUnique: boolean
-  finish:   'plain' | 'tonal-print'
-  folder:   string
-  files:    KidsSleepFiles
+  slug:       string
+  hex:        string
+  label:      string
+  pantone:    string
+  isUnique:   boolean
+  finish:     'plain' | 'tonal-print'
+  folder:     string
+  files:      KidsSleepFiles
+  available?: boolean   // false = hidden from frontend; re-enable for Season 2
 }
 
 function buildKidsSleepImages(productSlug: string, productName: string, c: KidsSleepConfig): ProductImage[] {
@@ -2096,11 +2108,15 @@ const KIDS_REST_COMMON_FILES: KidsSleepFiles = {
 // formally signed off by the brand. Internal spec names (disk folder names),
 // for reference: Soft Cloud White, Pale Oat, Baby Blue Grey, Dusty Sage, Faded Blush.
 const kidsRestColourSlugs: KidsSleepConfig[] = [
-  { slug: 'cloud',       hex: 'F5F2EC', label: 'Cloud',       pantone: '11-0601 TCX', isUnique: false, finish: 'plain', folder: 'Kids/unisex sleeper wear/Rest Set/SOFT CLOUD WHITE', files: KIDS_REST_COMMON_FILES },
-  { slug: 'oat',         hex: 'EDE5D0', label: 'Oat',         pantone: '12-0104 TCX', isUnique: true,  finish: 'plain', folder: 'Kids/unisex sleeper wear/Rest Set/PALE OAT',         files: KIDS_REST_COMMON_FILES },
-  { slug: 'mist-blue',   hex: 'A8B8C8', label: 'Mist Blue',   pantone: '14-4112 TCX', isUnique: false, finish: 'plain', folder: 'Kids/unisex sleeper wear/Rest Set/BABYBLUEGREY',     files: KIDS_REST_COMMON_FILES },
-  { slug: 'little-sage', hex: '9EAA8C', label: 'Little Sage', pantone: '16-0213 TCX', isUnique: false, finish: 'plain', folder: 'Kids/unisex sleeper wear/Rest Set/DUSTY SAGE',       files: KIDS_REST_COMMON_FILES },
-  { slug: 'petal',       hex: 'E8C4B8', label: 'Petal',       pantone: '13-2010 TCX', isUnique: false, finish: 'plain', folder: 'Kids/unisex sleeper wear/Rest Set/FADED BLUSH',      files: KIDS_REST_COMMON_FILES },
+  // ── SS2026 launch colours ──────────────────────────────────────────────────
+  { slug: 'cloud',       hex: 'F5F2EC', label: 'Cloud',       pantone: '11-0601 TCX', isUnique: false, finish: 'plain', folder: 'Kids/unisex sleeper wear/Rest Set/SOFT CLOUD WHITE', files: KIDS_REST_COMMON_FILES, available: true  },
+  { slug: 'little-sage', hex: '9EAA8C', label: 'Little Sage', pantone: '16-0213 TCX', isUnique: false, finish: 'plain', folder: 'Kids/unisex sleeper wear/Rest Set/DUSTY SAGE',       files: KIDS_REST_COMMON_FILES, available: true  },
+  // Hidden for SS2026 launch — re-enable for Season 2
+  { slug: 'oat',         hex: 'EDE5D0', label: 'Oat',         pantone: '12-0104 TCX', isUnique: true,  finish: 'plain', folder: 'Kids/unisex sleeper wear/Rest Set/PALE OAT',         files: KIDS_REST_COMMON_FILES, available: false },
+  // Hidden for SS2026 launch — re-enable for Season 2
+  { slug: 'mist-blue',   hex: 'A8B8C8', label: 'Mist Blue',   pantone: '14-4112 TCX', isUnique: false, finish: 'plain', folder: 'Kids/unisex sleeper wear/Rest Set/BABYBLUEGREY',     files: KIDS_REST_COMMON_FILES, available: false },
+  // Hidden for SS2026 launch — re-enable for Season 2
+  { slug: 'petal',       hex: 'E8C4B8', label: 'Petal',       pantone: '13-2010 TCX', isUnique: false, finish: 'plain', folder: 'Kids/unisex sleeper wear/Rest Set/FADED BLUSH',      files: KIDS_REST_COMMON_FILES, available: false },
 ]
 
 const kidsRestSleepSet: Product = {
@@ -2122,7 +2138,7 @@ const kidsRestSleepSet: Product = {
     slug:      c.slug,
     label:     c.label,
     hex:       `#${c.hex}`,
-    available: true,
+    available: c.available !== false,
     pantone:   c.pantone,
     isUnique:  c.isUnique,
     finish:    c.finish,
@@ -2475,8 +2491,9 @@ const KIDS_SUMMER_COMMON_FILES: KidsSleepFiles = {
 // formally signed off by the brand. Internal spec names (disk folder names),
 // for reference: Soft Cloud White, Dusty Sage, Warm Butter, Faded Blush, Pale Mint.
 const kidsSummerColourSlugs: KidsSleepConfig[] = [
+  // ── SS2026 launch colours ──────────────────────────────────────────────────
   {
-    slug: 'cloud', hex: 'F5F2EC', label: 'Cloud', pantone: '11-0601 TCX', isUnique: false, finish: 'plain',
+    slug: 'cloud', hex: 'F5F2EC', label: 'Cloud', pantone: '11-0601 TCX', isUnique: false, finish: 'plain', available: true,
     folder: 'Kids/unisex sleeper wear/Summer Set/SOFT CLOUD WHITE',
     files: {
       ...KIDS_SUMMER_COMMON_FILES,
@@ -2484,11 +2501,14 @@ const kidsSummerColourSlugs: KidsSleepConfig[] = [
       side: 'Summer Cloud - Side Profile.webp',
     },
   },
-  { slug: 'little-sage', hex: '9EAA8C', label: 'Little Sage', pantone: '16-0213 TCX', isUnique: false, finish: 'plain',       folder: 'Kids/unisex sleeper wear/Summer Set/DUSTY SAGE',   files: KIDS_SUMMER_COMMON_FILES },
-  { slug: 'butter',      hex: 'F5E6C8', label: 'Butter',      pantone: '12-0712 TCX', isUnique: true,  finish: 'plain',       folder: 'Kids/unisex sleeper wear/Summer Set/WARM BUTTER',  files: KIDS_SUMMER_COMMON_FILES },
-  { slug: 'petal',       hex: 'E8C4B8', label: 'Petal',       pantone: '13-2010 TCX', isUnique: false, finish: 'tonal-print', folder: 'Kids/unisex sleeper wear/Summer Set/FADED BLUSH',  files: KIDS_SUMMER_COMMON_FILES },
+  { slug: 'butter',      hex: 'F5E6C8', label: 'Butter',      pantone: '12-0712 TCX', isUnique: true,  finish: 'plain',       available: true,  folder: 'Kids/unisex sleeper wear/Summer Set/WARM BUTTER',  files: KIDS_SUMMER_COMMON_FILES },
+  // Hidden for SS2026 launch — re-enable for Season 2
+  { slug: 'little-sage', hex: '9EAA8C', label: 'Little Sage', pantone: '16-0213 TCX', isUnique: false, finish: 'plain',       available: false, folder: 'Kids/unisex sleeper wear/Summer Set/DUSTY SAGE',   files: KIDS_SUMMER_COMMON_FILES },
+  // Hidden for SS2026 launch — re-enable for Season 2
+  { slug: 'petal',       hex: 'E8C4B8', label: 'Petal',       pantone: '13-2010 TCX', isUnique: false, finish: 'tonal-print', available: false, folder: 'Kids/unisex sleeper wear/Summer Set/FADED BLUSH',  files: KIDS_SUMMER_COMMON_FILES },
+  // Hidden for SS2026 launch — re-enable for Season 2
   {
-    slug: 'mint', hex: 'C8E0C8', label: 'Mint', pantone: '13-0221 TCX', isUnique: false, finish: 'tonal-print',
+    slug: 'mint', hex: 'C8E0C8', label: 'Mint', pantone: '13-0221 TCX', isUnique: false, finish: 'tonal-print', available: false,
     folder: 'Kids/unisex sleeper wear/Summer Set/Pale Mint',
     files: {
       // This colour's photos were delivered as .png except the hero shot.
@@ -2522,7 +2542,7 @@ const kidsSummerSleepSet: Product = {
     slug:      c.slug,
     label:     c.label,
     hex:       `#${c.hex}`,
-    available: true,
+    available: c.available !== false,
     pantone:   c.pantone,
     isUnique:  c.isUnique,
     finish:    c.finish,
@@ -2655,13 +2675,17 @@ const kidsSummerSleepSet: Product = {
 
 // ─── Product 11: Women's Relaxed Shirt ────────────────────────────────────────
 // No real photography yet — placeholder images via buildPlaceholderImages().
-// Coming Soon: all sizes unavailable until product photography is shot.
-const womensRelaxedShirtColours: Array<{ slug: string; hex: string; label: string; pantone: string; isUnique: boolean }> = [
-  { slug: 'bone',        hex: 'F0EBE0', label: 'Bone',        pantone: '11-0507 TCX', isUnique: false },
-  { slug: 'mushroom',    hex: 'A89888', label: 'Mushroom',    pantone: '17-1210 TCX', isUnique: false },
-  { slug: 'charcoal',    hex: '6B6560', label: 'Charcoal',    pantone: '18-0601 TCX', isUnique: false },
-  { slug: 'green-olive', hex: '8D8B55', label: 'Green Olive', pantone: '17-0535 TCX', isUnique: false },
-  { slug: 'warm-clay',   hex: 'C4A882', label: 'Warm Clay',   pantone: '17-1340 TCX', isUnique: true  },
+// Launch colours: Bone, Green Olive. Other tones pending photography.
+const womensRelaxedShirtColours: Array<{ slug: string; hex: string; label: string; pantone: string; isUnique: boolean; available: boolean }> = [
+  // ── SS2026 launch colours ──────────────────────────────────────────────────
+  { slug: 'bone',        hex: 'F0EBE0', label: 'Bone',        pantone: '11-0507 TCX', isUnique: false, available: true  },
+  { slug: 'green-olive', hex: '8D8B55', label: 'Green Olive', pantone: '17-0535 TCX', isUnique: false, available: true  },
+  // Hidden for SS2026 launch — re-enable for Season 2
+  { slug: 'mushroom',    hex: 'A89888', label: 'Mushroom',    pantone: '17-1210 TCX', isUnique: false, available: false },
+  // Hidden for SS2026 launch — re-enable for Season 2
+  { slug: 'charcoal',    hex: '6B6560', label: 'Charcoal',    pantone: '18-0601 TCX', isUnique: false, available: false },
+  // Hidden for SS2026 launch — re-enable for Season 2
+  { slug: 'warm-clay',   hex: 'C4A882', label: 'Warm Clay',   pantone: '17-1340 TCX', isUnique: true,  available: false },
 ]
 
 const womensRelaxedShirt: Product = {
@@ -2671,7 +2695,7 @@ const womensRelaxedShirt: Product = {
   handle: 'womens-relaxed-shirt',
   collectionName: "Women's",
   collectionSlug: 'womens',
-  badge: 'Coming Soon',
+  badge: null,
   compositionQuote: '200–220 GSM Combed Cotton Jersey — grandad collar, no pocket. Pairs with Cargo Pants and The Contrast Pant.',
   price: 1999,
   currency: '₹',
@@ -2683,7 +2707,7 @@ const womensRelaxedShirt: Product = {
     slug:      c.slug,
     label:     c.label,
     hex:       `#${c.hex}`,
-    available: false,
+    available: c.available,
     pantone:   c.pantone,
     isUnique:  c.isUnique,
     finish:    'plain',
@@ -2691,12 +2715,12 @@ const womensRelaxedShirt: Product = {
   })),
 
   sizes: [
-    { label: 'XS',  available: false },
-    { label: 'S',   available: false },
-    { label: 'M',   available: false },
-    { label: 'L',   available: false },
-    { label: 'XL',  available: false },
-    { label: 'XXL', available: false },
+    { label: 'XS',  available: true },
+    { label: 'S',   available: true },
+    { label: 'M',   available: true },
+    { label: 'L',   available: true },
+    { label: 'XL',  available: true },
+    { label: 'XXL', available: true },
   ],
 
   featureBullets: [
@@ -2792,13 +2816,17 @@ const womensRelaxedShirt: Product = {
 
 // ─── Product 12: Kids Unisex Tee ──────────────────────────────────────────────
 // No real photography yet — placeholder images via buildPlaceholderImages().
-// Coming Soon: all sizes unavailable until product photography is shot.
-const kidsUnisexTeeColours: Array<{ slug: string; hex: string; label: string; pantone: string; isUnique: boolean }> = [
-  { slug: 'cloud',      hex: 'F5F2EC', label: 'Cloud',      pantone: '11-0601 TCX', isUnique: false },
-  { slug: 'warm-sand',  hex: 'CBC3B4', label: 'Warm Sand',  pantone: '13-0401 TCX', isUnique: false },
-  { slug: 'little-sage',hex: '9EAA8C', label: 'Little Sage',pantone: '16-0213 TCX', isUnique: false },
-  { slug: 'mist-blue',  hex: 'A8B8C8', label: 'Mist Blue',  pantone: '14-4112 TCX', isUnique: false },
-  { slug: 'butter',     hex: 'F5E6C8', label: 'Butter',     pantone: '12-0712 TCX', isUnique: true  },
+// Launch colours: Cloud, Mist Blue. Other tones pending photography.
+const kidsUnisexTeeColours: Array<{ slug: string; hex: string; label: string; pantone: string; isUnique: boolean; available: boolean }> = [
+  // ── SS2026 launch colours ──────────────────────────────────────────────────
+  { slug: 'cloud',       hex: 'F5F2EC', label: 'Cloud',       pantone: '11-0601 TCX', isUnique: false, available: true  },
+  { slug: 'mist-blue',   hex: 'A8B8C8', label: 'Mist Blue',   pantone: '14-4112 TCX', isUnique: false, available: true  },
+  // Hidden for SS2026 launch — re-enable for Season 2
+  { slug: 'warm-sand',   hex: 'CBC3B4', label: 'Warm Sand',   pantone: '13-0401 TCX', isUnique: false, available: false },
+  // Hidden for SS2026 launch — re-enable for Season 2
+  { slug: 'little-sage', hex: '9EAA8C', label: 'Little Sage', pantone: '16-0213 TCX', isUnique: false, available: false },
+  // Hidden for SS2026 launch — re-enable for Season 2
+  { slug: 'butter',      hex: 'F5E6C8', label: 'Butter',      pantone: '12-0712 TCX', isUnique: true,  available: false },
 ]
 
 const kidsUnisexTee: Product = {
@@ -2808,7 +2836,7 @@ const kidsUnisexTee: Product = {
   handle: 'kids-unisex-tee',
   collectionName: 'Youth Studio',
   collectionSlug: 'youth-studio',
-  badge: 'Coming Soon',
+  badge: null,
   compositionQuote: '160–180 GSM Combed Cotton Jersey — crew neck, short sleeve. Sizes 4Y to 12Y. OEKO-TEX Class I.',
   price: 999,
   currency: '₹',
@@ -2820,7 +2848,7 @@ const kidsUnisexTee: Product = {
     slug:      c.slug,
     label:     c.label,
     hex:       `#${c.hex}`,
-    available: false,
+    available: c.available,
     pantone:   c.pantone,
     isUnique:  c.isUnique,
     finish:    'plain',
@@ -2828,11 +2856,11 @@ const kidsUnisexTee: Product = {
   })),
 
   sizes: [
-    { label: '4Y',  available: false },
-    { label: '6Y',  available: false },
-    { label: '8Y',  available: false },
-    { label: '10Y', available: false },
-    { label: '12Y', available: false },
+    { label: '4Y',  available: true },
+    { label: '6Y',  available: true },
+    { label: '8Y',  available: true },
+    { label: '10Y', available: true },
+    { label: '12Y', available: true },
   ],
 
   featureBullets: [
