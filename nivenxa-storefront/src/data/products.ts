@@ -396,11 +396,11 @@ const oversizedTee: Product = {
     productName: 'Cargo Pant',
     price: '₹3,499',
     pairings: {
+      'bone':     { colourSlug: 'forest-floor', colourName: 'Forest Floor', hex: '#4A5240' },
+      'espresso': { colourSlug: 'chalk-stone',  colourName: 'Chalk Stone',  hex: '#C4B49A' },
       'raw-oat':  { colourSlug: 'forest-floor', colourName: 'Forest Floor', hex: '#4A5240' },
-      'bone':     { colourSlug: 'carbon',        colourName: 'Carbon',       hex: '#6B6560' },
-      'espresso': { colourSlug: 'chalk-stone',   colourName: 'Chalk Stone',  hex: '#C4B49A' },
-      'mushroom': { colourSlug: 'forest-floor',  colourName: 'Forest Floor', hex: '#4A5240' },
-      'earth':    { colourSlug: 'phantom',       colourName: 'Phantom',      hex: '#1A1A1A' },
+      'mushroom': { colourSlug: 'forest-floor', colourName: 'Forest Floor', hex: '#4A5240' },
+      'earth':    { colourSlug: 'chalk-stone',  colourName: 'Chalk Stone',  hex: '#C4B49A' },
     },
   },
 
@@ -675,11 +675,11 @@ const cargoPants: Product = {
     productName: 'Heavyweight Pocket Tee',
     price: '₹1,999',
     pairings: {
-      'forest-floor': { colourSlug: 'raw-oat',  colourName: 'Raw Oat',  hex: '#CBC3B4' },
-      'carbon':       { colourSlug: 'bone',     colourName: 'Bone',     hex: '#F0EBE0' },
+      'forest-floor': { colourSlug: 'bone',     colourName: 'Bone',     hex: '#F0EBE0' },
       'chalk-stone':  { colourSlug: 'espresso', colourName: 'Espresso', hex: '#363031' },
-      'phantom':      { colourSlug: 'earth',    colourName: 'Earth',    hex: '#8B7355' },
+      'carbon':       { colourSlug: 'bone',     colourName: 'Bone',     hex: '#F0EBE0' },
       'tobacco':      { colourSlug: 'bone',     colourName: 'Bone',     hex: '#F0EBE0' },
+      'phantom':      { colourSlug: 'bone',     colourName: 'Bone',     hex: '#F0EBE0' },
       // 'terracotta' pairing removed — colour hidden
     },
   },
@@ -1028,20 +1028,15 @@ const aLineKurta: Product = {
     },
   },
 
-  // Reciprocal cross-sell — see matching styledWith on kurtaContrastPant below.
-  // Pairing is a perfect bijection sourced entirely from the confirmed two-option
-  // pairing table (e.g. ivory's options were {sage, sand} — sage was free, so it
-  // got ivory; sand went to rose); single-valued because StyledWith only supports
-  // one paired colour per active colour.
   styledWith: {
     productHandle: 'kurta-contrast-pant',
     productName: 'The Contrast Pant',
     price: '₹1,499',
     pairings: {
       'ivory': { colourSlug: 'wild-sage',     colourName: 'Wild Sage',     hex: '#8C9E84' },
-      'sand':  { colourSlug: 'dusk-rose',     colourName: 'Dusk Rose',     hex: '#D4A8A0' },
-      'sage':  { colourSlug: 'baked-clay',    colourName: 'Baked Clay',    hex: '#8B5E3C' },
-      'rose':  { colourSlug: 'desert-sand',   colourName: 'Desert Sand',   hex: '#C8B89A' },
+      'rose':  { colourSlug: 'morning-ivory', colourName: 'Morning Ivory', hex: '#F1EEE6' },
+      'sand':  { colourSlug: 'wild-sage',     colourName: 'Wild Sage',     hex: '#8C9E84' },
+      'sage':  { colourSlug: 'morning-ivory', colourName: 'Morning Ivory', hex: '#F1EEE6' },
       'clay':  { colourSlug: 'morning-ivory', colourName: 'Morning Ivory', hex: '#F1EEE6' },
     },
   },
@@ -1230,17 +1225,16 @@ const kurtaContrastPant: Product = {
     },
   ],
 
-  // Reciprocal cross-sell — see matching styledWith on aLineKurta above.
   styledWith: {
     productHandle: 'a-line-kurta',
     productName: 'A-line Kurta',
     price: '₹3,999',
     pairings: {
       'wild-sage':     { colourSlug: 'ivory', colourName: 'Ivory', hex: '#F0EBE0' },
-      'dusk-rose':     { colourSlug: 'sand',  colourName: 'Sand',  hex: '#C8A882' },
-      'baked-clay':    { colourSlug: 'sage',  colourName: 'Sage',  hex: '#8C9E84' },
+      'morning-ivory': { colourSlug: 'rose',  colourName: 'Rose',  hex: '#D4A8A0' },
+      'dusk-rose':     { colourSlug: 'ivory', colourName: 'Ivory', hex: '#F0EBE0' },
+      'baked-clay':    { colourSlug: 'rose',  colourName: 'Rose',  hex: '#D4A8A0' },
       'desert-sand':   { colourSlug: 'rose',  colourName: 'Rose',  hex: '#D4A8A0' },
-      'morning-ivory': { colourSlug: 'clay',  colourName: 'Clay',  hex: '#C47A4E' },
     },
   },
 
