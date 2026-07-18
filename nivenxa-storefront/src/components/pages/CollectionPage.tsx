@@ -57,7 +57,8 @@ export default function CollectionPage({
       ) : (
         <div className={`${styles.productGrid} ${getGridClass(products.length)}`}>
           {products.map(product => {
-            const firstColour  = product.colours[0]
+            const availableColours = product.colours.filter(c => c.available)
+            const firstColour  = availableColours[0] ?? product.colours[0]
             const primaryImage = getPrimaryImage(firstColour.images)
             const subpath      = PRODUCT_SUBPATH[product.handle] ?? product.handle
             const href         = `/shop/${collectionSlug}/${subpath}`
@@ -68,7 +69,7 @@ export default function CollectionPage({
               ? [fp0.value, fp0.unit].filter(Boolean).join(' ')
               : product.category)
 
-            const toneCount = product.colours.length
+            const toneCount = availableColours.length
             const toneLabel = `${toneCount} ${toneCount === 1 ? 'tone' : 'tones'}`
 
             // Coming-soon pill — only when every size is unavailable, so this

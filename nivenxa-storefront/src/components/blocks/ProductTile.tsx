@@ -10,7 +10,8 @@ interface Props {
 }
 
 export default function ProductTile({ product }: Props) {
-  const firstColour = product.colours[0]
+  const availableColours = product.colours.filter(c => c.available)
+  const firstColour = availableColours[0] ?? product.colours[0]
   const primaryImage = getPrimaryImage(firstColour.images)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const href = `/shop/${product.handle}/${firstColour.slug}` as any
@@ -32,7 +33,7 @@ export default function ProductTile({ product }: Props) {
         <h3 className={styles.name}>{product.name}</h3>
 
         <div className={styles.swatches}>
-          {product.colours.slice(0, 8).map(c => (
+          {availableColours.slice(0, 8).map(c => (
             <span
               key={c.slug}
               className={styles.swatch}
@@ -40,8 +41,8 @@ export default function ProductTile({ product }: Props) {
               title={c.label}
             />
           ))}
-          {product.colours.length > 8 && (
-            <span className={styles.more}>+{product.colours.length - 8}</span>
+          {availableColours.length > 8 && (
+            <span className={styles.more}>+{availableColours.length - 8}</span>
           )}
         </div>
 

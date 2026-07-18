@@ -18,8 +18,10 @@ export default function ProductCard({
   defaultColourSlug,
   navLabel,
 }: ProductCardProps) {
+  const availableColours = product.colours.filter(c => c.available)
   const defaultColour =
-    product.colours.find(c => c.slug === defaultColourSlug) ||
+    availableColours.find(c => c.slug === defaultColourSlug) ||
+    availableColours[0] ||
     product.colours[0]
 
   const [activeColour, setActiveColour] = useState(defaultColour)
@@ -65,7 +67,7 @@ export default function ProductCard({
         <span className={styles.fabric}>{fabricLine}</span>
 
         <div className={styles.swatchRow}>
-          {product.colours.map(colour => (
+          {availableColours.map(colour => (
             <button
               key={colour.slug}
               className={`${styles.swatch} ${colour.slug === activeColour.slug ? styles.swatchActive : ''}`}

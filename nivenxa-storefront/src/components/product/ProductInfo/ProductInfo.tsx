@@ -129,7 +129,7 @@ export default function ProductInfo({
       {/* 5. Colour selector */}
       <p className={styles.sectionLabel}>AVAILABLE TONES</p>
       <ColourSwatch
-        colours={product.colours}
+        colours={product.colours.filter(c => c.available)}
         activeColour={activeColour}
         onColourChange={onColourChange}
         expanded={swatchExpanded}
