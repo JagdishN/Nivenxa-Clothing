@@ -1,0 +1,44 @@
+.wrap {
+  display: flex;
+  width: 100%;
+  padding: clamp(0.6rem, 1vw, 0.85rem);
+  border: 1px solid rgba(91, 46, 145, 0.18);
+  border-radius: 1.25rem;
+  background: rgba(250, 248, 252, 0.6);
+  box-shadow: 0 10px 40px rgba(91, 46, 145, 0.08);
+}
+
+// Sized entirely by the parent's width (see .gameArea in Play.module.scss) —
+// keeps one source of truth for how large the board gets, instead of an
+// independent vw guess that stops scaling once it hits its own cap.
+.board {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+// Chessground's default rank/file coordinates ship at 9px with only 0.8
+// opacity on inherited (unset) text color — effectively invisible against the
+// brown-theme squares. Overriding at the element level (chessground renders
+// these as plain global <coords>/<coord> tags, not classes we own) with a
+// single neutral tone that has enough contrast on both light and dark
+// squares — subtler than the piece/UI purple-gold palette since this is a
+// board-level reference aid, not chrome.
+.board :global(coords) {
+  opacity: 0.95;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(31, 27, 58, 0.68);
+}
+
+// Chessground's default check highlight is a bright red radial glow — swapped
+// for the site's gold accent so a checkmate reads as "the decisive square",
+// not an alarm, consistent with the rest of the celebratory treatment.
+.board :global(square.check) {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(214, 168, 95, 0.9) 0%,
+    rgba(214, 168, 95, 0.65) 25%,
+    rgba(214, 168, 95, 0) 89%,
+    rgba(214, 168, 95, 0) 100%
+  );
+}

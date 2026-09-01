@@ -1,0 +1,54 @@
+// ─── Chess section design tokens ───────────────────────────────────────────
+// Scoped as a class (not :root) so these never leak into or get overridden
+// by the store's own tokens in globals.css / globals.scss. Applied once, on
+// the wrapper element in chess/layout.tsx — every page/component under
+// /chess/* can then reference var(--chess-*) directly.
+.theme {
+  --chess-purple:       #5B2E91;
+  --chess-purple-deep:  #4B247A;
+  --chess-deep:         #1F1B3A;
+  --chess-gold:         #D6A85F;
+  --chess-bronze:       #8C5A2B;
+  --chess-lavender-bg:  #E9D7F7;
+  --chess-rose:         #E8BFD4;
+  --chess-ice:          #F4EEFA;
+  --chess-white-soft:   #FAF8FC;
+  --chess-gray-lilac:   #B7AFC7;
+  --chess-blue:         #3A8DFF;
+
+  // Move-quality feedback colors (added for the coaching/analysis feature).
+  // These are semantic (good/warn/bad), not brand colors — kept distinct
+  // from the palette above rather than approximated from it.
+  --chess-success:      #5E8C6A;
+  --chess-warning:      #D6A85F;
+  --chess-danger:       #B3543F;
+}
+
+// ─── Reusable gradients ─────────────────────────────────────────────────────
+// Consumed via `composes: x from './ChessTheme.module.scss'` in other chess
+// module.scss files, so each gradient has one source of truth.
+
+.headingGradientText {
+  background: linear-gradient(135deg, var(--chess-purple) 0%, var(--chess-gold) 60%, var(--chess-bronze) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: block;
+}
+
+.ctaButtonGradient {
+  background: linear-gradient(135deg, #5B2E91 0%, #7B4BC4 45%, #D6A85F 100%);
+}
+
+.ctaBannerGradient {
+  background: linear-gradient(135deg, var(--chess-purple) 0%, var(--chess-purple-deep) 40%, var(--chess-deep) 100%);
+}
+
+.pageBackground {
+  background:
+    radial-gradient(circle at top left,     rgba(91, 46, 145, 0.08),  transparent 30%),
+    radial-gradient(circle at bottom right, rgba(214, 168, 95, 0.06), transparent 30%),
+    radial-gradient(circle at top right,    rgba(232, 191, 212, 0.10), transparent 40%),
+    radial-gradient(circle at bottom left,  rgba(91, 46, 145, 0.07),  transparent 35%),
+    var(--chess-ice);
+}

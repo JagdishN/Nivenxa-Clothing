@@ -118,11 +118,7 @@ $purple-deep: #4B247A;
 }
 
 .headingAccent {
-  background: linear-gradient(135deg, $purple 0%, $gold 60%, $bronze 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  display: block;
+  composes: headingGradientText from './ChessTheme.module.scss';
 }
 
 .subtext {
@@ -154,6 +150,7 @@ $purple-deep: #4B247A;
 
 // ─── Register button (premium) ───────────────────────────────────────────────
 .registerBtn {
+  composes: ctaButtonGradient from './ChessTheme.module.scss';
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -162,7 +159,6 @@ $purple-deep: #4B247A;
   border-radius: 9999px;
   padding: 0;
   overflow: hidden;
-  background: linear-gradient(135deg, #5B2E91 0%, #7B4BC4 45%, #D6A85F 100%);
   border: 1.5px solid rgba($gold, 0.5);
   box-shadow:
     0 10px 30px rgba(91, 46, 145, 0.22);
@@ -220,79 +216,6 @@ $purple-deep: #4B247A;
 .btnIcon {
   font-size: 1rem;
   line-height: 1;
-}
-
-// ─── Outline button ───────────────────────────────────────────────────────────
-.outlineBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.875rem 1.75rem;
-  font-family: var(--font-sans);
-  font-size: 0.875rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: $purple;
-  text-decoration: none;
-  border: 1.5px solid rgba($purple, 0.4);
-  border-radius: 9999px;
-  background: transparent;
-  transition:
-    background 0.25s ease,
-    border-color 0.25s ease,
-    color 0.25s ease,
-    transform 0.25s ease;
-
-  &:hover {
-    background: rgba($purple, 0.08);
-    border-color: $purple;
-    transform: translateY(-2px);
-  }
-}
-
-// ─── Trust badges ─────────────────────────────────────────────────────────────
-.badges {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-
-  @include v.max-lg {
-    justify-content: center;
-  }
-}
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-family: var(--font-sans);
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: rgba($deep, 0.6);
-  padding: 0.35rem 0.85rem;
-  background: rgba($ice, 0.7);
-  border: 1px solid rgba($purple, 0.15);
-  border-radius: 9999px;
-  backdrop-filter: blur(8px);
-}
-
-.badgeIcon {
-  font-size: 0.85rem;
-}
-
-.badgeDot {
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: rgba($purple, 0.3);
-  flex-shrink: 0;
-
-  @include v.max-lg {
-    display: none;
-  }
 }
 
 // ─── Board wrapper ─────────────────────────────────────────────────────────────
@@ -384,6 +307,15 @@ $purple-deep: #4B247A;
   }
 }
 
+.cardLink {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
 .cardIcon {
   font-family: var(--font-sans);
   font-size: 0.72rem;
@@ -424,10 +356,10 @@ $purple-deep: #4B247A;
 
 // ─── CTA Banner ───────────────────────────────────────────────────────────────
 .ctaBanner {
+  composes: ctaBannerGradient from './ChessTheme.module.scss';
   position: relative;
   z-index: 1;
   overflow: hidden;
-  background: linear-gradient(135deg, $purple 0%, $purple-deep 40%, $deep 100%);
   margin: 0 clamp(1.5rem, 6vw, 5rem) clamp(4rem, 7vw, 6rem);
   border-radius: 2rem;
   border: 1px solid rgba($gold, 0.3);
