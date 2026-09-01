@@ -1,0 +1,26 @@
+.card {
+  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    border-color: rgba(26, 26, 26, 0.28);
+    background-color: #FCFAF7;
+  }
+}
+
+.cardCtaArrow {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+.card:hover .cardCtaArrow {
+  transform: translateX(4px);
+}
+
+.footerLink {
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: #1A1A1A;
+  }
+}

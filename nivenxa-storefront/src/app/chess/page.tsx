@@ -12,21 +12,22 @@ const fadeUp = (delay = 0) => ({
 
 const FEATURE_CARDS = [
   {
-    icon: 'Elite',
-    title: 'Elite Tournaments',
-    desc: 'Compete in curated championships, verified arenas, and trusted local events.',
-    iconClassName: 'cardIconGold',
-  },
-  {
     icon: 'Coach',
-    title: 'AI-Powered Training',
-    desc: 'Sharpen your openings, middlegame tactics, and endgame mastery with intelligent coaching.',
+    title: 'Learn as You Play',
+    desc: 'Get plain-language explanations for every move, so you understand the reasoning — not just the result.',
     iconClassName: 'cardIconPurple',
   },
   {
-    icon: 'Clock',
-    title: 'Live Chess Clock',
-    desc: 'Time-controlled matches with Bullet, Blitz, Rapid, and Classical formats.',
+    icon: 'Puzzle',
+    title: 'Puzzles That Build Skill',
+    desc: 'Work through curated puzzle sets designed to sharpen tactics, one motif at a time.',
+    iconClassName: 'cardIconGold',
+    href: '/chess/puzzles',
+  },
+  {
+    icon: 'Level',
+    title: 'Grows With You',
+    desc: 'An adaptive engine that scales from your first game to your toughest challenge yet.',
     iconClassName: 'cardIconBlue',
   },
 ]
@@ -44,33 +45,23 @@ export default function ChessPage() {
           </motion.p>
 
           <motion.h1 className={styles.heading} {...fadeUp(0.25)}>
-            Play Chess.<br />
-            <span className={styles.headingAccent}>Rule the Board.</span>
+            Play smarter.<br />
+            <span className={styles.headingAccent}>Every move explained.</span>
           </motion.h1>
 
           <motion.p className={styles.subtext} {...fadeUp(0.4)}>
-            Premium tournaments. Exclusive rewards. Join a curated chess community crafted for serious players.
+            AI-guided coaching that explains the why behind every move — train against an adaptive
+            engine and sharpen your game one position at a time.
           </motion.p>
 
           <motion.div className={styles.ctaRow} {...fadeUp(0.55)}>
-            <Link href="/account/register" className={styles.registerBtn}>
+            <Link href="/chess/play" className={styles.registerBtn}>
               <span className={styles.registerBtnInner}>
-                <span className={styles.btnIcon}>Join</span>
-                Register Now
+                <span className={styles.btnIcon}>Play</span>
+                Start Playing
               </span>
               <span className={styles.registerBtnGlow} aria-hidden="true" />
             </Link>
-            <Link href="/chess/learn-more" className={styles.outlineBtn}>
-              Learn More
-            </Link>
-          </motion.div>
-
-          <motion.div className={styles.badges} {...fadeUp(0.7)}>
-            <span className={styles.badge}><span className={styles.badgeIcon}>Elite</span> Premium Tournaments</span>
-            <span className={styles.badgeDot} aria-hidden="true" />
-            <span className={styles.badge}><span className={styles.badgeIcon}>Daily</span> Daily Challenges</span>
-            <span className={styles.badgeDot} aria-hidden="true" />
-            <span className={styles.badge}><span className={styles.badgeIcon}>Trust</span> Verified Events</span>
           </motion.div>
         </div>
 
@@ -94,18 +85,32 @@ export default function ChessPage() {
       </section>
 
       <section id="learn" className={styles.features}>
-        {FEATURE_CARDS.map((card, i) => (
-          <motion.div
-            key={card.title}
-            className={styles.card}
-            {...fadeUp(0.15 * i)}
-            whileHover={{ y: -6, transition: { duration: 0.3 } }}
-          >
-            <span className={`${styles.cardIcon} ${styles[card.iconClassName]}`}>{card.icon}</span>
-            <h3 className={styles.cardTitle}>{card.title}</h3>
-            <p className={styles.cardDesc}>{card.desc}</p>
-          </motion.div>
-        ))}
+        {FEATURE_CARDS.map((card, i) => {
+          const content = (
+            <>
+              <span className={`${styles.cardIcon} ${styles[card.iconClassName]}`}>{card.icon}</span>
+              <h3 className={styles.cardTitle}>{card.title}</h3>
+              <p className={styles.cardDesc}>{card.desc}</p>
+            </>
+          )
+
+          return (
+            <motion.div
+              key={card.title}
+              className={styles.card}
+              {...fadeUp(0.15 * i)}
+              whileHover={{ y: -6, transition: { duration: 0.3 } }}
+            >
+              {card.href ? (
+                <Link href={card.href} className={styles.cardLink}>
+                  {content}
+                </Link>
+              ) : (
+                content
+              )}
+            </motion.div>
+          )
+        })}
       </section>
 
       <motion.section
@@ -116,12 +121,14 @@ export default function ChessPage() {
         transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
       >
         <div className={styles.ctaBannerInner}>
-          <h2 className={styles.ctaBannerTitle}>Ready to make your move?</h2>
-          <p className={styles.ctaBannerSub}>Browse live and upcoming tournaments curated by Nivenxa Chess.</p>
-          <Link href="/chess/tournaments" className={styles.registerBtn}>
+          <h2 className={styles.ctaBannerTitle}>Ready to make your first move?</h2>
+          <p className={styles.ctaBannerSub}>
+            Jump into a game against the Nivenxa Chess engine — tuned to your level, ready when you are.
+          </p>
+          <Link href="/chess/play" className={styles.registerBtn}>
             <span className={styles.registerBtnInner}>
-              <span className={styles.btnIcon}>Elite</span>
-              Explore Tournaments
+              <span className={styles.btnIcon}>Play</span>
+              Start Playing
             </span>
             <span className={styles.registerBtnGlow} aria-hidden="true" />
           </Link>

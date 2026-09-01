@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import styles from './page.module.scss'
 
 export const metadata: Metadata = {
-  title: 'NIVENXA — A group of businesses built with intention',
+  title: 'NIVENXA — Independent ventures. Built with intention.',
   description: 'NIVENXA Studio and NIVENXA Technologies. Premium Indian comfortwear and digital products built with precision.',
 }
 
@@ -21,8 +22,8 @@ export default function RootPage() {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: '60vh',
-        padding: 'clamp(64px, 12vw, 140px) 40px clamp(48px, 8vw, 96px)',
+        minHeight: '50vh',
+        padding: 'clamp(50px, 9.5vw, 112px) 40px clamp(38px, 6.5vw, 77px)',
         textAlign: 'center',
         borderBottom: '1px solid rgba(26,26,26,0.08)',
       }}>
@@ -45,13 +46,13 @@ export default function RootPage() {
           lineHeight: 1.5,
           margin: 0,
         }}>
-          A group of businesses built with intention.
+          Independent ventures. Built with intention.
         </p>
       </section>
 
       {/* About */}
       <section style={{
-        padding: 'clamp(48px, 7vw, 80px) 40px',
+        padding: 'clamp(38px, 5.5vw, 64px) 40px',
         maxWidth: '680px',
         margin: '0 auto',
         borderBottom: '1px solid rgba(26,26,26,0.08)',
@@ -62,20 +63,31 @@ export default function RootPage() {
           color: 'rgba(26,26,26,0.70)',
           margin: 0,
         }}>
-          NIVENXA is built around a single idea — that the things we make,
-          wear, use, and build should be considered carefully.
-          We apply this thinking to clothing, technology, and everything
-          we choose to work on.
+          NIVENXA is built around a simple idea — that the things we make,
+          wear, use and build should be considered carefully.
+          We bring this thinking to clothing, technology and every venture
+          we choose to pursue.
         </p>
       </section>
 
       {/* Entity cards */}
       <section style={{
-        padding: 'clamp(48px, 7vw, 80px) 40px',
+        padding: 'clamp(38px, 5.5vw, 64px) 40px',
         maxWidth: '900px',
         margin: '0 auto',
         borderBottom: '1px solid rgba(26,26,26,0.08)',
       }}>
+        <p style={{
+          fontSize: '11px',
+          fontWeight: 600,
+          letterSpacing: '0.15em',
+          textTransform: 'uppercase',
+          color: 'rgba(26,26,26,0.40)',
+          margin: '0 0 24px',
+          textAlign: 'center',
+        }}>
+          Our ventures
+        </p>
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
@@ -83,7 +95,7 @@ export default function RootPage() {
         }}>
 
           {/* NIVENXA Studio */}
-          <div style={{
+          <div className={styles.card} style={{
             background: '#FFFFFF',
             border: '1px solid #E5DDD5',
             padding: '36px',
@@ -98,7 +110,7 @@ export default function RootPage() {
               color: 'rgba(26,26,26,0.40)',
               margin: '0 0 16px',
             }}>
-              Studio
+              Nivenxa Studio
             </p>
             <p style={{
               fontSize: '15px',
@@ -107,8 +119,8 @@ export default function RootPage() {
               margin: '0 0 32px',
               flex: 1,
             }}>
-              Premium Indian comfortwear. Natural fabrics. Relaxed silhouettes.
-              Designed for Indian life.
+              Premium Indian comfortwear. Natural fabrics, considered
+              construction and relaxed silhouettes designed for Indian life.
             </p>
             <Link
               href="/studio/en"
@@ -121,12 +133,12 @@ export default function RootPage() {
                 letterSpacing: '0.02em',
               }}
             >
-              Visit Studio →
+              Explore Studio <span className={styles.cardCtaArrow}>→</span>
             </Link>
           </div>
 
           {/* NIVENXA Technologies */}
-          <div style={{
+          <div className={styles.card} style={{
             background: '#FFFFFF',
             border: '1px solid #E5DDD5',
             padding: '36px',
@@ -141,7 +153,7 @@ export default function RootPage() {
               color: 'rgba(26,26,26,0.40)',
               margin: '0 0 16px',
             }}>
-              Technologies
+              Nivenxa Technologies
             </p>
             <p style={{
               fontSize: '15px',
@@ -150,7 +162,7 @@ export default function RootPage() {
               margin: '0 0 32px',
               flex: 1,
             }}>
-              Digital products built with precision. Mobile apps and platforms
+              Digital products and technology solutions built with precision
               for businesses ready to grow.
             </p>
             <Link
@@ -164,19 +176,75 @@ export default function RootPage() {
                 letterSpacing: '0.02em',
               }}
             >
-              Visit Technologies →
+              Explore Technologies <span className={styles.cardCtaArrow}>→</span>
             </Link>
           </div>
 
         </div>
       </section>
 
-      {/* Contact */}
+      {/* Footer */}
       <section style={{
-        padding: 'clamp(48px, 7vw, 80px) 40px',
+        padding: 'clamp(38px, 5.5vw, 64px) 40px',
         maxWidth: '680px',
         margin: '0 auto',
+        textAlign: 'center',
       }}>
+        <p style={{
+          fontFamily: 'var(--font-playfair, Georgia, serif)',
+          fontSize: '20px',
+          fontWeight: 400,
+          letterSpacing: '0.06em',
+          textTransform: 'uppercase',
+          margin: '0 0 8px',
+        }}>
+          NIVENXA
+        </p>
+        <p style={{
+          fontSize: '13px',
+          color: 'rgba(26,26,26,0.55)',
+          margin: '0 0 32px',
+        }}>
+          Independent ventures. Built with intention.
+        </p>
+
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '32px',
+          flexWrap: 'wrap',
+          margin: '0 0 32px',
+        }}>
+          <Link
+            href="/studio/en"
+            className={styles.footerLink}
+            style={{
+              fontSize: '12px',
+              fontWeight: 600,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              color: 'rgba(26,26,26,0.55)',
+              textDecoration: 'none',
+            }}
+          >
+            Studio — Explore →
+          </Link>
+          <Link
+            href="/technologies"
+            className={styles.footerLink}
+            style={{
+              fontSize: '12px',
+              fontWeight: 600,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              color: 'rgba(26,26,26,0.55)',
+              textDecoration: 'none',
+            }}
+          >
+            Technologies — Explore →
+          </Link>
+        </div>
+
         <p style={{
           fontSize: '11px',
           fontWeight: 600,
@@ -190,15 +258,25 @@ export default function RootPage() {
         <a
           href="mailto:info@nivenxa.com"
           style={{
+            display: 'inline-block',
             color: 'var(--nivenxa-cta-forest, #1C2E1E)',
             fontSize: '15px',
             fontWeight: 400,
             textDecoration: 'none',
             letterSpacing: '0.01em',
+            margin: '0 0 28px',
           }}
         >
           info@nivenxa.com
         </a>
+
+        <p style={{
+          fontSize: '11px',
+          color: 'rgba(26,26,26,0.35)',
+          margin: 0,
+        }}>
+          © 2026 NIVENXA · Hyderabad, India
+        </p>
       </section>
 
     </div>

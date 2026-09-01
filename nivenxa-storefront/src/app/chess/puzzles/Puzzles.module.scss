@@ -1,0 +1,102 @@
+@use '../../../styles/variables' as v;
+
+.page {
+  composes: pageBackground from '../ChessTheme.module.scss';
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero {
+  position: relative;
+  z-index: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: clamp(3rem, 6vw, 4.5rem) clamp(1.5rem, 6vw, 5rem) clamp(1.5rem, 4vw, 2.5rem);
+  text-align: center;
+}
+
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: clamp(0.6rem, 1vw, 0.7rem);
+  font-weight: 700;
+  letter-spacing: 0.38em;
+  text-transform: uppercase;
+  color: var(--chess-purple);
+  margin-bottom: clamp(0.75rem, 2vw, 1rem);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 24px;
+    height: 2px;
+    background: var(--chess-gold);
+    border-radius: 2px;
+  }
+}
+
+.heading {
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 4.5vw, 3.2rem);
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--chess-deep);
+  letter-spacing: -0.02em;
+  margin-bottom: clamp(0.75rem, 2vw, 1rem);
+}
+
+.subtext {
+  font-family: var(--font-sans);
+  font-size: clamp(0.95rem, 1.5vw, 1.08rem);
+  line-height: 1.7;
+  color: rgba(31, 27, 58, 0.68);
+  max-width: 480px;
+  margin-inline: auto;
+}
+
+// ─── Puzzle set placeholder grid ────────────────────────────────────────────
+.grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: clamp(1rem, 2.5vw, 1.5rem);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 clamp(1.5rem, 6vw, 5rem) clamp(4rem, 7vw, 6rem);
+}
+
+.tile {
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  text-align: center;
+  border: 2px dashed rgba(91, 46, 145, 0.3);
+  border-radius: 1.25rem;
+  background: linear-gradient(135deg, rgba(233, 215, 247, 0.4), rgba(244, 238, 250, 0.75));
+  box-shadow: 0 10px 40px rgba(91, 46, 145, 0.06);
+}
+
+.tileTier {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--chess-gold);
+}
+
+.tileLabel {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--chess-purple);
+}

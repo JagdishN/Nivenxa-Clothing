@@ -1,0 +1,1287 @@
+@use '../../../styles/variables' as v;
+
+.page {
+  composes: pageBackground from '../ChessTheme.module.scss';
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.layout {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  max-width: 1250px;
+  margin: 0 auto;
+  padding: clamp(0.7rem, 1.6vw, 1.1rem) clamp(1rem, 4vw, 2.5rem);
+
+  @include v.max-lg {
+    text-align: center;
+  }
+
+  // From a typical laptop/desktop width up, use more of the available width
+  // instead of staying pinned to the narrower base max-width — width+margin
+  // (not padding) create the gutter here, so zeroing the horizontal padding
+  // avoids doubling up with it.
+  @include v.xl {
+    width: calc(100% - 3rem);
+    max-width: 1380px;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  // Wide monitors have even more room to give — the 1280×720/1366×768
+  // no-scroll constraint no longer applies (nor does the vertical one). The
+  // cap here is headroom, not a target width — .playColumn is shrink-to-fit,
+  // so it only matters on tall wide monitors where .boardCol's vh-driven
+  // formula actually grows the board large enough to reach it.
+  @include v.xxl {
+    width: calc(100% - 4rem);
+    max-width: 1600px;
+  }
+}
+
+// ─── Playing screen: heading + divider, matching the setup screen ────────────
+// Hugs .playRow's own (board + gap + panel) width rather than stretching to
+// .layout's max-width, so the heading/divider/meta bar align to the same
+// left/right edges as the board and panel beneath them, not a wider box.
+// .panelCol's max-width (below) caps out before .layout's own max-width does
+// on wide screens — if this stretched to 100% instead, the heading/divider
+// would overshoot the actual board+panel content and leave a lopsided gap
+// only on the right.
+.playColumn {
+  width: fit-content;
+  max-width: 100%;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  // Close enough to .playerRow beneath it that the tier/time-control line and
+  // the board's own player row read as one game header, not two.
+  margin-bottom: 13px;
+
+  @include v.max-lg {
+    justify-content: center;
+    gap: 0.75rem;
+  }
+}
+
+.metaText {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--chess-purple);
+}
+
+// ─── Board column | panel column ──────────────────────────────────────────────
+.playRow {
+  display: flex;
+  align-items: stretch;
+  gap: clamp(1.25rem, 3vw, 2.25rem);
+
+  @include v.max-lg {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  @include v.xl {
+    gap: clamp(2rem, 2.4vw, 2.5rem);
+  }
+
+  @include v.xxl {
+    gap: clamp(2.5rem, 2.5vw, 3rem);
+  }
+}
+
+// Reads as a page label, not a dominant hero heading — sized down to sit
+// closer to the setup screen's own .tierPickerTitle step.
+.heading {
+  font-family: var(--font-serif);
+  font-size: clamp(1.1rem, 1.6vw, 1.4rem);
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--chess-deep);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.45rem;
+}
+
+// Status text and the Offer Draw/Resign actions share one row instead of
+// stacking — keeps the board column from needing an extra row's worth of
+// height just to fit the game actions in view.
+.statusBadge {
+  display: inline-flex;
+  font-family: var(--font-sans);
+  font-size: clamp(0.78rem, 1.1vw, 0.88rem);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--chess-purple);
+  padding: 0 0.25rem;
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+}
+
+// ─── Dominant board column ─────────────────────────────────────────────────────
+// flex: 0 (no grow) — `width` below is the real cap; flex-grow would let the
+// flex-basis stretch to fill the row's remaining space, blowing past it.
+.boardCol {
+  flex: 0 1 auto;
+  min-width: 0;
+  width: min(48vw, 55vh, 680px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  @include v.max-lg {
+    width: min(92vw, 64vh, 640px);
+  }
+
+  // Typical laptop/desktop widths (1280–1535px) were still governed by the
+  // narrower 55vh cap below, so the board stayed small even once the
+  // container itself had room — this gives it the same growth room a bit
+  // earlier. No px ceiling here — .panelCol below absorbs whatever width the
+  // board doesn't use (up to its own readability cap), so growing the board
+  // further no longer comes at the panel's expense the way a shared row
+  // budget would.
+  @include v.xl {
+    width: min(38vw, 57vh);
+  }
+
+  @include v.xxl {
+    width: min(40vw, 64vh);
+  }
+}
+
+.boardStack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+// ─── Right panel — stretches to the board column's height (align-items:
+// stretch on .playRow), controls at top, explanation content filling the rest.
+.panelCol {
+  flex: 0 0 clamp(340px, 28vw, 400px);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: 0.9rem 1rem;
+  border-radius: 1.1rem;
+  border: 1px solid rgba(91, 46, 145, 0.15);
+  background: rgba(255, 255, 255, 0.5);
+
+  @include v.max-lg {
+    flex: 0 0 auto;
+    width: min(92vw, 64vh, 640px);
+  }
+
+  // A fixed vw-driven formula, not flex-grow — .playColumn is
+  // shrink-to-fit (see above), and a flex-grow child inside a shrink-to-fit
+  // container doesn't reliably resolve to "fill the leftover space" the way
+  // it would in a fixed-width row; it settles near its flex-basis instead,
+  // silently undoing the growth. Capped for reading comfort once there's
+  // more room to give than that.
+  @include v.xl {
+    flex: 0 0 clamp(400px, 34vw, 620px);
+  }
+
+  @include v.xxl {
+    flex: 0 0 clamp(460px, 34vw, 700px);
+  }
+}
+
+.panelDivider {
+  height: 1px;
+  background: rgba(31, 27, 58, 0.1);
+  margin: 0.75rem 0;
+  flex-shrink: 0;
+}
+
+.panelBody {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+// Reuses .segmentedOption/.segmentedOptionSelected (setup screen) for the
+// selected/unselected treatment, just smaller and left-aligned here.
+.panelTabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+  flex-shrink: 0;
+
+  .segmentedOption {
+    padding: 0.3rem 0.75rem;
+    font-size: 0.72rem;
+  }
+}
+
+.backToMovesBtn {
+  align-self: flex-start;
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--chess-purple);
+  background: rgba(91, 46, 145, 0.08);
+  border: none;
+  border-radius: 9999px;
+  padding: 0.35rem 0.8rem;
+  margin-bottom: 0.65rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: rgba(91, 46, 145, 0.14);
+  }
+}
+
+.panelTitle {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(31, 27, 58, 0.5);
+  margin-bottom: 0.65rem;
+  flex-shrink: 0;
+}
+
+// ─── Insight tab, before any move exists — a compact standing objective
+// instead of a full-height bordered placeholder box (that read as an
+// unfinished/empty panel). Not flex:1 — sits at its natural height, so the
+// rest of the panel stays plain background rather than a stretched outline.
+.insightWelcome {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.15rem 0.05rem 0;
+}
+
+.insightWelcomeHeadline {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--chess-deep);
+}
+
+.insightWelcomeText {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: rgba(31, 27, 58, 0.7);
+}
+
+// ─── MOVES tab — compact White|Black table, scrolls within the panel like
+// .feed does rather than growing the page.
+.movesTable {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.2rem;
+}
+
+.moveRow {
+  display: grid;
+  grid-template-columns: 2rem 1fr 1fr;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.moveNum {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: rgba(31, 27, 58, 0.4);
+}
+
+.moveCell {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--chess-deep);
+  text-align: left;
+  padding: 0.3rem 0.55rem;
+  border-radius: 0.6rem;
+  border: 1px solid transparent;
+  background: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+
+  &:hover {
+    background: rgba(91, 46, 145, 0.06);
+  }
+}
+
+// Same treatment as .tierOptionSelected/.timeControlTileSelected.
+.moveCellSelected {
+  border-color: var(--chess-purple);
+  background: rgba(91, 46, 145, 0.1);
+  box-shadow: 0 0 0 1px var(--chess-purple) inset;
+}
+
+.panelPlaceholder {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-height: 4.25rem;
+}
+
+.boardOverlayWrap {
+  position: relative;
+}
+
+.playerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0 0.25rem;
+}
+
+.playerIdentity {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.playerName {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--chess-deep);
+}
+
+// Shown next to whichever side's clock is currently running.
+.activeDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--chess-gold);
+  flex-shrink: 0;
+}
+
+// ─── Clock ──────────────────────────────────────────────────────────────────
+.clockWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.clock {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgba(31, 27, 58, 0.7);
+}
+
+// Whichever clock is currently running — a step up from the gold dot alone,
+// still restrained (no motion, no bright colour swap).
+.clock_active {
+  color: var(--chess-deep);
+  font-weight: 700;
+}
+
+// Style-state only — no animation, per the "no flashing urgency" requirement.
+.clock_elevated {
+  color: var(--chess-gold);
+}
+
+.clock_warning {
+  color: var(--chess-warning);
+  font-weight: 700;
+}
+
+.clock_critical {
+  color: var(--chess-danger);
+  font-weight: 800;
+}
+
+// ─── Controls (top of the right panel) ───────────────────────────────────────
+.controls {
+  display: flex;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  flex-shrink: 0;
+
+  @include v.max-lg {
+    justify-content: center;
+  }
+}
+
+.controlBtn,
+.controlBtnPrimary,
+.controlBtnDanger {
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 0.55rem 1.15rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(91, 46, 145, 0.25);
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--chess-purple);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(91, 46, 145, 0.08);
+    border-color: var(--chess-purple);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+// New Game is more consequential than Undo/Flip — slightly heavier weight.
+.controlBtnPrimary {
+  font-weight: 700;
+}
+
+// Used inside the Resign/New Game confirm rows.
+.controlBtnDanger {
+  border-color: rgba(179, 84, 63, 0.4);
+  color: var(--chess-danger);
+
+  &:hover:not(:disabled) {
+    background: rgba(179, 84, 63, 0.08);
+    border-color: var(--chess-danger);
+  }
+}
+
+// Groups Undo/Flip apart from New Game with a light divider, since New Game
+// is the one that ends the current game.
+.controlsSecondary {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-left: 0.75rem;
+  border-left: 1px solid rgba(91, 46, 145, 0.18);
+}
+
+// ─── Inline "are you sure" confirm, swapped in for Resign / New Game ─────────
+// ─── Resign / New Game confirmation — a real modal dialog, not an inline
+// swap of the buttons that triggered it. An inline message read as inert
+// text rather than something requiring a decision; a dialog interrupting the
+// view makes the "this ends the game" stakes legible before the player acts.
+.confirmOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(31, 27, 58, 0.32);
+  backdrop-filter: blur(2px);
+}
+
+.confirmModal {
+  width: min(360px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem 1.4rem;
+  border-radius: 1.1rem;
+  border: 1px solid rgba(179, 84, 63, 0.3);
+  background: var(--chess-white-soft);
+  box-shadow: 0 20px 60px rgba(31, 27, 58, 0.25);
+}
+
+.confirmModalTitle {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: var(--chess-deep);
+}
+
+.confirmModalText {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: rgba(31, 27, 58, 0.7);
+  margin-top: -0.4rem;
+}
+
+.confirmModalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+// ─── Game actions (Offer Draw / Resign) — sit with the player's own info
+// below the board, distinct from the utility controls in the panel header.
+.actionBtn {
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0.32rem 0.85rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(31, 27, 58, 0.18);
+  background: transparent;
+  color: rgba(31, 27, 58, 0.6);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+
+  &:hover:not(:disabled) {
+    border-color: var(--chess-purple);
+    color: var(--chess-purple);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.drawBanner {
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  font-style: italic;
+  color: rgba(31, 27, 58, 0.55);
+  margin: 0.4rem 0 0;
+}
+
+// ─── Setup screen: heading + divider above the card, left-aligned to it ───────
+.setupColumn {
+  width: min(85vw, 720px);
+
+  @include v.max-lg {
+    width: 100%;
+    max-width: 640px;
+  }
+}
+
+// Very light — deliberately not the gold nav underline used elsewhere.
+.setupDivider {
+  height: 1px;
+  background: rgba(31, 27, 58, 0.1);
+  margin: 0.4rem 0 clamp(0.75rem, 1.6vw, 1.1rem);
+}
+
+.setupArea {
+  width: 100%;
+  padding: clamp(1.1rem, 2.2vw, 1.75rem);
+  border: 1px solid rgba(91, 46, 145, 0.18);
+  border-radius: 1.25rem;
+  background: rgba(250, 248, 252, 0.6);
+  box-shadow: 0 10px 40px rgba(91, 46, 145, 0.08);
+}
+
+.tierPickerTitle {
+  font-family: var(--font-serif);
+  font-size: clamp(1.05rem, 1.6vw, 1.3rem);
+  color: var(--chess-deep);
+  margin-bottom: clamp(0.75rem, 1.6vw, 1.1rem);
+  text-align: center;
+}
+
+.tierGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.65rem;
+
+  @include v.max-sm {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tierOption {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(91, 46, 145, 0.18);
+  background: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    border-color: var(--chess-purple);
+    background: rgba(91, 46, 145, 0.06);
+    transform: translateY(-2px);
+  }
+}
+
+.tierOptionSelected {
+  border-color: var(--chess-purple);
+  background: rgba(91, 46, 145, 0.1);
+  box-shadow: 0 0 0 1px var(--chess-purple) inset;
+}
+
+// ─── Setup screen: color segmented control ─────────────────────────────────────
+.setupSectionTitle {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(31, 27, 58, 0.5);
+  margin: clamp(0.8rem, 1.4vw, 1rem) 0 0.5rem;
+  text-align: center;
+}
+
+.segmentedRow {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.segmentedOption {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.5rem 1.1rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(91, 46, 145, 0.22);
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--chess-deep);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+
+  &:hover {
+    border-color: var(--chess-purple);
+  }
+}
+
+.segmentedOptionSelected {
+  border-color: var(--chess-purple);
+  background: var(--chess-purple);
+  color: #fff;
+}
+
+.setupHint {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: rgba(31, 27, 58, 0.5);
+  text-align: center;
+  margin: 0.4rem 0 0;
+}
+
+// ─── Setup screen: time-control tiles (always visible, no "Change" reveal) ────
+.timeControlGrid {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.timeControlTile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.55rem 0.5rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(91, 46, 145, 0.18);
+  background: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    border-color: var(--chess-purple);
+    background: rgba(91, 46, 145, 0.06);
+  }
+}
+
+// Same treatment as .tierOptionSelected — a light lavender fill, not a solid
+// purple button, so four selected-looking tiles don't read as visually heavy.
+.timeControlTileSelected {
+  border-color: var(--chess-purple);
+  background: rgba(91, 46, 145, 0.1);
+  box-shadow: 0 0 0 1px var(--chess-purple) inset;
+}
+
+.timeControlLabel {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--chess-deep);
+}
+
+.timeControlCategory {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: rgba(31, 27, 58, 0.5);
+}
+
+.startGameBtn {
+  composes: ctaButtonGradient from '../ChessTheme.module.scss';
+  display: block;
+  width: 100%;
+  margin-top: clamp(0.85rem, 1.6vw, 1.15rem);
+  padding: 0.7rem 1.5rem;
+  border: none;
+  border-radius: 9999px;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    opacity: 0.92;
+    transform: translateY(-1px);
+  }
+}
+
+// ─── Post-game result panel ─────────────────────────────────────────────────────
+.resultPanel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 0;
+  gap: 0.85rem;
+  padding: 0.9rem 1rem 1.1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(91, 46, 145, 0.15);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.resultHeadline {
+  font-family: var(--font-serif);
+  font-size: clamp(1.05rem, 1.8vw, 1.3rem);
+  color: var(--chess-deep);
+  text-align: center;
+}
+
+.resultSub {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: rgba(31, 27, 58, 0.65);
+  text-align: center;
+  margin-top: -0.5rem;
+}
+
+.resultDetail {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--chess-purple);
+  text-align: center;
+}
+
+.resultMeta,
+.resultMoves {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: rgba(31, 27, 58, 0.45);
+  text-align: center;
+}
+
+.resultActions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.statCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.statValue {
+  font-family: var(--font-serif);
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  color: var(--chess-purple);
+}
+
+.statLabel {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: rgba(31, 27, 58, 0.5);
+}
+
+// ─── Result announcement overlay ──────────────────────────────────────────
+// Shown once, right when the game ends — same information as .resultPanel
+// (which stays behind it as the persistent summary), just centered over the
+// board/workspace for a moment so the outcome doesn't slip by unannounced.
+// Dismissible via backdrop click or the close button; never traps the player.
+.resultOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(31, 27, 58, 0.28);
+  backdrop-filter: blur(3px);
+  animation: overlayFadeIn 0.3s ease both;
+}
+
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.resultCard {
+  position: relative;
+  width: min(380px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 1.9rem 1.75rem 1.6rem;
+  border-radius: 1.4rem;
+  border: 1px solid rgba(91, 46, 145, 0.2);
+  background: var(--chess-white-soft);
+  box-shadow: 0 24px 70px rgba(31, 27, 58, 0.3);
+  animation: cardReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 0.15s;
+}
+
+@keyframes cardReveal {
+  from { opacity: 0; transform: scale(0.92) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+// A short gold line draws itself in under the top edge for a win only —
+// restrained, one-shot, no continuous shimmer.
+.resultCardCelebrate {
+  border-color: rgba(214, 168, 95, 0.4);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 0;
+    height: 3px;
+    background: var(--chess-gold);
+    border-radius: 3px;
+    animation: goldLineDraw 0.6s ease-out both;
+    animation-delay: 0.5s;
+  }
+}
+
+@keyframes goldLineDraw {
+  from { width: 0; left: 50%; }
+  to { width: 72px; left: calc(50% - 36px); }
+}
+
+.resultCardClose {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.7rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: rgba(31, 27, 58, 0.4);
+  background: none;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+
+  &:hover {
+    background: rgba(91, 46, 145, 0.08);
+    color: var(--chess-purple);
+  }
+}
+
+// A handful of small gold sparkles scattered around the card, fixed
+// nth-child positions rather than computed ones — staggered in, then gone
+// within ~1.5s. A one-shot flourish, not a continuous effect.
+.sparkleField {
+  position: absolute;
+  inset: -18px;
+  pointer-events: none;
+}
+
+.sparkle {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--chess-gold);
+  opacity: 0;
+  animation: sparklePop 1.3s ease-out both;
+
+  &:nth-child(1) { top: 2%; left: 10%; animation-delay: 0.5s; }
+  &:nth-child(2) { top: 6%; left: 86%; animation-delay: 0.58s; }
+  &:nth-child(3) { top: 48%; left: -2%; animation-delay: 0.66s; }
+  &:nth-child(4) { top: 52%; left: 100%; animation-delay: 0.74s; }
+  &:nth-child(5) { top: 92%; left: 16%; animation-delay: 0.82s; }
+  &:nth-child(6) { top: 96%; left: 80%; animation-delay: 0.9s; }
+}
+
+@keyframes sparklePop {
+  0% { opacity: 0; transform: scale(0.4); }
+  35% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.6) translateY(-6px); }
+}
+
+// A thin gold line sweeping once across the board on a win — the "line
+// draws across" flourish, using the same restrained gold accent.
+.mateSweep {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--chess-gold), transparent);
+  transform: translate(-50%, -50%);
+  animation: sweepAcross 0.7s ease-out both;
+  pointer-events: none;
+}
+
+@keyframes sweepAcross {
+  0% { width: 0; opacity: 0.9; }
+  70% { width: 100%; opacity: 0.9; }
+  100% { width: 100%; opacity: 0; }
+}
+
+.tierOptionLabel {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--chess-purple);
+}
+
+.tierOptionDesc {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: rgba(31, 27, 58, 0.6);
+}
+
+// ─── Live explanation feed ──────────────────────────────────────────────────
+// Shows the last few moves' feedback (LIVE_FEED_SIZE in page.tsx), each in
+// its own row keyed by ply — never a single overwritable "current" slot, so
+// a fast engine reply can never bump the player's own move out of view
+// before it's been read. Fills the remaining panel height (flex: 1, matching
+// the board's height via .playRow's align-items: stretch); internal scroll
+// only kicks in if content genuinely exceeds that, so the page itself never
+// grows and reopens the no-scroll layout issue from earlier passes.
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.2rem;
+}
+
+.feedEmpty {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-height: 4.25rem;
+  padding: 0.65rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(91, 46, 145, 0.15);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+// More opaque + shadowed than .panelCol's own background — the two were
+// close enough in tone that the card barely read as bounded, leaving the
+// impression the whole panel was one big empty box rather than a small card
+// sitting inside it.
+.feedRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(91, 46, 145, 0.2);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 4px 18px rgba(91, 46, 145, 0.07);
+  flex-shrink: 0;
+}
+
+.feedRow_success {
+  border-color: rgba(94, 140, 106, 0.35);
+  background: rgba(94, 140, 106, 0.08);
+}
+
+.feedRow_warning {
+  border-color: rgba(214, 168, 95, 0.4);
+  background: rgba(214, 168, 95, 0.1);
+}
+
+.feedRow_danger {
+  border-color: rgba(179, 84, 63, 0.35);
+  background: rgba(179, 84, 63, 0.08);
+}
+
+// Purpose entries (engine moves at Beginner/Intermediate) get no bordered
+// card — only the player's own ('quality') move does. Same flow spacing as
+// .feedRow, just no border/background, so the engine's reply reads as
+// simpler plain text underneath the card rather than a second box.
+.feedPlain {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.1rem 0.05rem 0;
+}
+
+.entryMover {
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: rgba(31, 27, 58, 0.45);
+}
+
+// Only the mover name is shouted — the move notation keeps its real case
+// ("1.e4", not "1.E4") so it reads as chess notation, not a label.
+.entryMoverName {
+  text-transform: uppercase;
+}
+
+.entryMoverNotation {
+  text-transform: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.calloutHeadline {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--chess-deep);
+}
+
+.calloutSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.15rem;
+}
+
+.calloutSectionLabel {
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(31, 27, 58, 0.45);
+}
+
+.calloutBullets {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: rgba(31, 27, 58, 0.75);
+}
+
+.calloutText {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: rgba(31, 27, 58, 0.75);
+}
+
+// Inline, unboxed — deliberately lighter-weight than .calloutSection, which
+// is used for bullets/suggestion/remember.
+.calloutWatch {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: rgba(31, 27, 58, 0.75);
+  margin: 0.15rem 0 0;
+
+  strong {
+    color: var(--chess-deep);
+  }
+}
+
+.placeholderEmphasis {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--chess-deep);
+  margin: 0 0 0.3rem;
+}
+
+.calloutLoading,
+.calloutPlaceholder {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: rgba(31, 27, 58, 0.45);
+  font-style: italic;
+}
+
+.calloutError {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--chess-danger);
+}
+
+// ─── Post-game review ─────────────────────────────────────────────────────────
+.review {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 clamp(1.25rem, 5vw, 3rem) clamp(4rem, 7vw, 6rem);
+}
+
+.reviewInner {
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  border-radius: 1.25rem;
+  border: 1px solid rgba(91, 46, 145, 0.18);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.reviewTitle {
+  font-family: var(--font-serif);
+  font-size: clamp(1.3rem, 2.2vw, 1.7rem);
+  color: var(--chess-deep);
+  margin-bottom: 1rem;
+}
+
+.reviewList {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.reviewRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid rgba(91, 46, 145, 0.1);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.reviewPly {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: rgba(31, 27, 58, 0.45);
+  min-width: 2.5rem;
+}
+
+.reviewMover {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: rgba(31, 27, 58, 0.4);
+}
+
+.reviewSan {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--chess-deep);
+  min-width: 3.5rem;
+}
+
+.reviewPill {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+}
+
+.pill_success {
+  color: var(--chess-success);
+  background: rgba(94, 140, 106, 0.14);
+}
+
+.pill_warning {
+  color: var(--chess-warning);
+  background: rgba(214, 168, 95, 0.16);
+}
+
+.pill_danger {
+  color: var(--chess-danger);
+  background: rgba(179, 84, 63, 0.14);
+}
+
+.pill_neutral {
+  color: rgba(31, 27, 58, 0.55);
+  background: rgba(91, 46, 145, 0.08);
+}
+
+.reviewExplanation {
+  flex-basis: 100%;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: rgba(31, 27, 58, 0.7);
+  margin: 0.15rem 0 0;
+}
+
+.reviewLoading {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-style: italic;
+  color: rgba(31, 27, 58, 0.4);
+}
+
+.reviewError {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--chess-danger);
+}
