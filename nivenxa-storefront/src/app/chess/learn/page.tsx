@@ -12,13 +12,19 @@ const CATEGORIES = [
     slug: 'tactics',
     title: 'Tactics',
     desc: 'Pattern-based lessons on forks, pins, skewers, and other tactical motifs.',
-    available: false,
+    available: true,
   },
   {
     slug: 'endgames',
     title: 'Endgames',
     desc: 'Core endgame technique — king and pawn endings, basic mates, and more.',
-    available: false,
+    available: true,
+  },
+  {
+    slug: 'rules',
+    title: 'Rules',
+    desc: 'A simplified guide to how chess is played and arbitrated — from how pieces move to the clock itself.',
+    available: true,
   },
 ]
 
@@ -29,7 +35,7 @@ export default function ChessLearnPage() {
         <p className={styles.eyebrow}>NIVENXA CHESS</p>
         <h1 className={styles.heading}>Learn</h1>
         <p className={styles.subtext}>
-          Bite-sized lessons that explain the ideas behind the moves — start with openings, more categories on the way.
+          Bite-sized lessons that explain the ideas behind the moves — openings, tactics, endgame technique, and the rules themselves.
         </p>
       </section>
 

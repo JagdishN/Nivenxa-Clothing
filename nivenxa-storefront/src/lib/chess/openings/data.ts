@@ -103,6 +103,62 @@ export const OPENINGS: Opening[] = [
       'Black trades off the central tension; after White recaptures with the knight, Black’s position is solid, if a little passive.',
     ],
   },
+  {
+    slug: 'kings-indian-defence',
+    name: "King's Indian Defence",
+    description: 'A hypermodern defence where Black lets White build a big centre first, then strikes at it later with pieces and pawns.',
+    moves: ['d4', 'Nf6', 'c4', 'g6', 'Nc3', 'Bg7'],
+    stepExplanations: [
+      'White claims central space with the queen’s pawn.',
+      'Black develops a knight to control e4, without yet committing to a pawn structure.',
+      'White builds toward a broad pawn centre.',
+      'Black prepares a kingside fianchetto, planning to pressure the centre from a distance rather than occupy it directly.',
+      'White develops naturally, adding support for a future e4.',
+      'Black completes the fianchetto, eyeing the long dark-squared diagonal and preparing to castle — the hallmark King’s Indian setup.',
+    ],
+  },
+  {
+    slug: 'london-system',
+    name: 'London System',
+    description: 'A flexible, easy-to-learn White setup built around the same piece placement almost regardless of what Black plays.',
+    moves: ['d4', 'd5', 'Nf3', 'Nf6', 'Bf4', 'e6'],
+    stepExplanations: [
+      'White claims the centre with the queen’s pawn.',
+      'Black meets it symmetrically.',
+      'White develops a knight, preparing to castle.',
+      'Black develops symmetrically.',
+      'White develops the dark-squared bishop outside the pawn chain before playing e3 — the defining idea of the London System, since this bishop can get shut in if White plays e3 too early.',
+      'Black prepares to develop the light-squared bishop and keeps a solid, flexible structure.',
+    ],
+  },
+  {
+    slug: 'scandinavian-defence',
+    name: 'Scandinavian Defence',
+    description: 'Black challenges the centre immediately, trading a moment of queen safety for open, comfortable development.',
+    moves: ['e4', 'd5', 'exd5', 'Qxd5', 'Nc3', 'Qa5'],
+    stepExplanations: [
+      'White claims the centre.',
+      'Black strikes back immediately, challenging the e4 pawn head-on.',
+      'White captures, and Black will recapture with the queen — an early queen excursion that is this defence’s trademark trade-off.',
+      'Black recaptures, but the queen is now exposed and will likely lose time to White’s developing pieces.',
+      'White develops with tempo, attacking the queen.',
+      'Black’s queen retreats to a safe, active square, keeping an eye on e5 and preparing ...Nf6 and ...c6.',
+    ],
+  },
+  {
+    slug: 'english-opening',
+    name: 'English Opening',
+    description: 'White opens with a flank pawn rather than occupying the centre directly — often described as a reversed Sicilian Defence.',
+    moves: ['c4', 'e5', 'Nc3', 'Nf6', 'Nf3', 'Nc6'],
+    stepExplanations: [
+      'White opens with a flank pawn, aiming to influence d5 from the side rather than occupy the centre right away.',
+      'Black stakes a claim in the centre, meeting the flank approach with a direct central pawn.',
+      'White develops naturally, adding pressure toward d5.',
+      'Black develops a knight toward the centre, preparing to castle.',
+      'White develops and adds a second attacker toward e5.',
+      'Black defends e5 and develops naturally, keeping a flexible, symmetrical structure.',
+    ],
+  },
 ]
 
 export function getOpening(slug: string): Opening | undefined {
