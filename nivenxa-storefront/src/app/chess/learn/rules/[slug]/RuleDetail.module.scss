@@ -1,0 +1,129 @@
+@use '../../../../../styles/variables' as v;
+
+.page {
+  composes: pageBackground from '../../../ChessTheme.module.scss';
+  min-height: 100vh;
+  position: relative;
+}
+
+.hero {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(2rem, 5vw, 3.5rem) clamp(1.25rem, 5vw, 3rem) 0;
+}
+
+.breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(31, 27, 58, 0.5);
+  text-decoration: none;
+  margin-bottom: 0.9rem;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--chess-purple);
+  }
+}
+
+.heading {
+  font-family: var(--font-serif);
+  font-size: clamp(1.7rem, 3.5vw, 2.4rem);
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--chess-deep);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.5rem;
+}
+
+.subtext {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: rgba(31, 27, 58, 0.62);
+  max-width: 600px;
+  margin-bottom: 0;
+}
+
+// ─── Example selector (only rendered when an entry has more than one) ───────
+.exampleTabs {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  max-width: 1200px;
+  margin: 1rem auto 0;
+  padding: 0 clamp(1.25rem, 5vw, 3rem);
+}
+
+.exampleTab {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.45rem 0.9rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(91, 46, 145, 0.25);
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--chess-purple);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    background: rgba(91, 46, 145, 0.08);
+  }
+}
+
+.exampleTabSelected {
+  background: var(--chess-purple);
+  border-color: var(--chess-purple);
+  color: var(--chess-white-soft);
+}
+
+// ─── Illustrated layout (board + step-through panel) ─────────────────────────
+.layout {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: clamp(1.5rem, 3.5vw, 2.75rem);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(1.5rem, 3vw, 2.25rem) clamp(1.25rem, 5vw, 3rem) clamp(4rem, 7vw, 6rem);
+
+  @include v.max-lg {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+// ─── Text-only layout (Clock & Etiquette entries) ────────────────────────────
+// Same outer container (max-width + padding) as the hero above it, so the
+// paragraph column's left edge lines up with the heading rather than being
+// independently centered on the page. Line length is capped on the
+// paragraphs themselves instead of the container.
+.textLayout {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(1.5rem, 3vw, 2.25rem) clamp(1.25rem, 5vw, 3rem) clamp(4rem, 7vw, 6rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.paragraph {
+  max-width: 680px;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.75;
+  color: rgba(31, 27, 58, 0.8);
+  margin: 0;
+}

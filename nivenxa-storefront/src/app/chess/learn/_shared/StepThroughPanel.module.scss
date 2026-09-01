@@ -1,0 +1,157 @@
+@use '../../../../styles/variables' as v;
+
+// ─── Board + panel layout ────────────────────────────────────────────────────
+// The parent page renders these two elements inside its own `.layout` flex
+// row — kept here rather than wrapping them in an extra div so each page's
+// own `.layout` breakpoint rules (max-lg stacking) keep working unchanged.
+.boardCol {
+  flex: 0 0 auto;
+  width: min(90vw, 460px);
+}
+
+.boardWrap {
+  border: 1px solid rgba(91, 46, 145, 0.18);
+  border-radius: 1.25rem;
+  background: rgba(250, 248, 252, 0.6);
+  box-shadow: 0 10px 40px rgba(91, 46, 145, 0.08);
+  padding: clamp(0.6rem, 1vw, 0.85rem);
+}
+
+.panelCol {
+  flex: 1 1 340px;
+  min-width: 0;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 1rem 1.1rem;
+  border-radius: 1.1rem;
+  border: 1px solid rgba(91, 46, 145, 0.15);
+  background: rgba(255, 255, 255, 0.55);
+
+  @include v.max-lg {
+    width: min(92vw, 460px);
+    max-width: none;
+  }
+}
+
+// ─── Step controls ───────────────────────────────────────────────────────────
+.stepControls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.stepBtn {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(91, 46, 145, 0.25);
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--chess-purple);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(91, 46, 145, 0.08);
+    border-color: var(--chess-purple);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+.stepIndicator {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(31, 27, 58, 0.5);
+}
+
+// ─── Move list ───────────────────────────────────────────────────────────────
+.moveListLabel {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(31, 27, 58, 0.5);
+  margin: 0 0 0.5rem;
+}
+
+.moveList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.moveRow {
+  display: grid;
+  grid-template-columns: 1.75rem 1fr 1fr;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.moveNum {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: rgba(31, 27, 58, 0.4);
+}
+
+.moveCell {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--chess-deep);
+  text-align: left;
+  padding: 0.3rem 0.55rem;
+  border-radius: 0.6rem;
+  border: 1px solid transparent;
+  background: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+
+  &:hover {
+    background: rgba(91, 46, 145, 0.06);
+  }
+}
+
+.moveCellSelected {
+  border-color: var(--chess-purple);
+  background: rgba(91, 46, 145, 0.1);
+  box-shadow: 0 0 0 1px var(--chess-purple) inset;
+}
+
+// ─── Explanation ─────────────────────────────────────────────────────────────
+.explanation {
+  padding: 0.9rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(91, 46, 145, 0.15);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.explanationLabel {
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(31, 27, 58, 0.45);
+  margin: 0 0 0.35rem;
+}
+
+.explanationText {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: rgba(31, 27, 58, 0.78);
+  margin: 0;
+}
