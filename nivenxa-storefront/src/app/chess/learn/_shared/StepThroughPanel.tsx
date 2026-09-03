@@ -1,8 +1,10 @@
 'use client'
 import { useMemo, useState } from 'react'
+import Link from 'next/link'
 import { Chess } from 'chess.js'
 import type { Key } from 'chessground/types'
 import Board from '@/components/chess/Board'
+import { computeMoveSquares } from './moveSquares'
 import styles from './StepThroughPanel.module.scss'
 
 // The board is read-only here — no legal moves to offer, and moves never
@@ -24,32 +26,59 @@ function parseFenMeta(fen: string): FenMeta {
 }
 
 function moveLabel(meta: FenMeta): string {
-  return `${meta.fullmove}${meta.turn === 'w' ? '.' : '...'}`
+  return meta.turn === 'w' ? `${meta.fullmove}. ` : `${meta.fullmove}...`
 }
 
 export interface StepThroughExample {
   /** Starting FEN. Omit for the standard game start position (used by Openings). */
   fen?: string
   moves: string[]
-  /** One explanation per move, aligned by index with `moves`. */
+  /** One explanation per move, aligned by index with `moves`. Use "\n" to break a step's explanation into separate one-idea lines. */
   stepExplanations: string[]
   /** Shown at step 0, before any move has been played. */
   startDescription: string
+  /** Extra square(s) to circle per move, aligned by index with `moves` — e.g. the square a piece newly aims at, or both squares in a mutual-attack moment. */
+  stepHighlights?: (string | string[] | undefined)[]
+  /** [from, to] arrow to draw per move, aligned by index with `moves`. */
+  stepArrows?: ([string, string] | undefined)[]
+  /** A short "this is the X!" aside per move, aligned by index with `moves`. */
+  stepReveal?: (string | undefined)[]
+  /** Shown instead of the last move's explanation once the learner reaches the end. */
+  completionLabel?: string
+  completionSummary?: string[]
 }
 
-export default function StepThroughPanel({ example, footer }: { example: StepThroughExample; footer?: React.ReactNode }) {
+export default function StepThroughPanel({
+  example,
+  footer,
+  onPracticeClick,
+  practiceCtaLabel = 'Try it yourself →',
+  nextCta,
+}: {
+  example: StepThroughExample
+  footer?: React.ReactNode
+  /** When provided, a button appears once the learner reaches the last move. */
+  onPracticeClick?: () => void
+  /** Text for that button — defaults to "Try it yourself →" (Openings' Practice mode); pass e.g. "Your Turn →" for a different phase name. */
+  practiceCtaLabel?: string
+  /** When provided (and onPracticeClick isn't), a "Learn X next" link appears once the learner reaches the last move. */
+  nextCta?: { href: string; label: string }
+}) {
   const { moves, stepExplanations } = example
 
   // positions[0] is the starting FEN; positions[i] is the FEN after
-  // moves[0..i-1] have been played. Computed once per example.
-  const { positions, metas } = useMemo(() => {
+  // moves[0..i-1] have been played. lastMoves[0] is undefined (no move yet);
+  // lastMoves[i] is the [from, to] of moves[i-1]. Computed once per example.
+  const { positions, metas, lastMoves } = useMemo(() => {
     const chess = example.fen ? new Chess(example.fen) : new Chess()
     const fens = [chess.fen()]
+    const squares = computeMoveSquares(moves, example.fen)
+    const froms: (Key[] | undefined)[] = [undefined, ...squares.map((s) => [s.from, s.to])]
     for (const san of moves) {
       chess.move(san)
       fens.push(chess.fen())
     }
-    return { positions: fens, metas: fens.map(parseFenMeta) }
+    return { positions: fens, metas: fens.map(parseFenMeta), lastMoves: froms }
   }, [example.fen, moves])
 
   // 0 = starting position (before any move), up to moves.length.
@@ -85,6 +114,14 @@ export default function StepThroughPanel({ example, footer }: { example: StepThr
             turnColor={metas[step].turn === 'w' ? 'white' : 'black'}
             dests={EMPTY_DESTS}
             viewOnly
+            lastMove={lastMoves[step]}
+            highlightSquares={(() => {
+              if (atStart) return undefined
+              const raw = example.stepHighlights?.[step - 1]
+              if (!raw) return undefined
+              return (Array.isArray(raw) ? raw : [raw]) as Key[]
+            })()}
+            hintArrow={!atStart ? (example.stepArrows?.[step - 1] as Key[] | undefined) : undefined}
             onMove={noop}
           />
         </div>
@@ -96,7 +133,7 @@ export default function StepThroughPanel({ example, footer }: { example: StepThr
             ← Previous
           </button>
           <span className={styles.stepIndicator}>
-            {step} / {moves.length}
+            {atStart ? `Start · ${moves.length} moves` : `Move ${step} of ${moves.length}`}
           </span>
           <button
             type="button"
@@ -142,8 +179,36 @@ export default function StepThroughPanel({ example, footer }: { example: StepThr
         </div>
 
         <div className={styles.explanation}>
-          <p className={styles.explanationLabel}>{atStart ? 'Starting position' : moveLabel(metas[step - 1]) + moves[step - 1]}</p>
-          <p className={styles.explanationText}>{atStart ? example.startDescription : stepExplanations[step - 1]}</p>
+          <p className={styles.explanationLabel}>{atStart ? "Let's start" : moveLabel(metas[step - 1]) + moves[step - 1]}</p>
+          {(atStart ? example.startDescription : stepExplanations[step - 1]).split('\n').map((line, i) => (
+            <p key={i} className={styles.explanationText}>
+              {line}
+            </p>
+          ))}
+          {!atStart && example.stepReveal?.[step - 1] && <p className={styles.reveal}>{example.stepReveal[step - 1]}</p>}
+
+          {atEnd && example.completionSummary && (
+            <div className={styles.completionBlock}>
+              <p className={`${styles.explanationLabel} ${styles.explanationLabelDone}`}>
+                {example.completionLabel ?? "You're done"} <span aria-hidden="true">✓</span>
+              </p>
+              {example.completionSummary.map((line, i) => (
+                <p key={i} className={styles.explanationText}>
+                  {line}
+                </p>
+              ))}
+              {onPracticeClick && (
+                <button type="button" className={styles.practiceCta} onClick={onPracticeClick}>
+                  {practiceCtaLabel}
+                </button>
+              )}
+              {!onPracticeClick && nextCta && (
+                <Link href={nextCta.href} className={styles.practiceCta}>
+                  {nextCta.label}
+                </Link>
+              )}
+            </div>
+          )}
         </div>
 
         {footer}

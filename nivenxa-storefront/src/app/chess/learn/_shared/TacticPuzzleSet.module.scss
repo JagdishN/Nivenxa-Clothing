@@ -1,0 +1,91 @@
+// Reuses the board frame, celebration animation, and completion modal built
+// for Openings' Practice mode — same visual language, different data shape.
+.boardCol {
+  composes: boardCol from './StepThroughPanel.module.scss';
+}
+
+.boardWrap {
+  composes: boardWrap from './PracticePanel.module.scss';
+}
+
+.panelCol {
+  composes: panelCol from './StepThroughPanel.module.scss';
+}
+
+.puzzleIndicator {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(31, 27, 58, 0.5);
+  margin: 0;
+}
+
+.promptCard {
+  composes: promptCard from './PracticePanel.module.scss';
+}
+
+.promptCardCorrect {
+  composes: promptCardCorrect from './PracticePanel.module.scss';
+}
+
+.promptCardDone {
+  composes: promptCardDone from './PracticePanel.module.scss';
+}
+
+.promptText {
+  composes: promptText from './PracticePanel.module.scss';
+}
+
+.actions {
+  composes: actions from './PracticePanel.module.scss';
+}
+
+.actionBtnGhost {
+  composes: actionBtnGhost from './PracticePanel.module.scss';
+}
+
+.celebrate {
+  composes: celebrate from './PracticePanel.module.scss';
+}
+
+.spark {
+  composes: spark from './PracticePanel.module.scss';
+}
+
+.celebrateCheck {
+  composes: celebrateCheck from './PracticePanel.module.scss';
+}
+
+.modalBackdrop {
+  composes: modalBackdrop from './PracticePanel.module.scss';
+}
+
+.modalCard {
+  composes: modalCard from './PracticePanel.module.scss';
+}
+
+.modalTag {
+  composes: modalTag from './PracticePanel.module.scss';
+}
+
+.modalHeading {
+  composes: modalHeading from './PracticePanel.module.scss';
+}
+
+.modalBody {
+  composes: modalBody from './PracticePanel.module.scss';
+}
+
+.modalActions {
+  composes: modalActions from './PracticePanel.module.scss';
+}
+
+.modalPrimary {
+  composes: modalPrimary from './PracticePanel.module.scss';
+}
+
+.modalSecondary {
+  composes: modalSecondary from './PracticePanel.module.scss';
+}

@@ -50,6 +50,33 @@
   margin-bottom: 0;
 }
 
+// Reuses Openings' difficulty-tag styling so the badge reads identically
+// across both sections.
+.tags {
+  composes: tags from '../../openings/[slug]/OpeningDetail.module.scss';
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0.9rem auto 0;
+  padding: 0 clamp(1.25rem, 5vw, 3rem);
+}
+
+.tag {
+  composes: tag from '../../openings/[slug]/OpeningDetail.module.scss';
+}
+
+.tag_start {
+  composes: tag_start from '../../openings/[slug]/OpeningDetail.module.scss';
+}
+
+.tag_next {
+  composes: tag_next from '../../openings/[slug]/OpeningDetail.module.scss';
+}
+
+.tag_later {
+  composes: tag_later from '../../openings/[slug]/OpeningDetail.module.scss';
+}
+
 // ─── Example selector (only rendered when an entry has more than one) ───────
 .exampleTabs {
   position: relative;

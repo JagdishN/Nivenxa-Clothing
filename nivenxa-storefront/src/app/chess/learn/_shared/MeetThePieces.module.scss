@@ -1,0 +1,87 @@
+.boardCol {
+  composes: boardCol from './StepThroughPanel.module.scss';
+}
+
+.boardWrap {
+  composes: boardWrap from './StepThroughPanel.module.scss';
+}
+
+.panelCol {
+  composes: panelCol from './StepThroughPanel.module.scss';
+}
+
+.explanation {
+  composes: explanation from './MoveTrainer.module.scss';
+}
+
+.explanationText {
+  composes: explanationText from './MoveTrainer.module.scss';
+}
+
+.pieceGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.pieceBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.7rem 0.4rem;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(91, 46, 145, 0.15);
+  background: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    border-color: rgba(91, 46, 145, 0.35);
+  }
+}
+
+.pieceBtnActive {
+  border-color: var(--chess-purple);
+  background: rgba(91, 46, 145, 0.08);
+}
+
+.pieceBtnMet {
+  border-color: rgba(94, 140, 106, 0.4);
+}
+
+.pieceGlyph {
+  font-size: 1.7rem;
+  line-height: 1;
+  color: var(--chess-deep);
+}
+
+.pieceLabel {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--chess-deep);
+}
+
+.promptCard {
+  composes: promptCard from './PracticePanel.module.scss';
+}
+
+.promptCardDone {
+  composes: promptCardDone from './PracticePanel.module.scss';
+}
+
+.promptText {
+  composes: promptText from './PracticePanel.module.scss';
+}
+
+.actions {
+  composes: actions from './PracticePanel.module.scss';
+}
+
+.actionBtn {
+  composes: actionBtn from './PracticePanel.module.scss';
+  display: inline-block;
+  text-decoration: none;
+}

@@ -11,7 +11,10 @@
   z-index: 1;
   max-width: 1200px;
   margin: 0 auto;
-  padding: clamp(2rem, 5vw, 3.5rem) clamp(1.25rem, 5vw, 3rem) 0;
+  // Tighter than other Learn hero sections on purpose — this page has a full
+  // overview block (Big Idea/tags/pros-cons/when-to-play) below the hero
+  // before the board even appears, so the board needs the vertical room back.
+  padding: clamp(1.5rem, 4vw, 2.25rem) clamp(1.25rem, 5vw, 3rem) 0;
 }
 
 .breadcrumb {
@@ -50,6 +53,148 @@
   margin-bottom: 0;
 }
 
+// ─── Overview (Big Idea / tags / pros-cons / when-to-play) ──────────────────
+// Sits between the hero and the step-through board — the "why" is meant to
+// be read before the "how," not discovered after scrolling past the board.
+.overview {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(0.85rem, 2vw, 1.1rem) clamp(1.25rem, 5vw, 3rem) 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.overviewLabel {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--chess-purple);
+  margin: 0 0 0.5rem;
+}
+
+.bigIdea {
+  padding: 0.9rem 1.1rem;
+  border-radius: 1.1rem;
+  border: 1px solid rgba(91, 46, 145, 0.18);
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 10px 40px rgba(91, 46, 145, 0.06);
+}
+
+// Each sentence is its own line (one idea at a time) rather than one long
+// paragraph — only add space *between* lines, not after the label above them.
+.bigIdeaText {
+  font-family: var(--font-serif);
+  font-size: clamp(1.02rem, 1.6vw, 1.18rem);
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--chess-deep);
+  margin: 0;
+
+  & + & {
+    margin-top: 0.3rem;
+  }
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(91, 46, 145, 0.22);
+  background: rgba(91, 46, 145, 0.06);
+  color: var(--chess-purple);
+}
+
+// Difficulty tags — one per OpeningDifficulty value.
+.tag_start {
+  border-color: rgba(94, 140, 106, 0.35);
+  background: rgba(94, 140, 106, 0.1);
+  color: var(--chess-success);
+}
+
+.tag_next {
+  border-color: rgba(214, 168, 95, 0.4);
+  background: rgba(214, 168, 95, 0.12);
+  color: var(--chess-bronze);
+}
+
+.tag_later {
+  border-color: rgba(179, 84, 63, 0.3);
+  background: rgba(179, 84, 63, 0.08);
+  color: var(--chess-danger);
+}
+
+.prosConsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(1rem, 2.5vw, 1.75rem);
+
+  @include v.max-sm {
+    grid-template-columns: 1fr;
+  }
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+
+  li {
+    position: relative;
+    padding-left: 1.1rem;
+    font-family: var(--font-sans);
+    font-size: 0.88rem;
+    line-height: 1.55;
+    color: rgba(31, 27, 58, 0.78);
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0.5em;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+  }
+}
+
+.listPros li::before {
+  background: var(--chess-success);
+}
+
+.listCons li::before {
+  background: var(--chess-danger);
+}
+
+.whenText {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: rgba(31, 27, 58, 0.78);
+  margin: 0;
+
+  & + & {
+    margin-top: 0.3rem;
+  }
+}
+
 .layout {
   position: relative;
   z-index: 1;
@@ -59,7 +204,7 @@
   gap: clamp(1.5rem, 3.5vw, 2.75rem);
   max-width: 1200px;
   margin: 0 auto;
-  padding: clamp(1.5rem, 3vw, 2.25rem) clamp(1.25rem, 5vw, 3rem) clamp(4rem, 7vw, 6rem);
+  padding: clamp(1rem, 2vw, 1.5rem) clamp(1.25rem, 5vw, 3rem) clamp(4rem, 7vw, 6rem);
 
   @include v.max-lg {
     flex-direction: column;

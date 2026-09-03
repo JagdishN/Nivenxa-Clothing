@@ -8,7 +8,7 @@ import { useCart } from '@/context/CartContext'
 import { useAuth } from '@/context/AuthContext'
 import { useCurrency } from '@/context/CurrencyContext'
 import ProductFocusViewer from './ProductFocusViewer'
-import styles from '@/app/[locale]/product/[id]/ProductStory.module.scss'
+import styles from '@/app/[locale]/(shop)/product/[id]/ProductStory.module.scss'
 
 const toColorSlug = (colorway: string) => colorway.toLowerCase().replace(/\s+/g, '-')
 

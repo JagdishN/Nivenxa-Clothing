@@ -1,0 +1,90 @@
+// Same board/panel frame and celebration+modal language as TacticPuzzleSet —
+// a piece lesson is structurally the same "step through several small
+// exercises, then celebrate" shape, just with demo steps mixed in.
+.boardCol {
+  composes: boardCol from './StepThroughPanel.module.scss';
+}
+
+.boardWrap {
+  composes: boardWrap from './PracticePanel.module.scss';
+}
+
+.panelCol {
+  composes: panelCol from './StepThroughPanel.module.scss';
+}
+
+.stageIndicator {
+  composes: puzzleIndicator from './TacticPuzzleSet.module.scss';
+}
+
+.promptCard {
+  composes: promptCard from './PracticePanel.module.scss';
+}
+
+.promptCardCorrect {
+  composes: promptCardCorrect from './PracticePanel.module.scss';
+}
+
+.promptCardDone {
+  composes: promptCardDone from './PracticePanel.module.scss';
+}
+
+.promptText {
+  composes: promptText from './PracticePanel.module.scss';
+}
+
+.actions {
+  composes: actions from './PracticePanel.module.scss';
+}
+
+.actionBtn {
+  composes: actionBtn from './PracticePanel.module.scss';
+}
+
+.actionBtnGhost {
+  composes: actionBtnGhost from './PracticePanel.module.scss';
+}
+
+.celebrate {
+  composes: celebrate from './PracticePanel.module.scss';
+}
+
+.spark {
+  composes: spark from './PracticePanel.module.scss';
+}
+
+.celebrateCheck {
+  composes: celebrateCheck from './PracticePanel.module.scss';
+}
+
+.modalBackdrop {
+  composes: modalBackdrop from './PracticePanel.module.scss';
+}
+
+.modalCard {
+  composes: modalCard from './PracticePanel.module.scss';
+}
+
+.modalTag {
+  composes: modalTag from './PracticePanel.module.scss';
+}
+
+.modalHeading {
+  composes: modalHeading from './PracticePanel.module.scss';
+}
+
+.modalBody {
+  composes: modalBody from './PracticePanel.module.scss';
+}
+
+.modalActions {
+  composes: modalActions from './PracticePanel.module.scss';
+}
+
+.modalPrimary {
+  composes: modalPrimary from './PracticePanel.module.scss';
+}
+
+.modalSecondary {
+  composes: modalSecondary from './PracticePanel.module.scss';
+}

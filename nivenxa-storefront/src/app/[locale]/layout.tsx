@@ -2,9 +2,6 @@ import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { routing } from '@/i18n/routing'
-import Navbar from '@/components/global/Navbar'
-import Footer from '@/components/global/Footer'
-import CartDrawerMount from '@/components/global/CartDrawer/CartDrawerMount'
 import { AuthProvider } from '@/context/AuthContext'
 import { CartProvider } from '@/context/CartContext'
 import { ToastProvider } from '@/context/ToastContext'
@@ -38,12 +35,7 @@ export default async function LocaleLayout({
         <CurrencyProvider>
           <ToastProvider>
             <AuthProvider>
-              <CartProvider>
-                <Navbar />
-                <main>{children}</main>
-                <Footer />
-                <CartDrawerMount />
-              </CartProvider>
+              <CartProvider>{children}</CartProvider>
             </AuthProvider>
           </ToastProvider>
         </CurrencyProvider>

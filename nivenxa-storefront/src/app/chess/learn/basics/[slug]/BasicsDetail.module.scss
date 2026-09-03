@@ -1,0 +1,56 @@
+.page {
+  composes: page from '../../openings/[slug]/OpeningDetail.module.scss';
+}
+
+.hero {
+  composes: hero from '../../openings/[slug]/OpeningDetail.module.scss';
+}
+
+.breadcrumb {
+  composes: breadcrumb from '../../openings/[slug]/OpeningDetail.module.scss';
+}
+
+.heading {
+  composes: heading from '../../openings/[slug]/OpeningDetail.module.scss';
+}
+
+.subtext {
+  composes: subtext from '../../openings/[slug]/OpeningDetail.module.scss';
+}
+
+.layout {
+  composes: layout from '../../openings/[slug]/OpeningDetail.module.scss';
+}
+
+// The two plain intro lessons (The Board, Meet the Pieces) lay out their
+// own board+panel — same frame as MoveTrainer/StepThroughPanel for
+// consistency, since they share this `.layout` row.
+.boardCol {
+  composes: boardCol from '../../_shared/StepThroughPanel.module.scss';
+}
+
+.boardWrap {
+  composes: boardWrap from '../../_shared/StepThroughPanel.module.scss';
+}
+
+.panelCol {
+  composes: panelCol from '../../_shared/StepThroughPanel.module.scss';
+}
+
+.explanation {
+  composes: explanation from '../../_shared/MoveTrainer.module.scss';
+}
+
+.explanationText {
+  composes: explanationText from '../../_shared/MoveTrainer.module.scss';
+}
+
+.actions {
+  composes: actions from '../../_shared/PracticePanel.module.scss';
+}
+
+.actionBtn {
+  composes: actionBtn from '../../_shared/PracticePanel.module.scss';
+  display: inline-block;
+  text-decoration: none;
+}

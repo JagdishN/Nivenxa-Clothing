@@ -1,0 +1,201 @@
+.page {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--nivenxa-bg-primary, #f2ede6);
+  color: var(--nivenxa-text-primary, #1a1a1a);
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 40px;
+}
+
+.wordmark {
+  font-family: var(--font-playfair, Georgia, serif);
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(26, 26, 26, 0.7);
+  margin: 0 0 22px;
+}
+
+.rule {
+  width: 40px;
+  height: 1px;
+  background: rgba(26, 26, 26, 0.25);
+  margin: 0 0 22px;
+}
+
+.ruleTop {
+  composes: rule;
+}
+
+.ruleBottom {
+  composes: rule;
+}
+
+.label {
+  font-family: var(--font-inter, system-ui, sans-serif);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(26, 26, 26, 0.49);
+  margin: 0 0 14px;
+}
+
+.badgeRow {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 22px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #b23b2e;
+  // Delayed to start once the badge row has actually faded in — see the
+  // entrance sequence below — so the pulse doesn't run invisibly underneath it.
+  animation: pulse 2.4s ease-in-out 1.4s infinite;
+}
+
+.comingSoon {
+  font-family: var(--font-inter, system-ui, sans-serif);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(26, 26, 26, 0.4);
+}
+
+.tagline {
+  font-family: var(--font-playfair, Georgia, serif);
+  font-style: italic;
+  font-size: clamp(16px, 2vw, 19px);
+  line-height: 1.6;
+  color: rgba(26, 26, 26, 0.48);
+  margin: 0;
+}
+
+.taglineLine1 {
+  composes: tagline;
+}
+
+.taglineLine2 {
+  composes: tagline;
+}
+
+.watermark {
+  position: absolute;
+  left: 50%;
+  bottom: -6vw;
+  transform: translateX(-50%);
+  z-index: 0;
+  width: 100%;
+  text-align: center;
+  font-family: var(--font-playfair, Georgia, serif);
+  font-size: clamp(90px, 22vw, 320px);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: rgba(26, 26, 26, 0.06);
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+// ─── Entrance sequence ───────────────────────────────────────────────────────
+// Each piece arrives on its own, not as one block: a clearly visible rise
+// (16px, 30px for the giant background word) + fade, individually delayed
+// ~200-250ms apart so every element's own reveal is still finishing as the
+// next one starts. ~2.1s end-to-end, then everything sits still. Gated
+// behind prefers-reduced-motion so motion-sensitive visitors just see the
+// finished layout immediately instead of a broken/invisible one.
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  // The watermark's own text color already carries the final low-opacity
+  // look (rgba alpha 0.06, set on .watermark above) — this animates the
+  // element's opacity 0 -> 1 (i.e. "fully itself"), not a second, stacking
+  // opacity on top of that color's alpha.
+  @keyframes fadeUpWatermark {
+    from {
+      opacity: 0;
+      transform: translate(-50%, 30px);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+  }
+
+  .wordmark {
+    opacity: 0;
+    animation: fadeUp 0.7s ease-out 0s forwards;
+  }
+
+  .ruleTop {
+    opacity: 0;
+    animation: fadeUp 0.7s ease-out 0.25s forwards;
+  }
+
+  .label {
+    opacity: 0;
+    animation: fadeUp 0.7s ease-out 0.45s forwards;
+  }
+
+  .badgeRow {
+    opacity: 0;
+    animation: fadeUp 0.7s ease-out 0.7s forwards;
+  }
+
+  .ruleBottom {
+    opacity: 0;
+    animation: fadeUp 0.7s ease-out 0.95s forwards;
+  }
+
+  .taglineLine1 {
+    opacity: 0;
+    animation: fadeUp 0.7s ease-out 1.15s forwards;
+  }
+
+  .taglineLine2 {
+    opacity: 0;
+    animation: fadeUp 0.7s ease-out 1.35s forwards;
+  }
+
+  .watermark {
+    opacity: 0;
+    animation: fadeUpWatermark 0.6s ease-out 1.55s forwards;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}

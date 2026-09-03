@@ -12,7 +12,10 @@
   z-index: 1;
   max-width: 1400px;
   margin: 0 auto;
-  padding: clamp(3rem, 6vw, 4.5rem) clamp(1.5rem, 6vw, 5rem) clamp(1.5rem, 4vw, 2.5rem);
+  // Bottom padding cut ~40% from the other Learn list pages — this page has
+  // a recommendation strip and category sections below that should read as
+  // close to the heading as possible, not after a long empty gap.
+  padding: clamp(2.5rem, 5vw, 3.75rem) clamp(1.5rem, 6vw, 5rem) clamp(0.9rem, 2.5vw, 1.5rem);
 }
 
 .breadcrumb {
@@ -24,7 +27,7 @@
   font-weight: 600;
   color: rgba(31, 27, 58, 0.5);
   text-decoration: none;
-  margin-bottom: clamp(0.9rem, 2vw, 1.2rem);
+  margin-bottom: clamp(0.6rem, 1.5vw, 0.9rem);
   transition: color 0.2s ease;
 
   &:hover {
@@ -50,15 +53,93 @@
   max-width: 560px;
 }
 
+// ─── Category groups ──────────────────────────────────────────────────────
+// Openings are browsed by category rather than one flat list — a group can
+// legitimately contain an opening that also appears in another group
+// (e.g. "Start Here" openings reappear in their family group below); that
+// overlap is intentional, so groups are rendered independently rather than
+// deduplicated against each other.
+.group {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(0.9rem, 2vw, 1.25rem) clamp(1.5rem, 6vw, 5rem) 0;
+
+  &:last-child {
+    padding-bottom: clamp(4rem, 7vw, 6rem);
+  }
+}
+
+// ─── "New to openings?" recommendation strip ────────────────────────────────
+// A short link row, not a card grid — these four openings already get full
+// cards in their own category below, so this is a pointer, not a duplicate.
+.recommendStrip {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 clamp(1.5rem, 6vw, 5rem) clamp(1rem, 2.5vw, 1.5rem);
+}
+
+.recommendHeading {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--chess-gold);
+  margin: 0 0 0.35rem;
+}
+
+.recommendSubtext {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: rgba(31, 27, 58, 0.62);
+  margin: 0 0 0.65rem;
+}
+
+.recommendLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.recommendLink {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.45rem 0.9rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(214, 168, 95, 0.4);
+  background: rgba(214, 168, 95, 0.08);
+  color: var(--chess-bronze);
+  text-decoration: none;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    background: rgba(214, 168, 95, 0.16);
+    border-color: var(--chess-gold);
+    transform: translateY(-1px);
+  }
+}
+
+.groupHeading {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--chess-purple);
+  margin: 0 0 1rem;
+}
+
 .grid {
   position: relative;
   z-index: 1;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: clamp(1rem, 2.5vw, 1.5rem);
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 clamp(1.5rem, 6vw, 5rem) clamp(4rem, 7vw, 6rem);
 }
 
 .card {
@@ -81,6 +162,13 @@
   }
 }
 
+// The very first card of the very first group — a light visual anchor
+// marking "start reading here," not a full featured/highlight treatment.
+.cardFirst {
+  border-width: 2px;
+  border-color: rgba(91, 46, 145, 0.35);
+}
+
 .cardTitle {
   font-family: var(--font-serif);
   font-size: clamp(1.1rem, 1.8vw, 1.3rem);
@@ -96,4 +184,12 @@
   line-height: 1.6;
   color: rgba(31, 27, 58, 0.62);
   margin: 0;
+}
+
+.cardDifficulty {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(31, 27, 58, 0.62);
+  margin: 0.2rem 0 0;
 }

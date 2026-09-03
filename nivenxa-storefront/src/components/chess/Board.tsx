@@ -16,6 +16,14 @@ export interface BoardProps {
   viewOnly?: boolean
   /** Highlights the given color's king square (chessground's built-in check styling) — used for the checkmated king at game end. */
   check?: Color | boolean
+  /** [from, to] of the last move — chessground's built-in last-move square highlight. */
+  lastMove?: Key[]
+  /** Squares to circle (chessground's shape overlay) — e.g. the square a piece newly aims at. */
+  highlightSquares?: Key[]
+  /** Circle color for `highlightSquares` — yellow for a hint/callout, green for "these are legal squares." */
+  highlightColor?: 'yellow' | 'green'
+  /** [from, to] to draw as an arrow (chessground's shape overlay) — e.g. a "this piece to this square" hint. */
+  hintArrow?: Key[]
   onMove: (from: Key, to: Key) => void
 }
 
@@ -26,6 +34,10 @@ export default function Board({
   orientation = 'white',
   viewOnly = false,
   check = false,
+  lastMove,
+  highlightSquares,
+  highlightColor = 'yellow',
+  hintArrow,
   onMove,
 }: BoardProps) {
   const elRef = useRef<HTMLDivElement>(null)
@@ -41,6 +53,7 @@ export default function Board({
       fen,
       orientation,
       turnColor,
+      lastMove,
       // Chessground only attaches its mousedown/touchstart listeners once,
       // at construction, and skips that entirely if viewOnly is true then —
       // it does NOT re-bind on a later .set(). Since the engine hasn't
@@ -78,6 +91,7 @@ export default function Board({
       turnColor,
       viewOnly,
       check,
+      lastMove,
       movable: {
         free: false,
         color: turnColor,
@@ -85,7 +99,11 @@ export default function Board({
         showDests: true,
       },
     })
-  }, [fen, turnColor, dests, orientation, viewOnly, check])
+    apiRef.current?.setShapes([
+      ...(highlightSquares ?? []).map((orig) => ({ orig, brush: highlightColor })),
+      ...(hintArrow ? [{ orig: hintArrow[0], dest: hintArrow[1], brush: 'yellow' as const }] : []),
+    ])
+  }, [fen, turnColor, dests, orientation, viewOnly, check, lastMove, highlightSquares, highlightColor, hintArrow])
 
   return (
     <div className={styles.wrap}>

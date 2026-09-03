@@ -1,0 +1,291 @@
+@use '../../../../../styles/variables' as v;
+
+// ─── Page shell ───────────────────────────────────────────────────────────────
+.page {
+  padding-top: v.$space-page-top;
+  padding-bottom: v.$space-page-bot;
+}
+
+// ─── Hero ─────────────────────────────────────────────────────────────────────
+.hero {
+  position: relative;
+  max-width: var(--max-width);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+  margin-bottom: v.$space-section;
+  overflow: hidden;
+}
+
+.heroGhost {
+  position: absolute;
+  top: -1.2rem;
+  right: -1.5rem;
+  font-family: var(--font-serif);
+  font-size: v.$fs-ghost;
+  letter-spacing: 0.06em;
+  color: var(--color-ink);
+  opacity: 0.025;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+  transform: scaleX(0.92);
+}
+
+.heroNote {
+  position: absolute;
+  top: v.$heroNote-top;
+  right: 1rem;
+  width: v.$heroNote-width;
+  padding: 1rem 1.15rem;
+  border: 1px solid rgba(v.$base-charcoal, 0.08);
+  background-color: rgba(255, 255, 255, 0.75);
+  color: rgba(v.$base-charcoal, 0.75);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  line-height: 1.7;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 12px 30px rgba(50, 50, 50, 0.04);
+}
+
+.heroNoteLabel {
+  display: block;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(v.$base-charcoal, 0.9);
+  margin-bottom: 0.75rem;
+}
+
+.heroNoteList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li { margin-bottom: 0.55rem; }
+  li:last-child { margin-bottom: 0; }
+}
+
+.heroNoteLink {
+  display: inline-block;
+  color: rgba(v.$base-charcoal, 0.72);
+  text-decoration: none;
+  transition: color 0.3s ease, transform 0.3s ease;
+
+  &:hover, &:focus-visible {
+    color: #2b2b2b;
+    transform: translateX(2px);
+    cursor: pointer;
+  }
+
+  &:focus-visible {
+    outline: 1px solid rgba(v.$base-charcoal, 0.5);
+    outline-offset: 2px;
+  }
+}
+
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: var(--color-olive);
+  margin-bottom: 1.75rem;
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: clamp(3rem, 7vw, 6rem);
+  line-height: 1;
+  color: var(--color-ink);
+  margin-bottom: 1rem;
+}
+
+.subtitle {
+  font-family: var(--font-serif);
+  font-size: clamp(1rem, 2vw, 1.375rem);
+  font-style: italic;
+  color: rgba(v.$base-charcoal, 0.5);
+  letter-spacing: 0.01em;
+  margin-bottom: v.$space-subtitle;
+  max-width: 36ch;
+}
+
+.introWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 38rem;
+}
+
+.intro {
+  font-family: var(--font-sans);
+  font-size: v.$fs-intro;
+  line-height: 1.95;
+  color: var(--color-olive);
+}
+
+.introItalic {
+  font-family: var(--font-serif);
+  font-size: clamp(1rem, 1.6vw, 1.25rem);
+  font-style: italic;
+  color: rgba(v.$base-charcoal, 0.5);
+  letter-spacing: 0.01em;
+  line-height: 1.6;
+}
+
+.heroDivider {
+  width: 3rem;
+  height: 1px;
+  background-color: var(--color-accent);
+  margin-top: v.$space-divider;
+  opacity: 0.6;
+}
+
+// ─── Numbered sections ────────────────────────────────────────────────────────
+.sections {
+  max-width: var(--max-width);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+  display: flex;
+  flex-direction: column;
+  gap: v.$space-sections-gap;
+}
+
+.section {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  scroll-margin-top: v.$space-scroll-margin;
+
+  @include v.md {
+    grid-template-columns: 8rem 1fr;
+    gap: 3rem;
+    align-items: start;
+  }
+}
+
+.sectionInner {
+  display: contents;
+}
+
+.sectionMeta {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+
+  @include v.md {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.875rem;
+    padding-top: 0.4rem;
+  }
+}
+
+.sectionIndex {
+  font-family: var(--font-sans);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.sectionRule {
+  height: 1px;
+  background-color: rgba(v.$base-olive, 0.2);
+  flex: 1;
+
+  @include v.md {
+    width: 100%;
+    flex: none;
+  }
+}
+
+.sectionContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1.375rem;
+}
+
+.sectionTitle {
+  font-family: var(--font-serif);
+  font-size: v.$fs-section-title;
+  color: var(--color-ink);
+  line-height: 1.1;
+  margin-bottom: 0.5rem;
+}
+
+.body {
+  font-family: var(--font-sans);
+  font-size: v.$fs-body;
+  line-height: 1.95;
+  color: var(--color-olive);
+  max-width: 58ch;
+}
+
+// ─── Detail list ──────────────────────────────────────────────────────────────
+.detailList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-left: 1rem;
+  border-left: 1px solid rgba(v.$base-olive, 0.18);
+  margin-top: 0.25rem;
+}
+
+.detailItem {
+  font-family: var(--font-serif);
+  font-size: v.$fs-body;
+  font-style: italic;
+  line-height: 1.8;
+  color: rgba(v.$base-charcoal, 0.55);
+}
+
+// ─── Closing note ─────────────────────────────────────────────────────────────
+.closing {
+  max-width: var(--max-width);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+  margin-top: v.$space-section;
+
+  @include v.md { padding-left: calc(var(--gutter) + 8rem + 3rem); }
+}
+
+.closingRule {
+  width: 3rem;
+  height: 1px;
+  background-color: rgba(v.$base-olive, 0.45);
+  margin-bottom: 1.75rem;
+}
+
+.closingLabel {
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgba(v.$base-olive, 0.45);
+  margin-bottom: 1.25rem;
+}
+
+.closingBody {
+  font-family: var(--font-sans);
+  font-size: v.$fs-body;
+  line-height: 1.85;
+  color: var(--color-olive);
+  max-width: 44ch;
+  margin-bottom: 0.75rem;
+}
+
+.closingBodyItalic {
+  font-family: var(--font-serif);
+  font-size: v.$fs-closing-italic;
+  font-style: italic;
+  color: rgba(v.$base-charcoal, 0.55);
+  letter-spacing: 0.01em;
+  line-height: 1.75;
+}
