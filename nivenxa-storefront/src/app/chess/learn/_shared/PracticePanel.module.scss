@@ -1,0 +1,293 @@
+// Reuses the board sizing/frame from the Learn step-through panel so
+// switching between Learn and Practice doesn't shift the layout around.
+.boardCol {
+  composes: boardCol from './StepThroughPanel.module.scss';
+}
+
+.boardWrap {
+  composes: boardWrap from './StepThroughPanel.module.scss';
+  position: relative;
+}
+
+.panelCol {
+  composes: panelCol from './StepThroughPanel.module.scss';
+}
+
+.heading {
+  font-family: var(--font-serif);
+  font-size: clamp(1.05rem, 1.8vw, 1.25rem);
+  font-weight: 400;
+  color: var(--chess-deep);
+  margin: 0;
+}
+
+.promptCard {
+  padding: 0.9rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(91, 46, 145, 0.15);
+  background: rgba(255, 255, 255, 0.6);
+  min-height: 4.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.promptCardCorrect {
+  border-color: rgba(94, 140, 106, 0.4);
+  background: rgba(94, 140, 106, 0.1);
+}
+
+.promptCardDone {
+  border-color: rgba(214, 168, 95, 0.4);
+  background: rgba(214, 168, 95, 0.1);
+}
+
+.promptText {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: rgba(31, 27, 58, 0.85);
+  margin: 0;
+
+  & + & {
+    margin-top: 0.25rem;
+  }
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.actionBtn {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.6rem 1.1rem;
+  border-radius: 9999px;
+  border: none;
+  background: var(--chess-purple);
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 8px 24px rgba(91, 46, 145, 0.3);
+    transform: translateY(-1px);
+  }
+}
+
+.actionBtnGhost {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.6rem 1.1rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(91, 46, 145, 0.25);
+  background: none;
+  color: var(--chess-purple);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    background: rgba(91, 46, 145, 0.08);
+  }
+}
+
+// ─── On-board celebration (final correct move -> modal) ────────────────────
+// Kept deliberately restrained — a soft glow, a few small rising sparks, one
+// checkmark. No confetti/particles/streaks; matches the app's calm register.
+.celebrate {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  overflow: hidden;
+  background: radial-gradient(ellipse at center, rgba(214, 168, 95, 0.28) 0%, rgba(214, 168, 95, 0) 70%);
+  animation: celebrateGlow 1.3s ease-out;
+}
+
+.spark {
+  position: absolute;
+  bottom: 8%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--chess-gold);
+  opacity: 0;
+  animation: sparkRise 1s ease-out forwards;
+}
+
+.celebrateCheck {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  font-size: 2.75rem;
+  font-weight: 700;
+  color: var(--chess-success);
+  text-shadow: 0 0 24px rgba(94, 140, 106, 0.5);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.6);
+  animation: checkIn 0.6s ease-out 0.4s forwards;
+}
+
+@keyframes celebrateGlow {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes sparkRise {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.8);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-70px) scale(1.1);
+  }
+}
+
+@keyframes checkIn {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.6);
+  }
+  60% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+// ─── Completion modal ────────────────────────────────────────────────────────
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(31, 27, 58, 0.45);
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.25s ease-out;
+}
+
+.modalCard {
+  width: min(92vw, 380px);
+  padding: 1.75rem 1.5rem;
+  border-radius: 1.5rem;
+  background: var(--chess-white-soft);
+  box-shadow: 0 24px 64px rgba(31, 27, 58, 0.3);
+  text-align: center;
+  animation: modalIn 0.35s ease-out;
+}
+
+.modalTag {
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--chess-success);
+  margin: 0 0 0.6rem;
+}
+
+.modalHeading {
+  font-family: var(--font-serif);
+  font-size: clamp(1.3rem, 3vw, 1.6rem);
+  font-weight: 400;
+  color: var(--chess-deep);
+  margin: 0 0 0.6rem;
+}
+
+.modalBody {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: rgba(31, 27, 58, 0.72);
+  margin: 0;
+
+  & + & {
+    margin-top: 0.25rem;
+  }
+}
+
+.modalActions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 1.4rem;
+}
+
+.modalPrimary {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0.75rem 1.2rem;
+  border-radius: 9999px;
+  border: none;
+  background: var(--chess-purple);
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 8px 24px rgba(91, 46, 145, 0.3);
+    transform: translateY(-1px);
+  }
+}
+
+.modalSecondary {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.6rem 1.2rem;
+  border-radius: 9999px;
+  border: none;
+  background: none;
+  color: rgba(31, 27, 58, 0.55);
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--chess-purple);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

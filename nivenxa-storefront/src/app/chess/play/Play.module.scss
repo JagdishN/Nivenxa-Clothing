@@ -681,6 +681,15 @@
   margin: 0.4rem 0 0;
 }
 
+// ─── Setup screen: Strength slider (sub-selection within a tier) ─────────────
+.strengthSlider {
+  width: 100%;
+  display: block;
+  margin: 0 auto;
+  accent-color: var(--chess-purple);
+  cursor: pointer;
+}
+
 // ─── Setup screen: time-control tiles (always visible, no "Change" reveal) ────
 .timeControlGrid {
   display: grid;

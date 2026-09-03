@@ -5,7 +5,15 @@ import { useChessGame } from '@/lib/chess/useChessGame'
 import { useStockfish } from '@/lib/chess/useStockfish'
 import { useMoveAnalysis } from '@/lib/chess/useMoveAnalysis'
 import { useChessClock, type LowTimeState } from '@/lib/chess/useChessClock'
-import { SKILL_TIERS, SKILL_TIER_LIST, resolveExplanationMode, type SkillTier } from '@/lib/chess/skillTiers'
+import {
+  SKILL_TIERS,
+  SKILL_TIER_LIST,
+  resolveExplanationMode,
+  strengthSteps,
+  skillForStrength,
+  type SkillTier,
+} from '@/lib/chess/skillTiers'
+import { resolveDrawDecision } from '@/lib/chess/drawDecision'
 import { TIME_CONTROLS, TIME_CONTROL_MODE_LIST, type TimeControlMode, type TimeControlPreset } from '@/lib/chess/timeControls'
 import { accuracyFromEntries } from '@/lib/chess/moveClassification'
 import type { ColorChoice, MoveAnalysisEntry, MoveClassification, QualityMoveEntry } from '@/lib/chess/types'
@@ -17,11 +25,11 @@ const SETUP_STORAGE_KEY = 'nivenxa-chess-setup'
 // analysisEntries; this is purely a display cap, not a data-loss boundary.
 const LIVE_FEED_SIZE = 2
 // After Nivenxa declines a draw offer, Offer Draw is disabled for this many
-// plies (3 of the player's own moves) so it can't be spammed every turn.
-const DRAW_OFFER_COOLDOWN_PLIES = 6
-// Nivenxa declines a draw offer once its own position evaluation (from its
-// perspective) clears this many centipawns — i.e. it thinks it's clearly winning.
-const DRAW_DECLINE_THRESHOLD_CP = 150
+// plies (5 of the player's own moves) so it can't be spammed every turn.
+const DRAW_OFFER_COOLDOWN_PLIES = 10
+// Offer Draw stays disabled until both sides have played 10 full moves (20
+// plies) — a draw offer on move 1 doesn't mean anything, at any tier.
+const DRAW_OFFER_MIN_PLIES = 20
 // Historical dests never correspond to the live position, so reviewing a
 // past move always shows an empty (non-interactive) set of legal moves.
 const EMPTY_DESTS = new Map()
@@ -35,6 +43,17 @@ interface StoredSetup {
   color: ColorChoice
   mode: TimeControlMode | null
   presetIndex: number
+  strength: number
+}
+
+/** 1-indexed "Strength: N of M" default for a tier — derived from its own defaultSkill, not hardcoded to 1. */
+function defaultStrengthFor(tier: SkillTier): number {
+  const t = SKILL_TIERS[tier]
+  return t.defaultSkill - t.minSkill + 1
+}
+
+function clampStrength(tier: SkillTier, strength: number): number {
+  return Math.min(Math.max(1, Math.round(strength)), strengthSteps(tier))
 }
 
 function loadStoredSetup(): StoredSetup | null {
@@ -47,7 +66,10 @@ function loadStoredSetup(): StoredSetup | null {
     const colorValid = parsed?.color === 'w' || parsed?.color === 'b' || parsed?.color === 'random'
     const modeValid = parsed?.mode === null || parsed?.mode === 'rapid' || parsed?.mode === 'classical'
     const presetIndexValid = typeof parsed?.presetIndex === 'number'
-    if (tierValid && colorValid && modeValid && presetIndexValid) return parsed as StoredSetup
+    if (tierValid && colorValid && modeValid && presetIndexValid) {
+      const strength = typeof parsed.strength === 'number' ? clampStrength(parsed.tier, parsed.strength) : defaultStrengthFor(parsed.tier)
+      return { ...parsed, strength } as StoredSetup
+    }
   } catch {
     // stale/malformed value — ignore, fall back to defaults
   }
@@ -189,18 +211,25 @@ export default function ChessPlayPage() {
   const [draftColor, setDraftColor] = useState<ColorChoice>('random')
   const [draftMode, setDraftMode] = useState<TimeControlMode>('classical')
   const [draftPresetIndex, setDraftPresetIndex] = useState(0)
+  const [draftStrength, setDraftStrength] = useState(() => defaultStrengthFor('beginner'))
 
   // The config actually driving the game in progress.
   const [activeTierId, setActiveTierId] = useState<SkillTier>('beginner')
   const [activeColorChoice, setActiveColorChoice] = useState<ColorChoice>('random')
   const [activeMode, setActiveMode] = useState<TimeControlMode | null>(null)
   const [activePreset, setActivePreset] = useState<TimeControlPreset | null>(null)
+  const [activeStrength, setActiveStrength] = useState(() => defaultStrengthFor('beginner'))
   const [humanColor, setHumanColor] = useState<'w' | 'b'>('w')
 
   const [skillSet, setSkillSet] = useState(false)
   const [engineThinking, setEngineThinking] = useState(false)
   const [orientation, setOrientation] = useState<'white' | 'black'>('white')
   const [reviewOpen, setReviewOpen] = useState(false)
+
+  // Gates Resign — enabled only once the player has actually made a move
+  // (not just whenever `history` is non-empty, since if the player is Black
+  // the engine's own opening move would otherwise flip this too early).
+  const [playerHasMoved, setPlayerHasMoved] = useState(false)
 
   // Terminal states beyond what chess.js itself can reach (checkmate/
   // stalemate/draw-by-rule) — resignation and an agreed draw.
@@ -259,6 +288,7 @@ export default function ChessPlayPage() {
     if (stored) {
       setDraftTier(stored.tier)
       setDraftColor(stored.color)
+      setDraftStrength(stored.strength)
       if (stored.mode) {
         setDraftMode(stored.mode)
         setDraftPresetIndex(clampPresetIndex(stored.mode, stored.presetIndex))
@@ -266,7 +296,7 @@ export default function ChessPlayPage() {
     }
   }, [])
 
-  const beginGame = (tier: SkillTier, color: ColorChoice, mode: TimeControlMode, presetIndex: number) => {
+  const beginGame = (tier: SkillTier, color: ColorChoice, mode: TimeControlMode, presetIndex: number, strength: number) => {
     const resolved = resolveColor(color)
     const resolvedMode = tier === 'beginner' ? null : mode
     const resolvedPreset = resolvedMode ? TIME_CONTROLS[resolvedMode].presets[presetIndex] ?? TIME_CONTROLS[resolvedMode].presets[0] : null
@@ -275,12 +305,14 @@ export default function ChessPlayPage() {
     setActiveColorChoice(color)
     setActiveMode(resolvedMode)
     setActivePreset(resolvedPreset)
+    setActiveStrength(clampStrength(tier, strength))
     setHumanColor(resolved)
     setOrientation(resolved === 'w' ? 'white' : 'black')
     setSkillSet(false)
     setScreen('playing')
     setReviewOpen(false)
     setEndReason(null)
+    setPlayerHasMoved(false)
     setPendingConfirm(null)
     setDrawOfferState('idle')
     setDeclinedUntilPly(null)
@@ -294,14 +326,21 @@ export default function ChessPlayPage() {
   }
 
   const handleStartGame = () => {
-    saveSetup({ tier: draftTier, color: draftColor, mode: draftTier === 'beginner' ? null : draftMode, presetIndex: draftPresetIndex })
-    beginGame(draftTier, draftColor, draftMode, draftPresetIndex)
+    saveSetup({
+      tier: draftTier,
+      color: draftColor,
+      mode: draftTier === 'beginner' ? null : draftMode,
+      presetIndex: draftPresetIndex,
+      strength: draftStrength,
+    })
+    beginGame(draftTier, draftColor, draftMode, draftPresetIndex, draftStrength)
   }
 
   const handleNewGame = () => {
     // Reopen full setup, prefilled with the game's current config.
     setDraftTier(activeTierId)
     setDraftColor(activeColorChoice)
+    setDraftStrength(activeStrength)
     if (activeMode && activePreset) {
       setDraftMode(activeMode)
       setDraftPresetIndex(TIME_CONTROLS[activeMode].presets.indexOf(activePreset))
@@ -319,7 +358,12 @@ export default function ChessPlayPage() {
   const handlePlayAgain = () => {
     const mode = activeMode ?? 'classical'
     const presetIndex = activeMode && activePreset ? TIME_CONTROLS[activeMode].presets.indexOf(activePreset) : 0
-    beginGame(activeTierId, activeColorChoice, mode, presetIndex)
+    beginGame(activeTierId, activeColorChoice, mode, presetIndex, activeStrength)
+  }
+
+  const handleDraftTierChange = (tier: SkillTier) => {
+    setDraftTier(tier)
+    setDraftStrength(defaultStrengthFor(tier))
   }
 
   const handleUndo = () => {
@@ -330,6 +374,7 @@ export default function ChessPlayPage() {
   }
 
   const handleResignClick = () => {
+    if (!playerHasMoved) return
     setPendingConfirm('resign')
   }
 
@@ -344,6 +389,7 @@ export default function ChessPlayPage() {
   // evaluated against the position as it stood the moment the offer was made,
   // even though resolving it takes a beat.
   const handleOfferDraw = () => {
+    if (drawOfferDisabled) return
     setPendingConfirm(null)
     setDrawOfferState('pending')
     const offeredFen = fen
@@ -356,11 +402,14 @@ export default function ChessPlayPage() {
         const raw = await evaluateDrawPosition(offeredFen, 12)
         engineEvalCp = offeredTurn === engineColor ? raw : -raw
       } catch {
-        // Evaluation failed — fail toward accepting rather than leaving the offer stuck.
-        engineEvalCp = 0
+        // Evaluation failed — fail toward declining rather than silently
+        // giving up a possible advantage on a broken read of the position.
+        engineEvalCp = SKILL_TIERS[activeTierId].drawRejectCp
       }
 
-      if (engineEvalCp > DRAW_DECLINE_THRESHOLD_CP) {
+      const decision = resolveDrawDecision(engineEvalCp, activeTierId)
+
+      if (decision === 'reject') {
         setDrawOfferState('declined')
         setDeclinedUntilPly(history.length + DRAW_OFFER_COOLDOWN_PLIES)
         setTimeout(() => setDrawOfferState('idle'), 4000)
@@ -403,10 +452,10 @@ export default function ChessPlayPage() {
   // Apply the chosen tier's engine strength once the engine is ready.
   useEffect(() => {
     if (ready && screen === 'playing' && !skillSet) {
-      setSkillLevel(tierConfig.skillLevel)
+      setSkillLevel(skillForStrength(activeTierId, activeStrength))
       setSkillSet(true)
     }
-  }, [ready, screen, skillSet, tierConfig, setSkillLevel])
+  }, [ready, screen, skillSet, activeTierId, activeStrength, setSkillLevel])
 
   // Whenever it becomes the engine's turn, let it respond — except in live
   // explanation contexts, where awaitingExplanationForPly (set below) holds
@@ -475,6 +524,7 @@ export default function ChessPlayPage() {
     const plyAboutToBePlayed = history.length
     const result = makeMove(from, to, 'q')
     if (result) {
+      setPlayerHasMoved(true)
       analyzeMove(result, 'player')
       if (explanationMode === 'live') setAwaitingExplanationForPly(plyAboutToBePlayed)
     }
@@ -675,8 +725,18 @@ export default function ChessPlayPage() {
 
   const showUndo = activeTierId === 'beginner' || activeTierId === 'intermediate'
   const showOfferDraw = activeTierId !== 'beginner'
-  const drawOfferDisabled =
-    drawOfferState === 'pending' || drawOfferState === 'accepted' || (declinedUntilPly !== null && history.length < declinedUntilPly)
+  const belowMinMoves = history.length < DRAW_OFFER_MIN_PLIES
+  const inCooldown = declinedUntilPly !== null && history.length < declinedUntilPly
+  const drawOfferDisabled = drawOfferState === 'pending' || drawOfferState === 'accepted' || belowMinMoves || inCooldown
+  const drawOfferHint =
+    drawOfferState === 'pending' || drawOfferState === 'accepted'
+      ? undefined
+      : belowMinMoves
+        ? 'You can offer a draw later in the game.'
+        : inCooldown
+          ? 'You can offer again in a few moves.'
+          : undefined
+  const resignHint = playerHasMoved ? undefined : "You can resign once you've made a move."
 
   return (
     <main className={styles.page}>
@@ -694,13 +754,31 @@ export default function ChessPlayPage() {
                     key={t.id}
                     type="button"
                     className={`${styles.tierOption} ${draftTier === t.id ? styles.tierOptionSelected : ''}`}
-                    onClick={() => setDraftTier(t.id)}
+                    onClick={() => handleDraftTierChange(t.id)}
                   >
                     <span className={styles.tierOptionLabel}>{t.label}</span>
                     <span className={styles.tierOptionDesc}>{t.description}</span>
                   </button>
                 ))}
               </div>
+
+              {strengthSteps(draftTier) > 1 && (
+                <>
+                  <p className={styles.setupSectionTitle}>
+                    Strength: {draftStrength} of {strengthSteps(draftTier)}
+                  </p>
+                  <input
+                    type="range"
+                    className={styles.strengthSlider}
+                    min={1}
+                    max={strengthSteps(draftTier)}
+                    value={draftStrength}
+                    onChange={(e) => setDraftStrength(Number(e.target.value))}
+                    aria-label={`Strength within ${SKILL_TIERS[draftTier].label}, ${draftStrength} of ${strengthSteps(draftTier)}`}
+                  />
+                  <p className={styles.setupHint}>A higher strength plays more accurately within {SKILL_TIERS[draftTier].label}.</p>
+                </>
+              )}
 
               <p className={styles.setupSectionTitle}>Play as</p>
               <div className={styles.segmentedRow}>
@@ -767,6 +845,7 @@ export default function ChessPlayPage() {
             <div className={styles.metaRow}>
               <span className={styles.metaText}>
                 {tierConfig.label}
+                {strengthSteps(activeTierId) > 1 ? ` · Strength ${activeStrength}/${strengthSteps(activeTierId)}` : ''}
                 {activePreset ? ` · ${activePreset.label}` : ''}
               </span>
             </div>
@@ -849,17 +928,24 @@ export default function ChessPlayPage() {
                           className={styles.actionBtn}
                           onClick={handleOfferDraw}
                           disabled={drawOfferDisabled}
+                          title={drawOfferHint}
                         >
                           Offer Draw
                         </button>
                       )}
-                      <button type="button" className={styles.actionBtn} onClick={handleResignClick}>
+                      <button
+                        type="button"
+                        className={styles.actionBtn}
+                        onClick={handleResignClick}
+                        disabled={!playerHasMoved}
+                        title={resignHint}
+                      >
                         Resign
                       </button>
                     </div>
                     {drawOfferState === 'pending' && <p className={styles.drawBanner}>Draw offered…</p>}
                     {drawOfferState === 'accepted' && <p className={styles.drawBanner}>Nivenxa accepts the draw.</p>}
-                    {drawOfferState === 'declined' && <p className={styles.drawBanner}>Nivenxa declines the draw.</p>}
+                    {drawOfferState === 'declined' && <p className={styles.drawBanner}>Nivenxa wants to keep playing.</p>}
                     <div className={styles.panelDivider} />
                   </>
                 )}

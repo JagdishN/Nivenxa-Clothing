@@ -1,0 +1,57 @@
+// Basics is a strict, linear curriculum (not tiered like Openings/Tactics),
+// so its list reuses the top-level Learn page's plain numbered-card
+// treatment rather than the Start-Here/Learn-Next/Learn-Later grouping.
+.page {
+  composes: page from '../Learn.module.scss';
+}
+
+.hero {
+  composes: hero from '../Learn.module.scss';
+  text-align: left;
+}
+
+.breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(31, 27, 58, 0.5);
+  text-decoration: none;
+  margin-bottom: clamp(0.9rem, 2vw, 1.2rem);
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--chess-purple);
+  }
+}
+
+.heading {
+  composes: heading from '../Learn.module.scss';
+}
+
+.subtext {
+  composes: subtext from '../Learn.module.scss';
+  margin-inline: 0;
+}
+
+.grid {
+  composes: grid from '../Learn.module.scss';
+}
+
+.card {
+  composes: categoryCard from '../Learn.module.scss';
+}
+
+.cardNumber {
+  composes: categoryNumber from '../Learn.module.scss';
+}
+
+.cardTitle {
+  composes: categoryTitle from '../Learn.module.scss';
+}
+
+.cardDesc {
+  composes: categoryDesc from '../Learn.module.scss';
+}
