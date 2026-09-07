@@ -183,6 +183,67 @@ export interface FlatLedgerEntry {
   updated_at: string
 }
 
+export type PaymentMethod = 'cash' | 'upi' | 'bank_transfer' | 'cheque' | 'other'
+export type PaymentStatus = 'unpaid' | 'partial' | 'paid'
+
+/** One actual payment received from a flat against a specific maintenance period — see the schema comment. */
+export interface Payment {
+  id: string
+  apartment_id: string
+  maintenance_month_id: string
+  flat_id: string
+  amount: number
+  payment_date: string
+  method: PaymentMethod
+  reference_note: string | null
+  recorded_by: string
+  created_at: string
+}
+
+export type PendingItemStatus = 'pending' | 'resolved'
+
+/** A work item or cost identified but not yet folded into any published maintenance line item. */
+export interface PendingItem {
+  id: string
+  apartment_id: string
+  description: string
+  amount: number
+  reason: string | null
+  status: PendingItemStatus
+  raised_at: string
+  resolved_at: string | null
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+
+export interface InventoryItem {
+  id: string
+  apartment_id: string
+  item_name: string
+  quantity: number
+  unit: string | null
+  location: string | null
+  notes: string | null
+  purchased_on: string | null
+  value: number | null
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+
+export interface ServiceProvider {
+  id: string
+  apartment_id: string
+  name: string
+  phone: string
+  service_type: string
+  notes: string | null
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+
 /** Computed at read time — never stored (except the ledger amounts folded into it, which ARE stored, per flat per period). See lib/living/billing.ts. */
 export interface Bill {
   flat_id: string
@@ -196,11 +257,18 @@ export interface Bill {
   water_supply_share: number
   /** water_metered_charge + water_supply_share. */
   water_charge: number
+  /** maintenance_share + water_charge — this period's own charge, before late fee/previous due/advance adjustments. */
+  current_period_total: number
   advance_payment: number
   late_fee: number
   previous_due: number
   /** maintenance_share + water_charge + late_fee + previous_due - advance_payment, rounded to 2 decimals. */
   total_due: number
+  /** Sum of living_payments recorded against this flat for the current period. */
+  amount_paid: number
+  /** total_due - amount_paid — what's still left to collect for this period (can go negative if overpaid). */
+  balance_remaining: number
+  payment_status: PaymentStatus
   water_is_fallback: boolean
   water_fallback_reason: string | null
 }

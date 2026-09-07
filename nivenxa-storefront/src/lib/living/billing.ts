@@ -1,4 +1,4 @@
-import type { EscalationCadence, Flat, MaintenanceLineItem, SlabConfig, SplitMode, TankerRates, WaterSupplyCost } from './types'
+import type { EscalationCadence, Flat, MaintenanceLineItem, PaymentStatus, SlabConfig, SplitMode, TankerRates, WaterSupplyCost } from './types'
 
 /**
  * Pure, no I/O — matches the worked examples in the published spec exactly
@@ -12,6 +12,13 @@ import type { EscalationCadence, Flat, MaintenanceLineItem, SlabConfig, SplitMod
 /** Rounds to 2 decimal places — for a final display/stored amount, never an intermediate step (see note above). */
 export function round2(amount: number): number {
   return Math.round((amount + Number.EPSILON) * 100) / 100
+}
+
+/** Nothing owed (e.g. a fully-credited flat) → paid; nothing paid → unpaid; covers the due (or overpays it) → paid; anything in between → partial. */
+export function paymentStatus(totalDue: number, amountPaid: number): PaymentStatus {
+  if (totalDue <= 0) return 'paid'
+  if (amountPaid <= 0) return 'unpaid'
+  return amountPaid >= totalDue ? 'paid' : 'partial'
 }
 
 /**

@@ -1,0 +1,63 @@
+.effectiveField {
+  max-width: 18rem;
+  margin-bottom: 1.5rem;
+}
+
+.subheading {
+  font-family: var(--font-living-serif), Georgia, serif;
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: var(--living-ink);
+  margin: 0 0 1rem;
+}
+
+// Small/Large/Extra-large side by side, each a fixed compact width instead
+// of stretching a ₹800 rate across the full card — reduces page height and
+// puts the sizes right next to each other for comparison.
+.rateGrid {
+  display: flex;
+  gap: 1.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.rateField {
+  width: 11rem;
+}
+
+.rateLabel {
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.rateName {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--living-ink);
+}
+
+.rateCapacity {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--living-ink-soft);
+  margin-top: 0.1rem;
+}
+
+.amountWrap {
+  position: relative;
+}
+
+.currencySign {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--living-ink-soft);
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+
+.amountWrap input {
+  padding-left: 1.65rem;
+}

@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { requireMembership } from '@/lib/living/auth'
 import { formatCurrency, formatPeriodLabel, monthKeyFor } from '@/lib/living/format'
 import { maintenanceGrandTotal, splitMaintenance } from '@/lib/living/billing'
-import { getBillableFlats, getCommonWaterCharge, getCurrentMaintenancePeriod, getFlatLedger, getFlats } from '@/lib/living/queries'
+import { getBillableFlats, getCommonWaterCharge, getCurrentMaintenancePeriod, getFlatLedger, getFlats, getPreviousDueSuggestion } from '@/lib/living/queries'
 import type { MaintenanceLineItem } from '@/lib/living/types'
 import theme from '../../LivingTheme.module.scss'
 import homeStyles from '../Home.module.scss'
@@ -53,6 +53,11 @@ function syncCommonWaterAmount(lineItems: MaintenanceLineItem[], commonWaterChar
  * period ended. Becomes "the current period" immediately (getCurrentMaintenancePeriod
  * is just "most recently started"); the old one stays in the database, just
  * no longer the one shown/edited by default.
+ *
+ * Also seeds each billable flat's new previous_due from what was left unpaid
+ * on the period being superseded (getPreviousDueSuggestion) — a one-time
+ * carry-forward, not a live sync; the Admin can edit it afterward like any
+ * other ledger field.
  */
 async function startPeriodAction(formData: FormData) {
   'use server'
@@ -62,14 +67,35 @@ async function startPeriodAction(formData: FormData) {
   if (!periodStart || !periodEnd) redirect('/living/app/maintenance?error=' + encodeURIComponent('Pick both a start and end date.'))
   if (periodEnd < periodStart) redirect('/living/app/maintenance?error=' + encodeURIComponent('End date must be on or after the start date.'))
 
-  const { error } = await supabase.from('living_maintenance_months').insert({
-    apartment_id: apartment.id,
-    month: periodStart,
-    period_end: periodEnd,
-    line_items: TEMPLATE_DESCRIPTIONS.map((description) => ({ description, amount: 0, comment: '', category: '' })),
-    created_by: userId,
-  })
-  if (error) redirect('/living/app/maintenance?error=' + encodeURIComponent(error.message))
+  const priorPeriod = await getCurrentMaintenancePeriod(supabase, apartment.id)
+
+  const { data: inserted, error } = await supabase
+    .from('living_maintenance_months')
+    .insert({
+      apartment_id: apartment.id,
+      month: periodStart,
+      period_end: periodEnd,
+      line_items: TEMPLATE_DESCRIPTIONS.map((description) => ({ description, amount: 0, comment: '', category: '' })),
+      created_by: userId,
+    })
+    .select()
+    .single()
+  if (error || !inserted) redirect('/living/app/maintenance?error=' + encodeURIComponent(error?.message ?? 'Could not start the period.'))
+
+  if (priorPeriod) {
+    const flats = getBillableFlats(await getFlats(supabase, apartment.id))
+    for (const flat of flats) {
+      const previousDue = await getPreviousDueSuggestion(supabase, apartment, flat, priorPeriod)
+      if (previousDue > 0) {
+        await supabase
+          .from('living_flat_ledger')
+          .upsert(
+            { apartment_id: apartment.id, maintenance_month_id: inserted.id, flat_id: flat.id, previous_due: previousDue },
+            { onConflict: 'maintenance_month_id,flat_id' }
+          )
+      }
+    }
+  }
   redirect('/living/app/maintenance')
 }
 
@@ -193,8 +219,7 @@ async function publishAction() {
   redirect('/living/app/maintenance?notice=' + encodeURIComponent('Published — owners can now see their share.'))
 }
 
-export default async function LivingMaintenancePage({ searchParams }: { searchParams: Promise<{ notice?: string; error?: string }> }) {
-  const { notice, error } = await searchParams
+export default async function LivingMaintenancePage() {
   const { supabase, apartment } = await requireMembership(['admin', 'treasurer'])
   const thisMonth = monthKeyFor(new Date())
   const [maintenanceMonth, allFlats, commonWaterCharge] = await Promise.all([
@@ -224,8 +249,6 @@ export default async function LivingMaintenancePage({ searchParams }: { searchPa
       <h1 className={theme.heading} style={{ fontSize: '1.6rem', marginBottom: '0.3rem' }}>
         Maintenance{maintenanceMonth ? ` — ${formatPeriodLabel(maintenanceMonth.month, maintenanceMonth.period_end)}` : ''}
       </h1>
-      {notice && <div className={theme.alertInfo}>{notice}</div>}
-      {error && <div className={theme.alert}>{error}</div>}
       <p className={theme.muted} style={{ marginBottom: '1.5rem' }}>
         Water and tanker costs live on the <Link href="/living/app/water">Water</Link> page now — they&rsquo;re part of the water bill,
         not common maintenance.
@@ -350,6 +373,8 @@ export default async function LivingMaintenancePage({ searchParams }: { searchPa
             <h2 className={homeStyles.sectionTitle}>Advance, late fees &amp; due</h2>
             <p className={theme.muted} style={{ marginBottom: '1rem' }}>
               Per flat, for this billing period. Total due = maintenance + water + late fee + previous due − advance payment.
+              Previous due is auto-suggested from the prior period&rsquo;s unpaid balance when you start a new period (see{' '}
+              <Link href="/living/app/payments">Payments</Link>) — freely editable here either way.
             </p>
             <div className={theme.card}>
               <form action={saveLedgerAction}>

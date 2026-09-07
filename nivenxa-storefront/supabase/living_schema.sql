@@ -179,12 +179,12 @@ alter table living_maintenance_months alter column period_end set not null;
 create index if not exists living_maintenance_months_apartment_id_idx on living_maintenance_months (apartment_id, month);
 
 -- One row per flat per maintenance period — advance payment, late fee, and
--- the balance still outstanding from before this period, all Admin-entered
--- (there's no "amount actually paid" tracking anywhere yet, so previous_due
--- can't be computed with confidence — the Admin states what's still owed
--- from their own records, same as any of these three). Feeds directly into
--- computeBillForFlat()'s total_due: maintenance + water + late_fee +
--- previous_due - advance_payment.
+-- the balance still outstanding from before this period, all Admin-entered.
+-- previous_due is now auto-suggested (see startPeriodAction) from the prior
+-- period's own total_due minus living_payments recorded against it, but
+-- stays a plain editable column — the Admin can always override it. Feeds
+-- directly into computeBillForFlat()'s total_due: maintenance + water +
+-- late_fee + previous_due - advance_payment.
 create table if not exists living_flat_ledger (
   id uuid primary key default gen_random_uuid(),
   apartment_id uuid not null references living_apartments (id) on delete cascade,
@@ -209,6 +209,38 @@ create policy living_flat_ledger_write on living_flat_ledger for all
   with check (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'));
 
 alter table living_flat_ledger enable row level security;
+
+-- One row per actual payment received from a flat, against a specific
+-- maintenance period — a flat can have several in one period (partial
+-- payments over time). Sum of these against a period is that period's
+-- "amount paid"; computeBillForFlat() derives payment_status/balance_remaining
+-- from it, and starting a new period auto-suggests that new period's
+-- previous_due from what's left unpaid on the one before it.
+create table if not exists living_payments (
+  id uuid primary key default gen_random_uuid(),
+  apartment_id uuid not null references living_apartments (id) on delete cascade,
+  maintenance_month_id uuid not null references living_maintenance_months (id) on delete cascade,
+  flat_id uuid not null references living_flats (id) on delete cascade,
+  amount numeric not null check (amount > 0),
+  payment_date date not null default current_date,
+  method text not null default 'other' check (method in ('cash', 'upi', 'bank_transfer', 'cheque', 'other')),
+  reference_note text,
+  recorded_by uuid not null references auth.users (id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists living_payments_period_idx on living_payments (maintenance_month_id);
+create index if not exists living_payments_flat_idx on living_payments (flat_id, payment_date desc);
+
+drop policy if exists living_payments_select on living_payments;
+create policy living_payments_select on living_payments for select
+  using (apartment_id = living_my_apartment_id());
+drop policy if exists living_payments_write on living_payments;
+create policy living_payments_write on living_payments for all
+  using (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'))
+  with check (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'));
+
+alter table living_payments enable row level security;
 
 -- ─── Water ──────────────────────────────────────────────────────────────
 
@@ -685,6 +717,96 @@ create policy living_documents_insert on storage.objects for insert
     and (storage.foldername(name))[1] = living_my_apartment_id()::text
     and living_my_role() in ('admin', 'treasurer')
   );
+
+-- ─── Operational registers (Admin/Treasurer-only, not Owner-facing) ────────
+-- Pending works, inventory, and service providers — none of this affects
+-- billing math; it's the Admin/Treasurer's own operational record-keeping,
+-- so unlike living_flat_ledger/living_payments (which Owners can read their
+-- own numbers from), select here is admin/treasurer only, same as write.
+
+-- A work item or cost identified but not yet folded into any published
+-- maintenance line item — the `reason` free-text is deliberately open-ended
+-- ("waiting on quotes", "deferred to next cycle", "budget not approved yet")
+-- rather than a fixed enum, since the actual reasons vary too much to
+-- usefully constrain. Resolving one is a manual call, not automatic —
+-- there's no attempt to detect "this got added to maintenance," since a
+-- resolved item might also just get dropped entirely.
+create table if not exists living_pending_items (
+  id uuid primary key default gen_random_uuid(),
+  apartment_id uuid not null references living_apartments (id) on delete cascade,
+  description text not null,
+  amount numeric not null default 0,
+  reason text,
+  status text not null default 'pending' check (status in ('pending', 'resolved')),
+  raised_at date not null default current_date,
+  resolved_at timestamptz,
+  created_by uuid not null references auth.users (id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists living_pending_items_apartment_idx on living_pending_items (apartment_id, status);
+
+drop policy if exists living_pending_items_select on living_pending_items;
+create policy living_pending_items_select on living_pending_items for select
+  using (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'));
+drop policy if exists living_pending_items_write on living_pending_items;
+create policy living_pending_items_write on living_pending_items for all
+  using (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'))
+  with check (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'));
+
+alter table living_pending_items enable row level security;
+
+create table if not exists living_inventory_items (
+  id uuid primary key default gen_random_uuid(),
+  apartment_id uuid not null references living_apartments (id) on delete cascade,
+  item_name text not null,
+  quantity numeric not null default 1,
+  unit text,
+  location text,
+  notes text,
+  purchased_on date,
+  value numeric,
+  created_by uuid not null references auth.users (id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists living_inventory_items_apartment_idx on living_inventory_items (apartment_id);
+
+drop policy if exists living_inventory_items_select on living_inventory_items;
+create policy living_inventory_items_select on living_inventory_items for select
+  using (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'));
+drop policy if exists living_inventory_items_write on living_inventory_items;
+create policy living_inventory_items_write on living_inventory_items for all
+  using (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'))
+  with check (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'));
+
+alter table living_inventory_items enable row level security;
+
+create table if not exists living_service_providers (
+  id uuid primary key default gen_random_uuid(),
+  apartment_id uuid not null references living_apartments (id) on delete cascade,
+  name text not null,
+  phone text not null,
+  service_type text not null,
+  notes text,
+  created_by uuid not null references auth.users (id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists living_service_providers_apartment_idx on living_service_providers (apartment_id);
+
+drop policy if exists living_service_providers_select on living_service_providers;
+create policy living_service_providers_select on living_service_providers for select
+  using (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'));
+drop policy if exists living_service_providers_write on living_service_providers;
+create policy living_service_providers_write on living_service_providers for all
+  using (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'))
+  with check (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'));
+
+alter table living_service_providers enable row level security;
 
 drop policy if exists living_documents_delete on storage.objects;
 create policy living_documents_delete on storage.objects for delete

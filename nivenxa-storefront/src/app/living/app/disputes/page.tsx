@@ -17,8 +17,7 @@ async function resolveAction(formData: FormData) {
   redirect('/living/app/disputes?notice=' + encodeURIComponent('Updated.'))
 }
 
-export default async function LivingDisputesPage({ searchParams }: { searchParams: Promise<{ notice?: string; error?: string }> }) {
-  const { notice, error } = await searchParams
+export default async function LivingDisputesPage() {
   const { supabase, apartment } = await requireMembership(['admin', 'treasurer'])
   const disputes = await getOpenDisputes(supabase, apartment.id)
 
@@ -27,8 +26,6 @@ export default async function LivingDisputesPage({ searchParams }: { searchParam
       <h1 className={theme.heading} style={{ fontSize: '1.6rem', marginBottom: '1.5rem' }}>
         Disputes queue
       </h1>
-      {notice && <div className={theme.alertInfo}>{notice}</div>}
-      {error && <div className={theme.alert}>{error}</div>}
 
       {disputes.length === 0 ? (
         <div className={theme.card}>

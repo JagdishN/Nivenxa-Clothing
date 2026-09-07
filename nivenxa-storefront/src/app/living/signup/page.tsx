@@ -35,8 +35,8 @@ async function joinApartment(formData: FormData) {
   )
 }
 
-export default async function LivingSignupPage({ searchParams }: { searchParams: Promise<{ tab?: string; error?: string }> }) {
-  const { tab, error } = await searchParams
+export default async function LivingSignupPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const { tab } = await searchParams
 
   const supabase = await createLivingServerClient()
   const {
@@ -64,8 +64,6 @@ export default async function LivingSignupPage({ searchParams }: { searchParams:
     <div className={styles.shell}>
       <h1 className={styles.title}>Set up your account</h1>
       <p className={styles.subtitle}>You&rsquo;re verified — now create a new Apartment, or join one you already know the code for.</p>
-
-      {error && <div className={theme.alert}>{error}</div>}
 
       <div className={styles.tabRow}>
         <Link href="/living/signup?tab=create" className={activeTab === 'create' ? styles.tabActive : styles.tab}>

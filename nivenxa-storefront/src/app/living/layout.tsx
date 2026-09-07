@@ -1,5 +1,7 @@
+import { Suspense } from 'react'
 import { IBM_Plex_Mono, IBM_Plex_Sans, Source_Serif_4 } from 'next/font/google'
 import type { Metadata } from 'next'
+import Toast from './Toast'
 import theme from './LivingTheme.module.scss'
 
 const sourceSerif = Source_Serif_4({ subsets: ['latin'], weight: ['600', '700'], variable: '--font-living-serif', display: 'swap' })
@@ -21,6 +23,9 @@ export const metadata: Metadata = {
 export default function LivingLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className={`${theme.theme} ${sourceSerif.variable} ${plexSans.variable} ${plexMono.variable}`}>
+      <Suspense fallback={null}>
+        <Toast />
+      </Suspense>
       {children}
     </div>
   )

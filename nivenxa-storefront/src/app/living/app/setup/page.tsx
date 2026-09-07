@@ -148,8 +148,7 @@ async function rejectClaimAction(formData: FormData) {
   redirect('/living/app/setup?notice=' + encodeURIComponent('Request declined.'))
 }
 
-export default async function LivingSetupPage({ searchParams }: { searchParams: Promise<{ notice?: string; error?: string }> }) {
-  const { notice, error } = await searchParams
+export default async function LivingSetupPage() {
   const { supabase, apartment } = await requireMembership(['admin'])
   const [flats, claims] = await Promise.all([getFlats(supabase, apartment.id), getPendingClaims(supabase, apartment.id)])
 
@@ -158,8 +157,6 @@ export default async function LivingSetupPage({ searchParams }: { searchParams: 
       <h1 className={theme.heading} style={{ fontSize: '1.6rem', marginBottom: '1.5rem' }}>
         Apartment setup
       </h1>
-      {notice && <div className={theme.alertInfo}>{notice}</div>}
-      {error && <div className={theme.alert}>{error}</div>}
 
       <div className={homeStyles.section}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>

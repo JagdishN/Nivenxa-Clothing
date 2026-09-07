@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation'
 import { requireMembership } from '@/lib/living/auth'
-import { formatCurrency, formatMonthLabel, formatPeriodLabel, monthKeyFor } from '@/lib/living/format'
+import { formatCurrency, formatMonthLabel, formatPaymentMethod, formatPaymentStatus, formatPeriodLabel, monthKeyFor } from '@/lib/living/format'
 import { riseStreak } from '@/lib/living/billing'
-import { computeBillForFlat, getEffectiveSlabConfig, getFlats, getReadingHistory } from '@/lib/living/queries'
+import { computeBillForFlat, getCurrentMaintenancePeriod, getEffectiveSlabConfig, getFlats, getPaymentsForFlat, getReadingHistory } from '@/lib/living/queries'
 import theme from '../../LivingTheme.module.scss'
 import homeStyles from '../Home.module.scss'
 
@@ -28,8 +28,7 @@ async function raiseDisputeAction(formData: FormData) {
   redirect('/living/app/bill?notice=' + encodeURIComponent('Flagged — the Admin/Treasurer will review it.'))
 }
 
-export default async function LivingBillPage({ searchParams }: { searchParams: Promise<{ notice?: string; error?: string }> }) {
-  const { notice, error } = await searchParams
+export default async function LivingBillPage() {
   const { supabase, membership, apartment } = await requireMembership(['owner'])
   const month = monthKeyFor(new Date())
 
@@ -45,11 +44,13 @@ export default async function LivingBillPage({ searchParams }: { searchParams: P
   const flat = flats.find((f) => f.id === membership.flat_id)
   if (!flat) redirect('/living/app')
 
-  const [bill, history, slab] = await Promise.all([
+  const [bill, history, slab, currentPeriod] = await Promise.all([
     computeBillForFlat(supabase, apartment, flat, month),
     getReadingHistory(supabase, flat.id, 6),
     getEffectiveSlabConfig(supabase, apartment.id, month),
+    getCurrentMaintenancePeriod(supabase, apartment.id),
   ])
+  const payments = currentPeriod ? await getPaymentsForFlat(supabase, currentPeriod.id, flat.id) : []
 
   const streak = slab
     ? riseStreak(
@@ -65,8 +66,6 @@ export default async function LivingBillPage({ searchParams }: { searchParams: P
       <h1 className={theme.heading} style={{ fontSize: '1.6rem', marginBottom: '0.3rem' }}>
         Flat {flat.flat_no} — {formatMonthLabel(month)}
       </h1>
-      {notice && <div className={theme.alertInfo}>{notice}</div>}
-      {error && <div className={theme.alert}>{error}</div>}
 
       <div className={theme.card} style={{ marginBottom: '1.5rem' }}>
         <div className={homeStyles.billSummary}>
@@ -88,6 +87,10 @@ export default async function LivingBillPage({ searchParams }: { searchParams: P
           <div className={homeStyles.billLine}>
             <span>Water supply share (tankers/Majeera)</span>
             <span className={theme.num}>{formatCurrency(bill.water_supply_share)}</span>
+          </div>
+          <div className={homeStyles.billLine} style={{ fontWeight: 600 }}>
+            <span>Current Cycle Total</span>
+            <span className={theme.num}>{formatCurrency(bill.current_period_total)}</span>
           </div>
           {bill.late_fee !== 0 && (
             <div className={homeStyles.billLine}>
@@ -111,6 +114,21 @@ export default async function LivingBillPage({ searchParams }: { searchParams: P
             <span>Total due</span>
             <span className={theme.num}>{formatCurrency(bill.total_due)}</span>
           </div>
+          {bill.amount_paid !== 0 && (
+            <div className={homeStyles.billLine}>
+              <span>Paid so far</span>
+              <span className={theme.num}>−{formatCurrency(bill.amount_paid)}</span>
+            </div>
+          )}
+          <div className={homeStyles.billLine}>
+            <span>
+              Balance{' '}
+              <span className={bill.payment_status === 'paid' ? theme.pillOk : bill.payment_status === 'partial' ? theme.pillBrass : theme.pillFlag}>
+                {formatPaymentStatus(bill.payment_status)}
+              </span>
+            </span>
+            <span className={theme.num}>{formatCurrency(bill.balance_remaining)}</span>
+          </div>
         </div>
         {bill.water_fallback_reason && (
           <p className={homeStyles.statSub} style={{ marginTop: '0.75rem' }}>
@@ -118,6 +136,34 @@ export default async function LivingBillPage({ searchParams }: { searchParams: P
           </p>
         )}
       </div>
+
+      {payments.length > 0 && (
+        <div className={homeStyles.section}>
+          <h2 className={homeStyles.sectionTitle}>Payments this period</h2>
+          <div className={theme.card}>
+            <div className={theme.tableScroll}>
+              <table className={theme.table}>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th className={theme.num}>Amount</th>
+                    <th>Method</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payments.map((p) => (
+                    <tr key={p.id}>
+                      <td>{new Date(p.payment_date).toLocaleDateString('en-IN')}</td>
+                      <td className={theme.num}>{formatCurrency(p.amount)}</td>
+                      <td>{formatPaymentMethod(p.method)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       {streak === 2 && (
         <div className={theme.alertInfo}>Your water usage has risen for 2 months in a row. Worth a note if it&rsquo;s expected, or a check for a leak.</div>

@@ -208,30 +208,116 @@
   font-size: 0.88rem;
 }
 
+// Compact underline tabs — no boxes/borders, just a 3px teal underline on
+// the active one, sitting on the row's own hairline baseline so the whole
+// bar reads as one connected unit right above the card below it.
 .tabRow {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1.25rem;
+  gap: 1.75rem;
+  border-bottom: 1px solid var(--living-rule);
+  margin-bottom: 1rem;
 }
 
 .tab {
-  flex: 1;
   font: inherit;
   font-weight: 600;
-  font-size: 0.85rem;
-  padding: 0.6rem;
-  border-radius: 6px;
-  border: 1px solid var(--living-rule);
-  background: var(--living-paper);
+  font-size: 0.88rem;
+  padding: 0 0 0.7rem;
+  margin-bottom: -1px;
+  border-bottom: 3px solid transparent;
+  background: none;
   color: var(--living-ink-soft);
   cursor: pointer;
-  text-align: center;
   text-decoration: none;
-  display: block;
+  white-space: nowrap;
+
+  &:hover {
+    color: var(--living-ink);
+  }
 }
 
 .tabActive {
   composes: tab;
+  color: var(--living-water);
+  border-bottom-color: var(--living-water);
+
+  &:hover {
+    color: var(--living-water);
+  }
+}
+
+// ─── Amount emphasis + scanability helpers (Bills-style tables) ──────────
+
+.dash {
+  color: var(--living-ink-faint);
+}
+
+.warnText {
+  color: var(--living-flag);
+  font-weight: 600;
+}
+
+.creditText {
+  color: var(--living-ok);
+  font-weight: 600;
+}
+
+.totalCol {
+  background: var(--living-water-soft);
+}
+
+.infoIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  border: 1px solid var(--living-ink-faint);
+  color: var(--living-ink-soft);
+  font-size: 0.62rem;
+  font-style: normal;
+  line-height: 1;
+  cursor: help;
+  margin-left: 0.35rem;
+  vertical-align: middle;
+}
+
+.filterBar {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.searchForm {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.searchInput {
+  composes: input;
+  width: 15rem;
+  max-width: 100%;
+}
+
+.filterChip {
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--living-rule);
+  background: var(--living-paper-raised);
+  color: var(--living-ink-soft);
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.filterChipActive {
+  composes: filterChip;
   border-color: var(--living-water);
   background: var(--living-water-soft);
   color: var(--living-water);

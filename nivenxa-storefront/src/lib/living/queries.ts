@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { brokenMeterCharge, maintenanceGrandTotal, riseStreak, round2, splitMaintenance, waterCharge, waterSupplyCostTotal } from './billing'
-import type { Apartment, Bill, Flat, FlatClaim, FlatLedgerEntry, MaintenanceMonth, SlabConfig, TankerRates, WaterReading, WaterSupplyCost } from './types'
+import { brokenMeterCharge, maintenanceGrandTotal, paymentStatus, riseStreak, round2, splitMaintenance, waterCharge, waterSupplyCostTotal } from './billing'
+import type { Apartment, Bill, Flat, FlatClaim, FlatLedgerEntry, MaintenanceMonth, Payment, SlabConfig, TankerRates, WaterReading, WaterSupplyCost } from './types'
 
 /** The slab config in force for a given month — the most recent one whose `effective_from` doesn't exceed it. */
 export async function getEffectiveSlabConfig(supabase: SupabaseClient, apartmentId: string, month: string): Promise<SlabConfig | null> {
@@ -192,19 +192,28 @@ export async function getMeteredWaterCharge(supabase: SupabaseClient, apartment:
  * not returned by calling this on the excluded/merged flat directly.
  *
  * `month` still keys the water/slab/tanker lookups (those stay calendar-month
- * based), but maintenance no longer does — it always reflects
- * getCurrentMaintenancePeriod(), whatever date range that period actually covers.
+ * based); `maintenanceMonth` is passed in explicitly rather than looked up so
+ * this can also be run against a PAST period (see getPreviousDueSuggestion) —
+ * computeBillForFlat() below is just this with getCurrentMaintenancePeriod().
  */
-export async function computeBillForFlat(supabase: SupabaseClient, apartment: Apartment, flat: Flat, month: string): Promise<Bill> {
-  const [maintenanceMonth, allFlats, own, supplyCost, tankerRates] = await Promise.all([
-    getCurrentMaintenancePeriod(supabase, apartment.id),
+async function computeBillAgainstPeriod(
+  supabase: SupabaseClient,
+  apartment: Apartment,
+  flat: Flat,
+  maintenanceMonth: MaintenanceMonth | null,
+  month: string
+): Promise<Bill> {
+  const [allFlats, own, supplyCost, tankerRates] = await Promise.all([
     getFlats(supabase, apartment.id),
     getMeteredWaterCharge(supabase, apartment, flat, month),
     getWaterSupplyCost(supabase, apartment.id, month),
     getEffectiveTankerRates(supabase, apartment.id, month),
   ])
   const billableFlats = getBillableFlats(allFlats)
-  const ledger = maintenanceMonth ? await getFlatLedger(supabase, maintenanceMonth.id, flat.id) : null
+  const [ledger, payments] = await Promise.all([
+    maintenanceMonth ? getFlatLedger(supabase, maintenanceMonth.id, flat.id) : Promise.resolve(null),
+    maintenanceMonth ? getPaymentsForFlat(supabase, maintenanceMonth.id, flat.id) : Promise.resolve([]),
+  ])
   const advancePayment = ledger?.advance_payment ?? 0
   const lateFee = ledger?.late_fee ?? 0
   const previousDue = ledger?.previous_due ?? 0
@@ -243,6 +252,8 @@ export async function computeBillForFlat(supabase: SupabaseClient, apartment: Ap
   }
 
   const waterChargeAmount = meteredCharge + supplyShare
+  const totalDue = round2(maintenanceShare + waterChargeAmount + lateFee + previousDue - advancePayment)
+  const amountPaid = round2(sumPayments(payments))
 
   return {
     flat_id: flat.id,
@@ -252,13 +263,35 @@ export async function computeBillForFlat(supabase: SupabaseClient, apartment: Ap
     water_metered_charge: round2(meteredCharge),
     water_supply_share: round2(supplyShare),
     water_charge: round2(waterChargeAmount),
+    current_period_total: round2(maintenanceShare + waterChargeAmount),
     advance_payment: round2(advancePayment),
     late_fee: round2(lateFee),
     previous_due: round2(previousDue),
-    total_due: round2(maintenanceShare + waterChargeAmount + lateFee + previousDue - advancePayment),
+    total_due: totalDue,
+    amount_paid: amountPaid,
+    balance_remaining: round2(totalDue - amountPaid),
+    payment_status: paymentStatus(totalDue, amountPaid),
     water_is_fallback: waterIsFallback,
     water_fallback_reason: waterFallbackReason,
   }
+}
+
+export async function computeBillForFlat(supabase: SupabaseClient, apartment: Apartment, flat: Flat, month: string): Promise<Bill> {
+  const maintenanceMonth = await getCurrentMaintenancePeriod(supabase, apartment.id)
+  return computeBillAgainstPeriod(supabase, apartment, flat, maintenanceMonth, month)
+}
+
+/**
+ * What a flat still owes from `priorPeriod` (its total_due there minus
+ * whatever living_payments were recorded against it), floored at 0 — an
+ * overpayment isn't auto-converted into an advance, that stays a manual
+ * Admin call. Used to auto-seed the NEW period's previous_due when the
+ * Admin starts one (see startPeriodAction), never re-applied afterward —
+ * once seeded it's a normal editable ledger field like any other.
+ */
+export async function getPreviousDueSuggestion(supabase: SupabaseClient, apartment: Apartment, flat: Flat, priorPeriod: MaintenanceMonth): Promise<number> {
+  const bill = await computeBillAgainstPeriod(supabase, apartment, flat, priorPeriod, priorPeriod.month)
+  return Math.max(0, round2(bill.total_due - bill.amount_paid))
 }
 
 /** A flat's advance/late-fee/previous-due entry for a specific maintenance period, or null if never set (all three then default to 0). */
@@ -270,6 +303,31 @@ export async function getFlatLedger(supabase: SupabaseClient, maintenanceMonthId
     .eq('flat_id', flatId)
     .maybeSingle<FlatLedgerEntry>()
   return data
+}
+
+/** Every payment recorded against one flat for a specific period, newest first. */
+export async function getPaymentsForFlat(supabase: SupabaseClient, maintenanceMonthId: string, flatId: string): Promise<Payment[]> {
+  const { data } = await supabase
+    .from('living_payments')
+    .select('*')
+    .eq('maintenance_month_id', maintenanceMonthId)
+    .eq('flat_id', flatId)
+    .order('payment_date', { ascending: false })
+  return data ?? []
+}
+
+/** Every payment recorded across all flats for a period, newest first — the Payments page's log and the Excel export's Payments sheet. */
+export async function getPaymentsForPeriod(supabase: SupabaseClient, maintenanceMonthId: string): Promise<Payment[]> {
+  const { data } = await supabase
+    .from('living_payments')
+    .select('*')
+    .eq('maintenance_month_id', maintenanceMonthId)
+    .order('payment_date', { ascending: false })
+  return data ?? []
+}
+
+export function sumPayments(payments: Payment[]): number {
+  return payments.reduce((sum, p) => sum + p.amount, 0)
 }
 
 /** Consecutive-rise streak for a flat, ending at its most recent reading — see billing.ts's riseStreak(). */

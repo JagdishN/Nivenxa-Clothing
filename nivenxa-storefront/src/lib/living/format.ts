@@ -1,7 +1,31 @@
+import type { PaymentMethod, PaymentStatus } from './types'
+
 const currencyFormatter = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 })
 
 export function formatCurrency(amount: number): string {
   return currencyFormatter.format(amount)
+}
+
+const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  cash: 'Cash',
+  upi: 'UPI',
+  bank_transfer: 'Bank transfer',
+  cheque: 'Cheque',
+  other: 'Other',
+}
+
+export function formatPaymentMethod(method: PaymentMethod): string {
+  return PAYMENT_METHOD_LABELS[method]
+}
+
+const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
+  paid: 'Paid',
+  partial: 'Partial',
+  unpaid: 'Unpaid',
+}
+
+export function formatPaymentStatus(status: PaymentStatus): string {
+  return PAYMENT_STATUS_LABELS[status]
 }
 
 export function formatMonthLabel(monthDateString: string): string {

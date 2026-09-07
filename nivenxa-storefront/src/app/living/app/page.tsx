@@ -5,8 +5,7 @@ import { computeBillForFlat, getFlats, getOpenDisputes, getPendingClaims, getRis
 import theme from '../LivingTheme.module.scss'
 import styles from './Home.module.scss'
 
-export default async function LivingAppHomePage({ searchParams }: { searchParams: Promise<{ notice?: string }> }) {
-  const { notice } = await searchParams
+export default async function LivingAppHomePage() {
   const { supabase, membership, apartment } = await requireMembership()
   const month = monthKeyFor(new Date())
 
@@ -16,7 +15,6 @@ export default async function LivingAppHomePage({ searchParams }: { searchParams
 
     return (
       <>
-        {notice && <div className={theme.alertInfo}>{notice}</div>}
         <h1 className={theme.heading} style={{ fontSize: '1.6rem', marginBottom: '0.3rem' }}>
           {apartment.name}
         </h1>
@@ -42,7 +40,6 @@ export default async function LivingAppHomePage({ searchParams }: { searchParams
 
   return (
     <>
-      {notice && <div className={theme.alertInfo}>{notice}</div>}
       <h1 className={theme.heading} style={{ fontSize: '1.6rem', marginBottom: '0.3rem' }}>
         {apartment.name}
       </h1>

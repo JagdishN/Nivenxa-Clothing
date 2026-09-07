@@ -38,8 +38,7 @@ async function saveSlabAction(formData: FormData) {
   redirect('/living/app/settings/slabs?notice=' + encodeURIComponent('Saved — applies from ' + formData.get('effective_from') + ' onward.'))
 }
 
-export default async function LivingSlabSettingsPage({ searchParams }: { searchParams: Promise<{ notice?: string; error?: string }> }) {
-  const { notice, error } = await searchParams
+export default async function LivingSlabSettingsPage() {
   const { supabase, apartment } = await requireMembership(['admin'])
   const month = monthKeyFor(new Date())
 
@@ -60,8 +59,6 @@ export default async function LivingSlabSettingsPage({ searchParams }: { searchP
       <h1 className={theme.heading} style={{ fontSize: '1.6rem', marginBottom: '1.5rem' }}>
         Slab rates &amp; escalation
       </h1>
-      {notice && <div className={theme.alertInfo}>{notice}</div>}
-      {error && <div className={theme.alert}>{error}</div>}
 
       <div className={theme.card} style={{ marginBottom: '1.5rem' }}>
         <form action={saveSlabAction}>

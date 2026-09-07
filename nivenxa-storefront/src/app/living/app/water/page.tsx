@@ -131,8 +131,7 @@ async function saveWaterSupplyCostAction(formData: FormData) {
   redirect('/living/app/water?notice=' + encodeURIComponent('Water supply costs saved.'))
 }
 
-export default async function LivingWaterPage({ searchParams }: { searchParams: Promise<{ notice?: string; error?: string }> }) {
-  const { notice, error } = await searchParams
+export default async function LivingWaterPage() {
   const { supabase, apartment } = await requireMembership(['admin'])
   const month = monthKeyFor(new Date())
   const [flats, supplyCost, tankerRates] = await Promise.all([
@@ -158,8 +157,6 @@ export default async function LivingWaterPage({ searchParams }: { searchParams: 
       <h1 className={theme.heading} style={{ fontSize: '1.6rem', marginBottom: '0.3rem' }}>
         Water readings — {formatMonthLabel(month)}
       </h1>
-      {notice && <div className={theme.alertInfo}>{notice}</div>}
-      {error && <div className={theme.alert}>{error}</div>}
 
       {flats.length > 0 && (
         <UploadReadingsForm

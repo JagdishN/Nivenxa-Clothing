@@ -42,8 +42,7 @@ async function deleteAction(formData: FormData) {
   redirect('/living/app/documents?notice=' + encodeURIComponent('Removed.'))
 }
 
-export default async function LivingDocumentsPage({ searchParams }: { searchParams: Promise<{ notice?: string; error?: string }> }) {
-  const { notice, error } = await searchParams
+export default async function LivingDocumentsPage() {
   const { supabase, membership, apartment } = await requireMembership()
   const canManage = membership.role === 'admin' || membership.role === 'treasurer'
 
@@ -65,8 +64,6 @@ export default async function LivingDocumentsPage({ searchParams }: { searchPara
       <h1 className={theme.heading} style={{ fontSize: '1.6rem', marginBottom: '1.5rem' }}>
         Bill &amp; payment documents
       </h1>
-      {notice && <div className={theme.alertInfo}>{notice}</div>}
-      {error && <div className={theme.alert}>{error}</div>}
 
       {canManage && (
         <div className={theme.card} style={{ marginBottom: '1.5rem' }}>

@@ -4,6 +4,7 @@ import { requireMembership } from '@/lib/living/auth'
 import { formatCurrency, formatMonthLabel, monthKeyFor } from '@/lib/living/format'
 import theme from '../../../LivingTheme.module.scss'
 import homeStyles from '../../Home.module.scss'
+import styles from './Tankers.module.scss'
 
 /** Fetches the row for `effectiveFrom` if one already exists, so a save from one tab never blanks the other tab's fields. */
 async function getExistingRate(supabase: Awaited<ReturnType<typeof requireMembership>>['supabase'], apartmentId: string, effectiveFrom: string) {
@@ -71,9 +72,9 @@ async function deleteRateAction(formData: FormData) {
 export default async function LivingTankerSettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; notice?: string; error?: string }>
+  searchParams: Promise<{ tab?: string }>
 }) {
-  const { tab, notice, error } = await searchParams
+  const { tab } = await searchParams
   const activeTab = tab === 'govt' ? 'govt' : tab === 'history' ? 'history' : 'private'
   const { supabase, apartment } = await requireMembership(['admin'])
   const month = monthKeyFor(new Date())
@@ -95,8 +96,6 @@ export default async function LivingTankerSettingsPage({
         Configured once here — the Water page just asks how many of each, and multiplies automatically. Majeera has no rate; its
         amount is entered directly each month on the Water page.
       </p>
-      {notice && <div className={theme.alertInfo}>{notice}</div>}
-      {error && <div className={theme.alert}>{error}</div>}
 
       <div className={theme.tabRow}>
         <Link href="/living/app/settings/tankers?tab=private" className={activeTab === 'private' ? theme.tabActive : theme.tab}>
@@ -106,14 +105,14 @@ export default async function LivingTankerSettingsPage({
           Government Tankers
         </Link>
         <Link href="/living/app/settings/tankers?tab=history" className={activeTab === 'history' ? theme.tabActive : theme.tab}>
-          History
+          Rate History
         </Link>
       </div>
 
       {activeTab === 'private' && (
         <div className={theme.card}>
           <form action={savePrivateRatesAction}>
-            <div className={theme.field}>
+            <div className={styles.effectiveField}>
               <label className={theme.label} htmlFor="effective_from">
                 Effective from
               </label>
@@ -122,48 +121,65 @@ export default async function LivingTankerSettingsPage({
                 Past bills are never rewritten by this change.
               </p>
             </div>
-            <div className={theme.field}>
-              <label className={theme.label} htmlFor="rate_small_5000l">
-                Small (5,000L)
-              </label>
-              <input
-                id="rate_small_5000l"
-                name="rate_small_5000l"
-                type="number"
-                step="0.01"
-                className={theme.input}
-                defaultValue={latest?.rate_small_5000l ?? 0}
-                required
-              />
+
+            <h2 className={styles.subheading}>Private tanker rates</h2>
+            <div className={styles.rateGrid}>
+              <div className={styles.rateField}>
+                <label className={styles.rateLabel} htmlFor="rate_small_5000l">
+                  <span className={styles.rateName}>Small</span>
+                  <span className={styles.rateCapacity}>5,000 L</span>
+                </label>
+                <div className={styles.amountWrap}>
+                  <span className={styles.currencySign}>₹</span>
+                  <input
+                    id="rate_small_5000l"
+                    name="rate_small_5000l"
+                    type="number"
+                    step="0.01"
+                    className={theme.input}
+                    defaultValue={latest?.rate_small_5000l ?? 0}
+                    required
+                  />
+                </div>
+              </div>
+              <div className={styles.rateField}>
+                <label className={styles.rateLabel} htmlFor="rate_large_10000l">
+                  <span className={styles.rateName}>Large</span>
+                  <span className={styles.rateCapacity}>10,000 L</span>
+                </label>
+                <div className={styles.amountWrap}>
+                  <span className={styles.currencySign}>₹</span>
+                  <input
+                    id="rate_large_10000l"
+                    name="rate_large_10000l"
+                    type="number"
+                    step="0.01"
+                    className={theme.input}
+                    defaultValue={latest?.rate_large_10000l ?? 0}
+                    required
+                  />
+                </div>
+              </div>
+              <div className={styles.rateField}>
+                <label className={styles.rateLabel} htmlFor="rate_xlarge_25000l">
+                  <span className={styles.rateName}>Extra Large</span>
+                  <span className={styles.rateCapacity}>25,000 L</span>
+                </label>
+                <div className={styles.amountWrap}>
+                  <span className={styles.currencySign}>₹</span>
+                  <input
+                    id="rate_xlarge_25000l"
+                    name="rate_xlarge_25000l"
+                    type="number"
+                    step="0.01"
+                    className={theme.input}
+                    defaultValue={latest?.rate_xlarge_25000l ?? 0}
+                    required
+                  />
+                </div>
+              </div>
             </div>
-            <div className={theme.field}>
-              <label className={theme.label} htmlFor="rate_large_10000l">
-                Large (10,000L)
-              </label>
-              <input
-                id="rate_large_10000l"
-                name="rate_large_10000l"
-                type="number"
-                step="0.01"
-                className={theme.input}
-                defaultValue={latest?.rate_large_10000l ?? 0}
-                required
-              />
-            </div>
-            <div className={theme.field}>
-              <label className={theme.label} htmlFor="rate_xlarge_25000l">
-                Extra-large (25,000L)
-              </label>
-              <input
-                id="rate_xlarge_25000l"
-                name="rate_xlarge_25000l"
-                type="number"
-                step="0.01"
-                className={theme.input}
-                defaultValue={latest?.rate_xlarge_25000l ?? 0}
-                required
-              />
-            </div>
+
             <button type="submit" className={theme.button}>
               Save
             </button>
@@ -174,7 +190,7 @@ export default async function LivingTankerSettingsPage({
       {activeTab === 'govt' && (
         <div className={theme.card}>
           <form action={saveGovtRatesAction}>
-            <div className={theme.field}>
+            <div className={styles.effectiveField}>
               <label className={theme.label} htmlFor="effective_from_govt">
                 Effective from
               </label>
@@ -183,34 +199,47 @@ export default async function LivingTankerSettingsPage({
                 Past bills are never rewritten by this change.
               </p>
             </div>
-            <div className={theme.field}>
-              <label className={theme.label} htmlFor="rate_govt_small_5000l">
-                Small (5,000L)
-              </label>
-              <input
-                id="rate_govt_small_5000l"
-                name="rate_govt_small_5000l"
-                type="number"
-                step="0.01"
-                className={theme.input}
-                defaultValue={latest?.rate_govt_small_5000l ?? 0}
-                required
-              />
+
+            <h2 className={styles.subheading}>Government tanker rates</h2>
+            <div className={styles.rateGrid}>
+              <div className={styles.rateField}>
+                <label className={styles.rateLabel} htmlFor="rate_govt_small_5000l">
+                  <span className={styles.rateName}>Small</span>
+                  <span className={styles.rateCapacity}>5,000 L</span>
+                </label>
+                <div className={styles.amountWrap}>
+                  <span className={styles.currencySign}>₹</span>
+                  <input
+                    id="rate_govt_small_5000l"
+                    name="rate_govt_small_5000l"
+                    type="number"
+                    step="0.01"
+                    className={theme.input}
+                    defaultValue={latest?.rate_govt_small_5000l ?? 0}
+                    required
+                  />
+                </div>
+              </div>
+              <div className={styles.rateField}>
+                <label className={styles.rateLabel} htmlFor="rate_govt_large_10000l">
+                  <span className={styles.rateName}>Large</span>
+                  <span className={styles.rateCapacity}>10,000 L</span>
+                </label>
+                <div className={styles.amountWrap}>
+                  <span className={styles.currencySign}>₹</span>
+                  <input
+                    id="rate_govt_large_10000l"
+                    name="rate_govt_large_10000l"
+                    type="number"
+                    step="0.01"
+                    className={theme.input}
+                    defaultValue={latest?.rate_govt_large_10000l ?? 0}
+                    required
+                  />
+                </div>
+              </div>
             </div>
-            <div className={theme.field}>
-              <label className={theme.label} htmlFor="rate_govt_large_10000l">
-                Large (10,000L)
-              </label>
-              <input
-                id="rate_govt_large_10000l"
-                name="rate_govt_large_10000l"
-                type="number"
-                step="0.01"
-                className={theme.input}
-                defaultValue={latest?.rate_govt_large_10000l ?? 0}
-                required
-              />
-            </div>
+
             <button type="submit" className={theme.button}>
               Save
             </button>
@@ -220,7 +249,7 @@ export default async function LivingTankerSettingsPage({
 
       {activeTab === 'history' && (
         <div className={theme.card}>
-          <h2 className={homeStyles.sectionTitle}>History — private &amp; government</h2>
+          <h2 className={homeStyles.sectionTitle}>Rate History — private &amp; government</h2>
           {rates && rates.length > 0 ? (
             <div className={theme.tableScroll}>
               <table className={theme.table}>
