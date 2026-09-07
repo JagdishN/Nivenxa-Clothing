@@ -1,0 +1,194 @@
+// Internal tool — kept plain and functional rather than on-brand, since
+// nothing here is customer-facing.
+
+.page {
+  min-height: 100vh;
+  background: #f5f5f7;
+  color: #1a1a1a;
+  padding: 2rem clamp(1rem, 4vw, 3rem) 4rem;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.heading {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.loginCard {
+  max-width: 360px;
+  margin: 4rem auto;
+  background: #fff;
+  border: 1px solid #e2e2e5;
+  border-radius: 10px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.loginForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.error {
+  color: #b3261e;
+  background: rgba(179, 38, 30, 0.08);
+  border: 1px solid rgba(179, 38, 30, 0.24);
+  border-radius: 6px;
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+}
+
+.section {
+  background: #fff;
+  border: 1px solid #e2e2e5;
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.sectionTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.form {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  align-items: end;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #444;
+}
+
+.checkboxField {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #444;
+}
+
+.input {
+  font: inherit;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid #d4d4d8;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.primaryBtn {
+  font: inherit;
+  font-weight: 700;
+  padding: 0.6rem 1.1rem;
+  border-radius: 6px;
+  border: none;
+  background: #1a1a1a;
+  color: #fff;
+  cursor: pointer;
+
+  &:hover {
+    background: #333;
+  }
+}
+
+.secondaryBtn {
+  font: inherit;
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  border: 1px solid #d4d4d8;
+  background: #fff;
+  cursor: pointer;
+
+  &:hover {
+    background: #f0f0f2;
+  }
+}
+
+.tableShell {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+
+  th,
+  td {
+    text-align: left;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid #ececef;
+    white-space: nowrap;
+  }
+
+  th {
+    font-weight: 700;
+    color: #555;
+  }
+}
+
+.verifiedYes {
+  color: #1a7d3a;
+  font-weight: 700;
+}
+
+.verifiedNo {
+  color: #8a8a92;
+}
+
+.toggleBtn {
+  font: inherit;
+  font-size: 0.78rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid #d4d4d8;
+  background: #fff;
+  cursor: pointer;
+
+  &:hover {
+    background: #f0f0f2;
+  }
+}
+
+.emptyRow {
+  text-align: center;
+  color: #8a8a92;
+  padding: 1.5rem;
+}
+
+.qrPreview {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  border: 1px solid #d4d4d8;
+  border-radius: 6px;
+  background: #fff;
+  padding: 4px;
+  margin-bottom: 0.4rem;
+}
+
+.mutedNote {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: #8a8a92;
+  margin-bottom: 0.4rem;
+}

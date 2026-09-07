@@ -117,6 +117,13 @@ export interface ChessTournament {
   organizer: {
     name: string
     verified: boolean
+    /** International format, e.g. "+91XXXXXXXXXX" — powers the wa.me Register fallback. */
+    whatsapp?: string
+  }
+  /** Organizer's own payment QR, shown purely informationally — Nivenxa never processes this payment. */
+  payment?: {
+    qrUrl: string
+    note?: string
   }
   trust: {
     score: number

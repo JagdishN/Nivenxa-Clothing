@@ -8,6 +8,7 @@ const LINKS = [
   { href: '/chess/play', label: 'Play' },
   { href: '/chess/learn', label: 'Learn' },
   { href: '/chess/puzzles', label: 'Puzzles' },
+  { href: '/chess/tournaments', label: 'Tournaments' },
 ]
 
 export default function ChessNav() {

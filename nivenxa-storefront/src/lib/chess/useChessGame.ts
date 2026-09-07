@@ -40,9 +40,9 @@ export interface UseChessGameResult extends ChessGameState {
   undo: (count?: number) => void
 }
 
-/** Wraps a chess.js instance, exposing React-reactive game state. */
-export function useChessGame(): UseChessGameResult {
-  const [chess] = useState(() => new Chess())
+/** Wraps a chess.js instance, exposing React-reactive game state. `initialFen` defaults to the standard starting position. */
+export function useChessGame(initialFen?: string): UseChessGameResult {
+  const [chess] = useState(() => new Chess(initialFen))
   const [state, setState] = useState<ChessGameState>(() => computeState(chess))
   const [dests, setDests] = useState<Map<Key, Key[]>>(() => computeDests(chess))
 
@@ -72,9 +72,10 @@ export function useChessGame(): UseChessGameResult {
   )
 
   const reset = useCallback(() => {
-    chess.reset()
+    if (initialFen) chess.load(initialFen)
+    else chess.reset()
     sync()
-  }, [chess, sync])
+  }, [chess, sync, initialFen])
 
   const undo = useCallback(
     (count = 1) => {

@@ -16,6 +16,23 @@
   text-align: center;
 }
 
+.breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(31, 27, 58, 0.5);
+  text-decoration: none;
+  margin-bottom: 0.9rem;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--chess-purple);
+  }
+}
+
 .eyebrow {
   font-family: var(--font-sans);
   font-size: clamp(0.6rem, 1vw, 0.7rem);
@@ -57,7 +74,7 @@
   margin-inline: auto;
 }
 
-// ─── Puzzle set placeholder grid ────────────────────────────────────────────
+// ─── Puzzle theme grid ───────────────────────────────────────────────────────
 .grid {
   position: relative;
   z-index: 1;
@@ -78,13 +95,36 @@
   gap: 0.5rem;
   padding: 1.5rem;
   text-align: center;
-  border: 2px dashed rgba(91, 46, 145, 0.3);
+  text-decoration: none;
+  border: 1px solid rgba(91, 46, 145, 0.22);
   border-radius: 1.25rem;
   background: linear-gradient(135deg, rgba(233, 215, 247, 0.4), rgba(244, 238, 250, 0.75));
   box-shadow: 0 10px 40px rgba(91, 46, 145, 0.06);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 50px rgba(91, 46, 145, 0.14);
+    border-color: rgba(91, 46, 145, 0.4);
+  }
 }
 
 .tileTier {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  font-weight: 400;
+  color: var(--chess-deep);
+}
+
+.tileCount {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--chess-purple);
+}
+
+.tileRange {
   font-family: var(--font-sans);
   font-size: 0.72rem;
   font-weight: 800;
@@ -93,10 +133,13 @@
   color: var(--chess-gold);
 }
 
-.tileLabel {
+.emptyState {
+  position: relative;
+  z-index: 1;
+  max-width: 640px;
+  margin: 0 auto clamp(4rem, 7vw, 6rem);
+  padding: 2rem;
+  text-align: center;
+  color: rgba(31, 27, 58, 0.6);
   font-family: var(--font-sans);
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--chess-purple);
 }

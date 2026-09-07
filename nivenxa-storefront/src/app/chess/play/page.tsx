@@ -14,6 +14,7 @@ import {
   type SkillTier,
 } from '@/lib/chess/skillTiers'
 import { resolveDrawDecision } from '@/lib/chess/drawDecision'
+import { PERSONAS, getPersona } from '@/lib/chess/personas'
 import { TIME_CONTROLS, TIME_CONTROL_MODE_LIST, type TimeControlMode, type TimeControlPreset } from '@/lib/chess/timeControls'
 import { accuracyFromEntries } from '@/lib/chess/moveClassification'
 import type { ColorChoice, MoveAnalysisEntry, MoveClassification, QualityMoveEntry } from '@/lib/chess/types'
@@ -196,7 +197,7 @@ export default function ChessPlayPage() {
     reset,
     undo,
   } = useChessGame()
-  const { ready, error, setSkillLevel, getBestMove } = useStockfish()
+  const { ready, error, setSkillLevel, setContempt, getMove } = useStockfish()
   // Dedicated instance for draw-offer evaluation — kept separate from the
   // gameplay engine and the analysis engine in useMoveAnalysis so it never
   // overlaps an in-flight `go` command on a shared Worker (same reasoning
@@ -212,6 +213,9 @@ export default function ChessPlayPage() {
   const [draftMode, setDraftMode] = useState<TimeControlMode>('classical')
   const [draftPresetIndex, setDraftPresetIndex] = useState(0)
   const [draftStrength, setDraftStrength] = useState(() => defaultStrengthFor('beginner'))
+  // Persona picker — Expert/Master only (see the setup screen JSX below).
+  // `null` means "no persona": plain best-move Stockfish, same as before.
+  const [draftPersonaSlug, setDraftPersonaSlug] = useState<string | null>(null)
 
   // The config actually driving the game in progress.
   const [activeTierId, setActiveTierId] = useState<SkillTier>('beginner')
@@ -219,6 +223,7 @@ export default function ChessPlayPage() {
   const [activeMode, setActiveMode] = useState<TimeControlMode | null>(null)
   const [activePreset, setActivePreset] = useState<TimeControlPreset | null>(null)
   const [activeStrength, setActiveStrength] = useState(() => defaultStrengthFor('beginner'))
+  const [activePersonaSlug, setActivePersonaSlug] = useState<string | null>(null)
   const [humanColor, setHumanColor] = useState<'w' | 'b'>('w')
 
   const [skillSet, setSkillSet] = useState(false)
@@ -262,6 +267,7 @@ export default function ChessPlayPage() {
   const [showResultOverlay, setShowResultOverlay] = useState(false)
 
   const tierConfig = SKILL_TIERS[activeTierId]
+  const activePersona = getPersona(activePersonaSlug)
   const explanationMode = resolveExplanationMode(activeTierId, activeMode)
 
   const {
@@ -296,16 +302,27 @@ export default function ChessPlayPage() {
     }
   }, [])
 
-  const beginGame = (tier: SkillTier, color: ColorChoice, mode: TimeControlMode, presetIndex: number, strength: number) => {
+  const beginGame = (
+    tier: SkillTier,
+    color: ColorChoice,
+    mode: TimeControlMode,
+    presetIndex: number,
+    strength: number,
+    personaSlug: string | null
+  ) => {
     const resolved = resolveColor(color)
     const resolvedMode = tier === 'beginner' ? null : mode
     const resolvedPreset = resolvedMode ? TIME_CONTROLS[resolvedMode].presets[presetIndex] ?? TIME_CONTROLS[resolvedMode].presets[0] : null
+    // Personas only exist at Expert/Master — belt-and-suspenders in case a
+    // stale draft slug somehow survives a tier change.
+    const resolvedPersonaSlug = tier === 'expert' || tier === 'master' ? personaSlug : null
 
     setActiveTierId(tier)
     setActiveColorChoice(color)
     setActiveMode(resolvedMode)
     setActivePreset(resolvedPreset)
     setActiveStrength(clampStrength(tier, strength))
+    setActivePersonaSlug(resolvedPersonaSlug)
     setHumanColor(resolved)
     setOrientation(resolved === 'w' ? 'white' : 'black')
     setSkillSet(false)
@@ -333,7 +350,7 @@ export default function ChessPlayPage() {
       presetIndex: draftPresetIndex,
       strength: draftStrength,
     })
-    beginGame(draftTier, draftColor, draftMode, draftPresetIndex, draftStrength)
+    beginGame(draftTier, draftColor, draftMode, draftPresetIndex, draftStrength, draftPersonaSlug)
   }
 
   const handleNewGame = () => {
@@ -341,6 +358,7 @@ export default function ChessPlayPage() {
     setDraftTier(activeTierId)
     setDraftColor(activeColorChoice)
     setDraftStrength(activeStrength)
+    setDraftPersonaSlug(activePersonaSlug)
     if (activeMode && activePreset) {
       setDraftMode(activeMode)
       setDraftPresetIndex(TIME_CONTROLS[activeMode].presets.indexOf(activePreset))
@@ -358,12 +376,15 @@ export default function ChessPlayPage() {
   const handlePlayAgain = () => {
     const mode = activeMode ?? 'classical'
     const presetIndex = activeMode && activePreset ? TIME_CONTROLS[activeMode].presets.indexOf(activePreset) : 0
-    beginGame(activeTierId, activeColorChoice, mode, presetIndex, activeStrength)
+    beginGame(activeTierId, activeColorChoice, mode, presetIndex, activeStrength, activePersonaSlug)
   }
 
   const handleDraftTierChange = (tier: SkillTier) => {
     setDraftTier(tier)
     setDraftStrength(defaultStrengthFor(tier))
+    // Personas are Expert/Master-only — dropping to Beginner/Intermediate
+    // clears any picked persona rather than silently carrying it forward.
+    if (tier !== 'expert' && tier !== 'master') setDraftPersonaSlug(null)
   }
 
   const handleUndo = () => {
@@ -449,13 +470,16 @@ export default function ChessPlayPage() {
     })
   }
 
-  // Apply the chosen tier's engine strength once the engine is ready.
+  // Apply the chosen tier's engine strength once the engine is ready — a
+  // persona's own skillLevel/contempt override the tier's strength slider
+  // while it's active (the tier still governs movetime/tone/draw behavior).
   useEffect(() => {
     if (ready && screen === 'playing' && !skillSet) {
-      setSkillLevel(skillForStrength(activeTierId, activeStrength))
+      setSkillLevel(activePersona ? activePersona.skillLevel : skillForStrength(activeTierId, activeStrength))
+      setContempt(activePersona ? activePersona.contempt : 0)
       setSkillSet(true)
     }
-  }, [ready, screen, skillSet, activeTierId, activeStrength, setSkillLevel])
+  }, [ready, screen, skillSet, activeTierId, activeStrength, activePersona, setSkillLevel, setContempt])
 
   // Whenever it becomes the engine's turn, let it respond — except in live
   // explanation contexts, where awaitingExplanationForPly (set below) holds
@@ -468,7 +492,7 @@ export default function ChessPlayPage() {
     let cancelled = false
     setEngineThinking(true)
 
-    getBestMove(fen, { movetime: tierConfig.movetime })
+    getMove(fen, { movetime: tierConfig.movetime, persona: activePersona })
       .then((uci) => {
         if (cancelled) return
         const { from, to, promotion } = parseUciMove(uci)
@@ -495,7 +519,8 @@ export default function ChessPlayPage() {
     isGameOver,
     endReason,
     awaitingExplanationForPly,
-    getBestMove,
+    getMove,
+    activePersona,
     makeMove,
     analyzeMove,
     tierConfig.movetime,
@@ -780,6 +805,34 @@ export default function ChessPlayPage() {
                 </>
               )}
 
+              {(draftTier === 'expert' || draftTier === 'master') && (
+                <>
+                  <p className={styles.setupSectionTitle}>Personality (optional)</p>
+                  <div className={styles.tierGrid}>
+                    <button
+                      type="button"
+                      className={`${styles.tierOption} ${draftPersonaSlug === null ? styles.tierOptionSelected : ''}`}
+                      onClick={() => setDraftPersonaSlug(null)}
+                    >
+                      <span className={styles.tierOptionLabel}>Plain</span>
+                      <span className={styles.tierOptionDesc}>Always the engine&rsquo;s single best move.</span>
+                    </button>
+                    {PERSONAS.map((p) => (
+                      <button
+                        key={p.slug}
+                        type="button"
+                        className={`${styles.tierOption} ${draftPersonaSlug === p.slug ? styles.tierOptionSelected : ''}`}
+                        onClick={() => setDraftPersonaSlug(p.slug)}
+                      >
+                        <span className={styles.tierOptionLabel}>{p.name}</span>
+                        <span className={styles.tierOptionDesc}>{p.description}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className={styles.setupHint}>A persona samples from Nivenxa&rsquo;s top candidate moves instead of always the single best one.</p>
+                </>
+              )}
+
               <p className={styles.setupSectionTitle}>Play as</p>
               <div className={styles.segmentedRow}>
                 {(['w', 'b', 'random'] as ColorChoice[]).map((c) => (
@@ -845,7 +898,8 @@ export default function ChessPlayPage() {
             <div className={styles.metaRow}>
               <span className={styles.metaText}>
                 {tierConfig.label}
-                {strengthSteps(activeTierId) > 1 ? ` · Strength ${activeStrength}/${strengthSteps(activeTierId)}` : ''}
+                {strengthSteps(activeTierId) > 1 && !activePersona ? ` · Strength ${activeStrength}/${strengthSteps(activeTierId)}` : ''}
+                {activePersona ? ` · ${activePersona.name}` : ''}
                 {activePreset ? ` · ${activePreset.label}` : ''}
               </span>
             </div>

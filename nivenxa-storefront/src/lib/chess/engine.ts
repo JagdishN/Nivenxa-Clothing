@@ -1,4 +1,6 @@
 import type { EngineMoveOptions, EngineTopMove, SkillLevel } from './types'
+import type { EngineProvider, EngineMoveConfig } from './engineProvider'
+import type { Persona, StyleWeight } from './personas'
 
 const WORKER_URL = '/stockfish/stockfish-18-lite-single.js'
 
@@ -8,11 +10,53 @@ function goCommand(options: EngineMoveOptions): string {
   return 'go movetime 1000'
 }
 
+// ─── Persona-driven move selection ──────────────────────────────────────────
+// The one place "personality" lives — tune the table below or pickWeightedIndex
+// to change how personas feel without touching anything else.
+
+/**
+ * Relative weights for picking among the top N candidate moves (index 0 =
+ * the engine's actual best move), by styleWeight. Extra table entries
+ * beyond a persona's multiPvCandidates just go unused — personas realistically
+ * stay in the 1-3 candidate range, so this doesn't need to scale further.
+ */
+const STYLE_WEIGHT_TABLES: Record<StyleWeight, number[]> = {
+  safe: [0.94, 0.05, 0.01],
+  balanced: [0.6, 0.28, 0.12],
+  aggressive: [0.45, 0.32, 0.23],
+}
+
+function pickWeightedIndex(candidateCount: number, styleWeight: StyleWeight): number {
+  const weights = STYLE_WEIGHT_TABLES[styleWeight].slice(0, candidateCount)
+  const total = weights.reduce((sum, w) => sum + w, 0)
+  let roll = Math.random() * total
+  for (let i = 0; i < weights.length; i++) {
+    roll -= weights[i]
+    if (roll <= 0) return i
+  }
+  return 0 // floating-point fallback — always the top move
+}
+
+/**
+ * Persona-aware move choice: pulls the persona's configured number of top
+ * candidates via MultiPV, then picks among them weighted by styleWeight
+ * instead of always taking index 0 (see pickWeightedIndex above). Falls
+ * back naturally to the single best move whenever multiPvCandidates is 1,
+ * or whenever the engine returns fewer candidates than requested (e.g. very
+ * few legal moves left on the board).
+ */
+async function selectPersonaMove(engine: StockfishEngine, fen: string, persona: Persona, options: EngineMoveOptions): Promise<string> {
+  const candidates = await engine.getTopMoves(fen, persona.multiPvCandidates, options)
+  if (candidates.length === 0) throw new Error('Stockfish returned no legal move for this position')
+  const index = pickWeightedIndex(candidates.length, persona.styleWeight)
+  return candidates[index].move
+}
+
 /**
  * Thin wrapper around the Stockfish WASM Web Worker, speaking the UCI text
  * protocol. One instance = one worker; not shared across components.
  */
-export class StockfishEngine {
+export class StockfishEngine implements EngineProvider {
   private worker: Worker | null = null
   private readyPromise: Promise<void> | null = null
   private ready = false
@@ -69,6 +113,24 @@ export class StockfishEngine {
     const worker = this.assertReady()
     const clamped = Math.max(0, Math.min(20, Math.round(level)))
     worker.postMessage(`setoption name Skill Level value ${clamped}`)
+  }
+
+  /** See the Persona.contempt doc comment in personas.ts — best-effort, harmless if the build doesn't support it. */
+  setContempt(value: number): void {
+    const worker = this.assertReady()
+    worker.postMessage(`setoption name Contempt value ${Math.round(value)}`)
+  }
+
+  /**
+   * EngineProvider entry point. Plain play (no persona) delegates straight
+   * to getBestMove, unchanged. With a persona, delegates to
+   * selectPersonaMove instead of always returning the single best line —
+   * see that function above for how styleWeight picks among candidates.
+   */
+  getMove(fen: string, config: EngineMoveConfig = {}): Promise<string> {
+    const { persona, ...options } = config
+    if (!persona) return this.getBestMove(fen, options)
+    return selectPersonaMove(this, fen, persona, options)
   }
 
   getBestMove(fen: string, options: EngineMoveOptions = {}): Promise<string> {

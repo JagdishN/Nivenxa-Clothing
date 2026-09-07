@@ -32,9 +32,13 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.local.example
 
 # vercel
 .vercel
+
+# large local data files (e.g. the Lichess puzzle CSV for scripts/import-puzzles.ts)
+/data/
 
 # typescript
 *.tsbuildinfo

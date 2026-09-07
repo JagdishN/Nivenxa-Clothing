@@ -1,0 +1,77 @@
+.layout {
+  composes: layout from '../../learn/basics/[slug]/BasicsDetail.module.scss';
+}
+
+.boardCol {
+  composes: boardCol from '../../learn/_shared/StepThroughPanel.module.scss';
+}
+
+.boardWrap {
+  composes: boardWrap from '../../learn/_shared/PracticePanel.module.scss';
+}
+
+.panelCol {
+  composes: panelCol from '../../learn/_shared/StepThroughPanel.module.scss';
+}
+
+.stageIndicator {
+  composes: puzzleIndicator from '../../learn/_shared/TacticPuzzleSet.module.scss';
+}
+
+.colorIndicator {
+  composes: promptText from '../../learn/_shared/PracticePanel.module.scss';
+  opacity: 0.75;
+  font-size: 0.85em;
+  margin: 0.15rem 0 0.6rem;
+
+  strong {
+    color: var(--chess-purple);
+  }
+}
+
+.promptCard {
+  composes: promptCard from '../../learn/_shared/PracticePanel.module.scss';
+}
+
+.promptCardCorrect {
+  composes: promptCardCorrect from '../../learn/_shared/PracticePanel.module.scss';
+}
+
+.promptText {
+  composes: promptText from '../../learn/_shared/PracticePanel.module.scss';
+}
+
+.hintText {
+  composes: promptText from '../../learn/_shared/PracticePanel.module.scss';
+  opacity: 0.7;
+  font-size: 0.88em;
+}
+
+.doneText {
+  composes: promptText from '../../learn/_shared/PracticePanel.module.scss';
+  font-weight: 700;
+}
+
+.actions {
+  composes: actions from '../../learn/_shared/PracticePanel.module.scss';
+}
+
+.actionBtn {
+  composes: actionBtn from '../../learn/_shared/PracticePanel.module.scss';
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+.actionBtnGhost {
+  composes: actionBtnGhost from '../../learn/_shared/PracticePanel.module.scss';
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}

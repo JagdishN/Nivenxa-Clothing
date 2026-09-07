@@ -1,0 +1,238 @@
+// ─── Living section design tokens ──────────────────────────────────────────
+// Scoped as a class, same convention as chess/ChessTheme.module.scss — applied
+// once on the wrapper in living/layout.tsx, referenced as var(--living-*)
+// everywhere under /living/*. Carries the "ledger paper" identity from the
+// published spec forward into the working app: a paper ground, ink neutrals,
+// and three functional accents (water, brass, flag) rather than one brand color.
+.theme {
+  --living-paper: #f7f5ef;
+  --living-paper-raised: #ffffff;
+  --living-rule: #ded7c4;
+  --living-ink: #2b2620;
+  --living-ink-soft: #6b6355;
+  --living-ink-faint: #9c9483;
+  --living-water: #2c6e7a;
+  --living-water-soft: #e2eff0;
+  --living-brass: #a5722c;
+  --living-brass-soft: #f5ebda;
+  --living-flag: #a1402f;
+  --living-flag-soft: #f6e6e1;
+  --living-ok: #3f7a4e;
+  --living-ok-soft: #e5f0e6;
+
+  --living-radius: 10px;
+  --living-shadow: 0 1px 2px rgba(43, 38, 32, 0.06), 0 6px 20px rgba(43, 38, 32, 0.05);
+
+  background: var(--living-paper);
+  color: var(--living-ink);
+  min-height: 100vh;
+  font-family: var(--font-living-sans), system-ui, sans-serif;
+}
+
+// ─── Shared primitives — composed into page-level modules ────────────────
+
+.card {
+  background: var(--living-paper-raised);
+  border: 1px solid var(--living-rule);
+  border-radius: var(--living-radius);
+  box-shadow: var(--living-shadow);
+  padding: 1.5rem;
+}
+
+.pageShell {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.heading {
+  font-family: var(--font-living-serif), Georgia, serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--living-ink-soft);
+  margin-bottom: 0.35rem;
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--living-ink);
+  background: var(--living-paper);
+  border: 1px solid var(--living-rule);
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+
+  &:focus-visible {
+    outline: 2px solid var(--living-water);
+    outline-offset: 1px;
+  }
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 4.5rem;
+}
+
+.field {
+  margin-bottom: 1rem;
+}
+
+.button {
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  padding: 0.65rem 1.2rem;
+  border: 1px solid var(--living-ink);
+  background: var(--living-ink);
+  color: var(--living-paper-raised);
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.88;
+  }
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.buttonGhost {
+  composes: button;
+  background: transparent;
+  color: var(--living-ink);
+  border-color: var(--living-rule);
+
+  &:hover {
+    background: var(--living-paper);
+    opacity: 1;
+  }
+}
+
+.buttonDanger {
+  composes: button;
+  background: var(--living-flag);
+  border-color: var(--living-flag);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+
+  th,
+  td {
+    text-align: left;
+    padding: 0.55rem 0.7rem;
+    border-bottom: 1px solid var(--living-rule);
+  }
+
+  th {
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--living-ink-soft);
+    font-weight: 600;
+  }
+}
+
+.tableScroll {
+  overflow-x: auto;
+}
+
+.num {
+  font-family: var(--font-living-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.pill {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: var(--living-water-soft);
+  color: var(--living-water);
+}
+
+.pillBrass {
+  composes: pill;
+  background: var(--living-brass-soft);
+  color: var(--living-brass);
+}
+
+.pillFlag {
+  composes: pill;
+  background: var(--living-flag-soft);
+  color: var(--living-flag);
+}
+
+.pillOk {
+  composes: pill;
+  background: var(--living-ok-soft);
+  color: var(--living-ok);
+}
+
+.alert {
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.88rem;
+  background: var(--living-flag-soft);
+  color: var(--living-flag);
+  border: 1px solid transparent;
+  margin-bottom: 1.25rem;
+}
+
+.alertInfo {
+  composes: alert;
+  background: var(--living-water-soft);
+  color: var(--living-water);
+}
+
+.muted {
+  color: var(--living-ink-soft);
+  font-size: 0.88rem;
+}
+
+.tabRow {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.tab {
+  flex: 1;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.6rem;
+  border-radius: 6px;
+  border: 1px solid var(--living-rule);
+  background: var(--living-paper);
+  color: var(--living-ink-soft);
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  display: block;
+}
+
+.tabActive {
+  composes: tab;
+  border-color: var(--living-water);
+  background: var(--living-water-soft);
+  color: var(--living-water);
+}

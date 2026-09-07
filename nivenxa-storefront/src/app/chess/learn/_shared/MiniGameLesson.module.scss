@@ -1,0 +1,75 @@
+.boardCol {
+  composes: boardCol from './StepThroughPanel.module.scss';
+}
+
+.boardWrap {
+  composes: boardWrap from './PracticePanel.module.scss';
+}
+
+.panelCol {
+  composes: panelCol from './StepThroughPanel.module.scss';
+}
+
+.stageIndicator {
+  composes: puzzleIndicator from './TacticPuzzleSet.module.scss';
+}
+
+.promptCard {
+  composes: promptCard from './PracticePanel.module.scss';
+}
+
+.promptText {
+  composes: promptText from './PracticePanel.module.scss';
+}
+
+.coachText {
+  composes: promptText from './PracticePanel.module.scss';
+  color: #2f7d4f;
+  font-weight: 600;
+}
+
+.hintTextLine {
+  composes: promptText from './PracticePanel.module.scss';
+  opacity: 0.7;
+  font-size: 0.9em;
+}
+
+.actions {
+  composes: actions from './PracticePanel.module.scss';
+}
+
+.actionBtnGhost {
+  composes: actionBtnGhost from './PracticePanel.module.scss';
+}
+
+.modalBackdrop {
+  composes: modalBackdrop from './PracticePanel.module.scss';
+}
+
+.modalCard {
+  composes: modalCard from './PracticePanel.module.scss';
+}
+
+.modalTag {
+  composes: modalTag from './PracticePanel.module.scss';
+}
+
+.modalHeading {
+  composes: modalHeading from './PracticePanel.module.scss';
+}
+
+.modalBody {
+  composes: modalBody from './PracticePanel.module.scss';
+}
+
+.modalActions {
+  composes: modalActions from './PracticePanel.module.scss';
+}
+
+.modalPrimary {
+  composes: modalPrimary from './PracticePanel.module.scss';
+}
+
+.modalSecondary {
+  composes: modalSecondary from './PracticePanel.module.scss';
+}

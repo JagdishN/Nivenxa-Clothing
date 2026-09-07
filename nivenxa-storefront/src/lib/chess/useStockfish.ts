@@ -1,13 +1,18 @@
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { StockfishEngine } from './engine'
+import type { EngineMoveConfig } from './engineProvider'
 import type { EngineMoveOptions, EngineTopMove, SkillLevel } from './types'
 
 export interface UseStockfishResult {
   ready: boolean
   error: string | null
   setSkillLevel: (level: SkillLevel) => void
+  /** See personas.ts — best-effort, harmless if the current build doesn't expose this UCI option. */
+  setContempt: (value: number) => void
   getBestMove: (fen: string, options?: EngineMoveOptions) => Promise<string>
+  /** Persona-aware entry point — plain best move when config.persona is unset, see engine.ts's getMove. */
+  getMove: (fen: string, config?: EngineMoveConfig) => Promise<string>
   getTopMoves: (fen: string, multiPv: number, options?: EngineMoveOptions) => Promise<EngineTopMove[]>
   evaluatePosition: (fen: string, depth?: number) => Promise<number>
   stop: () => void
@@ -39,9 +44,18 @@ export function useStockfish(): UseStockfishResult {
     engineRef.current?.setSkillLevel(level)
   }, [])
 
+  const setContempt = useCallback((value: number) => {
+    engineRef.current?.setContempt(value)
+  }, [])
+
   const getBestMove = useCallback((fen: string, options?: EngineMoveOptions) => {
     if (!engineRef.current) return Promise.reject(new Error('Chess engine is not ready yet'))
     return engineRef.current.getBestMove(fen, options)
+  }, [])
+
+  const getMove = useCallback((fen: string, config?: EngineMoveConfig) => {
+    if (!engineRef.current) return Promise.reject(new Error('Chess engine is not ready yet'))
+    return engineRef.current.getMove(fen, config)
   }, [])
 
   const getTopMoves = useCallback((fen: string, multiPv: number, options?: EngineMoveOptions) => {
@@ -58,5 +72,5 @@ export function useStockfish(): UseStockfishResult {
     engineRef.current?.stop()
   }, [])
 
-  return { ready, error, setSkillLevel, getBestMove, getTopMoves, evaluatePosition, stop }
+  return { ready, error, setSkillLevel, setContempt, getBestMove, getMove, getTopMoves, evaluatePosition, stop }
 }

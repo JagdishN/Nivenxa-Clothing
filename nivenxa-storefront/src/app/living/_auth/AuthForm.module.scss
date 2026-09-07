@@ -1,0 +1,86 @@
+.shell {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 4rem;
+}
+
+.title {
+  font-size: 1.6rem;
+  margin: 0 0 0.4rem;
+}
+
+.subtitle {
+  color: var(--living-ink-soft);
+  font-size: 0.92rem;
+  margin: 0 0 1.75rem;
+}
+
+.hint {
+  font-size: 0.8rem;
+  color: var(--living-ink-faint);
+  margin-top: 0.4rem;
+}
+
+.switchStep {
+  background: none;
+  border: none;
+  color: var(--living-water);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 0.75rem;
+}
+
+.footer {
+  margin-top: 1.5rem;
+  font-size: 0.88rem;
+  color: var(--living-ink-soft);
+}
+
+.footer a {
+  color: var(--living-water);
+  font-weight: 600;
+}
+
+.tabRow {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.tab {
+  flex: 1;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.65rem;
+  border-radius: 6px;
+  border: 1px solid var(--living-rule);
+  background: var(--living-paper);
+  color: var(--living-ink-soft);
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  display: block;
+}
+
+.tabActive {
+  composes: tab;
+  border-color: var(--living-water);
+  background: var(--living-water-soft);
+  color: var(--living-water);
+}
+
+.radioRow {
+  display: flex;
+  gap: 1.25rem;
+  font-size: 0.9rem;
+}
+
+.radioRow label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}

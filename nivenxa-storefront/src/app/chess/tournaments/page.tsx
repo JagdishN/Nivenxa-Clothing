@@ -1,10 +1,12 @@
 import Link from 'next/link'
-import { getCurrentTournamentGroups } from '@/lib/chess/TournamentService'
+import { getPublicTournaments } from '@/lib/chess/tournaments'
 import TournamentListing from './TournamentListing'
 import styles from './Tournaments.module.scss'
 
-export default function TournamentsPage() {
-  const groups = getCurrentTournamentGroups()
+export const dynamic = 'force-dynamic' // always reflect the latest admin-verified tournaments, not a build-time snapshot
+
+export default async function TournamentsPage() {
+  const groups = await getPublicTournaments()
 
   return (
     <main className={styles.page}>

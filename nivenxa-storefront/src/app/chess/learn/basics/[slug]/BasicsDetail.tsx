@@ -1,16 +1,11 @@
 'use client'
 import Link from 'next/link'
-import type { Key } from 'chessground/types'
-import Board from '@/components/chess/Board'
 import MoveTrainer from '../../_shared/MoveTrainer'
 import PieceLesson from '../../_shared/PieceLesson'
-import MeetThePieces from '../../_shared/MeetThePieces'
+import BoardLesson from '../../_shared/BoardLesson'
+import MiniGameLesson from '../../_shared/MiniGameLesson'
 import { getNextBasicsLesson, type BasicsLesson } from '@/lib/chess/basics/data'
 import styles from './BasicsDetail.module.scss'
-
-const EMPTY_DESTS = new Map<Key, Key[]>()
-const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
-function noop() {}
 
 export default function BasicsDetail({ lesson }: { lesson: BasicsLesson }) {
   const next = getNextBasicsLesson(lesson.slug)
@@ -27,8 +22,18 @@ export default function BasicsDetail({ lesson }: { lesson: BasicsLesson }) {
       </section>
 
       <div className={styles.layout}>
-        {lesson.interactive === 'meet-pieces' ? (
-          <MeetThePieces nextCta={nextCta} />
+        {lesson.miniGame && lesson.miniGameFen ? (
+          <MiniGameLesson example={{ fen: lesson.miniGameFen, completionSummary: lesson.completionSummary }} />
+        ) : lesson.boardSteps && lesson.boardFen ? (
+          <BoardLesson
+            example={{
+              steps: lesson.boardSteps,
+              fen: lesson.boardFen,
+              lessonName: lesson.name,
+              completionSummary: lesson.completionSummary,
+            }}
+            nextCta={nextCta}
+          />
         ) : lesson.steps ? (
           <PieceLesson
             example={{
@@ -53,31 +58,7 @@ export default function BasicsDetail({ lesson }: { lesson: BasicsLesson }) {
             }}
             nextCta={nextCta}
           />
-        ) : (
-          <>
-            <div className={styles.boardCol}>
-              <div className={styles.boardWrap}>
-                <Board fen={START_FEN} turnColor="white" dests={EMPTY_DESTS} viewOnly onMove={noop} />
-              </div>
-            </div>
-            <div className={styles.panelCol}>
-              <div className={styles.explanation}>
-                {(lesson.startText ?? []).map((line, i) => (
-                  <p key={i} className={styles.explanationText}>
-                    {line}
-                  </p>
-                ))}
-              </div>
-              <div className={styles.actions}>
-                {nextCta && (
-                  <Link href={nextCta.href} className={styles.actionBtn}>
-                    {nextCta.label}
-                  </Link>
-                )}
-              </div>
-            </div>
-          </>
-        )}
+        ) : null}
       </div>
     </main>
   )

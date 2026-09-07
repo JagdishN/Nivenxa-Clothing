@@ -287,6 +287,14 @@ $gold-soft: #FFE39A;
   border: 1px solid rgba($muted, 0.36);
 }
 
+// 'Local' — the admin-entered tournaments schema's fourth tournament_type
+// value, alongside International/National/Academy above.
+.typeLocal {
+  color: $rose-deep;
+  background: rgba($gold-soft, 0.28);
+  border: 1px solid rgba($gold, 0.34);
+}
+
 .mapLink {
   display: inline-flex;
   align-items: center;
@@ -382,6 +390,88 @@ $gold-soft: #FFE39A;
   box-shadow:
     0 12px 28px rgba($purple, 0.24),
     0 0 0 1px rgba($white, 0.06) inset;
+}
+
+// ─── Payment QR popover — same reveal-on-click pattern as .playerPreview ──
+.paymentInfo {
+  position: relative;
+  margin-top: 0.4rem;
+}
+
+.paymentInfoButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.8rem;
+  padding: 0 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba($purple, 0.28);
+  background: rgba($purple, 0.08);
+  color: $purple;
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.86;
+    transform: translateY(-1px);
+  }
+}
+
+.paymentPanel {
+  position: absolute;
+  z-index: 4;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  display: grid;
+  gap: 0.6rem;
+  width: min(18rem, calc(100vw - 2rem));
+  padding: 1rem;
+  border-radius: 1.15rem;
+  border: 1px solid rgba($gold, 0.28);
+  background:
+    radial-gradient(circle at top right, rgba($gold, 0.16), transparent 34%),
+    linear-gradient(135deg, rgba($deep, 0.98), rgba($purple, 0.96));
+  box-shadow:
+    0 24px 70px rgba($deep, 0.28),
+    0 0 0 1px rgba($white, 0.08) inset;
+}
+
+.paymentPanelTitle {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: $white;
+  margin: 0;
+}
+
+.paymentPanelSubtext {
+  font-size: 0.7rem;
+  line-height: 1.4;
+  color: rgba($white, 0.72);
+  margin: 0;
+}
+
+.paymentQrImage {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  border-radius: 0.75rem;
+  background: $white;
+  padding: 0.5rem;
+}
+
+.paymentNoteText {
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: rgba($gold, 0.92);
+  margin: 0;
+  font-style: italic;
 }
 
 .playerAvatar {

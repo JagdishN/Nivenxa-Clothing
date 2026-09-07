@@ -6,28 +6,61 @@
 // checked by a chess-knowledgeable human. Same word rule as
 // Openings/Tactics — see those files' header comments.
 //
-// BASICS is authored in the exact curriculum order the child moves through
-// it: The Board -> Meet the Pieces -> Pawns -> Rooks -> Bishops -> Knights
-// -> Queen -> King -> Capturing -> Check -> Checkmate.
+// BASICS follows a single story, in the exact order the child moves through
+// it: What is this board? -> Who plays on it? -> What are my pieces? ->
+// Which pieces are stronger? -> Where do they start? -> How does each one
+// move? -> How do I take another piece? -> How do I actually win?
 //
-// - "The Board" is plain intro reading (no board interaction).
-// - "Meet the Pieces" is the interactive `MeetThePieces` component (tap a
-//   piece type, see it highlighted on the starting position) — flagged via
-//   `interactive: 'meet-pieces'`, no `steps`/`trainer` needed.
-// - The six piece lessons (Pawns..King) use `steps`: a `PieceLesson`
-//   sequence of SEE IT MOVE -> YOUR TURN -> WHAT STOPS IT -> CAPTURE ->
-//   SHOW WHAT YOU LEARNED, per the Chess Basics -> Pieces redesign. Every
-//   correctness check (blocking, no-jumping, king safety, captures) is real
-//   chess.js legal-move generation — nothing is hardcoded — so the "wrong"
-//   decoy squares (e.g. dragging a rook past a blocking pawn) are genuinely
-//   illegal moves, not a scripted fake.
-// - Capturing/Check/Checkmate still use the older single-step `trainer`
-//   (`MoveTrainer`) — they're not per-piece movement lessons, so they're
-//   out of scope for this pass.
+//   1. The Chessboard          6. How Rooks Move      11. How Kings Move
+//   2. Meet Your Pieces        7. How Bishops Move     12. Check
+//   3. Set Up the Board        8. How Knights Move     13. Getting Out of Check
+//   4. How Pawns Move          9. How Queens Move      14. Checkmate
+//   5. (see 4)                 10. (see 9)             15. Your First Mini Game
+//
+// (Rules later handles: Castling, Promotion, En Passant, Stalemate, Draws.)
+//
+// - "The Chessboard" merges what used to be three separate lessons (Meet the
+//   Chessboard, Turn the Board the Right Way, Square Names) into one lesson
+//   in four parts — squares, colours, orientation, coordinates — since they
+//   are all facts about the same object and a first-time player shouldn't
+//   have to "finish a lesson" three times before they can find e4. Uses
+//   `boardSteps` (+ `boardFen`), a `BoardLesson` sequence of demo/squareQuiz/
+//   yesNo steps — no piece ever moves, only clicks/judges the board itself.
+//   The two orientation steps override the lesson's default empty board with
+//   the starting position (`fen` on the step itself) so "light on the right"
+//   has real pieces to anchor to.
+// - "Meet Your Pieces" and "Set Up the Board" also use `boardSteps`. Meet
+//   Your Pieces shows White AND Black together for every piece type
+//   (deliberately not White-only, so a child never learns "the white rook is
+//   the rook" instead of "this is a rook"), and now teaches point values —
+//   with an explicit line that points compare pieces, they don't decide who
+//   wins. Set Up the Board builds the starting position corner-by-corner.
+// - The six piece-movement lessons use `steps`: a `PieceLesson` sequence of
+//   SEE IT MOVE -> YOUR TURN -> WHAT STOPS IT -> CAPTURE -> SHOW WHAT YOU
+//   LEARNED. Movement and capture are taught together, not in separate
+//   lessons — every correctness check (blocking, no-jumping, king safety,
+//   captures) is real chess.js legal-move generation, nothing hardcoded.
+// - Check, Getting Out of Check, and Checkmate now also use `steps`
+//   (`PieceLesson`) instead of the old single-exercise `trainer` — each
+//   teaches through a demo before asking the learner to try it, and Getting
+//   Out of Check walks through all three escape techniques (move, block,
+//   capture) as separate positions.
+// - Your First Mini Game (`miniGame: true`) is a real, engine-backed game on
+//   reduced material (White has Queen + 2 pawns vs Black's Rook + 2 pawns) —
+//   not another quiz. It reuses the same `useChessGame` + `useStockfish`
+//   hooks as /chess/play, with the engine set to its gentlest skill level.
+//   See `MiniGameLesson.tsx` for the component; this file only supplies the
+//   starting position and the closing copy.
+// - The former standalone "Capturing" lesson was removed — capture is now
+//   taught as part of every piece-movement lesson (the CAPTURE step), so a
+//   separate cross-piece capturing lesson before any piece has been
+//   introduced no longer has anything new to teach.
 // ─────────────────────────────────────────────────────────────────────────
 
 import type { MoveFilterMode } from '@/app/chess/learn/_shared/moveTrainerLogic'
 import type { PieceLessonStep } from '@/app/chess/learn/_shared/PieceLesson'
+import type { BoardLessonStep } from '@/app/chess/learn/_shared/BoardLesson'
+import { allLightSquares, allDarkSquares } from '@/app/chess/learn/_shared/squareColors'
 
 export interface BasicsTrainerConfig {
   fen: string
@@ -47,40 +80,463 @@ export interface BasicsLesson {
   description: string
   /** One short, idea-only line for the list-card. */
   summary: string
-  /** "The Board" (plain intro) has neither — just startText. */
-  trainer?: BasicsTrainerConfig
-  /** The six piece lessons — a multi-step SEE IT MOVE -> ... -> SHOW WHAT YOU LEARNED sequence. */
+  /** The board/piece-anatomy lessons — a `BoardLesson` sequence, paired with `boardFen`. */
+  boardSteps?: BoardLessonStep[]
+  boardFen?: string
+  /** The piece-movement and check/checkmate lessons — a multi-step SEE IT MOVE -> ... -> SHOW WHAT YOU LEARNED sequence. */
   steps?: PieceLessonStep[]
-  /** "Meet the Pieces" only — renders the tap-to-reveal `MeetThePieces` component instead of `trainer`/`steps`. */
-  interactive?: 'meet-pieces'
-  startText?: string[]
+  /** Unused by any current lesson — kept for a future single-exercise drill, if one is ever needed again. */
+  trainer?: BasicsTrainerConfig
+  /** Your First Mini Game only — routes to `MiniGameLesson` instead of any quiz engine. */
+  miniGame?: boolean
+  miniGameFen?: string
   completionSummary?: string[]
 }
 
+const EMPTY_FEN = '8/8/8/8/8/8/8/8 w - - 0 1'
+const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+const MINI_GAME_FEN = 'r3k3/4pp2/8/8/8/8/4PP2/3QK3 w - - 0 1'
+
 export const BASICS: BasicsLesson[] = [
   {
-    slug: 'the-board',
-    name: 'The Board',
-    description: 'Chess is played on a checkered board of 64 squares.',
-    summary: 'Learn what the chess board looks like.',
-    startText: [
-      'The board has 8 rows and 8 columns.',
-      'That makes 64 squares in total.',
-      'Every square has its own name, like e4 or a1.',
+    slug: 'the-chessboard',
+    name: 'The Chessboard',
+    description: 'A chessboard has 64 squares, two colours, one correct direction, and a name for every square.',
+    summary: 'Learn the board — squares, colours, direction, and names.',
+    boardFen: EMPTY_FEN,
+    boardSteps: [
+      // Part A — meet the board
+      {
+        kind: 'demo',
+        stageLabel: 'MEET THE BOARD',
+        text: ['A chessboard has 64 squares.', 'It has 8 rows and 8 columns.'],
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'ONE ROW',
+        highlightSquares: ['a4', 'b4', 'c4', 'd4', 'e4', 'f4', 'g4', 'h4'],
+        text: ['Here is one row.', 'It has 8 squares.'],
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'ONE COLUMN',
+        highlightSquares: ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8'],
+        text: ['Here is one column.', 'It also has 8 squares, going the other way.'],
+      },
+      // Part B — two colours
+      {
+        kind: 'demo',
+        stageLabel: 'TWO COLOURS',
+        text: ['The squares use two colours.', 'The colours take turns from one square to the next.'],
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'LIGHT AND DARK',
+        text: [
+          'Chessboards can use different colours.',
+          'They might be white and black, cream and brown, or even white and green.',
+          'Whatever the colours are, we call them light squares and dark squares.',
+        ],
+      },
+      {
+        kind: 'squareQuiz',
+        stageLabel: 'YOUR TURN',
+        mode: 'any',
+        correctSquares: allLightSquares(),
+        prompt: 'Click a light square.',
+        wrongText: "Not quite — that's a dark square.",
+        hintText: 'Try a2, c2, e2, or g2.',
+        revealSquaresFrom: 'hint',
+        correctText: "That's a light square.",
+      },
+      {
+        kind: 'squareQuiz',
+        stageLabel: 'YOUR TURN',
+        mode: 'any',
+        correctSquares: allDarkSquares(),
+        prompt: 'Now click a dark square.',
+        wrongText: "Not quite — that's a light square.",
+        hintText: 'Try a1, c1, e1, or g1.',
+        revealSquaresFrom: 'hint',
+        correctText: "That's a dark square.",
+      },
+      // Part C — board direction (real pieces, for a concrete "is this right" judgement)
+      {
+        kind: 'demo',
+        stageLabel: 'PUT IT THE RIGHT WAY',
+        fen: START_FEN,
+        text: ["Now let's set up the board correctly.", 'The square at your bottom-right should be a light square.'],
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'REMEMBER',
+        fen: START_FEN,
+        highlightSquares: ['h1'],
+        text: ['A simple memory line:', 'Light on the right.'],
+      },
+      {
+        kind: 'yesNo',
+        stageLabel: 'IS THIS RIGHT?',
+        boardIsCorrect: true,
+        prompt: 'Is this board the right way around?',
+        correctText: 'Yes — the light square is on the right.',
+        wrongText: 'Look again — the bottom-right square here is light. That is correct.',
+      },
+      {
+        kind: 'yesNo',
+        stageLabel: 'IS THIS RIGHT?',
+        boardIsCorrect: false,
+        prompt: 'What about this one — is it the right way around?',
+        correctText: 'Right — the dark square is on the right, so this board is turned the wrong way.',
+        wrongText: 'Look again — the bottom-right square here is dark. That is the wrong way around.',
+      },
+      // Part D — files, ranks, and square names
+      {
+        kind: 'demo',
+        stageLabel: 'FILES',
+        highlightSquares: ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'e8'],
+        text: ['The lines going up and down use letters.', 'They go from a to h.'],
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'RANKS',
+        highlightSquares: ['a4', 'b4', 'c4', 'd4', 'e4', 'f4', 'g4', 'h4'],
+        text: ['The lines going across use numbers.', 'They go from 1 to 8.'],
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'SQUARE NAMES',
+        highlightSquares: ['e4'],
+        text: ['Every square has a name.', 'It combines its letter and its number.', 'This square is e4.'],
+      },
+      {
+        kind: 'squareQuiz',
+        stageLabel: 'YOUR TURN',
+        mode: 'any',
+        correctSquares: ['e4'],
+        prompt: 'Can you find e4?',
+        wrongText: 'Not quite. Remember — letter first, then number.',
+        hintText: 'e4 is the letter e, number 4.',
+        revealSquaresFrom: 'hint',
+        correctText: "That's e4!",
+      },
+      {
+        kind: 'squareQuiz',
+        stageLabel: 'YOUR TURN',
+        mode: 'any',
+        correctSquares: ['c6'],
+        prompt: 'Now find c6.',
+        wrongText: 'Not quite. Try again.',
+        hintText: 'c6 is the letter c, number 6.',
+        revealSquaresFrom: 'hint',
+        correctText: "That's c6!",
+      },
+      {
+        kind: 'squareQuiz',
+        stageLabel: 'SHOW WHAT YOU LEARNED',
+        mode: 'all',
+        correctSquares: ['a1', 'h8'],
+        prompt: '⭐ Show what you learned — find both a1 and h8.',
+        wrongText: 'Not quite. Try again.',
+        hintText: 'a1 is the near-left corner, h8 is the far corner.',
+        revealSquaresFrom: 'hint',
+        correctText: 'You found both corners!',
+      },
     ],
-    completionSummary: ['You know what the chess board looks like.'],
+    completionSummary: [
+      'A chessboard has 64 squares, in 8 rows and 8 columns, alternating light and dark.',
+      'Set up the board with a light square on your right.',
+      'Every square has a name — its letter (a-h) and its number (1-8).',
+    ],
   },
   {
     slug: 'meet-the-pieces',
-    name: 'Meet the Pieces',
-    description: 'Each player starts the game with 16 pieces.',
-    summary: 'Tap each piece to meet it.',
-    interactive: 'meet-pieces',
-    completionSummary: ['You met all six kinds of pieces.'],
+    name: 'Meet Your Pieces',
+    description: 'White and Black have the same six piece types, and some pieces are stronger than others.',
+    summary: 'Meet every piece — both colours, and how strong each one is.',
+    boardFen: START_FEN,
+    boardSteps: [
+      {
+        kind: 'demo',
+        stageLabel: 'TWO TEAMS',
+        text: ['Two players play chess.', 'White has one team. Black has one team.', 'Both teams have the same pieces.'],
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'STRENGTH',
+        text: ['Some pieces are stronger than others.', 'We measure that with points.'],
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'KING',
+        highlightSquares: ['e1', 'e8'],
+        text: [
+          'This is the king.',
+          'White has one king, Black has one king.',
+          'They move the same way — only the colour is different.',
+          'The king has no point value. The king is the piece you must protect.',
+        ],
+      },
+      {
+        kind: 'squareQuiz',
+        stageLabel: 'YOUR TURN',
+        mode: 'all',
+        correctSquares: ['e1', 'e8'],
+        prompt: 'Can you find both kings?',
+        wrongText: "Not quite — that's not a king.",
+        hintText: 'Kings start right next to the queens.',
+        revealSquaresFrom: 'hint',
+        correctText: 'You found both kings.',
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'QUEEN',
+        highlightSquares: ['d1', 'd8'],
+        text: [
+          'This is the queen.',
+          'White has one queen, Black has one queen.',
+          'They move the same way — only the colour is different.',
+          'Queen = 9 points. She is the strongest piece.',
+        ],
+      },
+      {
+        kind: 'squareQuiz',
+        stageLabel: 'YOUR TURN',
+        mode: 'all',
+        correctSquares: ['d1', 'd8'],
+        prompt: 'Can you find both queens?',
+        wrongText: "Not quite — that's not a queen.",
+        hintText: 'Queens start right next to the kings.',
+        revealSquaresFrom: 'hint',
+        correctText: 'You found both queens.',
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'ROOK',
+        highlightSquares: ['a1', 'h1', 'a8', 'h8'],
+        text: [
+          'These are rooks.',
+          'White and Black both have two rooks.',
+          'They move the same way — only the colour is different.',
+          'Rook = 5 points.',
+        ],
+      },
+      {
+        kind: 'squareQuiz',
+        stageLabel: 'YOUR TURN',
+        mode: 'all',
+        correctSquares: ['a1', 'h1', 'a8', 'h8'],
+        prompt: 'Can you find all four rooks?',
+        wrongText: "Not quite — that's not a rook.",
+        hintText: 'Rooks start in the corners.',
+        revealSquaresFrom: 'hint',
+        correctText: 'You found all four rooks.',
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'BISHOP',
+        highlightSquares: ['c1', 'f1', 'c8', 'f8'],
+        text: [
+          'These are bishops.',
+          'White and Black both have two bishops.',
+          'They move the same way — only the colour is different.',
+          'Bishop = 3 points.',
+        ],
+      },
+      {
+        kind: 'squareQuiz',
+        stageLabel: 'YOUR TURN',
+        mode: 'all',
+        correctSquares: ['c1', 'f1', 'c8', 'f8'],
+        prompt: 'Can you find all four bishops?',
+        wrongText: "Not quite — that's not a bishop.",
+        hintText: 'Bishops start next to the knights.',
+        revealSquaresFrom: 'hint',
+        correctText: 'You found all four bishops.',
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'KNIGHT',
+        highlightSquares: ['b1', 'g1', 'b8', 'g8'],
+        text: [
+          'These are knights.',
+          'White and Black both have two knights.',
+          'They move the same way — only the colour is different.',
+          'Knight = 3 points.',
+        ],
+      },
+      {
+        kind: 'squareQuiz',
+        stageLabel: 'YOUR TURN',
+        mode: 'all',
+        correctSquares: ['b1', 'g1', 'b8', 'g8'],
+        prompt: 'Can you find all four knights?',
+        wrongText: "Not quite — that's not a knight.",
+        hintText: 'Knights start right next to the rooks.',
+        revealSquaresFrom: 'hint',
+        correctText: 'You found all four knights.',
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'PAWN',
+        highlightSquares: ['a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2', 'a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7'],
+        text: [
+          'These are pawns.',
+          'White and Black both have eight pawns.',
+          'They move the same way — only the colour is different.',
+          'Pawn = 1 point. They are the weakest piece, but there are a lot of them.',
+        ],
+      },
+      {
+        kind: 'squareQuiz',
+        stageLabel: 'SHOW WHAT YOU LEARNED',
+        mode: 'all',
+        correctSquares: ['e2', 'e7'],
+        prompt: '⭐ Show what you learned — find the two pawns standing in front of the kings.',
+        wrongText: "Not quite — that's not the pawn in front of a king.",
+        hintText: 'Look one square in front of each king.',
+        revealSquaresFrom: 'hint',
+        correctText: 'You found them.',
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'REMEMBER',
+        text: ['Points help us compare pieces.', 'They do not decide who wins the game.'],
+      },
+    ],
+    completionSummary: [
+      'White and Black have the same pieces — king, queen, rooks, bishops, knights, and pawns.',
+      'Pawn = 1, Knight = 3, Bishop = 3, Rook = 5, Queen = 9. The king has no point value.',
+      'Points help compare pieces — they do not decide who wins.',
+    ],
+  },
+  {
+    slug: 'set-up-the-pieces',
+    name: 'Set Up the Board',
+    description: 'Every piece has its own starting square.',
+    summary: 'Learn where each piece begins.',
+    boardFen: EMPTY_FEN,
+    boardSteps: [
+      {
+        kind: 'demo',
+        stageLabel: 'ROOKS',
+        highlightSquares: ['a1', 'h1', 'a8', 'h8'],
+        text: ['Rooks start in the corners.'],
+      },
+      {
+        kind: 'squareQuiz',
+        stageLabel: 'YOUR TURN',
+        mode: 'all',
+        correctSquares: ['a1', 'h1', 'a8', 'h8'],
+        prompt: 'Click the four corners where the rooks belong.',
+        wrongText: "Not quite — that's not a corner.",
+        hintText: 'The four corners of the board.',
+        revealSquaresFrom: 'hint',
+        correctText: 'Rooks in the corners.',
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'KNIGHTS',
+        highlightSquares: ['b1', 'g1', 'b8', 'g8'],
+        text: ['Knights start next to the rooks.'],
+      },
+      {
+        kind: 'squareQuiz',
+        stageLabel: 'YOUR TURN',
+        mode: 'all',
+        correctSquares: ['b1', 'g1', 'b8', 'g8'],
+        prompt: 'Click where the four knights belong.',
+        wrongText: 'Not quite.',
+        hintText: 'Right next to the rooks.',
+        revealSquaresFrom: 'hint',
+        correctText: 'Knights next to the rooks.',
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'BISHOPS',
+        highlightSquares: ['c1', 'f1', 'c8', 'f8'],
+        text: ['Bishops start next to the knights.'],
+      },
+      {
+        kind: 'squareQuiz',
+        stageLabel: 'YOUR TURN',
+        mode: 'all',
+        correctSquares: ['c1', 'f1', 'c8', 'f8'],
+        prompt: 'Click where the four bishops belong.',
+        wrongText: 'Not quite.',
+        hintText: 'Right next to the knights.',
+        revealSquaresFrom: 'hint',
+        correctText: 'Bishops next to the knights.',
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'QUEEN',
+        highlightSquares: ['d1', 'd8'],
+        text: [
+          'The queen starts on her own colour.',
+          'A white queen on a light square, a black queen on a dark square.',
+          'Simple memory: queen on her colour.',
+        ],
+      },
+      {
+        kind: 'squareQuiz',
+        stageLabel: 'YOUR TURN',
+        mode: 'all',
+        correctSquares: ['d1', 'd8'],
+        prompt: 'Click where both queens belong.',
+        wrongText: 'Not quite.',
+        hintText: 'One light square, one dark square, both on the same file.',
+        revealSquaresFrom: 'hint',
+        correctText: 'Queen on her colour.',
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'KING',
+        highlightSquares: ['e1', 'e8'],
+        text: ['The king stands right next to the queen.'],
+      },
+      {
+        kind: 'squareQuiz',
+        stageLabel: 'YOUR TURN',
+        mode: 'all',
+        correctSquares: ['e1', 'e8'],
+        prompt: 'Click where both kings belong.',
+        wrongText: 'Not quite.',
+        hintText: 'Right next to the queen.',
+        revealSquaresFrom: 'hint',
+        correctText: 'Kings next to the queens.',
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'PAWNS',
+        highlightSquares: ['a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2'],
+        text: ['Pawns stand in a row in front of the other pieces.'],
+      },
+      {
+        kind: 'squareQuiz',
+        stageLabel: 'SHOW WHAT YOU LEARNED',
+        mode: 'all',
+        correctSquares: ['a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2'],
+        prompt: "⭐ Show what you learned — click White's whole row of pawns.",
+        wrongText: 'Not quite.',
+        hintText: 'The whole second rank.',
+        revealSquaresFrom: 'hint',
+        correctText: 'The whole row of pawns.',
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'READY',
+        text: ['🎉 The board is ready!', "Now let's learn how your pieces move."],
+      },
+    ],
+    completionSummary: [
+      'Rooks in the corners, then knights, then bishops.',
+      'The queen stands on her own colour, the king beside her, and pawns fill the row in front.',
+    ],
   },
   {
     slug: 'pawns',
-    name: 'Pawns',
+    name: 'How Pawns Move',
     description: 'Pawns move forward, and capture diagonally.',
     summary: 'Learn how pawns move and capture.',
     steps: [
@@ -175,7 +631,7 @@ export const BASICS: BasicsLesson[] = [
   },
   {
     slug: 'rooks',
-    name: 'Rooks',
+    name: 'How Rooks Move',
     description: 'The rook moves straight — up, down, left, or right — as far as the path is clear.',
     summary: 'Learn how rooks move, block, and capture.',
     steps: [
@@ -236,7 +692,7 @@ export const BASICS: BasicsLesson[] = [
         pieceColor: 'w',
         filterMode: 'captures',
         prompt: 'Capture the black pawn.',
-        wrongText: 'Not quite. Look for the enemy piece on the rook\'s path.',
+        wrongText: "Not quite. Look for the enemy piece on the rook's path.",
         hintText: 'The pawn is on d2 — move straight down to capture it.',
         revealSquaresFrom: 'hint',
         correctText: 'You captured it — moving onto an enemy piece captures it.',
@@ -259,7 +715,7 @@ export const BASICS: BasicsLesson[] = [
   },
   {
     slug: 'bishops',
-    name: 'Bishops',
+    name: 'How Bishops Move',
     description: 'The bishop moves diagonally, as far as the path is clear.',
     summary: 'Learn how bishops move, block, and capture.',
     steps: [
@@ -295,9 +751,9 @@ export const BASICS: BasicsLesson[] = [
       {
         kind: 'demo',
         stageLabel: 'WHAT STOPS IT?',
-        fen: '7k/5P2/8/3B4/8/8/8/6K1 w - - 0 1',
+        fen: "7k/5P2/8/3B4/8/8/8/6K1 w - - 0 1",
         pieceColor: 'w',
-        text: ['Now there is a pawn on your bishop\'s path.', 'Can the bishop move through it?'],
+        text: ["Now there is a pawn on your bishop's path.", 'Can the bishop move through it?'],
       },
       {
         kind: 'try',
@@ -328,7 +784,7 @@ export const BASICS: BasicsLesson[] = [
         pieceColor: 'w',
         filterMode: 'captures',
         prompt: 'Capture the black pawn.',
-        wrongText: 'Not quite. Look for the enemy piece on the bishop\'s diagonal.',
+        wrongText: "Not quite. Look for the enemy piece on the bishop's diagonal.",
         hintText: 'The pawn is on b7 — move up and left to capture it.',
         revealSquaresFrom: 'hint',
         correctText: 'You captured it — landing on an enemy piece captures it.',
@@ -354,7 +810,7 @@ export const BASICS: BasicsLesson[] = [
   },
   {
     slug: 'knights',
-    name: 'Knights',
+    name: 'How Knights Move',
     description: 'The knight moves in an L shape, and can jump over other pieces.',
     summary: 'Learn how knights move and jump.',
     steps: [
@@ -377,7 +833,7 @@ export const BASICS: BasicsLesson[] = [
         wrongText: 'Not quite. Look for an L shape — two squares one way, one square to the side.',
         hintText: 'Try b4, b6, c3, c7, e3, e7, f4, or f6.',
         revealSquaresFrom: 'hint',
-        correctText: 'That\'s an L shape — two squares one way, one square to the side.',
+        correctText: "That's an L shape — two squares one way, one square to the side.",
       },
       {
         kind: 'demo',
@@ -442,7 +898,7 @@ export const BASICS: BasicsLesson[] = [
   },
   {
     slug: 'queen',
-    name: 'Queen',
+    name: 'How Queens Move',
     description: 'The queen moves like a rook and a bishop combined.',
     summary: 'Learn how the queen moves, blocks, and captures.',
     steps: [
@@ -503,7 +959,7 @@ export const BASICS: BasicsLesson[] = [
         pieceColor: 'w',
         filterMode: 'captures',
         prompt: 'Capture the black pawn.',
-        wrongText: 'Not quite. Look for the enemy piece on one of the queen\'s lines.',
+        wrongText: "Not quite. Look for the enemy piece on one of the queen's lines.",
         hintText: 'The pawn is on a2 — try the diagonal.',
         revealSquaresFrom: 'hint',
         correctText: 'The queen captures the same way every piece does — by landing on it.',
@@ -516,10 +972,10 @@ export const BASICS: BasicsLesson[] = [
         pieceColor: 'w',
         filterMode: 'captures',
         prompt: '⭐ Show what you learned — capture the black rook with your queen.',
-        wrongText: 'Not quite. Remember, the queen can\'t jump over your pawn — try a different line.',
+        wrongText: "Not quite. Remember, the queen can't jump over your pawn — try a different line.",
         hintText: 'Try the diagonal toward a2.',
         revealSquaresFrom: 'hint',
-        correctText: 'Straight or diagonal, blocked by pieces, capturing by landing on them — that\'s the queen.',
+        correctText: "Straight or diagonal, blocked by pieces, capturing by landing on them — that's the queen.",
       },
     ],
     completionSummary: [
@@ -529,7 +985,7 @@ export const BASICS: BasicsLesson[] = [
   },
   {
     slug: 'king',
-    name: 'King',
+    name: 'How Kings Move',
     description: 'The king moves one square at a time, and must always stay safe.',
     summary: 'Learn how the king moves and stays safe.',
     steps: [
@@ -571,7 +1027,7 @@ export const BASICS: BasicsLesson[] = [
         filterMode: 'legal',
         prompt: 'Try moving the king to c5.',
         wrongText: 'No, that square is not safe — the rook could capture your king there.',
-        hintText: 'Try a square the rook doesn\'t attack, like d6 or e5.',
+        hintText: "Try a square the rook doesn't attack, like d6 or e5.",
         revealSquaresFrom: 'hint',
         correctText: 'Good — you found a square where your king is safe.',
       },
@@ -594,7 +1050,7 @@ export const BASICS: BasicsLesson[] = [
         wrongText: 'Not quite. Look for the enemy piece right next to your king.',
         hintText: 'Try capturing on c5.',
         revealSquaresFrom: 'hint',
-        correctText: 'The king captures just like it moves — one square, and only if it\'s safe.',
+        correctText: "The king captures just like it moves — one square, and only if it's safe.",
       },
       {
         kind: 'try',
@@ -613,55 +1069,197 @@ export const BASICS: BasicsLesson[] = [
     completionSummary: ['The king moves one square in any direction.', 'It always avoids squares where it could be captured.'],
   },
   {
-    slug: 'capturing',
-    name: 'Capturing',
-    description: 'Moving a piece onto an enemy piece captures it.',
-    summary: 'Learn how to capture a piece.',
-    trainer: {
-      fen: 'k7/3p4/8/3R4/8/8/8/7K w - - 0 1',
-      pieceSquare: 'd5',
-      pieceColor: 'w',
-      filterMode: 'captures',
-      moveExplanation: 'You can capture an enemy piece by moving onto its square.',
-      promptLabel: 'Find the piece you can capture.',
-      hintText: 'Look for an enemy piece in the rook\'s path.',
-      revealSquaresFrom: 'hint',
-    },
-    completionSummary: ['You learned how to capture a piece.'],
-  },
-  {
     slug: 'check',
     name: 'Check',
     description: 'A move that attacks the king is called check.',
-    summary: 'Learn how to give check.',
-    trainer: {
-      fen: '4k3/8/8/3R4/8/8/8/7K w - - 0 1',
-      pieceSquare: 'd5',
-      pieceColor: 'w',
-      filterMode: 'checks',
-      moveExplanation: 'A move that attacks the king is called check.',
-      promptLabel: 'Find a move that gives check.',
-      hintText: 'Look for a square where the rook attacks the king.',
-      revealSquaresFrom: 'hint',
-    },
-    completionSummary: ['You learned how to give check.'],
+    summary: 'Learn what check means and how to give it.',
+    steps: [
+      {
+        kind: 'demo',
+        stageLabel: 'WHAT IS CHECK?',
+        fen: '4k3/8/8/3R4/8/8/8/7K w - - 0 1',
+        pieceColor: 'w',
+        text: ['A move that attacks the king is called check.', 'A king in check must get to safety right away.'],
+      },
+      {
+        kind: 'try',
+        stageLabel: 'YOUR TURN',
+        fen: '4k3/8/8/3R4/8/8/8/7K w - - 0 1',
+        pieceSquare: 'd5',
+        pieceColor: 'w',
+        filterMode: 'checks',
+        prompt: 'Find a move that gives check.',
+        wrongText: "Not quite. Look for a square where the rook attacks the king.",
+        hintText: 'Try d8, straight up the d-file.',
+        revealSquaresFrom: 'hint',
+        correctText: 'That attacks the king — this is check.',
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'ANY PIECE CAN CHECK',
+        fen: '4k3/8/8/8/8/8/8/3QK3 w - - 0 1',
+        pieceColor: 'w',
+        text: ['Any piece can give check, not just the rook.', 'Here your queen is ready to attack the king.'],
+      },
+      {
+        kind: 'try',
+        stageLabel: 'SHOW WHAT YOU LEARNED',
+        fen: '4k3/8/8/8/8/8/8/3QK3 w - - 0 1',
+        pieceSquare: 'd1',
+        pieceColor: 'w',
+        filterMode: 'checks',
+        onlyTo: ['d8'],
+        prompt: '⭐ Show what you learned — give check with your queen.',
+        wrongText: "Not quite. Look for a square where the queen attacks the king.",
+        hintText: 'Try d8, straight up the d-file.',
+        revealSquaresFrom: 'hint',
+        correctText: 'Check! You attacked the king.',
+      },
+    ],
+    completionSummary: ['A move that attacks the king is called check.', 'Any piece can give check, not only the rook or queen.'],
+  },
+  {
+    slug: 'escaping-check',
+    name: 'Getting Out of Check',
+    description: 'There are three ways out of check: move, block, or capture.',
+    summary: 'Learn the three ways to get your king out of check.',
+    steps: [
+      {
+        kind: 'demo',
+        stageLabel: 'THREE WAYS OUT',
+        fen: 'k7/8/8/8/8/8/4r3/4K3 w - - 0 1',
+        pieceColor: 'w',
+        text: ['Your king is in check.', 'You must get your king safe right away.', 'You can move your king to a safe square.'],
+      },
+      {
+        kind: 'try',
+        stageLabel: 'MOVE',
+        fen: 'k7/8/8/8/8/8/4r3/4K3 w - - 0 1',
+        pieceSquare: 'e1',
+        pieceColor: 'w',
+        filterMode: 'legal',
+        onlyTo: ['d1', 'f1'],
+        prompt: 'Move your king to a safe square.',
+        wrongText: 'Not quite. Step off the e-file, away from the rook.',
+        hintText: 'Try d1 or f1.',
+        revealSquaresFrom: 'hint',
+        correctText: 'Your king is safe now.',
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'BLOCK',
+        fen: 'k3r3/8/8/8/8/8/8/4KQ2 w - - 0 1',
+        pieceColor: 'w',
+        text: ['You can also block the attack.', 'Put one of your own pieces in the way.'],
+      },
+      {
+        kind: 'try',
+        stageLabel: 'BLOCK',
+        fen: 'k3r3/8/8/8/8/8/8/4KQ2 w - - 0 1',
+        pieceSquare: 'f1',
+        pieceColor: 'w',
+        filterMode: 'legal',
+        prompt: 'Block the check with your queen.',
+        wrongText: "Not quite. Put your queen on the e-file, between your king and the rook.",
+        hintText: 'Try e2.',
+        revealSquaresFrom: 'hint',
+        correctText: 'You blocked the attack — the rook no longer reaches your king.',
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'CAPTURE',
+        fen: 'k7/8/8/8/8/8/4r3/2N1K3 w - - 0 1',
+        pieceColor: 'w',
+        text: ['Or you can capture the piece giving check.'],
+      },
+      {
+        kind: 'try',
+        stageLabel: 'CAPTURE',
+        fen: 'k7/8/8/8/8/8/4r3/2N1K3 w - - 0 1',
+        pieceSquare: 'c1',
+        pieceColor: 'w',
+        filterMode: 'captures',
+        prompt: 'Capture the piece giving check.',
+        wrongText: 'Not quite. Look for a piece that attacks the checking rook.',
+        hintText: 'Your knight can jump to e2 and capture it.',
+        revealSquaresFrom: 'hint',
+        correctText: 'You captured the attacker — no more check.',
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'SHOW WHAT YOU LEARNED',
+        fen: 'k7/8/8/8/8/8/4r3/2N1K3 w - - 0 1',
+        pieceColor: 'w',
+        text: ['Move, block, or capture — three ways to get out of check.'],
+      },
+    ],
+    completionSummary: ['There are three ways to get out of check.', 'Move your king, block the attack, or capture the attacking piece.'],
   },
   {
     slug: 'checkmate',
     name: 'Checkmate',
     description: 'Checkmate ends the game — the king is in check with no way to escape.',
     summary: 'Learn how to find checkmate.',
-    trainer: {
-      fen: '6k1/5ppp/8/8/8/8/6K1/R7 w - - 0 1',
-      pieceSquare: 'a1',
-      pieceColor: 'w',
-      filterMode: 'checkmates',
-      moveExplanation: 'Checkmate ends the game.\nThe king is in check, and it has no way to escape.',
-      promptLabel: 'Find the checkmate move.',
-      hintText: 'Look at the open file in front of the king.',
-      revealSquaresFrom: 'hint',
-    },
-    completionSummary: ['You learned how to find checkmate.'],
+    steps: [
+      {
+        kind: 'demo',
+        stageLabel: 'WHAT IS CHECKMATE?',
+        fen: '6k1/5ppp/8/8/8/8/6K1/R7 w - - 0 1',
+        pieceColor: 'w',
+        text: [
+          'Checkmate ends the game.',
+          'The king is in check, and there is no move, block, or capture that saves it.',
+        ],
+      },
+      {
+        kind: 'try',
+        stageLabel: 'YOUR TURN',
+        fen: '6k1/5ppp/8/8/8/8/6K1/R7 w - - 0 1',
+        pieceSquare: 'a1',
+        pieceColor: 'w',
+        filterMode: 'checkmates',
+        prompt: 'Find the checkmate move.',
+        wrongText: "Not quite. Look at the open file in front of the king.",
+        hintText: 'Try a8, straight up the open file.',
+        revealSquaresFrom: 'hint',
+        correctText: 'Checkmate! The king has no way out.',
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'ANY PIECE CAN MATE',
+        fen: '6k1/5ppp/8/8/8/8/8/4Q1K1 w - - 0 1',
+        pieceColor: 'w',
+        text: ['Just like check, any piece can deliver checkmate.', "Here your queen can finish the game."],
+      },
+      {
+        kind: 'try',
+        stageLabel: 'SHOW WHAT YOU LEARNED',
+        fen: '6k1/5ppp/8/8/8/8/8/4Q1K1 w - - 0 1',
+        pieceSquare: 'e1',
+        pieceColor: 'w',
+        filterMode: 'checkmates',
+        prompt: '⭐ Show what you learned — find the checkmate move.',
+        wrongText: 'Not quite. Look for a square where the king has nowhere to go.',
+        hintText: 'Try e8, straight up the e-file.',
+        revealSquaresFrom: 'hint',
+        correctText: 'Checkmate! You won the game.',
+      },
+    ],
+    completionSummary: ['The king is in check with no way to escape.', 'That ends the game — checkmate.'],
+  },
+  {
+    slug: 'mini-game',
+    name: 'Your First Mini Game',
+    description: 'Use everything you learned in a small game against Nivenxa.',
+    summary: 'Play a real, small game — your first time putting it all together.',
+    miniGame: true,
+    miniGameFen: MINI_GAME_FEN,
+    completionSummary: [
+      'You know the board.',
+      'You know the pieces.',
+      'You know how they move and capture.',
+      'You know check and checkmate.',
+    ],
   },
 ]
 

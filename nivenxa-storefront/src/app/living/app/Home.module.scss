@@ -1,0 +1,76 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.statLabel {
+  composes: label from '../LivingTheme.module.scss';
+  margin-bottom: 0.5rem;
+}
+
+.statValue {
+  font-family: var(--font-living-serif), Georgia, serif;
+  font-size: 1.9rem;
+  font-weight: 600;
+}
+
+.statSub {
+  color: var(--living-ink-soft);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.joinCode {
+  font-family: var(--font-living-mono), monospace;
+  font-size: 1.1rem;
+  letter-spacing: 0.05em;
+}
+
+.section {
+  margin-bottom: 1.5rem;
+}
+
+.sectionTitle {
+  font-size: 1.05rem;
+  margin: 0 0 0.75rem;
+}
+
+.rowList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--living-rule);
+  border-radius: 8px;
+  font-size: 0.88rem;
+}
+
+.billSummary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.billLine {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95rem;
+}
+
+.billTotal {
+  composes: billLine;
+  font-weight: 700;
+  font-size: 1.15rem;
+  border-top: 1px solid var(--living-rule);
+  padding-top: 0.6rem;
+}
