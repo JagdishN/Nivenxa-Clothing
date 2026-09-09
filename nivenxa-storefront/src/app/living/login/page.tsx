@@ -6,7 +6,7 @@ import styles from '../_auth/AuthForm.module.scss'
 
 export default async function LivingLoginPage() {
   const session = await getLivingSession()
-  if (session) redirect('/living/app')
+  if (session) redirect('/living/home')
 
   return (
     <div className={styles.shell}>

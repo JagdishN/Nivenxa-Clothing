@@ -1,46 +1,29 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import type { LivingFlashMessage } from '@/lib/living/flash'
 import styles from './Toast.module.scss'
 
-interface ToastMessage {
-  text: string
-  kind: 'notice' | 'error'
-}
-
 /**
- * Every Server Action in /living flashes a message back through
- * ?notice=...&error=... on its redirect — that's the one channel a plain
- * <form action={serverAction}> has for "here's what happened." This picks
- * those params up client-side, shows them as a floating toast instead of an
- * inline page banner, then strips them from the URL (via router.replace, no
- * new history entry) so a refresh or back-navigation doesn't re-trigger it.
- * Mounted once in living/layout.tsx — every route under /living gets it for free.
+ * Renders the flash message the server-rendered layout read for THIS
+ * request (see lib/living/flash.ts + middleware.ts's one-time-cookie
+ * cleanup) — no URL involved at all, unlike the old ?notice=/?error=
+ * query-param version. `initial` is a fresh prop on every navigation
+ * (living/layout.tsx is force-dynamic), so each new non-null value is
+ * shown once and auto-dismissed.
  */
-export default function Toast() {
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const [message, setMessage] = useState<ToastMessage | null>(null)
-  const lastKey = useRef<string | null>(null)
+export default function Toast({ initial }: { initial: LivingFlashMessage | null }) {
+  const [message, setMessage] = useState(initial)
+  const [lastInitial, setLastInitial] = useState(initial)
 
-  useEffect(() => {
-    const notice = searchParams.get('notice')
-    const error = searchParams.get('error')
-    if (!notice && !error) return
-
-    const key = `${pathname}?notice=${notice ?? ''}&error=${error ?? ''}`
-    if (lastKey.current === key) return
-    lastKey.current = key
-    setMessage(error ? { text: error, kind: 'error' } : { text: notice as string, kind: 'notice' })
-
-    const params = new URLSearchParams(searchParams.toString())
-    params.delete('notice')
-    params.delete('error')
-    const qs = params.toString()
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, searchParams])
+  // "Adjusting state when a prop changes," done during render rather than in
+  // an effect (react.dev's own recommended pattern for this) — Toast is
+  // mounted once by the layout and stays mounted across client-side
+  // navigations, so a fresh `initial` on a later render is exactly the
+  // "new flash message arrived" signal, without an extra render's delay.
+  if (initial !== lastInitial) {
+    setLastInitial(initial)
+    setMessage(initial)
+  }
 
   useEffect(() => {
     if (!message) return
@@ -53,7 +36,7 @@ export default function Toast() {
   return (
     <div className={styles.wrap} role="status" aria-live="polite">
       <div className={message.kind === 'error' ? styles.toastError : styles.toastInfo}>
-        <span>{message.text}</span>
+        <span>{message.message}</span>
         <button type="button" className={styles.dismiss} onClick={() => setMessage(null)} aria-label="Dismiss">
           ×
         </button>

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { setLivingError, setLivingNotice } from '@/lib/living/flash'
 import { createLivingServerClient } from '@/lib/living/supabaseServer'
 import OtpForm from '../_auth/OtpForm'
 import theme from '../LivingTheme.module.scss'
@@ -15,8 +16,11 @@ async function createApartment(formData: FormData) {
     p_flat_split: String(formData.get('flat_split') ?? 'equal'),
     p_flat_count: Number(formData.get('flat_count') ?? 1),
   })
-  if (error) redirect('/living/signup?tab=create&error=' + encodeURIComponent(error.message))
-  redirect('/living/app')
+  if (error) {
+    await setLivingError(error.message)
+    redirect('/living/signup?tab=create')
+  }
+  redirect('/living/home')
 }
 
 async function joinApartment(formData: FormData) {
@@ -26,13 +30,15 @@ async function joinApartment(formData: FormData) {
     p_join_code: String(formData.get('join_code') ?? '').trim(),
     p_flat_no: String(formData.get('flat_no') ?? '').trim(),
   })
-  if (error) redirect('/living/signup?tab=join&error=' + encodeURIComponent(error.message))
+  if (error) {
+    await setLivingError(error.message)
+    redirect('/living/signup?tab=join')
+  }
   const status = (data as { status?: string } | null)?.status
-  redirect(
-    status === 'pending'
-      ? '/living/app?notice=' + encodeURIComponent('Request sent — the Admin needs to approve it before you can see your flat.')
-      : '/living/app'
-  )
+  if (status === 'pending') {
+    await setLivingNotice('Request sent — the Admin needs to approve it before you can see your flat.')
+  }
+  redirect('/living/home')
 }
 
 export default async function LivingSignupPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
@@ -45,7 +51,7 @@ export default async function LivingSignupPage({ searchParams }: { searchParams:
 
   if (user) {
     const { data: membership } = await supabase.from('living_memberships').select('id').eq('user_id', user.id).maybeSingle()
-    if (membership) redirect('/living/app')
+    if (membership) redirect('/living/home')
   }
 
   if (!user) {

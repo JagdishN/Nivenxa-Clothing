@@ -1,6 +1,7 @@
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getLivingSession } from '@/lib/living/auth'
+import AuthDrawerProvider from './AuthDrawerProvider'
+import AuthTrigger from './AuthTrigger'
 import LivingNav from './LivingNav'
 import styles from './Landing.module.scss'
 
@@ -15,10 +16,10 @@ const CORE_FLOW = [
 
 export default async function LivingLandingPage() {
   const session = await getLivingSession()
-  if (session) redirect('/living/app')
+  if (session) redirect('/living/home')
 
   return (
-    <>
+    <AuthDrawerProvider>
       <LivingNav />
 
       <section className={styles.hero}>
@@ -29,12 +30,12 @@ export default async function LivingLandingPage() {
           RWA process in between.
         </p>
         <div className={styles.heroActions}>
-          <Link href="/living/signup" className={styles.heroBtnPrimary}>
+          <AuthTrigger mode="signup" className={styles.heroBtnPrimary}>
             Sign Up
-          </Link>
-          <Link href="/living/login" className={styles.heroBtnGhost}>
+          </AuthTrigger>
+          <AuthTrigger mode="login" className={styles.heroBtnGhost}>
             Login
-          </Link>
+          </AuthTrigger>
         </div>
       </section>
 
@@ -75,10 +76,10 @@ export default async function LivingLandingPage() {
       </section>
 
       <div className={styles.closingCta}>
-        <Link href="/living/signup" className={styles.heroBtnPrimary}>
+        <AuthTrigger mode="signup" className={styles.heroBtnPrimary}>
           Sign Up
-        </Link>
+        </AuthTrigger>
       </div>
-    </>
+    </AuthDrawerProvider>
   )
 }

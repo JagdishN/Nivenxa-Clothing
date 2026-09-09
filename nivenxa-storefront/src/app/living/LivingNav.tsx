@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import AuthTrigger from './AuthTrigger'
 import styles from './LivingNav.module.scss'
 
 export default function LivingNav() {
@@ -8,12 +9,12 @@ export default function LivingNav() {
         Nivenxa <em>Living</em>
       </Link>
       <nav className={styles.actions}>
-        <Link href="/living/login" className={styles.link}>
+        <AuthTrigger mode="login" className={styles.link}>
           Login
-        </Link>
-        <Link href="/living/signup" className={styles.linkPrimary}>
+        </AuthTrigger>
+        <AuthTrigger mode="signup" className={styles.linkPrimary}>
           Sign Up
-        </Link>
+        </AuthTrigger>
       </nav>
     </header>
   )

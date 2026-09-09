@@ -26,13 +26,16 @@
 }
 
 .link {
+  font: inherit;
   font-size: 0.88rem;
   font-weight: 600;
   padding: 0.5rem 1rem;
   border-radius: 6px;
   text-decoration: none;
   color: var(--living-ink);
+  background: none;
   border: 1px solid var(--living-rule);
+  cursor: pointer;
 }
 
 .linkPrimary {

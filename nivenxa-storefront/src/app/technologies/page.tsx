@@ -2,55 +2,62 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'NIVENXA Technologies — Digital products built with precision',
-  description: 'We design and build digital products for startups and growing businesses. AI solutions, enterprise platforms, mobile apps, and business automation.',
+  title: 'NIVENXA Technologies — Senior engineers, small teams, systems built to last',
+  description: 'We design and build business software, AI-enabled systems and digital products — without layers of account management or junior-heavy delivery teams.',
 }
 
 const WHAT_WE_BUILD = [
   {
+    num: '01',
     title: 'AI Solutions & Agents',
     description: 'AI-powered workflows, intelligent agents, and OpenAI integrations that create measurable value.',
   },
   {
+    num: '02',
     title: 'Enterprise Platforms',
     description: 'Scalable web platforms built for real business complexity — not demos.',
   },
   {
+    num: '03',
     title: 'Mobile Applications',
-    description: 'iOS and Android apps built in React Native — one codebase, both platforms.',
+    description: 'Cross-platform iOS and Android applications built for reliable, maintainable product experiences.',
+    stack: 'React Native · iOS · Android',
   },
   {
+    num: '04',
     title: 'Business Automation',
     description: 'Internal tools, workflow automation, and dashboards that save hours every week.',
   },
   {
+    num: '05',
     title: 'API & System Integration',
     description: 'Connect your systems. Payment gateways, third-party APIs, and custom integrations.',
   },
   {
+    num: '06',
     title: 'Cloud & DevOps',
     description: 'Azure-hosted infrastructure, CI/CD pipelines, and production-ready deployments.',
   },
 ]
 
-const TECHNOLOGIES = [
-  '.NET', 'Azure', 'React', 'Next.js', 'React Native',
-  'Python', 'PostgreSQL', 'OpenAI', 'Azure AI Search',
-  'Node.js', 'TypeScript', 'Docker', 'GitHub Actions',
+const TECHNOLOGY_GROUPS = [
+  { label: 'Application', items: ['.NET', 'React', 'Next.js', 'React Native', 'TypeScript', 'Node.js'] },
+  { label: 'AI & Data', items: ['Python', 'OpenAI', 'PostgreSQL', 'SQL Server', 'Azure AI Search'] },
+  { label: 'Cloud & DevOps', items: ['Azure', 'Docker', 'GitHub Actions'] },
 ]
 
 const HOW_WE_WORK = [
   {
-    title: 'Small Teams',
-    description: 'Every project is led by experienced engineers. Not outsourced. Not handed to juniors.',
+    title: 'Senior-Led',
+    description: 'Every project is led directly by experienced engineers. Not outsourced. Not handed to juniors.',
   },
   {
-    title: 'Quality First',
-    description: 'We favour long-term maintainability over quick fixes. Code we are proud to put our name on.',
+    title: 'Built to Last',
+    description: 'We favour maintainability and sound architecture over shortcuts. Code we are proud to put our name on.',
   },
   {
-    title: 'AI Native',
-    description: 'We integrate AI where it creates measurable value — not because it is a trend.',
+    title: 'AI With Purpose',
+    description: 'We use AI where it creates measurable value — not because it is fashionable.',
   },
 ]
 
@@ -72,52 +79,76 @@ const PROCESS_STEPS = [
   },
   {
     step: '04',
-    title: 'Support',
+    title: 'Launch & Evolve',
     description: 'Deployment, monitoring, and ongoing product evolution.',
+  },
+]
+
+const PRODUCTS = [
+  {
+    title: 'NIVENXA Chess',
+    description:
+      'An interactive chess learning and playing platform designed to help players learn, practise and improve through guided play, move explanations and intelligent assistance.',
+    tags: ['EdTech', 'Chess', 'AI-Assisted'],
+    href: '/chess',
+    linkLabel: 'Explore NIVENXA Chess',
+  },
+  {
+    title: 'Nivenxa Living',
+    description:
+      'A lightweight platform designed specifically for standalone apartment communities to manage maintenance billing, expenses, payments, residents and day-to-day association operations.',
+    tags: ['PropTech', 'SaaS', 'In Development'],
+    href: '/living',
+    linkLabel: 'Explore Nivenxa Living',
   },
 ]
 
 const PROJECTS = [
   {
     title: 'Home Services Platform',
-    description: 'On-demand laundry and ironing app for apartment communities.',
-    tags: ['Mobile + Web', 'React Native'],
+    description:
+      'Mobile and web platform managing pickup, billing, payments and delivery operations for on-demand laundry services.',
+    tags: ['Mobile', 'Operations'],
+    stack: 'React Native · Web',
     status: 'In Development',
-    footer: 'Powered by NIVENXA Technologies',
   },
   {
     title: 'AI Compliance Platform',
-    description: 'Enterprise SaaS with AI-powered compliance workflows.',
-    tags: ['Enterprise SaaS', 'AI'],
+    description:
+      'Enterprise compliance analysis using AI-assisted regulatory rule evaluation — designed to reduce manual document review and surface compliance gaps faster.',
+    tags: ['AI', 'Enterprise SaaS'],
+    stack: 'Azure · OpenAI',
     status: 'In Development',
-    footer: 'Confidential',
   },
   {
     title: 'Manufacturing ERP',
-    description: 'End-to-end production tracking and inventory management platform.',
-    tags: ['Enterprise', 'Web Platform'],
+    description:
+      'Production, inventory and operational workflow platform connecting manufacturing activities from planning through fulfilment.',
+    tags: ['Manufacturing', 'Enterprise'],
+    stack: '.NET · SQL Server',
     status: 'Private Project',
-    footer: 'Confidential',
   },
   {
     title: 'Healthcare Workflow Platform',
-    description: 'Clinical workflow automation for healthcare providers.',
-    tags: ['Healthcare', 'Automation'],
+    description:
+      'Clinical workflow automation for healthcare providers, streamlining care coordination and reducing administrative overhead.',
+    tags: ['Healthcare', 'Workflow'],
+    stack: undefined as string | undefined,
     status: 'Private Project',
-    footer: 'Confidential',
   },
 ]
 
-const INDUSTRIES = [
-  'Fashion & Retail',
-  'Healthcare',
-  'Manufacturing',
-  'Financial Services',
-  'Real Estate',
-  'Hospitality',
-  'On-demand Services',
-  'Enterprise',
-]
+const CLIENTS = ['Peach and Blue', 'Asendus']
+
+const INDUSTRIES = ['Fashion & Retail', 'Healthcare', 'Manufacturing', 'Financial Services', 'Real Estate', 'Hospitality']
+
+const eyebrow = {
+  fontSize: '11px',
+  fontWeight: 600,
+  letterSpacing: '0.15em',
+  textTransform: 'uppercase' as const,
+  color: 'rgba(26,26,26,0.50)',
+}
 
 export default function TechnologiesPage() {
   return (
@@ -146,13 +177,7 @@ export default function TechnologiesPage() {
         }}>
           NIVENXA
         </Link>
-        <span style={{
-          fontSize: '11px',
-          fontWeight: 500,
-          letterSpacing: '0.12em',
-          textTransform: 'uppercase' as const,
-          color: 'rgba(26,26,26,0.50)',
-        }}>
+        <span style={{ ...eyebrow, margin: 0 }}>
           Technologies
         </span>
       </header>
@@ -164,14 +189,7 @@ export default function TechnologiesPage() {
         margin: '0 auto',
         borderBottom: '1px solid rgba(26,26,26,0.10)',
       }}>
-        <p style={{
-          fontSize: '11px',
-          fontWeight: 600,
-          letterSpacing: '0.15em',
-          textTransform: 'uppercase' as const,
-          color: 'rgba(26,26,26,0.45)',
-          margin: '0 0 20px',
-        }}>
+        <p style={{ ...eyebrow, margin: '0 0 20px' }}>
           NIVENXA Technologies
         </p>
         <h1 style={{
@@ -182,19 +200,35 @@ export default function TechnologiesPage() {
           letterSpacing: '-0.01em',
           margin: '0 0 24px',
         }}>
-          We design and build digital products for startups and growing businesses.
+          Senior engineers. Small teams. Systems built to last.
         </h1>
         <p style={{
           fontSize: '16px',
           lineHeight: 1.80,
           color: 'rgba(26,26,26,0.65)',
-          margin: 0,
+          margin: '0 0 32px',
           maxWidth: '620px',
         }}>
-          We partner with founders and organisations to design, build, and scale modern web platforms,
-          mobile applications, AI solutions, and business automation systems. We do not just write
-          software — we build digital products that businesses rely on every day.
+          We design and build business software, AI-enabled systems, and digital products for startups and
+          growing businesses — without layers of account management or junior-heavy delivery teams.
         </p>
+        <a
+          href="mailto:info@nivenxa.com"
+          style={{
+            display: 'inline-block',
+            fontSize: '12px',
+            fontWeight: 600,
+            letterSpacing: '0.10em',
+            textTransform: 'uppercase' as const,
+            color: 'var(--nivenxa-text-primary, #1A1A1A)',
+            background: 'transparent',
+            border: '1px solid rgba(26,26,26,0.30)',
+            padding: '13px 26px',
+            textDecoration: 'none',
+          }}
+        >
+          Start a Conversation
+        </a>
       </section>
 
       {/* Section 2 — What We Build */}
@@ -204,14 +238,7 @@ export default function TechnologiesPage() {
         margin: '0 auto',
         borderBottom: '1px solid rgba(26,26,26,0.10)',
       }}>
-        <p style={{
-          fontSize: '11px',
-          fontWeight: 600,
-          letterSpacing: '0.15em',
-          textTransform: 'uppercase' as const,
-          color: 'rgba(26,26,26,0.45)',
-          margin: '0 0 32px',
-        }}>
+        <p style={{ ...eyebrow, margin: '0 0 32px' }}>
           What we build
         </p>
         <div style={{
@@ -226,6 +253,15 @@ export default function TechnologiesPage() {
               background: 'var(--nivenxa-bg-primary, #F2EDE6)',
               padding: '32px',
             }}>
+              <p style={{
+                fontSize: '11px',
+                fontWeight: 700,
+                letterSpacing: '0.1em',
+                color: 'rgba(26,26,26,0.32)',
+                margin: '0 0 12px',
+              }}>
+                {item.num}
+              </p>
               <h3 style={{
                 fontSize: '14px',
                 fontWeight: 600,
@@ -242,67 +278,42 @@ export default function TechnologiesPage() {
               }}>
                 {item.description}
               </p>
+              {item.stack && (
+                <p style={{
+                  fontSize: '11px',
+                  fontWeight: 500,
+                  letterSpacing: '0.04em',
+                  color: 'rgba(26,26,26,0.42)',
+                  margin: '10px 0 0',
+                }}>
+                  {item.stack}
+                </p>
+              )}
             </div>
           ))}
         </div>
       </section>
 
-      {/* Section 3 — Technologies */}
+      {/* Section 3 — Why NIVENXA */}
       <section style={{
-        padding: 'clamp(48px, 7vw, 80px) 40px',
-        maxWidth: '820px',
-        margin: '0 auto',
-        borderBottom: '1px solid rgba(26,26,26,0.10)',
-      }}>
-        <p style={{
-          fontSize: '11px',
-          fontWeight: 600,
-          letterSpacing: '0.15em',
-          textTransform: 'uppercase' as const,
-          color: 'rgba(26,26,26,0.45)',
-          margin: '0 0 24px',
-        }}>
-          Technologies
-        </p>
-        <div style={{
-          display: 'flex',
-          flexWrap: 'wrap' as const,
-          gap: '8px',
-        }}>
-          {TECHNOLOGIES.map((tech) => (
-            <span key={tech} style={{
-              fontSize: '12px',
-              fontWeight: 500,
-              letterSpacing: '0.03em',
-              color: 'var(--nivenxa-text-primary, #1A1A1A)',
-              background: 'rgba(26,26,26,0.07)',
-              border: '1px solid rgba(26,26,26,0.12)',
-              padding: '6px 14px',
-              borderRadius: '2px',
-            }}>
-              {tech}
-            </span>
-          ))}
-        </div>
-      </section>
-
-      {/* Section 4 — How We Work */}
-      <section style={{
-        padding: 'clamp(48px, 7vw, 80px) 40px',
+        padding: 'clamp(56px, 8vw, 96px) 40px',
         maxWidth: '1040px',
         margin: '0 auto',
         borderBottom: '1px solid rgba(26,26,26,0.10)',
       }}>
-        <p style={{
-          fontSize: '11px',
-          fontWeight: 600,
-          letterSpacing: '0.15em',
-          textTransform: 'uppercase' as const,
-          color: 'rgba(26,26,26,0.45)',
-          margin: '0 0 32px',
-        }}>
-          How we work
+        <p style={{ ...eyebrow, margin: '0 0 16px' }}>
+          Why NIVENXA
         </p>
+        <h2 style={{
+          fontFamily: 'var(--font-playfair, Georgia, serif)',
+          fontSize: 'clamp(24px, 3.4vw, 36px)',
+          fontWeight: 400,
+          lineHeight: 1.2,
+          letterSpacing: '-0.01em',
+          margin: '0 0 36px',
+        }}>
+          How we work differently.
+        </h2>
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
@@ -312,10 +323,11 @@ export default function TechnologiesPage() {
             <div key={card.title} style={{
               background: '#FFFFFF',
               border: '1px solid #E5DDD5',
+              borderTop: '2px solid var(--nivenxa-cta-forest, #1C2E1E)',
               padding: '32px',
             }}>
               <h3 style={{
-                fontSize: '12px',
+                fontSize: '13px',
                 fontWeight: 700,
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase' as const,
@@ -337,21 +349,215 @@ export default function TechnologiesPage() {
         </div>
       </section>
 
-      {/* Section 5 — Our Process */}
+      {/* Section 4 — NIVENXA Products */}
       <section style={{
         padding: 'clamp(48px, 7vw, 80px) 40px',
         maxWidth: '1040px',
         margin: '0 auto',
         borderBottom: '1px solid rgba(26,26,26,0.10)',
       }}>
+        <p style={{ ...eyebrow, margin: '0 0 10px' }}>
+          NIVENXA Products
+        </p>
         <p style={{
-          fontSize: '11px',
-          fontWeight: 600,
-          letterSpacing: '0.15em',
-          textTransform: 'uppercase' as const,
-          color: 'rgba(26,26,26,0.45)',
-          margin: '0 0 40px',
+          fontSize: '14px',
+          lineHeight: 1.65,
+          color: 'rgba(26,26,26,0.60)',
+          margin: '0 0 32px',
+          maxWidth: '560px',
         }}>
+          Software we design, build, and own end to end — not just client delivery.
+        </p>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gap: '20px',
+        }}>
+          {PRODUCTS.map((product) => (
+            <div key={product.title} style={{
+              background: '#FFFFFF',
+              border: '1px solid #E5DDD5',
+              padding: '28px',
+              display: 'flex',
+              flexDirection: 'column' as const,
+            }}>
+              <h3 style={{
+                fontSize: '16px',
+                fontWeight: 600,
+                margin: '0 0 8px',
+                letterSpacing: '0.01em',
+              }}>
+                {product.title}
+              </h3>
+              <div style={{
+                display: 'flex',
+                flexWrap: 'wrap' as const,
+                gap: '4px 10px',
+                margin: '0 0 14px',
+              }}>
+                {product.tags.map((tag, i) => (
+                  <span key={tag} style={{
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase' as const,
+                    color: 'rgba(26,26,26,0.55)',
+                  }}>
+                    {tag}{i < product.tags.length - 1 ? ' ·' : ''}
+                  </span>
+                ))}
+              </div>
+              <p style={{
+                fontSize: '13px',
+                lineHeight: 1.65,
+                color: 'rgba(26,26,26,0.65)',
+                margin: '0 0 20px',
+                flex: 1,
+              }}>
+                {product.description}
+              </p>
+              <Link href={product.href} style={{
+                fontSize: '12px',
+                fontWeight: 600,
+                letterSpacing: '0.03em',
+                color: 'var(--nivenxa-cta-forest, #1C2E1E)',
+                textDecoration: 'none',
+              }}>
+                {product.linkLabel} →
+              </Link>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Section 5 — Selected Client Work */}
+      <section style={{
+        padding: 'clamp(48px, 7vw, 80px) 40px',
+        maxWidth: '1040px',
+        margin: '0 auto',
+        borderBottom: '1px solid rgba(26,26,26,0.10)',
+      }}>
+        <p style={{ ...eyebrow, margin: '0 0 32px' }}>
+          Selected Client Work
+        </p>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(440px, 1fr))',
+          gap: '20px',
+        }}>
+          {PROJECTS.map((project) => (
+            <div key={project.title} style={{
+              background: '#FFFFFF',
+              border: '1px solid #E5DDD5',
+              padding: '28px',
+              display: 'flex',
+              flexDirection: 'column' as const,
+            }}>
+              <div style={{
+                display: 'flex',
+                flexWrap: 'wrap' as const,
+                gap: '4px 10px',
+                margin: '0 0 12px',
+              }}>
+                {project.tags.map((tag, i) => (
+                  <span key={tag} style={{
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase' as const,
+                    color: 'var(--nivenxa-cta-forest, #1C2E1E)',
+                  }}>
+                    {tag}{i < project.tags.length - 1 ? ' ·' : ''}
+                  </span>
+                ))}
+              </div>
+              <h3 style={{
+                fontSize: '16px',
+                fontWeight: 600,
+                margin: '0 0 10px',
+                letterSpacing: '0.01em',
+              }}>
+                {project.title}
+              </h3>
+              <p style={{
+                fontSize: '13px',
+                lineHeight: 1.65,
+                color: 'rgba(26,26,26,0.65)',
+                margin: '0 0 18px',
+                flex: 1,
+              }}>
+                {project.description}
+              </p>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '12px',
+                borderTop: '1px solid rgba(26,26,26,0.08)',
+                paddingTop: '14px',
+              }}>
+                <p style={{
+                  fontSize: '11px',
+                  fontWeight: 500,
+                  letterSpacing: '0.04em',
+                  color: 'rgba(26,26,26,0.45)',
+                  margin: 0,
+                }}>
+                  {project.stack ?? ''}
+                </p>
+                <p style={{
+                  fontSize: '10px',
+                  fontWeight: 600,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase' as const,
+                  color: 'rgba(26,26,26,0.40)',
+                  margin: 0,
+                  whiteSpace: 'nowrap' as const,
+                }}>
+                  {project.status}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Section 6 — Clients */}
+      <section style={{
+        padding: 'clamp(40px, 6vw, 64px) 40px',
+        maxWidth: '1040px',
+        margin: '0 auto',
+        borderBottom: '1px solid rgba(26,26,26,0.10)',
+      }}>
+        <p style={{ ...eyebrow, margin: '0 0 20px' }}>
+          Clients We&rsquo;ve Worked With
+        </p>
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap' as const,
+          gap: '12px 32px',
+        }}>
+          {CLIENTS.map((client) => (
+            <span key={client} style={{
+              fontFamily: 'var(--font-playfair, Georgia, serif)',
+              fontSize: '20px',
+              fontWeight: 400,
+              color: 'rgba(26,26,26,0.75)',
+            }}>
+              {client}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      {/* Section 7 — Our Process */}
+      <section style={{
+        padding: 'clamp(48px, 7vw, 80px) 40px',
+        maxWidth: '1040px',
+        margin: '0 auto',
+        borderBottom: '1px solid rgba(26,26,26,0.10)',
+      }}>
+        <p style={{ ...eyebrow, margin: '0 0 40px' }}>
           Our process
         </p>
         <div style={{
@@ -369,7 +575,7 @@ export default function TechnologiesPage() {
                 fontSize: '11px',
                 fontWeight: 700,
                 letterSpacing: '0.12em',
-                color: 'rgba(26,26,26,0.28)',
+                color: 'rgba(26,26,26,0.38)',
                 margin: '0 0 12px',
               }}>
                 {step.step}
@@ -395,154 +601,81 @@ export default function TechnologiesPage() {
         </div>
       </section>
 
-      {/* Section 6 — Projects */}
+      {/* Section 8 — Technologies */}
       <section style={{
         padding: 'clamp(48px, 7vw, 80px) 40px',
-        maxWidth: '1040px',
+        maxWidth: '820px',
         margin: '0 auto',
         borderBottom: '1px solid rgba(26,26,26,0.10)',
       }}>
-        <p style={{
-          fontSize: '11px',
-          fontWeight: 600,
-          letterSpacing: '0.15em',
-          textTransform: 'uppercase' as const,
-          color: 'rgba(26,26,26,0.45)',
-          margin: '0 0 32px',
-        }}>
-          Projects
+        <p style={{ ...eyebrow, margin: '0 0 8px' }}>
+          Technology
         </p>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-          gap: '16px',
+        <p style={{
+          fontSize: '13px',
+          lineHeight: 1.6,
+          color: 'rgba(26,26,26,0.55)',
+          margin: '0 0 32px',
+          maxWidth: '480px',
         }}>
-          {PROJECTS.map((project) => (
-            <div key={project.title} style={{
-              background: '#FFFFFF',
-              border: '1px solid #E5DDD5',
-              padding: '28px',
+          We choose technologies appropriate to the system — not the other way round.
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '20px' }}>
+          {TECHNOLOGY_GROUPS.map((group) => (
+            <div key={group.label} style={{
               display: 'flex',
-              flexDirection: 'column' as const,
-              position: 'relative' as const,
+              flexWrap: 'wrap' as const,
+              alignItems: 'baseline',
+              gap: '4px 10px',
             }}>
-              <div style={{
-                position: 'absolute' as const,
-                top: '20px',
-                right: '20px',
-                fontSize: '9px',
+              <span style={{
+                fontSize: '11px',
                 fontWeight: 700,
-                letterSpacing: '0.12em',
+                letterSpacing: '0.1em',
                 textTransform: 'uppercase' as const,
-                color: project.status === 'In Development'
-                  ? 'var(--nivenxa-cta-forest, #1C2E1E)'
-                  : 'rgba(26,26,26,0.45)',
-                background: project.status === 'In Development'
-                  ? 'rgba(28,46,30,0.08)'
-                  : 'rgba(26,26,26,0.05)',
-                padding: '4px 8px',
+                color: 'rgba(26,26,26,0.42)',
+                minWidth: '150px',
               }}>
-                {project.status}
-              </div>
-              <h3 style={{
-                fontSize: '15px',
-                fontWeight: 600,
-                margin: '0 0 10px',
-                paddingRight: '90px',
+                {group.label}
+              </span>
+              <span style={{
+                fontSize: '14px',
+                color: 'rgba(26,26,26,0.75)',
                 letterSpacing: '0.01em',
               }}>
-                {project.title}
-              </h3>
-              <p style={{
-                fontSize: '13px',
-                lineHeight: 1.65,
-                color: 'rgba(26,26,26,0.65)',
-                margin: '0 0 18px',
-                flex: 1,
-              }}>
-                {project.description}
-              </p>
-              <div style={{
-                display: 'flex',
-                flexWrap: 'wrap' as const,
-                gap: '6px',
-                marginBottom: '20px',
-              }}>
-                {project.tags.map((tag) => (
-                  <span key={tag} style={{
-                    fontSize: '10px',
-                    fontWeight: 600,
-                    letterSpacing: '0.06em',
-                    textTransform: 'uppercase' as const,
-                    color: 'rgba(26,26,26,0.50)',
-                    background: 'rgba(26,26,26,0.05)',
-                    padding: '3px 8px',
-                    borderRadius: '1px',
-                  }}>
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              <p style={{
-                fontSize: '10px',
-                fontWeight: 500,
-                letterSpacing: '0.08em',
-                color: 'rgba(26,26,26,0.35)',
-                margin: 0,
-                borderTop: '1px solid rgba(26,26,26,0.08)',
-                paddingTop: '14px',
-              }}>
-                {project.footer}
-              </p>
+                {group.items.join(' · ')}
+              </span>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Section 7 — Industries */}
+      {/* Section 9 — Industries */}
       <section style={{
-        padding: 'clamp(48px, 7vw, 80px) 40px',
+        padding: 'clamp(40px, 6vw, 64px) 40px',
         maxWidth: '820px',
         margin: '0 auto',
-        borderBottom: '1px solid rgba(26,26,26,0.10)',
       }}>
-        <p style={{
-          fontSize: '11px',
-          fontWeight: 600,
-          letterSpacing: '0.15em',
-          textTransform: 'uppercase' as const,
-          color: 'rgba(26,26,26,0.45)',
-          margin: '0 0 24px',
-        }}>
-          Industries we have worked in
+        <p style={{ ...eyebrow, margin: '0 0 20px' }}>
+          Industries
         </p>
-        <div style={{
-          display: 'flex',
-          flexWrap: 'wrap' as const,
-          gap: '8px',
+        <p style={{
+          fontSize: '14px',
+          color: 'rgba(26,26,26,0.72)',
+          lineHeight: 1.8,
+          margin: 0,
+          letterSpacing: '0.01em',
         }}>
-          {INDUSTRIES.map((industry) => (
-            <span key={industry} style={{
-              fontSize: '12px',
-              fontWeight: 500,
-              letterSpacing: '0.03em',
-              color: 'rgba(26,26,26,0.70)',
-              background: 'transparent',
-              border: '1px solid rgba(26,26,26,0.18)',
-              padding: '6px 14px',
-              borderRadius: '2px',
-            }}>
-              {industry}
-            </span>
-          ))}
-        </div>
+          {INDUSTRIES.join(' · ')}
+        </p>
       </section>
 
-      {/* Section 8 — Contact / CTA */}
-      <section style={{
-        padding: 'clamp(64px, 10vw, 120px) 40px clamp(80px, 12vw, 140px)',
+      {/* Section 10 — Contact / CTA */}
+      <section id="contact" style={{
+        padding: 'clamp(48px, 7vw, 90px) 40px clamp(60px, 9vw, 105px)',
         maxWidth: '820px',
         margin: '0 auto',
+        borderTop: '1px solid rgba(26,26,26,0.10)',
       }}>
         <h2 style={{
           fontFamily: 'var(--font-playfair, Georgia, serif)',
@@ -550,7 +683,7 @@ export default function TechnologiesPage() {
           fontWeight: 400,
           lineHeight: 1.20,
           letterSpacing: '-0.01em',
-          margin: '0 0 20px',
+          margin: '0 0 18px',
         }}>
           Let us build something meaningful.
         </h2>
@@ -558,7 +691,7 @@ export default function TechnologiesPage() {
           fontSize: '16px',
           lineHeight: 1.75,
           color: 'rgba(26,26,26,0.65)',
-          margin: '0 0 36px',
+          margin: '0 0 28px',
           maxWidth: '560px',
         }}>
           Whether you are launching a startup, modernising internal systems, or exploring what AI
@@ -576,21 +709,21 @@ export default function TechnologiesPage() {
             background: 'var(--nivenxa-cta-forest, #1C2E1E)',
             padding: '14px 28px',
             textDecoration: 'none',
-            marginBottom: '20px',
+            marginBottom: '16px',
           }}
         >
           Start a Conversation
         </a>
         <p style={{
           fontSize: '13px',
-          color: 'rgba(26,26,26,0.50)',
-          margin: '16px 0 0',
+          color: 'rgba(26,26,26,0.55)',
+          margin: '12px 0 0',
           letterSpacing: '0.01em',
         }}>
           <a
             href="mailto:info@nivenxa.com"
             style={{
-              color: 'rgba(26,26,26,0.55)',
+              color: 'rgba(26,26,26,0.60)',
               textDecoration: 'none',
             }}
           >

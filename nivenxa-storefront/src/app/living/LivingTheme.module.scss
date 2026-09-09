@@ -39,10 +39,30 @@
   padding: 1.5rem;
 }
 
+// Narrower than AppNav's own .inner on purpose — the header is a wayfinding
+// bar and can stretch further; page content (forms, tables) stays capped so
+// it doesn't get uncomfortably wide to scan on a large monitor. Form/input
+// widths are unaffected either way — they're sized in their own modules
+// (e.g. Tankers.module.scss's .rateField), not by how wide this shell is.
 .pageShell {
-  max-width: 960px;
+  max-width: 1360px;
   margin: 0 auto;
-  padding: 2rem 1.5rem 4rem;
+  padding: 2rem 2rem 4rem;
+
+  @media (min-width: 1024px) {
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+
+  @media (min-width: 1600px) {
+    padding-left: 4rem;
+    padding-right: 4rem;
+  }
+
+  @media (max-width: 640px) {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
 }
 
 .heading {

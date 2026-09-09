@@ -1,6 +1,6 @@
-import { Suspense } from 'react'
 import { IBM_Plex_Mono, IBM_Plex_Sans, Source_Serif_4 } from 'next/font/google'
 import type { Metadata } from 'next'
+import { readLivingFlash } from '@/lib/living/flash'
 import Toast from './Toast'
 import theme from './LivingTheme.module.scss'
 
@@ -20,12 +20,11 @@ export const metadata: Metadata = {
   description: 'Maintenance, water billing, and collections for standalone apartment buildings — without hiring a society management company.',
 }
 
-export default function LivingLayout({ children }: { children: React.ReactNode }) {
+export default async function LivingLayout({ children }: { children: React.ReactNode }) {
+  const flash = await readLivingFlash()
   return (
     <div className={`${theme.theme} ${sourceSerif.variable} ${plexSans.variable} ${plexMono.variable}`}>
-      <Suspense fallback={null}>
-        <Toast />
-      </Suspense>
+      <Toast initial={flash} />
       {children}
     </div>
   )

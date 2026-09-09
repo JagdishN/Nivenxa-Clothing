@@ -44,7 +44,7 @@ export async function requireMembership(allowedRoles?: LivingRole[]): Promise<Li
   const { data: membership } = await supabase.from('living_memberships').select('*').eq('user_id', user.id).maybeSingle<Membership>()
   if (!membership) redirect('/living/signup')
 
-  if (allowedRoles && !allowedRoles.includes(membership.role)) redirect('/living/app')
+  if (allowedRoles && !allowedRoles.includes(membership.role)) redirect('/living/home')
 
   const { data: apartment } = await supabase
     .from('living_apartments')
