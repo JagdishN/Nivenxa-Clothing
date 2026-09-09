@@ -224,12 +224,28 @@ export interface InventoryItem {
   quantity: number
   unit: string | null
   location: string | null
+  category: string | null
   notes: string | null
   purchased_on: string | null
   value: number | null
   created_by: string
   created_at: string
   updated_at: string
+}
+
+/** Shared master data, same list across every apartment on the platform — not scoped to one apartment_id. */
+export interface InventoryCategory {
+  id: string
+  name: string
+  created_by: string
+  created_at: string
+}
+
+export interface InventoryUnit {
+  id: string
+  name: string
+  created_by: string
+  created_at: string
 }
 
 export interface ServiceProvider {
@@ -242,6 +258,14 @@ export interface ServiceProvider {
   created_by: string
   created_at: string
   updated_at: string
+}
+
+/** Shared master data, same list across every apartment on the platform — not scoped to one apartment_id. */
+export interface ServiceType {
+  id: string
+  name: string
+  created_by: string
+  created_at: string
 }
 
 /** Computed at read time — never stored (except the ledger amounts folded into it, which ARE stored, per flat per period). See lib/living/billing.ts. */

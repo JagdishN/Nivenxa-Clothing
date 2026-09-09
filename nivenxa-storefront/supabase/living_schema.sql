@@ -808,6 +808,82 @@ create policy living_service_providers_write on living_service_providers for all
 
 alter table living_service_providers enable row level security;
 
+alter table living_inventory_items add column if not exists category text;
+
+-- Inventory Categories/Units and Service Types are shared master data across
+-- every apartment on the platform, not scoped per apartment_id — any
+-- admin/treasurer contributes to (and everyone in that role reads from) one
+-- common catalog, the same way a shared reference list works. Each table
+-- started out apartment-scoped; the "drop column if exists" + "create index
+-- if not exists" pair below migrates an already-applied DB to the shared
+-- shape in place (and is a no-op on a fresh install, where the table is
+-- created directly in the shared shape).
+create table if not exists living_inventory_categories (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  created_by uuid not null references auth.users (id),
+  created_at timestamptz not null default now()
+);
+
+-- Old apartment-scoped policies reference apartment_id, so they have to go
+-- before the column drop below (Postgres won't drop a column a policy
+-- depends on).
+drop policy if exists living_inventory_categories_select on living_inventory_categories;
+drop policy if exists living_inventory_categories_write on living_inventory_categories;
+
+alter table living_inventory_categories drop column if exists apartment_id;
+create unique index if not exists living_inventory_categories_name_key on living_inventory_categories (name);
+
+create policy living_inventory_categories_select on living_inventory_categories for select
+  using (living_my_role() in ('admin', 'treasurer'));
+create policy living_inventory_categories_write on living_inventory_categories for all
+  using (living_my_role() in ('admin', 'treasurer'))
+  with check (living_my_role() in ('admin', 'treasurer'));
+
+alter table living_inventory_categories enable row level security;
+
+create table if not exists living_inventory_units (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  created_by uuid not null references auth.users (id),
+  created_at timestamptz not null default now()
+);
+
+drop policy if exists living_inventory_units_select on living_inventory_units;
+drop policy if exists living_inventory_units_write on living_inventory_units;
+
+alter table living_inventory_units drop column if exists apartment_id;
+create unique index if not exists living_inventory_units_name_key on living_inventory_units (name);
+
+create policy living_inventory_units_select on living_inventory_units for select
+  using (living_my_role() in ('admin', 'treasurer'));
+create policy living_inventory_units_write on living_inventory_units for all
+  using (living_my_role() in ('admin', 'treasurer'))
+  with check (living_my_role() in ('admin', 'treasurer'));
+
+alter table living_inventory_units enable row level security;
+
+create table if not exists living_service_types (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  created_by uuid not null references auth.users (id),
+  created_at timestamptz not null default now()
+);
+
+drop policy if exists living_service_types_select on living_service_types;
+drop policy if exists living_service_types_write on living_service_types;
+
+alter table living_service_types drop column if exists apartment_id;
+create unique index if not exists living_service_types_name_key on living_service_types (name);
+
+create policy living_service_types_select on living_service_types for select
+  using (living_my_role() in ('admin', 'treasurer'));
+create policy living_service_types_write on living_service_types for all
+  using (living_my_role() in ('admin', 'treasurer'))
+  with check (living_my_role() in ('admin', 'treasurer'));
+
+alter table living_service_types enable row level security;
+
 drop policy if exists living_documents_delete on storage.objects;
 create policy living_documents_delete on storage.objects for delete
   using (

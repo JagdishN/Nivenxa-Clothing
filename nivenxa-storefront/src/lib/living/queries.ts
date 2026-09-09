@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { brokenMeterCharge, maintenanceGrandTotal, paymentStatus, riseStreak, round2, splitMaintenance, waterCharge, waterSupplyCostTotal } from './billing'
-import type { Apartment, Bill, Flat, FlatClaim, FlatLedgerEntry, MaintenanceMonth, Payment, SlabConfig, TankerRates, WaterReading, WaterSupplyCost } from './types'
+import type { Apartment, Bill, Flat, FlatClaim, FlatLedgerEntry, InventoryCategory, InventoryUnit, MaintenanceMonth, Payment, ServiceType, SlabConfig, TankerRates, WaterReading, WaterSupplyCost } from './types'
 
 /** The slab config in force for a given month — the most recent one whose `effective_from` doesn't exceed it. */
 export async function getEffectiveSlabConfig(supabase: SupabaseClient, apartmentId: string, month: string): Promise<SlabConfig | null> {
@@ -378,6 +378,24 @@ export async function getOpenDisputes(supabase: SupabaseClient, apartmentId: str
 
 export interface PendingClaimWithFlat extends FlatClaim {
   flat: Flat
+}
+
+/** Shared master data — same list for every apartment, not filtered by apartment_id. */
+export async function getInventoryCategories(supabase: SupabaseClient): Promise<InventoryCategory[]> {
+  const { data } = await supabase.from('living_inventory_categories').select('*').order('name')
+  return data ?? []
+}
+
+/** Shared master data — same list for every apartment, not filtered by apartment_id. */
+export async function getInventoryUnits(supabase: SupabaseClient): Promise<InventoryUnit[]> {
+  const { data } = await supabase.from('living_inventory_units').select('*').order('name')
+  return data ?? []
+}
+
+/** Shared master data — same list for every apartment, not filtered by apartment_id. */
+export async function getServiceTypes(supabase: SupabaseClient): Promise<ServiceType[]> {
+  const { data } = await supabase.from('living_service_types').select('*').order('name')
+  return data ?? []
 }
 
 export async function getPendingClaims(supabase: SupabaseClient, apartmentId: string): Promise<PendingClaimWithFlat[]> {

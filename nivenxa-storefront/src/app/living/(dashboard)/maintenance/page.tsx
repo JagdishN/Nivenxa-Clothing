@@ -56,6 +56,12 @@ function syncCommonWaterAmount(lineItems: MaintenanceLineItem[], commonWaterChar
  * is just "most recently started"); the old one stays in the database, just
  * no longer the one shown/edited by default.
  *
+ * Line items (description + amount + category) carry forward from the period
+ * being superseded, since most months' costs repeat — freely editable
+ * afterward like any other field. Comments reset to blank since they tend to
+ * be period-specific notes, not recurring values. The very first period for
+ * an apartment (no prior period) falls back to TEMPLATE_DESCRIPTIONS at 0.
+ *
  * Also seeds each billable flat's new previous_due from what was left unpaid
  * on the period being superseded (getPreviousDueSuggestion) — a one-time
  * carry-forward, not a live sync; the Admin can edit it afterward like any
@@ -77,13 +83,17 @@ async function startPeriodAction(formData: FormData) {
 
   const priorPeriod = await getCurrentMaintenancePeriod(supabase, apartment.id)
 
+  const lineItems: MaintenanceLineItem[] = priorPeriod
+    ? priorPeriod.line_items.map((item) => ({ ...item, comment: '' }))
+    : TEMPLATE_DESCRIPTIONS.map((description) => ({ description, amount: 0, comment: '', category: '' }))
+
   const { data: inserted, error } = await supabase
     .from('living_maintenance_months')
     .insert({
       apartment_id: apartment.id,
       month: periodStart,
       period_end: periodEnd,
-      line_items: TEMPLATE_DESCRIPTIONS.map((description) => ({ description, amount: 0, comment: '', category: '' })),
+      line_items: lineItems,
       created_by: userId,
     })
     .select()
@@ -514,8 +524,9 @@ export default async function LivingMaintenancePage() {
                     <h2 className={homeStyles.sectionTitle}>Start a new billing period</h2>
                     <p className={theme.muted} style={{ marginBottom: '1rem' }}>
                       Not tied to a calendar month — pick whatever range this apartment actually bills for (a month, a quarter, half a
-                      year). Starting one makes it the current period shown here and to Owners; the old one stays in the record, just no
-                      longer the active one.
+                      year). Line item amounts carry forward from the current period so you&rsquo;re not retyping the same numbers —
+                      edit anything that changed on the Line Items tab afterward. Starting one makes it the current period shown here
+                      and to Owners; the old one stays in the record, just no longer the active one.
                     </p>
                     <form action={startPeriodAction} style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
                       <div className={theme.field} style={{ marginBottom: 0 }}>

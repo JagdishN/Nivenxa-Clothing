@@ -146,6 +146,38 @@
   border-color: var(--living-flag);
 }
 
+// Compact icon-only actions for table rows (row-level save / delete) — same
+// hit target regardless of icon, ghost by default so a row of them doesn't
+// compete visually with the primary buttons above.
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--living-ink-soft);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--living-paper);
+    border-color: var(--living-rule);
+    color: var(--living-ink);
+  }
+}
+
+.iconButtonDanger {
+  composes: iconButton;
+
+  &:hover {
+    background: var(--living-flag-soft);
+    border-color: var(--living-flag);
+    color: var(--living-flag);
+  }
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;

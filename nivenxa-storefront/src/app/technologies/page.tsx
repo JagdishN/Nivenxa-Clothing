@@ -6,6 +6,11 @@ export const metadata: Metadata = {
   description: 'We design and build business software, AI-enabled systems and digital products — without layers of account management or junior-heavy delivery teams.',
 }
 
+// TODO: replace with the real NIVENXA contact number before launch.
+const PHONE_DISPLAY = '+91 7416996664'
+const PHONE_TEL = 'tel:+917416996664'
+const PHONE_WA = 'https://wa.me/917416996665'
+
 const WHAT_WE_BUILD = [
   {
     num: '01',
@@ -213,7 +218,7 @@ export default function TechnologiesPage() {
           growing businesses — without layers of account management or junior-heavy delivery teams.
         </p>
         <a
-          href="mailto:info@nivenxa.com"
+          href="#contact"
           style={{
             display: 'inline-block',
             fontSize: '12px',
@@ -694,42 +699,109 @@ export default function TechnologiesPage() {
           margin: '0 0 28px',
           maxWidth: '560px',
         }}>
-          Whether you are launching a startup, modernising internal systems, or exploring what AI
-          can do for your business — we would like to hear about it.
+          Have a product idea, an existing system that needs improvement, or an AI opportunity
+          worth exploring? Talk to us.
         </p>
-        <a
-          href="mailto:info@nivenxa.com"
-          style={{
-            display: 'inline-block',
-            fontSize: '12px',
-            fontWeight: 600,
-            letterSpacing: '0.10em',
-            textTransform: 'uppercase' as const,
-            color: 'var(--nivenxa-cta-forest-text, #E8C4A0)',
-            background: 'var(--nivenxa-cta-forest, #1C2E1E)',
-            padding: '14px 28px',
-            textDecoration: 'none',
-            marginBottom: '16px',
-          }}
-        >
-          Start a Conversation
-        </a>
-        <p style={{
-          fontSize: '13px',
-          color: 'rgba(26,26,26,0.55)',
-          margin: '12px 0 0',
-          letterSpacing: '0.01em',
-        }}>
+
+        <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginBottom: '32px' }}>
           <a
             href="mailto:info@nivenxa.com"
             style={{
-              color: 'rgba(26,26,26,0.60)',
+              display: 'inline-block',
+              fontSize: '12px',
+              fontWeight: 600,
+              letterSpacing: '0.10em',
+              textTransform: 'uppercase' as const,
+              color: 'var(--nivenxa-cta-forest-text, #E8C4A0)',
+              background: 'var(--nivenxa-cta-forest, #1C2E1E)',
+              padding: '14px 28px',
               textDecoration: 'none',
             }}
           >
-            info@nivenxa.com
+            Email Us
           </a>
-        </p>
+          <a
+            href={PHONE_WA}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-block',
+              fontSize: '12px',
+              fontWeight: 600,
+              letterSpacing: '0.10em',
+              textTransform: 'uppercase' as const,
+              color: 'var(--nivenxa-text-primary, #1A1A1A)',
+              background: 'transparent',
+              border: '1px solid rgba(26,26,26,0.30)',
+              padding: '13px 28px',
+              textDecoration: 'none',
+            }}
+          >
+            WhatsApp Us
+          </a>
+        </div>
+
+        <div style={{
+          display: 'flex',
+          gap: 'clamp(32px, 6vw, 64px)',
+          flexWrap: 'wrap',
+          paddingTop: '24px',
+          borderTop: '1px solid rgba(26,26,26,0.10)',
+        }}>
+          <div>
+            <p style={{
+              fontSize: '11px',
+              fontWeight: 600,
+              letterSpacing: '0.10em',
+              textTransform: 'uppercase' as const,
+              color: 'rgba(26,26,26,0.45)',
+              margin: '0 0 6px',
+            }}>
+              Email
+            </p>
+            <a
+              href="mailto:info@nivenxa.com"
+              style={{
+                fontSize: '15px',
+                color: 'rgba(26,26,26,0.75)',
+                textDecoration: 'none',
+              }}
+            >
+              info@nivenxa.com
+            </a>
+          </div>
+          <div>
+            <p style={{
+              fontSize: '11px',
+              fontWeight: 600,
+              letterSpacing: '0.10em',
+              textTransform: 'uppercase' as const,
+              color: 'rgba(26,26,26,0.45)',
+              margin: '0 0 6px',
+            }}>
+              Talk to us
+            </p>
+            <a
+              href={PHONE_TEL}
+              style={{
+                display: 'block',
+                fontSize: '15px',
+                color: 'rgba(26,26,26,0.75)',
+                textDecoration: 'none',
+                marginBottom: '2px',
+              }}
+            >
+              {PHONE_DISPLAY}
+            </a>
+            <p style={{ fontSize: '13px', color: 'rgba(26,26,26,0.55)', margin: 0 }}>
+              <a href={PHONE_TEL} style={{ color: 'inherit', textDecoration: 'none' }}>Call</a>
+              {' · '}
+              <a href={PHONE_WA} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
+                WhatsApp
+              </a>
+            </p>
+          </div>
+        </div>
       </section>
 
     </div>

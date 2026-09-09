@@ -20,12 +20,17 @@ const LOCALES = [
   'zh',   // Chinese Simplified
 ] as const
 
+// The clothing storefront lives under its own top-level segment, same as
+// every other section of the site (/chess, /living, /technologies) — so
+// /studio/{locale}, not a bare /{locale}. Routes live at
+// src/app/studio/[locale]/... to match (a mismatch between this prefix and
+// where the folder actually lived was the earlier "Explore Studio" 404).
 export const routing = defineRouting({
   locales: LOCALES,
   defaultLocale: 'en',
   localePrefix: {
     mode: 'always',
-    prefixes: Object.fromEntries(LOCALES.map(l => [l, `/studio/${l}`])) as Record<typeof LOCALES[number], string>,
+    prefixes: Object.fromEntries(LOCALES.map((l) => [l, `/studio/${l}`])) as Record<(typeof LOCALES)[number], string>,
   },
 })
 
