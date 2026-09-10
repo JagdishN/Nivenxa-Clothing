@@ -6,10 +6,11 @@ export const metadata: Metadata = {
   description: 'We design and build business software, AI-enabled systems and digital products — without layers of account management or junior-heavy delivery teams.',
 }
 
-// TODO: replace with the real NIVENXA contact number before launch.
 const PHONE_DISPLAY = '+91 7416996664'
 const PHONE_TEL = 'tel:+917416996664'
-const PHONE_WA = 'https://wa.me/917416996665'
+// wa.me's `text` param pre-fills the message so a click opens straight into
+// a started conversation instead of a blank chat.
+const PHONE_WA = `https://wa.me/917416996665?text=${encodeURIComponent("Hi NIVENXA, I'd like to talk about a project.")}`
 
 const WHAT_WE_BUILD = [
   {

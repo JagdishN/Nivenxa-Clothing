@@ -6,6 +6,11 @@ import { getOpenDisputes } from '@/lib/living/queries'
 import theme from '../../LivingTheme.module.scss'
 import homeStyles from '../Home.module.scss'
 
+function disputeStatusPillClass(status: string): string {
+  if (status === 'reviewed') return theme.pill
+  return theme.pillBrass
+}
+
 async function resolveAction(formData: FormData) {
   'use server'
   const { supabase } = await requireMembership(['admin', 'treasurer'])
@@ -44,7 +49,7 @@ export default async function LivingDisputesPage() {
                 <strong>
                   Flat {flat.flat_no} — {formatMonthLabel(reading.month)}
                 </strong>
-                <span className={theme.pillBrass}>{reading.dispute!.status}</span>
+                <span className={disputeStatusPillClass(reading.dispute!.status)}>{reading.dispute!.status}</span>
               </div>
               <p className={homeStyles.statSub} style={{ marginBottom: '0.75rem' }}>
                 Reading: {reading.previous_reading ?? '—'} → {reading.current_reading ?? '—'}

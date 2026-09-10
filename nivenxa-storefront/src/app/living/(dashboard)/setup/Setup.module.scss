@@ -1,0 +1,34 @@
+// Native <details>/<summary> as the "Add Flats" action — a real disclosure,
+// not a fake tab. No JS needed to toggle it; the summary is styled to read
+// as a button rather than a native marker/triangle.
+.addFlats {
+  margin-bottom: 1.5rem;
+}
+
+.addFlatsSummary {
+  list-style: none;
+  cursor: pointer;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+}
+
+.addFlatsPanel {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.flatRowView td {
+  vertical-align: middle;
+}
+
+.editForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: flex-end;
+  padding: 0.75rem 0.25rem;
+}

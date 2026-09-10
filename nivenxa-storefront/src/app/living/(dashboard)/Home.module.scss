@@ -74,3 +74,31 @@
   border-top: 1px solid var(--living-rule);
   padding-top: 0.6rem;
 }
+
+// A demoted, single-card strip for configuration/administrative numbers
+// (flat count, join code, pending requests) that don't need the same
+// visual weight as the "how's my apartment doing this month" headline
+// cards above — same card, several compact stats side by side instead of
+// one full-size card each.
+.miniStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+
+.miniStat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.miniStatLabel {
+  composes: label from '../LivingTheme.module.scss';
+  margin-bottom: 0;
+}
+
+.miniStatValue {
+  font-family: var(--font-living-serif), Georgia, serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+}

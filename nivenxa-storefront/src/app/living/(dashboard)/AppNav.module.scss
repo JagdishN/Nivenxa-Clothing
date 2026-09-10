@@ -7,13 +7,23 @@
 // spans more of the screen than the content column does, same reasoning a
 // lot of dashboard shells use: it's a wayfinding bar, not something meant
 // to be read top-to-bottom, so it can afford to stretch further.
+//
+// Grid rather than the old flex-column: brand sits top-left, the nav row
+// spans underneath it, and the account avatar occupies its own column on
+// the right spanning BOTH rows — vertically centered against the full
+// header height (brand + nav together), not just against the brand line,
+// and pinned to the header's own right edge rather than sitting close to
+// the nav row's last item.
 .inner {
   max-width: 1500px;
   margin: 0 auto;
   padding: 0.7rem 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto auto;
+  column-gap: 1.5rem;
+  row-gap: 0.5rem;
+  align-items: center;
 
   @media (min-width: 1024px) {
     padding-left: 3rem;
@@ -31,29 +41,47 @@
   }
 }
 
-// Apartment name + account icon — always the same line, icon pinned to the
-// far right, independent of how the links row below wraps.
-.topRow {
+// Product identity first, workspace (apartment) second — the apartment is
+// the customer/tenant using the product, not the product's name, so it
+// reads as a subtitle rather than the headline.
+.brand {
+  grid-column: 1;
+  grid-row: 1;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 0.05rem;
+  text-decoration: none;
+  line-height: 1.1;
 }
 
-.logo {
+.productName {
   font-family: var(--font-living-serif), Georgia, serif;
   font-weight: 700;
   font-size: 1.05rem;
   color: var(--living-ink);
-  text-decoration: none;
   white-space: nowrap;
 }
 
-// nowrap + its own horizontal scroll, rather than flex-wrap — with 12+
-// items across every role's nav, wrapping to a second line is what made the
-// header feel messy in the first place. A single line that scrolls on a
-// narrow window reads cleaner than two stacked rows on any window.
+.productNameAccent {
+  color: var(--living-water);
+}
+
+.workspaceName {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--living-ink-soft);
+  white-space: nowrap;
+}
+
+// nowrap + its own horizontal scroll, rather than flex-wrap — with 8
+// top-level items across every role's nav, wrapping to a second line is
+// what made the header feel messy in the first place. A single line that
+// scrolls on a narrow window reads cleaner than two stacked rows on any
+// window. Spans under both the brand and account columns (see .inner).
 .links {
+  grid-column: 1 / span 2;
+  grid-row: 2;
   display: flex;
   gap: 0.1rem;
   flex-wrap: nowrap;
@@ -62,24 +90,148 @@
   padding-bottom: 2px; // room for the scrollbar so it doesn't clip descenders
 }
 
+// Top-level items read as navigation, not buttons — active state is teal
+// text + a thin underline, never a filled pill. The filled treatment is
+// reserved for the dropdown panel below, where it means something more
+// specific: "this is the exact page you're on," not just "you're
+// somewhere inside this section."
 .link {
+  font: inherit;
   font-size: 0.83rem;
   font-weight: 600;
-  padding: 0.4rem 0.55rem;
-  border-radius: 6px;
+  padding: 0.4rem 0.35rem;
+  margin: 0 0.2rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
   text-decoration: none;
   color: var(--living-ink-soft);
   white-space: nowrap;
   flex-shrink: 0;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--living-ink);
+  }
 }
 
 .linkActive {
   composes: link;
-  background: var(--living-water-soft);
   color: var(--living-water);
+  border-bottom-color: var(--living-water);
+
+  &:hover {
+    color: var(--living-water);
+  }
 }
 
+// A menu (Billing, Operations, Community, Settings) — the whole pill is one
+// button that opens the mega-menu panel; direct navigation to the group's
+// own landing page happens via "Overview," the panel's own first item, not
+// via a separate click target on the trigger itself. A split label/caret
+// click target was tried and dropped — it read as "nothing happens" when
+// someone clicked the label expecting the menu to open.
+.navGroup {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.caret {
+  font-size: 0.65em;
+  vertical-align: 1px;
+}
+
+// position: fixed with JS-computed top/left (AppNav.tsx) rather than
+// absolute + top:100% — .links scrolls horizontally via overflow-x: auto,
+// which per the CSS overflow spec forces overflow-y to auto as well the
+// moment overflow-x isn't visible, so an absolutely-positioned panel here
+// would get clipped by its own scroll container instead of floating above it.
+.megaPanel {
+  position: fixed;
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  padding: 0.6rem 0.4rem;
+  background: var(--living-paper-raised);
+  border: 1px solid var(--living-rule);
+  border-radius: 10px;
+  box-shadow: var(--living-shadow);
+  z-index: 10;
+}
+
+.megaPanelTitle {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--living-ink-faint);
+  padding: 0.3rem 0.7rem 0.5rem;
+}
+
+.megaSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  padding-top: 0.4rem;
+  margin-top: 0.4rem;
+  border-top: 1px solid var(--living-rule);
+}
+
+.megaSectionFirst {
+  composes: megaSection;
+  padding-top: 0;
+  margin-top: 0;
+  border-top: none;
+}
+
+.megaSectionHeading {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--living-ink-faint);
+  padding: 0.3rem 0.7rem 0.25rem;
+}
+
+.megaLink {
+  font-size: 0.87rem;
+  font-weight: 600;
+  padding: 0.55rem 0.7rem;
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--living-ink-soft);
+  white-space: nowrap;
+
+  &:hover {
+    background: var(--living-paper);
+    color: var(--living-ink);
+  }
+}
+
+.megaLinkActive {
+  composes: megaLink;
+  background: var(--living-water-soft);
+  color: var(--living-water);
+
+  &:hover {
+    background: var(--living-water-soft);
+    color: var(--living-water);
+  }
+}
+
+// The Overview row always gets breathing room below it, even when the
+// section right after it has no heading of its own to provide that gap.
+.megaOverview {
+  margin-bottom: 0.3rem;
+}
+
+// Right column, spanning both grid rows of .inner — vertically centered
+// against the full header height and pinned to its true right edge.
 .account {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  justify-self: end;
+  align-self: center;
   position: relative;
 }
 

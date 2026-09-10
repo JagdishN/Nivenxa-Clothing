@@ -7,7 +7,7 @@ const FLASH_COOKIE = 'living_flash'
 // could theoretically resurface if middleware somehow didn't run.
 const FLASH_MAX_AGE_SECONDS = 15
 
-export type FlashKind = 'notice' | 'error'
+export type FlashKind = 'notice' | 'warning' | 'error'
 
 export interface LivingFlashMessage {
   kind: FlashKind
@@ -37,6 +37,10 @@ export async function setLivingNotice(message: string) {
   await setLivingFlash('notice', message)
 }
 
+export async function setLivingWarning(message: string) {
+  await setLivingFlash('warning', message)
+}
+
 export async function setLivingError(message: string) {
   await setLivingFlash('error', message)
 }
@@ -48,7 +52,7 @@ export async function readLivingFlash(): Promise<LivingFlashMessage | null> {
   if (!raw) return null
   try {
     const parsed = JSON.parse(raw)
-    if (parsed && (parsed.kind === 'notice' || parsed.kind === 'error') && typeof parsed.message === 'string') {
+    if (parsed && (parsed.kind === 'notice' || parsed.kind === 'warning' || parsed.kind === 'error') && typeof parsed.message === 'string') {
       return parsed as LivingFlashMessage
     }
   } catch {

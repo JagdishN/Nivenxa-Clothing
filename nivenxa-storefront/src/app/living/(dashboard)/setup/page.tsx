@@ -1,11 +1,15 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { requireMembership } from '@/lib/living/auth'
 import { parseFlatTemplate } from '@/lib/living/apartments'
 import { setLivingError, setLivingNotice } from '@/lib/living/flash'
 import { getFlats, getPendingClaims } from '@/lib/living/queries'
+import MaterialIcon from '../../MaterialIcon'
 import theme from '../../LivingTheme.module.scss'
 import homeStyles from '../Home.module.scss'
 import Tabs from '../Tabs'
+import FlatRow from './FlatRow'
+import styles from './Setup.module.scss'
 
 // The platform's absolute ceiling on Apartment.flat_count itself (validated
 // when that field is set/edited) — NOT the number used for the "X / Y" cap
@@ -76,38 +80,41 @@ async function addFlatAction(formData: FormData) {
   redirect('/living/setup')
 }
 
-async function updateFlatsAction(formData: FormData) {
+/** Edits exactly one flat — the pencil-icon row edit on the Flats table, not a bulk save. */
+async function updateSingleFlatAction(flatId: string, formData: FormData) {
   'use server'
   const { supabase, apartment } = await requireMembership(['admin'])
-  const flats = await getFlats(supabase, apartment.id)
 
-  for (const flat of flats) {
-    const flatNo = String(formData.get(`flat_no_${flat.id}`) ?? '').trim()
-    const ownerName = String(formData.get(`owner_name_${flat.id}`) ?? '').trim()
-    const ownerContact = String(formData.get(`owner_contact_${flat.id}`) ?? '').trim()
-    const sqFtRaw = formData.get(`sq_ft_${flat.id}`)
-    const shareOverrideRaw = formData.get(`share_override_${flat.id}`)
-    const excludedFromBilling = formData.get(`excluded_${flat.id}`) === 'on'
-    const mergeInto = String(formData.get(`merge_into_${flat.id}`) ?? '').trim()
-
-    const { error } = await supabase
-      .from('living_flats')
-      .update({
-        flat_no: flatNo || flat.flat_no,
-        owner_name: ownerName || null,
-        owner_contact: ownerContact || null,
-        sq_ft: sqFtRaw === null || sqFtRaw === '' ? null : Number(sqFtRaw),
-        share_override: shareOverrideRaw === null || shareOverrideRaw === '' ? null : Number(shareOverrideRaw),
-        excluded_from_billing: excludedFromBilling,
-        merged_into_flat_id: mergeInto || null,
-      })
-      .eq('id', flat.id)
-    if (error) {
-      await setLivingError(`Flat ${flat.flat_no}: ${error.message}`)
-      redirect('/living/setup')
-    }
+  const flatNo = String(formData.get('flat_no') ?? '').trim()
+  if (!flatNo) {
+    await setLivingError('Flat number is required.')
+    redirect('/living/setup')
   }
-  await setLivingNotice('Flats updated.')
+  const ownerName = String(formData.get('owner_name') ?? '').trim()
+  const ownerContact = String(formData.get('owner_contact') ?? '').trim()
+  const sqFtRaw = formData.get('sq_ft')
+  const shareOverrideRaw = formData.get('share_override')
+  const excludedFromBilling = formData.get('excluded') === 'on'
+  const mergeInto = String(formData.get('merge_into') ?? '').trim()
+
+  const { error } = await supabase
+    .from('living_flats')
+    .update({
+      flat_no: flatNo,
+      owner_name: ownerName || null,
+      owner_contact: ownerContact || null,
+      sq_ft: sqFtRaw === null || sqFtRaw === '' ? null : Number(sqFtRaw),
+      share_override: shareOverrideRaw === null || shareOverrideRaw === '' ? null : Number(shareOverrideRaw),
+      excluded_from_billing: excludedFromBilling,
+      merged_into_flat_id: mergeInto || null,
+    })
+    .eq('id', flatId)
+    .eq('apartment_id', apartment.id)
+  if (error) {
+    await setLivingError(error.message)
+    redirect('/living/setup')
+  }
+  await setLivingNotice('Flat updated.')
   redirect('/living/setup')
 }
 
@@ -151,6 +158,25 @@ async function updateSharedCostDivisorAction(formData: FormData) {
     redirect('/living/setup')
   }
   await setLivingNotice('Split divisor updated.')
+  redirect('/living/setup')
+}
+
+async function updateOpeningCashBalanceAction(formData: FormData) {
+  'use server'
+  const { supabase, apartment } = await requireMembership(['admin'])
+  const raw = String(formData.get('opening_cash_balance') ?? '').trim()
+  const balance = raw === '' ? null : Number(raw)
+  if (balance !== null && !Number.isFinite(balance)) {
+    await setLivingError('Opening balance must be a number, or left blank to treat it as zero.')
+    redirect('/living/setup')
+  }
+
+  const { error } = await supabase.from('living_apartments').update({ opening_cash_balance: balance }).eq('id', apartment.id)
+  if (error) {
+    await setLivingError(error.message)
+    redirect('/living/setup')
+  }
+  await setLivingNotice('Opening balance updated.')
   redirect('/living/setup')
 }
 
@@ -218,135 +244,102 @@ export default async function LivingSetupPage() {
                     </button>
                   </form>
                 </div>
-                <div className={theme.card}>
-                  <form action={updateFlatsAction}>
-                    <div className={theme.tableScroll}>
-                      <table className={theme.table}>
-                        <thead>
-                          <tr>
-                            <th>Flat</th>
-                            <th>Owner</th>
-                            <th>Contact</th>
-                            <th className={theme.num}>sq ft</th>
-                            <th className={theme.num}>Share override</th>
-                            <th>Shared/common meter</th>
-                            <th>Merge water into</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {flats.map((flat) => (
-                            <tr key={flat.id}>
-                              <td>
-                                <input name={`flat_no_${flat.id}`} className={theme.input} defaultValue={flat.flat_no} />
-                              </td>
-                              <td>
-                                <input name={`owner_name_${flat.id}`} className={theme.input} defaultValue={flat.owner_name ?? ''} />
-                              </td>
-                              <td>
-                                <input name={`owner_contact_${flat.id}`} className={theme.input} defaultValue={flat.owner_contact ?? ''} />
-                              </td>
-                              <td>
-                                <input name={`sq_ft_${flat.id}`} className={theme.input} type="number" step="0.01" defaultValue={flat.sq_ft ?? ''} />
-                              </td>
-                              <td>
-                                <input
-                                  name={`share_override_${flat.id}`}
-                                  className={theme.input}
-                                  type="number"
-                                  step="0.01"
-                                  defaultValue={flat.share_override ?? ''}
-                                />
-                              </td>
-                              <td style={{ textAlign: 'center' }}>
-                                <input type="checkbox" name={`excluded_${flat.id}`} defaultChecked={flat.excluded_from_billing} />
-                              </td>
-                              <td>
-                                <select name={`merge_into_${flat.id}`} className={theme.select} defaultValue={flat.merged_into_flat_id ?? ''}>
-                                  <option value="">— none —</option>
-                                  {flats
-                                    .filter((other) => other.id !== flat.id)
-                                    .map((other) => (
-                                      <option key={other.id} value={other.id}>
-                                        {other.flat_no}
-                                      </option>
-                                    ))}
-                                </select>
-                              </td>
-                            </tr>
-                          ))}
-                          {flats.length === 0 && (
-                            <tr>
-                              <td colSpan={7} className={theme.muted}>
-                                No flats yet — add them in the Add Flats tab.
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
+
+                {/* An action, not a peer view — a <details> disclosure rather than a tab, opened on demand instead of always taking up its own place in the tab row. */}
+                <details className={styles.addFlats}>
+                  <summary className={`${theme.button} ${styles.addFlatsSummary}`}>
+                    <MaterialIcon name="add" size={16} style={{ marginRight: '0.3rem' }} />
+                    Add Flats
+                  </summary>
+                  <div className={styles.addFlatsPanel}>
+                    <div className={theme.card}>
+                      <h2 className={homeStyles.sectionTitle}>Bulk upload</h2>
+                      <p className={theme.muted} style={{ marginBottom: '1rem' }}>
+                        Upload an .xlsx file with columns <code>flat_no</code>, <code>owner_name</code>, <code>owner_contact</code>.
+                      </p>
+                      <form action={uploadFlatsAction}>
+                        <div className={theme.field}>
+                          <input type="file" name="file" accept=".xlsx" required />
+                        </div>
+                        <button type="submit" className={theme.button}>
+                          Upload
+                        </button>
+                      </form>
                     </div>
-                    {flats.length > 0 && (
-                      <button type="submit" className={theme.button} style={{ marginTop: '1rem' }}>
-                        Save changes
-                      </button>
-                    )}
-                  </form>
-                  <p className={theme.muted} style={{ marginTop: '0.75rem' }}>
-                    Share override only matters when this Apartment&rsquo;s maintenance split is set to weighted, and only if you
-                    don&rsquo;t want to rely on sq ft for that flat. &ldquo;Shared/common meter&rdquo; is for a row that isn&rsquo;t a
-                    real resident (e.g. a building-wide common meter) — it never gets a personal bill, and its own water charge
-                    auto-fills the Common Water Bill line item on Maintenance instead. &ldquo;Merge water into&rdquo; is for a flat
-                    with a second meter, same owner as another unit — its water charge adds into the flat you pick, and it drops off
-                    the Bills page on its own.
-                  </p>
-                </div>
-              </>
-            ),
-          },
-          {
-            id: 'add',
-            label: 'Add Flats',
-            content: (
-              <>
-                <div className={theme.card} style={{ marginBottom: '1.5rem' }}>
-                  <h2 className={homeStyles.sectionTitle}>Bulk upload</h2>
-                  <p className={theme.muted} style={{ marginBottom: '1rem' }}>
-                    Upload an .xlsx file with columns <code>flat_no</code>, <code>owner_name</code>, <code>owner_contact</code>.
-                  </p>
-                  <form action={uploadFlatsAction}>
-                    <div className={theme.field}>
-                      <input type="file" name="file" accept=".xlsx" required />
+
+                    <div className={theme.card}>
+                      <h2 className={homeStyles.sectionTitle}>Add a flat manually</h2>
+                      <form action={addFlatAction} style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                        <div className={theme.field} style={{ marginBottom: 0 }}>
+                          <label className={theme.label} htmlFor="flat_no">
+                            Flat number
+                          </label>
+                          <input id="flat_no" name="flat_no" className={theme.input} required />
+                        </div>
+                        <div className={theme.field} style={{ marginBottom: 0 }}>
+                          <label className={theme.label} htmlFor="owner_name">
+                            Owner name
+                          </label>
+                          <input id="owner_name" name="owner_name" className={theme.input} />
+                        </div>
+                        <div className={theme.field} style={{ marginBottom: 0 }}>
+                          <label className={theme.label} htmlFor="owner_contact">
+                            Owner contact (email or phone)
+                          </label>
+                          <input id="owner_contact" name="owner_contact" className={theme.input} />
+                        </div>
+                        <button type="submit" className={theme.button}>
+                          <MaterialIcon name="add" size={16} style={{ marginRight: "0.3rem" }} />Add flat
+                        </button>
+                      </form>
                     </div>
-                    <button type="submit" className={theme.button}>
-                      Upload
-                    </button>
-                  </form>
-                </div>
+                  </div>
+                </details>
 
                 <div className={theme.card}>
-                  <h2 className={homeStyles.sectionTitle}>Add a flat manually</h2>
-                  <form action={addFlatAction}>
-                    <div className={theme.field}>
-                      <label className={theme.label} htmlFor="flat_no">
-                        Flat number
-                      </label>
-                      <input id="flat_no" name="flat_no" className={theme.input} required />
-                    </div>
-                    <div className={theme.field}>
-                      <label className={theme.label} htmlFor="owner_name">
-                        Owner name
-                      </label>
-                      <input id="owner_name" name="owner_name" className={theme.input} />
-                    </div>
-                    <div className={theme.field}>
-                      <label className={theme.label} htmlFor="owner_contact">
-                        Owner contact (email or phone)
-                      </label>
-                      <input id="owner_contact" name="owner_contact" className={theme.input} />
-                    </div>
-                    <button type="submit" className={theme.button}>
-                      Add flat
-                    </button>
-                  </form>
+                  <div className={theme.tableScroll}>
+                    <table className={theme.table}>
+                      <thead>
+                        <tr>
+                          <th>Flat</th>
+                          <th>Owner</th>
+                          <th>Contact</th>
+                          <th className={theme.num}>sq ft</th>
+                          <th className={theme.num}>Split override</th>
+                          <th>Water meter</th>
+                          <th>Merged into</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {flats.map((flat) => (
+                          <FlatRow
+                            key={flat.id}
+                            flat={flat}
+                            otherFlats={flats.filter((other) => other.id !== flat.id)}
+                            apartmentName={apartment.name}
+                            joinCode={apartment.join_code}
+                            action={updateSingleFlatAction.bind(null, flat.id)}
+                          />
+                        ))}
+                        {flats.length === 0 && (
+                          <tr>
+                            <td colSpan={8} className={theme.muted}>
+                              No flats yet — use Add Flats above.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className={theme.muted} style={{ marginTop: '0.75rem' }}>
+                    Click the pencil to edit a flat. Split override only matters when this Apartment&rsquo;s maintenance split is set
+                    to weighted, and only if you don&rsquo;t want to rely on sq ft for that flat. &ldquo;Water meter: Shared/common&rdquo;
+                    is for a row that isn&rsquo;t a real resident (e.g. a building-wide common meter) — it never gets a personal bill,
+                    and its own water charge auto-fills the Common Water Bill line item on Maintenance instead. &ldquo;Merged
+                    into&rdquo; is for a flat with a second meter, same owner as another unit — its water charge adds into the flat
+                    you pick, and it drops off the Bills page on its own.
+                  </p>
                 </div>
               </>
             ),
@@ -355,50 +348,83 @@ export default async function LivingSetupPage() {
             id: 'split',
             label: 'Common Split',
             content: (
-              <div className={theme.card}>
-                <p className={theme.muted} style={{ marginBottom: '1rem' }}>
-                  Equal-split common maintenance and the shared water-supply pool (tankers/Majeera) both divide by the actual number
-                  of flats by default. Override that here if it shouldn&rsquo;t be — e.g. a flat with two water meters is still one
-                  billable unit, or not every row above is really a separate one.
-                </p>
-                <form action={updateSharedCostDivisorAction} style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem' }}>
-                  <div className={theme.field} style={{ marginBottom: 0 }}>
-                    <label className={theme.label} htmlFor="shared_cost_divisor">
-                      Divisor
-                    </label>
-                    <input
-                      id="shared_cost_divisor"
-                      name="shared_cost_divisor"
-                      type="number"
-                      min={1}
-                      className={theme.input}
-                      style={{ width: '6rem' }}
-                      defaultValue={apartment.shared_cost_divisor ?? ''}
-                      placeholder={String(flats.length)}
-                    />
-                  </div>
-                  <button type="submit" className={theme.buttonGhost}>
-                    Update
-                  </button>
-                </form>
-                <p className={theme.muted} style={{ marginTop: '0.5rem' }}>
-                  Currently dividing by {apartment.shared_cost_divisor ?? flats.length}
-                  {apartment.shared_cost_divisor ? ' (override)' : ` (actual flat count — leave blank to keep this automatic)`}. Leave
-                  blank to go back to automatic. When overridden, per-flat shares won&rsquo;t necessarily add back up to the grand
-                  total — that&rsquo;s expected.
-                </p>
-              </div>
+              <>
+                <div className={theme.card} style={{ marginBottom: '1.5rem' }}>
+                  <p className={theme.muted} style={{ marginBottom: '1rem' }}>
+                    Equal-split common maintenance and the shared water-supply pool (tankers/Majeera) both divide by the actual number
+                    of flats by default. Override that here if it shouldn&rsquo;t be — e.g. a flat with two water meters is still one
+                    billable unit, or not every row above is really a separate one.
+                  </p>
+                  <form action={updateSharedCostDivisorAction} style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem' }}>
+                    <div className={theme.field} style={{ marginBottom: 0 }}>
+                      <label className={theme.label} htmlFor="shared_cost_divisor">
+                        Divisor
+                      </label>
+                      <input
+                        id="shared_cost_divisor"
+                        name="shared_cost_divisor"
+                        type="number"
+                        min={1}
+                        className={theme.input}
+                        style={{ width: '6rem' }}
+                        defaultValue={apartment.shared_cost_divisor ?? ''}
+                        placeholder={String(flats.length)}
+                      />
+                    </div>
+                    <button type="submit" className={theme.buttonGhost}>
+                      Update
+                    </button>
+                  </form>
+                  <p className={theme.muted} style={{ marginTop: '0.5rem' }}>
+                    Currently dividing by {apartment.shared_cost_divisor ?? flats.length}
+                    {apartment.shared_cost_divisor ? ' (override)' : ` (actual flat count — leave blank to keep this automatic)`}. Leave
+                    blank to go back to automatic. When overridden, per-flat shares won&rsquo;t necessarily add back up to the grand
+                    total — that&rsquo;s expected.
+                  </p>
+                </div>
+
+                <div className={theme.card}>
+                  <p className={theme.muted} style={{ marginBottom: '1rem' }}>
+                    The association&rsquo;s real cash balance before Living started tracking it — a one-time seed for{' '}
+                    <Link href="/living/statements">Financial Statements</Link>&rsquo; running Opening/Closing Balance. Leave blank to
+                    start from zero.
+                  </p>
+                  <form action={updateOpeningCashBalanceAction} style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem' }}>
+                    <div className={theme.field} style={{ marginBottom: 0 }}>
+                      <label className={theme.label} htmlFor="opening_cash_balance">
+                        Opening cash balance
+                      </label>
+                      <input
+                        id="opening_cash_balance"
+                        name="opening_cash_balance"
+                        type="number"
+                        step="0.01"
+                        className={theme.input}
+                        style={{ width: '10rem' }}
+                        defaultValue={apartment.opening_cash_balance ?? ''}
+                        placeholder="0"
+                      />
+                    </div>
+                    <button type="submit" className={theme.buttonGhost}>
+                      Update
+                    </button>
+                  </form>
+                </div>
+              </>
             ),
           },
           {
             id: 'requests',
-            label: 'Requests',
+            label: 'Join Requests',
             badge: claims.length,
             content: (
               <div className={homeStyles.rowList}>
                 {claims.map((claim) => (
                   <div key={claim.id} className={homeStyles.row}>
-                    <span>Flat {claim.flat.flat_no}</span>
+                    <span>
+                      Flat {claim.flat.flat_no}
+                      <span className={theme.muted}> — {claim.requester_email ?? claim.requester_phone ?? 'no contact on file'}</span>
+                    </span>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <form action={approveClaimAction}>
                         <input type="hidden" name="claim_id" value={claim.id} />

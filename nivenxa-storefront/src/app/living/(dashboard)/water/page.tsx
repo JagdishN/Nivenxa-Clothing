@@ -3,8 +3,19 @@ import Link from 'next/link'
 import { requireMembership } from '@/lib/living/auth'
 import { setLivingError, setLivingNotice } from '@/lib/living/flash'
 import { daysInMonth, formatCurrency, formatMonthLabel, monthKeyFor } from '@/lib/living/format'
-import { splitMaintenance, suggestedBaseRatePer1000L, waterSupplyCostTotal } from '@/lib/living/billing'
-import { getBillableFlats, getEffectiveTankerRates, getFlats, getReadingHistory, getWaterReading, getWaterSupplyCost } from '@/lib/living/queries'
+import { tankerAndMajeeraLiters, waterSupplyCostTotal } from '@/lib/living/billing'
+import {
+  getCombinedWaterRate,
+  getEffectiveSlabConfig,
+  getEffectiveTankerRates,
+  getFlats,
+  getIncomingGap,
+  getReadingHistory,
+  getTotalConsumptionForMonth,
+  getWaterReading,
+  getWaterSupplyCost,
+  setWaterChargeAdjustment,
+} from '@/lib/living/queries'
 import type { WaterReading } from '@/lib/living/types'
 import theme from '../../LivingTheme.module.scss'
 import homeStyles from '../Home.module.scss'
@@ -138,19 +149,43 @@ async function saveWaterSupplyCostAction(formData: FormData) {
   redirect('/living/water')
 }
 
+async function adjustWaterChargeAction(formData: FormData) {
+  'use server'
+  const { supabase, apartment, userId } = await requireMembership(['admin'])
+  const flatId = String(formData.get('flat_id'))
+  const month = String(formData.get('adjustment_month'))
+  const amount = Number(formData.get('adjustment_amount') ?? 0)
+  const reason = String(formData.get('adjustment_reason') ?? '').trim()
+
+  if (!reason) {
+    await setLivingError('Add a reason for the adjustment.')
+    redirect('/living/water')
+  }
+
+  try {
+    await setWaterChargeAdjustment(supabase, apartment.id, flatId, month, amount, reason, userId)
+  } catch (err) {
+    await setLivingError(err instanceof Error ? err.message : 'Could not save the adjustment.')
+    redirect('/living/water')
+  }
+  await setLivingNotice('Adjustment saved.')
+  redirect('/living/water')
+}
+
 export default async function LivingWaterPage() {
   const { supabase, apartment } = await requireMembership(['admin'])
   const month = monthKeyFor(new Date())
-  const [flats, supplyCost, tankerRates] = await Promise.all([
+  const [flats, supplyCost, tankerRates, combinedRate, incomingGap, slab, totalConsumption] = await Promise.all([
     getFlats(supabase, apartment.id),
     getWaterSupplyCost(supabase, apartment.id, month),
     getEffectiveTankerRates(supabase, apartment.id, month),
+    getCombinedWaterRate(supabase, apartment.id, month),
+    getIncomingGap(supabase, apartment.id, month),
+    getEffectiveSlabConfig(supabase, apartment.id, month),
+    getTotalConsumptionForMonth(supabase, apartment.id, month),
   ])
-  // Every real meter (including a shared/common one and a merged second
-  // meter) still needs its own reading tracked, so `flats` above stays
-  // unfiltered for the readings table — only the split preview below should
-  // exclude common/merged flats, same reasoning as computeBillForFlat.
-  const billableFlats = getBillableFlats(flats)
+  const purchasedLiters = supplyCost ? tankerAndMajeeraLiters(supplyCost, daysInMonth(month)) : 0
+  const reconciliationGap = purchasedLiters - totalConsumption
   const readings = new Map<string, WaterReading>()
   for (const flat of flats) {
     const r = await getWaterReading(supabase, flat.id, month)
@@ -310,8 +345,7 @@ export default async function LivingWaterPage() {
                   defaultValue={supplyCost?.majeera_connection_count ?? 0}
                 />
                 <p className={theme.muted} style={{ marginTop: '0.3rem' }}>
-                  Government norm: 500L/day supplied per connection — used only to suggest a base water rate on the Slab settings
-                  page, never billed on its own.
+                  Government norm: 500L/day supplied per connection — feeds this month&rsquo;s combined water rate below directly.
                 </p>
               </div>
               <div className={theme.field}>
@@ -360,34 +394,121 @@ export default async function LivingWaterPage() {
                           <span>Total water supply cost</span>
                           <span className={theme.num}>{formatCurrency(waterSupplyCostTotal(supplyCost, tankerRates))}</span>
                         </div>
-                        {billableFlats.length > 0 && (
-                          <p className={theme.muted} style={{ marginTop: '0.5rem' }}>
-                            {apartment.flat_split === 'equal' ? 'Equal split' : 'Weighted split'} across{' '}
-                            {apartment.flat_split === 'equal' ? (apartment.shared_cost_divisor ?? billableFlats.length) : billableFlats.length} flats
-                            {apartment.flat_split === 'equal' && apartment.shared_cost_divisor ? ' (divisor override)' : ''} — e.g. flat{' '}
-                            {billableFlats[0].flat_no}:{' '}
-                            {formatCurrency(
-                              splitMaintenance(
-                                waterSupplyCostTotal(supplyCost, tankerRates),
-                                billableFlats,
-                                apartment.flat_split,
-                                apartment.shared_cost_divisor
-                              ).get(billableFlats[0].id) ?? 0
-                            )}{' '}
-                            added on top of that flat&rsquo;s own metered charge.
-                          </p>
+                        {incomingGap !== 0 && (
+                          <div className={homeStyles.billLine}>
+                            <span>{incomingGap > 0 ? 'Carried over (under-recovered last month)' : 'Carried over (over-recovered last month)'}</span>
+                            <span className={theme.num}>{formatCurrency(incomingGap)}</span>
+                          </div>
                         )}
-                        {(() => {
-                          const suggested = suggestedBaseRatePer1000L(supplyCost, tankerRates, daysInMonth(month))
-                          return suggested !== null ? (
-                            <p className={theme.muted} style={{ marginTop: '0.5rem' }}>
-                              Works out to {formatCurrency(suggested)} per 1,000L supplied this month — a starting point for the base
-                              water rate on <Link href="/living/settings/slabs">Slab settings</Link>, not applied automatically.
+                        <div className={homeStyles.billTotal}>
+                          <span>Combined rate this month</span>
+                          <span className={theme.num}>{formatCurrency(combinedRate)} / 1,000L</span>
+                        </div>
+                        <p className={theme.muted} style={{ marginTop: '0.5rem' }}>
+                          Every flat&rsquo;s own metered consumption is billed at this rate{slab?.water_billing_method === 'slab' ? ', multiplied per the tier it falls in' : ''} —
+                          no separate equal-split water charge anymore. Any ₹ gap between what&rsquo;s billed and what&rsquo;s actually
+                          spent this month carries into next month&rsquo;s rate automatically.
+                        </p>
+
+                        <div style={{ marginTop: '1rem', borderTop: '1px solid var(--living-rule)', paddingTop: '1rem' }}>
+                          <div className={homeStyles.billLine}>
+                            <span>Total litres purchased this month</span>
+                            <span className={theme.num}>{purchasedLiters.toLocaleString('en-IN')}L</span>
+                          </div>
+                          <div className={homeStyles.billLine}>
+                            <span>Total litres recorded consumed by flats</span>
+                            <span className={theme.num}>{totalConsumption.toLocaleString('en-IN')}L</span>
+                          </div>
+                          <div className={homeStyles.billLine}>
+                            <span>Difference</span>
+                            <span className={theme.num}>{reconciliationGap.toLocaleString('en-IN')}L</span>
+                          </div>
+                          <p className={theme.muted} style={{ marginTop: '0.5rem' }}>
+                            Not silently distributed — a gap here can come from common-area/cleaning/gardening/security usage, a
+                            free source (borewell/municipal) blended into meters, meter differences, tank overflow, leakage, or
+                            unrecorded consumption. Worth a look if it&rsquo;s large or growing.
+                          </p>
+                        </div>
+
+                        {slab?.water_billing_method === 'slab' && slab.slabs.length > 0 && (
+                          <div style={{ marginTop: '1rem', borderTop: '1px solid var(--living-rule)', paddingTop: '1rem' }}>
+                            <p className={theme.label} style={{ marginBottom: '0.5rem' }}>
+                              Effective tier rates this month ({slab.slab_calculation_method === 'whole_consumption' ? 'Whole-consumption' : 'Progressive'})
                             </p>
-                          ) : null
-                        })()}
+                            <div className={theme.tableScroll}>
+                              <table className={theme.table}>
+                                <thead>
+                                  <tr>
+                                    <th>From</th>
+                                    <th>To</th>
+                                    <th className={theme.num}>Multiplier</th>
+                                    <th className={theme.num}>Rate</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {slab.slabs.map((tier, i) => (
+                                    <tr key={i}>
+                                      <td>{tier.from_liters.toLocaleString('en-IN')}L</td>
+                                      <td>{tier.to_liters === null ? 'Unbounded' : `${tier.to_liters.toLocaleString('en-IN')}L`}</td>
+                                      <td className={theme.num}>{tier.rate_multiplier}×</td>
+                                      <td className={theme.num}>{formatCurrency(combinedRate * tier.rate_multiplier)}/1,000L</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
+                  </div>
+
+                  <div className={theme.card} style={{ marginTop: '1.25rem' }}>
+                    <p className={theme.label} style={{ marginBottom: '0.5rem' }}>
+                      Adjust a flat&rsquo;s water charge
+                    </p>
+                    <p className={theme.muted} style={{ marginBottom: '0.75rem' }}>
+                      A manual correction on top of the computed charge, with a reason kept on record. Applying it to the current
+                      month locks that month&rsquo;s water charge going forward, so it won&rsquo;t drift if tanker counts or
+                      readings change later.
+                    </p>
+                    <form action={adjustWaterChargeAction}>
+                      <div className={homeStyles.grid}>
+                        <div className={theme.field}>
+                          <label className={theme.label} htmlFor="flat_id">
+                            Flat
+                          </label>
+                          <select id="flat_id" name="flat_id" className={theme.select} required>
+                            {flats.map((f) => (
+                              <option key={f.id} value={f.id}>
+                                {f.flat_no}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className={theme.field}>
+                          <label className={theme.label} htmlFor="adjustment_month">
+                            Month
+                          </label>
+                          <input id="adjustment_month" name="adjustment_month" type="date" className={theme.input} defaultValue={month} required />
+                        </div>
+                        <div className={theme.field}>
+                          <label className={theme.label} htmlFor="adjustment_amount">
+                            Adjustment amount (± ₹)
+                          </label>
+                          <input id="adjustment_amount" name="adjustment_amount" type="number" step="0.01" className={theme.input} required />
+                        </div>
+                      </div>
+                      <div className={theme.field}>
+                        <label className={theme.label} htmlFor="adjustment_reason">
+                          Reason
+                        </label>
+                        <input id="adjustment_reason" name="adjustment_reason" className={theme.input} required />
+                      </div>
+                      <button type="submit" className={theme.button}>
+                        Save adjustment
+                      </button>
+                    </form>
                   </div>
                 </>
               ),

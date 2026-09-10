@@ -1,0 +1,70 @@
+.sheet {
+  max-width: 30rem;
+  margin: 0 auto;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--living-ok);
+  margin-bottom: 1rem;
+}
+
+.receiptNo {
+  font-family: var(--font-living-mono), ui-monospace, monospace;
+  font-size: 0.85rem;
+  color: var(--living-ink-soft);
+  letter-spacing: 0.02em;
+}
+
+.amount {
+  font-family: var(--font-living-serif), Georgia, serif;
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin: 0.5rem 0;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--living-rule);
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.92rem;
+}
+
+.rowLabel {
+  color: var(--living-ink-soft);
+}
+
+.actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+
+// Print/PDF output: just the receipt card — no header, no back link, no
+// action buttons, no page background/shadow chrome.
+@media print {
+  :global(header) {
+    display: none;
+  }
+
+  .noPrint {
+    display: none;
+  }
+
+  .sheet {
+    max-width: none;
+  }
+}

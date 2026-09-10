@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation'
 import { requireMembership } from '@/lib/living/auth'
 import { setLivingError, setLivingNotice } from '@/lib/living/flash'
 import { formatCurrency, formatMonthLabel, monthKeyFor } from '@/lib/living/format'
+import ConfirmSubmitButton from '../../ConfirmSubmitButton'
+import MaterialIcon from '../../../MaterialIcon'
 import theme from '../../../LivingTheme.module.scss'
 import homeStyles from '../../Home.module.scss'
 import Tabs from '../../Tabs'
@@ -70,10 +72,10 @@ async function saveGovtRatesAction(formData: FormData) {
   redirect('/living/settings/tankers')
 }
 
-async function deleteRateAction(formData: FormData) {
+async function deleteRateAction(id: string) {
   'use server'
   const { supabase, apartment } = await requireMembership(['admin'])
-  const { error } = await supabase.from('living_tanker_rates').delete().eq('id', String(formData.get('id'))).eq('apartment_id', apartment.id)
+  const { error } = await supabase.from('living_tanker_rates').delete().eq('id', id).eq('apartment_id', apartment.id)
   if (error) {
     await setLivingError(error.message)
     redirect('/living/settings/tankers')
@@ -281,12 +283,14 @@ export default async function LivingTankerSettingsPage() {
                             <td className={theme.num}>{formatCurrency(r.rate_govt_small_5000l)}</td>
                             <td className={theme.num}>{formatCurrency(r.rate_govt_large_10000l)}</td>
                             <td>
-                              <form action={deleteRateAction}>
-                                <input type="hidden" name="id" value={r.id} />
-                                <button type="submit" className={theme.buttonGhost}>
-                                  Delete
-                                </button>
-                              </form>
+                              <ConfirmSubmitButton
+                                formAction={deleteRateAction.bind(null, r.id)}
+                                confirmMessage={`Delete the rate effective ${formatMonthLabel(r.effective_from)}? Past bills already using it are unaffected.`}
+                                className={theme.iconButtonDanger}
+                                title="Delete rate"
+                              >
+                                <MaterialIcon name="delete" size={18} />
+                              </ConfirmSubmitButton>
                             </td>
                           </tr>
                         ))}

@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { requireMembership } from '@/lib/living/auth'
 import { createLivingServerClient } from '@/lib/living/supabaseServer'
 import AppNav from './AppNav'
+import SessionTimeout from './SessionTimeout'
 import theme from '../LivingTheme.module.scss'
 
 async function signOutAction() {
@@ -17,6 +18,7 @@ export default async function LivingAppLayout({ children }: { children: React.Re
   return (
     <>
       <AppNav role={membership.role} apartmentName={apartment.name} onSignOut={signOutAction} />
+      <SessionTimeout onSignOut={signOutAction} />
       <div className={theme.pageShell}>{children}</div>
     </>
   )

@@ -3,6 +3,8 @@ import { requireMembership } from '@/lib/living/auth'
 import { setLivingError, setLivingNotice } from '@/lib/living/flash'
 import { formatCurrency } from '@/lib/living/format'
 import type { PendingItem } from '@/lib/living/types'
+import ConfirmSubmitButton from '../ConfirmSubmitButton'
+import MaterialIcon from '../../MaterialIcon'
 import theme from '../../LivingTheme.module.scss'
 import homeStyles from '../Home.module.scss'
 import Tabs from '../Tabs'
@@ -71,10 +73,9 @@ async function reopenPendingItemAction(formData: FormData) {
   redirect('/living/pending-works')
 }
 
-async function deletePendingItemAction(formData: FormData) {
+async function deletePendingItemAction(id: string) {
   'use server'
   const { supabase, apartment } = await requireMembership(['admin', 'treasurer'])
-  const id = String(formData.get('id') ?? '')
   const { error } = await supabase.from('living_pending_items').delete().eq('id', id).eq('apartment_id', apartment.id)
   if (error) {
     await setLivingError(error.message)
@@ -154,7 +155,7 @@ export default async function LivingPendingWorksPage() {
                       <input id="reason" name="reason" className={theme.input} placeholder="e.g. Waiting on quotes" />
                     </div>
                     <button type="submit" className={theme.button}>
-                      Add
+                      <MaterialIcon name="add" size={16} style={{ marginRight: "0.3rem" }} />Add
                     </button>
                   </form>
                 </div>
@@ -188,12 +189,14 @@ export default async function LivingPendingWorksPage() {
                                     Mark resolved
                                   </button>
                                 </form>
-                                <form action={deletePendingItemAction}>
-                                  <input type="hidden" name="id" value={item.id} />
-                                  <button type="submit" className={theme.buttonGhost}>
-                                    Delete
-                                  </button>
-                                </form>
+                                <ConfirmSubmitButton
+                                  formAction={deletePendingItemAction.bind(null, item.id)}
+                                  confirmMessage="Delete this pending item?"
+                                  className={theme.iconButtonDanger}
+                                  title="Delete"
+                                >
+                                  <MaterialIcon name="delete" size={18} />
+                                </ConfirmSubmitButton>
                               </div>
                             </td>
                           </tr>
@@ -242,12 +245,14 @@ export default async function LivingPendingWorksPage() {
                                   Reopen
                                 </button>
                               </form>
-                              <form action={deletePendingItemAction}>
-                                <input type="hidden" name="id" value={item.id} />
-                                <button type="submit" className={theme.buttonGhost}>
-                                  Delete
-                                </button>
-                              </form>
+                              <ConfirmSubmitButton
+                                formAction={deletePendingItemAction.bind(null, item.id)}
+                                confirmMessage="Delete this pending item?"
+                                className={theme.iconButtonDanger}
+                                title="Delete"
+                              >
+                                <MaterialIcon name="delete" size={18} />
+                              </ConfirmSubmitButton>
                             </div>
                           </td>
                         </tr>

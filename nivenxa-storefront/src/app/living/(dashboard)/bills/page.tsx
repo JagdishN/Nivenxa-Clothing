@@ -209,7 +209,9 @@ export default async function LivingBillsPage({ searchParams }: { searchParams: 
                 <tbody>
                   {visibleRows.map((r) => (
                     <tr key={r.flatId}>
-                      <td>{r.flatNo}</td>
+                      <td>
+                        <Link href={`/living/billing/ledgers/${r.flatId}`}>{r.flatNo}</Link>
+                      </td>
                       <td>{r.ownerName ?? '—'}</td>
                       <td className={theme.num}>{formatCurrency(r.maintenance)}</td>
                       <td className={theme.num}>

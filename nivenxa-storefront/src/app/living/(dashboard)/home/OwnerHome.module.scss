@@ -1,0 +1,152 @@
+.topRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.greeting {
+  font-family: var(--font-living-serif), Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.flatTag {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--living-ink-soft);
+}
+
+.monthLabel {
+  composes: muted from '../../LivingTheme.module.scss';
+  margin-bottom: 1.25rem;
+}
+
+// The "still owed" hero — a full breakdown card, teal-accented while
+// unpaid, brass-accented once something's been paid but a balance remains.
+.hero {
+  border-top: 4px solid var(--living-water);
+}
+
+.heroPartial {
+  composes: hero;
+  border-top-color: var(--living-brass);
+}
+
+.heroLabel {
+  composes: label from '../../LivingTheme.module.scss';
+  margin-bottom: 0.3rem;
+}
+
+.heroAmount {
+  font-family: var(--font-living-serif), Georgia, serif;
+  font-size: 2.6rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.heroPeriod {
+  color: var(--living-ink-soft);
+  font-size: 0.85rem;
+  margin-top: 0.4rem;
+  margin-bottom: 1.25rem;
+}
+
+.heroBreakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--living-rule);
+}
+
+.heroLine {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.92rem;
+  color: var(--living-ink-soft);
+}
+
+.heroTotal {
+  composes: heroLine;
+  color: var(--living-ink);
+  font-weight: 700;
+  font-size: 1.05rem;
+  padding-top: 0.6rem;
+  margin-top: 0.2rem;
+  border-top: 1px solid var(--living-rule);
+}
+
+.heroActions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1.4rem;
+}
+
+// The paid state — deliberately a much smaller, calmer strip instead of the
+// full breakdown card, so the page itself communicates "nothing to do here."
+.heroPaid {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+  border-left: 4px solid var(--living-ok);
+  background: var(--living-ok-soft);
+}
+
+.paidBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 700;
+  color: var(--living-ok);
+  font-size: 1.05rem;
+}
+
+.paidAmount {
+  font-family: var(--font-living-serif), Georgia, serif;
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--living-ink);
+}
+
+.paidMeta {
+  color: var(--living-ink-soft);
+  font-size: 0.88rem;
+}
+
+.activityList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.activityRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--living-rule);
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.activityIcon {
+  flex-shrink: 0;
+  width: 1.6rem;
+  text-align: center;
+}
+
+.activityBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.activityAmount {
+  color: var(--living-ink-soft);
+  font-size: 0.82rem;
+}

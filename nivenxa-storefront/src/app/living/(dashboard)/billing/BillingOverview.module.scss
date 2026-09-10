@@ -1,0 +1,84 @@
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.step {
+  padding: 1rem;
+  border: 1px solid var(--living-rule);
+  border-radius: var(--living-radius);
+  background: var(--living-paper-raised);
+}
+
+.stepNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: var(--living-water-soft);
+  color: var(--living-water);
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-bottom: 0.6rem;
+}
+
+.stepNumberDone {
+  composes: stepNumber;
+  background: var(--living-ok-soft);
+  color: var(--living-ok);
+}
+
+.stepTitle {
+  font-weight: 700;
+  margin-bottom: 0.15rem;
+}
+
+.stepStatus {
+  font-size: 0.8rem;
+  color: var(--living-ink-soft);
+  margin-bottom: 0.5rem;
+}
+
+.stepAmount {
+  font-family: var(--font-living-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 1rem 0 1.25rem;
+}
+
+.checklistItem {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.92rem;
+}
+
+.checkDone {
+  color: var(--living-ok);
+  font-weight: 700;
+}
+
+.checkOpen {
+  color: var(--living-ink-faint);
+  font-weight: 700;
+}
