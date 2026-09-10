@@ -3,8 +3,8 @@ import { redirect } from 'next/navigation'
 import { requireMembership } from '@/lib/living/auth'
 import { setLivingError, setLivingNotice } from '@/lib/living/flash'
 import { formatCurrency, formatPeriodLabel, monthKeyFor } from '@/lib/living/format'
-import { maintenanceGrandTotal, splitMaintenance } from '@/lib/living/billing'
-import { getBillableFlats, getCommonWaterCharge, getCurrentMaintenancePeriod, getFlatLedger, getFlats, getPreviousDueSuggestion } from '@/lib/living/queries'
+import { maintenanceGrandTotal, round2, splitMaintenance } from '@/lib/living/billing'
+import { getBillableFlats, getCarryForwardExpenses, getCommonWaterCharge, getCurrentMaintenancePeriod, getFlatLedger, getFlats, getPreviousDueSuggestion } from '@/lib/living/queries'
 import type { MaintenanceLineItem } from '@/lib/living/types'
 import theme from '../../LivingTheme.module.scss'
 import homeStyles from '../Home.module.scss'
@@ -62,6 +62,15 @@ function syncCommonWaterAmount(lineItems: MaintenanceLineItem[], commonWaterChar
  * be period-specific notes, not recurring values. The very first period for
  * an apartment (no prior period) falls back to TEMPLATE_DESCRIPTIONS at 0.
  *
+ * Also folds in every Expense (from any prior period) still owed a future
+ * billing cycle — "Include in next bill cycle" or "Split across months" was
+ * checked when it was recorded. Each contributes amount / carry_forward_months
+ * as a new line item (added to an existing line item with a matching
+ * description instead of duplicating it), and its carry_forward_remaining
+ * counter is decremented by one — so a 3-month split really only shows up on
+ * the next 3 periods, not forever. An expense with neither box checked never
+ * affects Maintenance at all.
+ *
  * Also seeds each billable flat's new previous_due from what was left unpaid
  * on the period being superseded (getPreviousDueSuggestion) — a one-time
  * carry-forward, not a live sync; the Admin can edit it afterward like any
@@ -86,6 +95,32 @@ async function startPeriodAction(formData: FormData) {
   const lineItems: MaintenanceLineItem[] = priorPeriod
     ? priorPeriod.line_items.map((item) => ({ ...item, comment: '' }))
     : TEMPLATE_DESCRIPTIONS.map((description) => ({ description, amount: 0, comment: '', category: '' }))
+
+  const carryForwardExpenses = await getCarryForwardExpenses(supabase, apartment.id)
+  if (carryForwardExpenses.length > 0) {
+    const totalsByLabel = new Map<string, number>()
+    for (const expense of carryForwardExpenses) {
+      const label = (expense.category || expense.description).trim()
+      if (!label) continue
+      const perCycle = expense.amount / (expense.carry_forward_months || 1)
+      totalsByLabel.set(label, (totalsByLabel.get(label) ?? 0) + perCycle)
+    }
+    for (const [label, amount] of totalsByLabel) {
+      const existingItem = lineItems.find((item) => item.description.trim().toLowerCase() === label.toLowerCase())
+      if (existingItem) {
+        existingItem.amount = round2(existingItem.amount + amount)
+      } else {
+        lineItems.push({ description: label, amount: round2(amount), comment: '', category: '' })
+      }
+    }
+    for (const expense of carryForwardExpenses) {
+      const remaining = (expense.carry_forward_remaining ?? 1) - 1
+      await supabase
+        .from('living_expenses')
+        .update({ carry_forward_remaining: remaining > 0 ? remaining : null })
+        .eq('id', expense.id)
+    }
+  }
 
   const { data: inserted, error } = await supabase
     .from('living_maintenance_months')
@@ -524,9 +559,11 @@ export default async function LivingMaintenancePage() {
                     <h2 className={homeStyles.sectionTitle}>Start a new billing period</h2>
                     <p className={theme.muted} style={{ marginBottom: '1rem' }}>
                       Not tied to a calendar month — pick whatever range this apartment actually bills for (a month, a quarter, half a
-                      year). Line item amounts carry forward from the current period so you&rsquo;re not retyping the same numbers —
-                      edit anything that changed on the Line Items tab afterward. Starting one makes it the current period shown here
-                      and to Owners; the old one stays in the record, just no longer the active one.
+                      year). Line item amounts carry forward from the current period so you&rsquo;re not retyping the same numbers, and
+                      any <Link href="/living/expenses">Expense</Link> marked &ldquo;Include in next bill cycle&rdquo; or &ldquo;Split
+                      across months&rdquo; gets folded in as a line item automatically — edit anything that changed on the Line Items
+                      tab afterward. Starting one makes it the current period shown here and to Owners; the old one stays in the
+                      record, just no longer the active one.
                     </p>
                     <form action={startPeriodAction} style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
                       <div className={theme.field} style={{ marginBottom: 0 }}>

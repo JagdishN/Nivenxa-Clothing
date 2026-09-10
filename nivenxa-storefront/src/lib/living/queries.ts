@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { brokenMeterCharge, maintenanceGrandTotal, paymentStatus, riseStreak, round2, splitMaintenance, waterCharge, waterSupplyCostTotal } from './billing'
-import type { Apartment, Bill, Flat, FlatClaim, FlatLedgerEntry, InventoryCategory, InventoryUnit, MaintenanceMonth, Payment, ServiceType, SlabConfig, TankerRates, WaterReading, WaterSupplyCost } from './types'
+import type { Apartment, Bill, Expense, ExpenseCategory, Flat, FlatClaim, FlatLedgerEntry, InventoryCategory, InventoryUnit, MaintenanceMonth, Payment, ServiceType, SlabConfig, TankerRates, WaterReading, WaterSupplyCost } from './types'
 
 /** The slab config in force for a given month — the most recent one whose `effective_from` doesn't exceed it. */
 export async function getEffectiveSlabConfig(supabase: SupabaseClient, apartmentId: string, month: string): Promise<SlabConfig | null> {
@@ -328,6 +328,43 @@ export async function getPaymentsForPeriod(supabase: SupabaseClient, maintenance
 
 export function sumPayments(payments: Payment[]): number {
   return payments.reduce((sum, p) => sum + p.amount, 0)
+}
+
+/** Every expense recorded for a period, newest first — the Expenses page's log. */
+export async function getExpensesForPeriod(supabase: SupabaseClient, maintenanceMonthId: string): Promise<Expense[]> {
+  const { data } = await supabase
+    .from('living_expenses')
+    .select('*')
+    .eq('maintenance_month_id', maintenanceMonthId)
+    .order('expense_date', { ascending: false })
+  return data ?? []
+}
+
+export function sumExpenses(expenses: Expense[]): number {
+  return expenses.reduce((sum, e) => sum + e.amount, 0)
+}
+
+/**
+ * Every expense across the whole apartment (any period, not just the one
+ * being superseded) that still owes a future billing cycle its share —
+ * "Include in next bill cycle" or "Split across months" was checked when it
+ * was recorded, and it hasn't fully rolled out yet. startPeriodAction folds
+ * each one's amount / carry_forward_months into the new period's line items
+ * and decrements carry_forward_remaining by one.
+ */
+export async function getCarryForwardExpenses(supabase: SupabaseClient, apartmentId: string): Promise<Expense[]> {
+  const { data } = await supabase
+    .from('living_expenses')
+    .select('*')
+    .eq('apartment_id', apartmentId)
+    .gt('carry_forward_remaining', 0)
+  return data ?? []
+}
+
+/** Shared master data — same list for every apartment, not filtered by apartment_id. */
+export async function getExpenseCategories(supabase: SupabaseClient): Promise<ExpenseCategory[]> {
+  const { data } = await supabase.from('living_expense_categories').select('*').order('name')
+  return data ?? []
 }
 
 /** Consecutive-rise streak for a flat, ending at its most recent reading — see billing.ts's riseStreak(). */

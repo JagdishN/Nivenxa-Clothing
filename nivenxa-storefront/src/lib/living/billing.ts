@@ -32,24 +32,35 @@ export function maintenanceGrandTotal(lineItems: MaintenanceLineItem[]): number 
   return lineItems.reduce((sum, item) => sum + item.amount, 0)
 }
 
-/**
- * This month's total water-supply spend (tankers + Majeera) — the pool that
- * gets split across flats (same equal/weighted logic as maintenance, via
- * `splitMaintenance`) and added to each flat's own metered charge. Majeera
- * isn't rate-multiplied — its amount (and optional extra) is entered directly.
- */
-export function waterSupplyCostTotal(
+/** This month's tanker spend only (private + government) — rate × count per tanker size. */
+export function tankerCostTotal(
   cost: WaterSupplyCost,
   rates: Pick<TankerRates, 'rate_small_5000l' | 'rate_large_10000l' | 'rate_xlarge_25000l' | 'rate_govt_small_5000l' | 'rate_govt_large_10000l'>
 ): number {
-  const tankerTotal =
+  return (
     cost.small_tanker_count * rates.rate_small_5000l +
     cost.large_tanker_count * rates.rate_large_10000l +
     cost.xlarge_tanker_count * rates.rate_xlarge_25000l +
     cost.govt_small_tanker_count * rates.rate_govt_small_5000l +
     cost.govt_large_tanker_count * rates.rate_govt_large_10000l
-  const majeeraTotal = cost.majeera_amount + (cost.majeera_extra_enabled ? cost.majeera_extra_amount ?? 0 : 0)
-  return tankerTotal + majeeraTotal
+  )
+}
+
+/** This month's Majeera spend only — not rate-multiplied, its amount (and optional extra) is entered directly. */
+export function majeeraCostTotal(cost: WaterSupplyCost): number {
+  return cost.majeera_amount + (cost.majeera_extra_enabled ? cost.majeera_extra_amount ?? 0 : 0)
+}
+
+/**
+ * This month's total water-supply spend (tankers + Majeera) — the pool that
+ * gets split across flats (same equal/weighted logic as maintenance, via
+ * `splitMaintenance`) and added to each flat's own metered charge.
+ */
+export function waterSupplyCostTotal(
+  cost: WaterSupplyCost,
+  rates: Pick<TankerRates, 'rate_small_5000l' | 'rate_large_10000l' | 'rate_xlarge_25000l' | 'rate_govt_small_5000l' | 'rate_govt_large_10000l'>
+): number {
+  return tankerCostTotal(cost, rates) + majeeraCostTotal(cost)
 }
 
 const MAJEERA_LITERS_PER_CONNECTION_PER_DAY = 500

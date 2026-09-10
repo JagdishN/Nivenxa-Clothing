@@ -200,6 +200,34 @@ export interface Payment {
   created_at: string
 }
 
+/** One actual expense paid out by the apartment against a specific maintenance period — the outgoing counterpart to Payment. */
+export interface Expense {
+  id: string
+  apartment_id: string
+  maintenance_month_id: string
+  expense_date: string
+  category: string | null
+  description: string
+  amount: number
+  paid_to: string | null
+  method: PaymentMethod
+  reference_note: string | null
+  /** Total number of future billing cycles this expense's amount should be spread across — null/0 means it's a one-off, never fed into a future Maintenance line item. 1 = "Include in next bill cycle"; >1 = "Split across months". */
+  carry_forward_months: number | null
+  /** How many of those cycles are still left to apply — decremented by startPeriodAction each time a new period picks up its share. */
+  carry_forward_remaining: number | null
+  recorded_by: string
+  created_at: string
+}
+
+/** Shared master data, same list across every apartment on the platform — not scoped to one apartment_id. */
+export interface ExpenseCategory {
+  id: string
+  name: string
+  created_by: string
+  created_at: string
+}
+
 export type PendingItemStatus = 'pending' | 'resolved'
 
 /** A work item or cost identified but not yet folded into any published maintenance line item. */

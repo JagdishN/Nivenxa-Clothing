@@ -242,6 +242,72 @@ create policy living_payments_write on living_payments for all
 
 alter table living_payments enable row level security;
 
+-- One row per actual expense paid out by the apartment, against a specific
+-- maintenance period — the outgoing counterpart to living_payments. Not the
+-- same thing as a living_maintenance_months line item: a line item is a
+-- budgeted/billed figure that feeds the per-flat split; an expense here is a
+-- real transaction (with a date, who it was paid to, how) recorded for
+-- bookkeeping, whether or not it happens to match a line item 1:1.
+create table if not exists living_expenses (
+  id uuid primary key default gen_random_uuid(),
+  apartment_id uuid not null references living_apartments (id) on delete cascade,
+  maintenance_month_id uuid not null references living_maintenance_months (id) on delete cascade,
+  expense_date date not null default current_date,
+  category text,
+  description text not null,
+  amount numeric not null check (amount > 0),
+  paid_to text,
+  method text not null default 'other' check (method in ('cash', 'upi', 'bank_transfer', 'cheque', 'other')),
+  reference_note text,
+  recorded_by uuid not null references auth.users (id),
+  created_at timestamptz not null default now()
+);
+
+-- Null/0 = a one-off expense, never fed into a future Maintenance line item
+-- automatically. A positive carry_forward_months means "Include in next
+-- bill cycle" (1) or "Split across months" (>1) was checked when recording
+-- it — amount / carry_forward_months gets added as a Maintenance line item
+-- each time a new period starts, for as long as carry_forward_remaining is
+-- still > 0 (decremented by startPeriodAction on every period it applies
+-- to, so a 3-month split really only spreads across the next 3 periods).
+alter table living_expenses add column if not exists carry_forward_months integer;
+alter table living_expenses add column if not exists carry_forward_remaining integer;
+
+create index if not exists living_expenses_period_idx on living_expenses (maintenance_month_id);
+create index if not exists living_expenses_apartment_idx on living_expenses (apartment_id, expense_date desc);
+create index if not exists living_expenses_carry_forward_idx on living_expenses (apartment_id) where carry_forward_remaining > 0;
+
+drop policy if exists living_expenses_select on living_expenses;
+create policy living_expenses_select on living_expenses for select
+  using (apartment_id = living_my_apartment_id());
+drop policy if exists living_expenses_write on living_expenses;
+create policy living_expenses_write on living_expenses for all
+  using (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'))
+  with check (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'));
+
+alter table living_expenses enable row level security;
+
+-- Shared master data, same shape/reasoning as living_inventory_categories —
+-- one common list across every apartment on the platform.
+create table if not exists living_expense_categories (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  created_by uuid not null references auth.users (id),
+  created_at timestamptz not null default now()
+);
+
+create unique index if not exists living_expense_categories_name_key on living_expense_categories (name);
+
+drop policy if exists living_expense_categories_select on living_expense_categories;
+create policy living_expense_categories_select on living_expense_categories for select
+  using (living_my_role() in ('admin', 'treasurer'));
+drop policy if exists living_expense_categories_write on living_expense_categories;
+create policy living_expense_categories_write on living_expense_categories for all
+  using (living_my_role() in ('admin', 'treasurer'))
+  with check (living_my_role() in ('admin', 'treasurer'));
+
+alter table living_expense_categories enable row level security;
+
 -- ─── Water ──────────────────────────────────────────────────────────────
 
 create table if not exists living_water_readings (
