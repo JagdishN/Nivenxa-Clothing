@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { brokenMeterCharge, maintenanceGrandTotal, paymentStatus, riseStreak, round2, splitMaintenance, waterCharge, waterSupplyCostTotal } from './billing'
-import type { Apartment, Bill, Expense, ExpenseCategory, Flat, FlatClaim, FlatLedgerEntry, InventoryCategory, InventoryUnit, MaintenanceMonth, Payment, ServiceType, SlabConfig, TankerRates, WaterReading, WaterSupplyCost } from './types'
+import type { Apartment, Bill, EventCategory, EventCollection, EventExpense, Expense, ExpenseCategory, Flat, FlatClaim, FlatLedgerEntry, InventoryCategory, InventoryUnit, LivingEvent, MaintenanceMonth, Payment, ServiceType, SlabConfig, TankerRates, WaterReading, WaterSupplyCost } from './types'
 
 /** The slab config in force for a given month — the most recent one whose `effective_from` doesn't exceed it. */
 export async function getEffectiveSlabConfig(supabase: SupabaseClient, apartmentId: string, month: string): Promise<SlabConfig | null> {
@@ -365,6 +365,46 @@ export async function getCarryForwardExpenses(supabase: SupabaseClient, apartmen
 export async function getExpenseCategories(supabase: SupabaseClient): Promise<ExpenseCategory[]> {
   const { data } = await supabase.from('living_expense_categories').select('*').order('name')
   return data ?? []
+}
+
+/** Shared master data — same list for every apartment, not filtered by apartment_id. */
+export async function getEventCategories(supabase: SupabaseClient): Promise<EventCategory[]> {
+  const { data } = await supabase.from('living_event_categories').select('*').order('name')
+  return data ?? []
+}
+
+export async function getEvents(supabase: SupabaseClient, apartmentId: string): Promise<LivingEvent[]> {
+  const { data } = await supabase
+    .from('living_events')
+    .select('*')
+    .eq('apartment_id', apartmentId)
+    .order('event_date', { ascending: false, nullsFirst: false })
+  return data ?? []
+}
+
+export async function getEvent(supabase: SupabaseClient, apartmentId: string, eventId: string): Promise<LivingEvent | null> {
+  const { data } = await supabase.from('living_events').select('*').eq('id', eventId).eq('apartment_id', apartmentId).maybeSingle<LivingEvent>()
+  return data
+}
+
+/** Every contribution collected towards an event, newest first. */
+export async function getEventCollections(supabase: SupabaseClient, eventId: string): Promise<EventCollection[]> {
+  const { data } = await supabase.from('living_event_collections').select('*').eq('event_id', eventId).order('collected_date', { ascending: false })
+  return data ?? []
+}
+
+export function sumEventCollections(rows: EventCollection[]): number {
+  return rows.reduce((sum, r) => sum + r.amount, 0)
+}
+
+/** Every expense recorded against an event, newest first. */
+export async function getEventExpenses(supabase: SupabaseClient, eventId: string): Promise<EventExpense[]> {
+  const { data } = await supabase.from('living_event_expenses').select('*').eq('event_id', eventId).order('expense_date', { ascending: false })
+  return data ?? []
+}
+
+export function sumEventExpenses(rows: EventExpense[]): number {
+  return rows.reduce((sum, r) => sum + r.amount, 0)
 }
 
 /** Consecutive-rise streak for a flat, ending at its most recent reading — see billing.ts's riseStreak(). */

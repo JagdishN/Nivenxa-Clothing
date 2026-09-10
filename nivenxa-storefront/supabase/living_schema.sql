@@ -950,6 +950,113 @@ create policy living_service_types_write on living_service_types for all
 
 alter table living_service_types enable row level security;
 
+-- ─── Events (Ganesh Puja, Durga Puja, etc.) ────────────────────────────────
+-- Shared master data, same shape/reasoning as living_expense_categories.
+create table if not exists living_event_categories (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  created_by uuid not null references auth.users (id),
+  created_at timestamptz not null default now()
+);
+
+create unique index if not exists living_event_categories_name_key on living_event_categories (name);
+
+drop policy if exists living_event_categories_select on living_event_categories;
+create policy living_event_categories_select on living_event_categories for select
+  using (living_my_role() in ('admin', 'treasurer'));
+drop policy if exists living_event_categories_write on living_event_categories;
+create policy living_event_categories_write on living_event_categories for all
+  using (living_my_role() in ('admin', 'treasurer'))
+  with check (living_my_role() in ('admin', 'treasurer'));
+
+alter table living_event_categories enable row level security;
+
+-- One row per community event (a specific Ganesh Puja, a specific Durga
+-- Puja, an Independence Day function, etc.) — `category` picks from the
+-- shared master list above, `name` is this specific occurrence's own label
+-- (e.g. "Ganesh Puja 2026"). Money in/out lives in the two tables below,
+-- scoped to event_id, not to a Maintenance billing period — an event isn't
+-- part of the recurring maintenance cycle at all.
+create table if not exists living_events (
+  id uuid primary key default gen_random_uuid(),
+  apartment_id uuid not null references living_apartments (id) on delete cascade,
+  category text,
+  name text not null,
+  event_date date,
+  notes text,
+  created_by uuid not null references auth.users (id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists living_events_apartment_idx on living_events (apartment_id, event_date desc);
+
+drop policy if exists living_events_select on living_events;
+create policy living_events_select on living_events for select
+  using (apartment_id = living_my_apartment_id());
+drop policy if exists living_events_write on living_events;
+create policy living_events_write on living_events for all
+  using (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'))
+  with check (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'));
+
+alter table living_events enable row level security;
+
+-- Money collected towards an event — a donation/contribution log, the event
+-- equivalent of living_payments. Not necessarily from a flat (a shop or a
+-- well-wisher can contribute too), so flat_id is optional and
+-- contributor_name carries the free-text "who" either way.
+create table if not exists living_event_collections (
+  id uuid primary key default gen_random_uuid(),
+  apartment_id uuid not null references living_apartments (id) on delete cascade,
+  event_id uuid not null references living_events (id) on delete cascade,
+  amount numeric not null check (amount > 0),
+  collected_date date not null default current_date,
+  contributor_name text,
+  flat_id uuid references living_flats (id) on delete set null,
+  method text not null default 'cash' check (method in ('cash', 'upi', 'bank_transfer', 'cheque', 'other')),
+  reference_note text,
+  recorded_by uuid not null references auth.users (id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists living_event_collections_event_idx on living_event_collections (event_id);
+
+drop policy if exists living_event_collections_select on living_event_collections;
+create policy living_event_collections_select on living_event_collections for select
+  using (apartment_id = living_my_apartment_id());
+drop policy if exists living_event_collections_write on living_event_collections;
+create policy living_event_collections_write on living_event_collections for all
+  using (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'))
+  with check (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'));
+
+alter table living_event_collections enable row level security;
+
+-- Money spent on an event — the event equivalent of living_expenses.
+create table if not exists living_event_expenses (
+  id uuid primary key default gen_random_uuid(),
+  apartment_id uuid not null references living_apartments (id) on delete cascade,
+  event_id uuid not null references living_events (id) on delete cascade,
+  amount numeric not null check (amount > 0),
+  expense_date date not null default current_date,
+  description text not null,
+  paid_to text,
+  method text not null default 'cash' check (method in ('cash', 'upi', 'bank_transfer', 'cheque', 'other')),
+  reference_note text,
+  recorded_by uuid not null references auth.users (id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists living_event_expenses_event_idx on living_event_expenses (event_id);
+
+drop policy if exists living_event_expenses_select on living_event_expenses;
+create policy living_event_expenses_select on living_event_expenses for select
+  using (apartment_id = living_my_apartment_id());
+drop policy if exists living_event_expenses_write on living_event_expenses;
+create policy living_event_expenses_write on living_event_expenses for all
+  using (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'))
+  with check (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'));
+
+alter table living_event_expenses enable row level security;
+
 drop policy if exists living_documents_delete on storage.objects;
 create policy living_documents_delete on storage.objects for delete
   using (

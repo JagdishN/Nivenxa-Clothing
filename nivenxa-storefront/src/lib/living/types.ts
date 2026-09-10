@@ -228,6 +228,56 @@ export interface ExpenseCategory {
   created_at: string
 }
 
+/** Shared master data, same list across every apartment on the platform — e.g. Ganesh Puja, Durga Puja, Diwali. */
+export interface EventCategory {
+  id: string
+  name: string
+  created_by: string
+  created_at: string
+}
+
+/** One specific occurrence of a community event — not part of the Maintenance billing cycle at all. */
+export interface LivingEvent {
+  id: string
+  apartment_id: string
+  category: string | null
+  name: string
+  event_date: string | null
+  notes: string | null
+  created_by: string
+  created_at: string
+}
+
+/** Money collected towards an event — the event equivalent of Payment. */
+export interface EventCollection {
+  id: string
+  apartment_id: string
+  event_id: string
+  amount: number
+  collected_date: string
+  contributor_name: string | null
+  flat_id: string | null
+  method: PaymentMethod
+  reference_note: string | null
+  recorded_by: string
+  created_at: string
+}
+
+/** Money spent on an event — the event equivalent of Expense. */
+export interface EventExpense {
+  id: string
+  apartment_id: string
+  event_id: string
+  amount: number
+  expense_date: string
+  description: string
+  paid_to: string | null
+  method: PaymentMethod
+  reference_note: string | null
+  recorded_by: string
+  created_at: string
+}
+
 export type PendingItemStatus = 'pending' | 'resolved'
 
 /** A work item or cost identified but not yet folded into any published maintenance line item. */
