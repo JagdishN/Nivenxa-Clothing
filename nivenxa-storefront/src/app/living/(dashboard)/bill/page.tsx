@@ -1,11 +1,18 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { requireMembership } from '@/lib/living/auth'
 import { setLivingError, setLivingNotice } from '@/lib/living/flash'
-import { formatCurrency, formatMonthLabel, formatPaymentMethod, formatPaymentStatus, formatPeriodLabel, monthKeyFor } from '@/lib/living/format'
+import { formatCurrency, formatMonthLabel, formatPaymentStatus, formatPeriodLabel, monthKeyFor } from '@/lib/living/format'
 import { riseStreak } from '@/lib/living/billing'
-import { computeBillForFlat, getCurrentMaintenancePeriod, getEffectiveSlabConfig, getFlats, getPaymentsForFlat, getReadingHistory } from '@/lib/living/queries'
+import { computeBillForFlat, getBillHistoryForFlat, getCurrentMaintenancePeriod, getEffectiveSlabConfig, getFlats, getReadingHistory } from '@/lib/living/queries'
 import theme from '../../LivingTheme.module.scss'
 import homeStyles from '../Home.module.scss'
+
+function disputeStatusPillClass(status: string): string {
+  if (status === 'resolved') return theme.pillOk
+  if (status === 'reviewed') return theme.pill
+  return theme.pillBrass
+}
 
 async function setNoteAction(formData: FormData) {
   'use server'
@@ -56,13 +63,14 @@ export default async function LivingBillPage() {
   const flat = flats.find((f) => f.id === membership.flat_id)
   if (!flat) redirect('/living/home')
 
-  const [bill, history, slab, currentPeriod] = await Promise.all([
+  const [bill, history, slab, currentPeriod, billHistory] = await Promise.all([
     computeBillForFlat(supabase, apartment, flat, month),
     getReadingHistory(supabase, flat.id, 6),
     getEffectiveSlabConfig(supabase, apartment.id, month),
     getCurrentMaintenancePeriod(supabase, apartment.id),
+    getBillHistoryForFlat(supabase, apartment, flat),
   ])
-  const payments = currentPeriod ? await getPaymentsForFlat(supabase, currentPeriod.id, flat.id) : []
+  const pastBills = billHistory.filter((entry) => entry.period.id !== currentPeriod?.id)
 
   const streak = slab
     ? riseStreak(
@@ -76,8 +84,12 @@ export default async function LivingBillPage() {
   return (
     <>
       <h1 className={theme.heading} style={{ fontSize: '1.6rem', marginBottom: '0.3rem' }}>
-        Flat {flat.flat_no} — {formatMonthLabel(month)}
+        My Bills
       </h1>
+      <p className={theme.muted} style={{ marginBottom: '1.5rem' }}>
+        Flat {flat.flat_no} — current cycle, {formatMonthLabel(month)}. Payments and receipts live under{' '}
+        <Link href="/living/my-payments">Payments</Link>.
+      </p>
 
       <div className={theme.card} style={{ marginBottom: '1.5rem' }}>
         <div className={homeStyles.billSummary}>
@@ -93,13 +105,42 @@ export default async function LivingBillPage() {
             <span className={theme.num}>{formatCurrency(bill.maintenance_share)}</span>
           </div>
           <div className={homeStyles.billLine}>
-            <span>Metered water{bill.water_is_fallback ? ' (estimated)' : ''}</span>
-            <span className={theme.num}>{formatCurrency(bill.water_metered_charge)}</span>
+            <span>
+              Water{bill.water_is_fallback ? ' (estimated)' : ''}
+              {!bill.water_is_fallback && bill.water_consumption_liters !== null && bill.water_rate_per_1000l !== null && (
+                <span className={theme.muted} style={{ display: 'block', fontSize: '0.78rem' }}>
+                  {bill.water_billing_method === 'slab' ? (
+                    <>
+                      {bill.water_consumption_liters.toLocaleString('en-IN')}L — Slab (
+                      {bill.water_slab_calculation_method === 'whole_consumption' ? 'Whole-consumption' : 'Progressive'})
+                      {bill.water_tier_breakdown && bill.water_tier_breakdown.length > 0 && (
+                        <details style={{ marginTop: '0.25rem' }}>
+                          <summary style={{ cursor: 'pointer' }}>View calculation</summary>
+                          {bill.water_tier_breakdown.map((tier, i) => (
+                            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
+                              <span>
+                                {tier.liters_billed.toLocaleString('en-IN')}L × {formatCurrency(tier.rate)}/1,000L ({tier.rate_multiplier}×)
+                              </span>
+                              <span>{formatCurrency(tier.amount)}</span>
+                            </div>
+                          ))}
+                        </details>
+                      )}
+                    </>
+                  ) : (
+                    `${bill.water_consumption_liters.toLocaleString('en-IN')}L × ${formatCurrency(bill.water_rate_per_1000l)}/1,000L`
+                  )}
+                </span>
+              )}
+            </span>
+            <span className={theme.num}>{formatCurrency(bill.water_charge)}</span>
           </div>
-          <div className={homeStyles.billLine}>
-            <span>Water supply share (tankers/Majeera)</span>
-            <span className={theme.num}>{formatCurrency(bill.water_supply_share)}</span>
-          </div>
+          {bill.water_manual_adjustment !== 0 && (
+            <div className={homeStyles.billLine}>
+              <span>Water adjustment</span>
+              <span className={theme.num}>{bill.water_manual_adjustment > 0 ? '+' : ''}{formatCurrency(bill.water_manual_adjustment)}</span>
+            </div>
+          )}
           <div className={homeStyles.billLine} style={{ fontWeight: 600 }}>
             <span>Current Cycle Total</span>
             <span className={theme.num}>{formatCurrency(bill.current_period_total)}</span>
@@ -149,25 +190,37 @@ export default async function LivingBillPage() {
         )}
       </div>
 
-      {payments.length > 0 && (
+      {pastBills.length > 0 && (
         <div className={homeStyles.section}>
-          <h2 className={homeStyles.sectionTitle}>Payments this period</h2>
+          <h2 className={homeStyles.sectionTitle}>Past bills</h2>
           <div className={theme.card}>
             <div className={theme.tableScroll}>
               <table className={theme.table}>
                 <thead>
                   <tr>
-                    <th>Date</th>
-                    <th className={theme.num}>Amount</th>
-                    <th>Method</th>
+                    <th>Billing period</th>
+                    <th className={theme.num}>Maintenance</th>
+                    <th className={theme.num}>Water</th>
+                    <th className={theme.num}>Total</th>
+                    <th>Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {payments.map((p) => (
-                    <tr key={p.id}>
-                      <td>{new Date(p.payment_date).toLocaleDateString('en-IN')}</td>
-                      <td className={theme.num}>{formatCurrency(p.amount)}</td>
-                      <td>{formatPaymentMethod(p.method)}</td>
+                  {pastBills.map(({ period, bill: pastBill }) => (
+                    <tr key={period.id}>
+                      <td>{formatPeriodLabel(period.month, period.period_end)}</td>
+                      <td className={theme.num}>{formatCurrency(pastBill.maintenance_share)}</td>
+                      <td className={theme.num}>{formatCurrency(pastBill.water_charge)}</td>
+                      <td className={theme.num}>{formatCurrency(pastBill.total_due)}</td>
+                      <td>
+                        <span
+                          className={
+                            pastBill.payment_status === 'paid' ? theme.pillOk : pastBill.payment_status === 'partial' ? theme.pillBrass : theme.pillFlag
+                          }
+                        >
+                          {formatPaymentStatus(pastBill.payment_status)}
+                        </span>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -213,7 +266,7 @@ export default async function LivingBillPage() {
                       <td>{r.owner_note ?? '—'}</td>
                       <td>
                         {r.flagged && <span className={theme.pillFlag}>Meter flagged</span>}
-                        {r.dispute && <span className={theme.pillBrass}>{r.dispute.status}</span>}
+                        {r.dispute && <span className={disputeStatusPillClass(r.dispute.status)}>{r.dispute.status}</span>}
                         {!r.flagged && !r.dispute && '—'}
                       </td>
                     </tr>

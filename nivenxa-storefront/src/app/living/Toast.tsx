@@ -33,9 +33,11 @@ export default function Toast({ initial }: { initial: LivingFlashMessage | null 
 
   if (!message) return null
 
+  const toneClass = message.kind === 'error' ? styles.toastError : message.kind === 'warning' ? styles.toastWarning : styles.toastSuccess
+
   return (
     <div className={styles.wrap} role="status" aria-live="polite">
-      <div className={message.kind === 'error' ? styles.toastError : styles.toastInfo}>
+      <div className={toneClass}>
         <span>{message.message}</span>
         <button type="button" className={styles.dismiss} onClick={() => setMessage(null)} aria-label="Dismiss">
           ×

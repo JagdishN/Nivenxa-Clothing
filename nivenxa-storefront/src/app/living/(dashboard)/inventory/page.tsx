@@ -1,4 +1,4 @@
-import { IconDeviceFloppy, IconTrash } from '@tabler/icons-react'
+import { IconDeviceFloppy } from '@tabler/icons-react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { requireMembership } from '@/lib/living/auth'
 import { setLivingError, setLivingNotice } from '@/lib/living/flash'
@@ -6,6 +6,7 @@ import { parseInventoryTemplate } from '@/lib/living/inventory'
 import { getInventoryCategories, getInventoryUnits } from '@/lib/living/queries'
 import type { InventoryItem } from '@/lib/living/types'
 import ConfirmSubmitButton from '../ConfirmSubmitButton'
+import MaterialIcon from '../../MaterialIcon'
 import theme from '../../LivingTheme.module.scss'
 import homeStyles from '../Home.module.scss'
 import Tabs from '../Tabs'
@@ -355,7 +356,7 @@ export default async function LivingInventoryPage() {
                                   className={theme.iconButtonDanger}
                                   title="Delete this item"
                                 >
-                                  <IconTrash size={20} stroke={1.75} />
+                                  <MaterialIcon name="delete" size={20} />
                                 </ConfirmSubmitButton>
                               </div>
                             </td>
@@ -470,7 +471,7 @@ export default async function LivingInventoryPage() {
                       </table>
                     </div>
                     <button type="submit" className={theme.button} style={{ marginTop: '1rem' }}>
-                      Add items
+                      <MaterialIcon name="add" size={16} style={{ marginRight: "0.3rem" }} />Add items
                     </button>
                   </form>
                 </div>
@@ -498,7 +499,7 @@ export default async function LivingInventoryPage() {
                       <input id="names" name="names" className={theme.input} placeholder="Motors, General, Puja Items" required />
                     </div>
                     <button type="submit" className={theme.button}>
-                      Add
+                      <MaterialIcon name="add" size={16} style={{ marginRight: "0.3rem" }} />Add
                     </button>
                   </form>
                 </div>
@@ -524,7 +525,7 @@ export default async function LivingInventoryPage() {
                                   className={theme.iconButtonDanger}
                                   title="Delete category"
                                 >
-                                  <IconTrash size={20} stroke={1.75} />
+                                  <MaterialIcon name="delete" size={20} />
                                 </ConfirmSubmitButton>
                               </form>
                             </td>
@@ -565,7 +566,7 @@ export default async function LivingInventoryPage() {
                       <input id="unit_names" name="names" className={theme.input} placeholder="Pieces, Metres, KG" required />
                     </div>
                     <button type="submit" className={theme.button}>
-                      Add
+                      <MaterialIcon name="add" size={16} style={{ marginRight: "0.3rem" }} />Add
                     </button>
                   </form>
                 </div>
@@ -591,7 +592,7 @@ export default async function LivingInventoryPage() {
                                   className={theme.iconButtonDanger}
                                   title="Delete unit"
                                 >
-                                  <IconTrash size={20} stroke={1.75} />
+                                  <MaterialIcon name="delete" size={20} />
                                 </ConfirmSubmitButton>
                               </form>
                             </td>

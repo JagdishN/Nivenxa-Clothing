@@ -16,6 +16,8 @@ export interface Apartment {
   flat_count: number
   /** Overrides the divisor for equal-split common costs (maintenance + water-supply pool) — null means "use flats.length" as before. */
   shared_cost_divisor: number | null
+  /** The association's real cash position before Living started tracking it — a one-time seed for Financial Statements. Null is treated as 0. */
+  opening_cash_balance: number | null
   created_by: string
   created_at: string
 }
@@ -53,6 +55,9 @@ export interface FlatClaim {
   requested_at: string
   decided_at: string | null
   decided_by: string | null
+  /** Snapshot of the requester's own auth identity at request time — an Admin's session can't read auth.users directly. */
+  requester_email: string | null
+  requester_phone: string | null
 }
 
 export interface MaintenanceLineItem {
@@ -108,18 +113,63 @@ export interface SlabTier {
   rate_multiplier: number
 }
 
+export type WaterBillingMethod = 'standard' | 'slab'
+export type SlabCalculationMethod = 'progressive' | 'whole_consumption'
+
 export interface SlabConfig {
   id: string
   apartment_id: string
   effective_from: string
+  /** Vestigial — the base rate is always the live monthly combined rate (getCombinedWaterRate), never admin-entered. */
   base_rate_per_1000l: number
+  /** water_billing_method 'slab': multiplies that month's dynamic base rate per band — never a fixed rupee amount. */
   slabs: SlabTier[]
+  water_billing_method: WaterBillingMethod
+  slab_calculation_method: SlabCalculationMethod
   grace_period_days: number
   escalation_cadence: EscalationCadence
   escalation_multiplier: number
   rise_threshold_percent: number
   notify_admin_at_streak: number
   created_at: string
+}
+
+/** One tier's contribution to a slab-billed water charge — progressive has one entry per tier touched; whole_consumption has exactly one, covering all consumption. */
+export interface WaterTierBreakdownEntry {
+  from_liters: number
+  to_liters: number | null
+  rate_multiplier: number
+  /** The resolved ₹/1,000L for this tier at this month's base rate (base_rate_per_1000l × rate_multiplier). */
+  rate: number
+  liters_billed: number
+  amount: number
+}
+
+/**
+ * The frozen record of how a flat's water charge for a past month was
+ * actually calculated — written lazily the first time that month is
+ * computed (see getMeteredWaterCharge in queries.ts), immune to later
+ * edits of slab config / tanker counts / readings for that month.
+ */
+export interface WaterBillSnapshot {
+  id: string
+  apartment_id: string
+  flat_id: string
+  month: string
+  consumption_liters: number | null
+  base_rate_per_1000l: number
+  billing_method: WaterBillingMethod
+  slab_calculation_method: SlabCalculationMethod | null
+  slab_config_id: string | null
+  tier_breakdown: WaterTierBreakdownEntry[] | null
+  computed_charge: number
+  manual_adjustment: number
+  adjustment_reason: string | null
+  adjustment_by: string | null
+  adjustment_at: string | null
+  final_charge: number
+  created_at: string
+  updated_at: string
 }
 
 export interface BillDocument {
@@ -148,9 +198,10 @@ export interface TankerRates {
 
 /**
  * One row per Apartment per month (not per flat) — the water-supply spend
- * that supplements metered water, split across flats the same way
- * maintenance is and added to each flat's own metered charge. Majeera has
- * no rate — its amount (and optional extra) is typed directly each month.
+ * that feeds the combined ₹/1,000L rate every flat's own metered
+ * consumption is billed at (see lib/living/queries.ts's getCombinedWaterRate).
+ * Majeera has no rate — its amount (and optional extra) is typed directly
+ * each month.
  */
 export interface WaterSupplyCost {
   id: string
@@ -161,11 +212,13 @@ export interface WaterSupplyCost {
   xlarge_tanker_count: number
   govt_small_tanker_count: number
   govt_large_tanker_count: number
-  /** Government norm: 500L/day supplied per connection — used only to suggest a base water rate, never billed directly. */
+  /** Government norm: 500L/day supplied per connection — feeds the combined water rate directly. */
   majeera_connection_count: number
   majeera_amount: number
   majeera_extra_enabled: boolean
   majeera_extra_amount: number | null
+  /** Cumulative unresolved over/under-recovery as of the end of this month — null until first needed. See getIncomingGap. */
+  carried_gap: number | null
   created_at: string
   updated_at: string
 }
@@ -183,7 +236,20 @@ export interface FlatLedgerEntry {
   updated_at: string
 }
 
-export type PaymentMethod = 'cash' | 'upi' | 'bank_transfer' | 'cheque' | 'other'
+/** A record of one advance-balance move between two flats' ledger rows for the same period — see transferAdvanceAction/deleteAdvanceTransferAction in maintenance/page.tsx. */
+export interface AdvanceTransfer {
+  id: string
+  apartment_id: string
+  maintenance_month_id: string
+  from_flat_id: string
+  to_flat_id: string
+  amount: number
+  transferred_by: string | null
+  created_at: string
+}
+
+/** 'advance' is system-written only — see syncAdvanceApplicationPayment in queries.ts — never a manually-selectable option in the Record Payment form. */
+export type PaymentMethod = 'cash' | 'upi' | 'bank_transfer' | 'cheque' | 'other' | 'advance'
 export type PaymentStatus = 'unpaid' | 'partial' | 'paid'
 
 /** One actual payment received from a flat against a specific maintenance period — see the schema comment. */
@@ -196,6 +262,8 @@ export interface Payment {
   payment_date: string
   method: PaymentMethod
   reference_note: string | null
+  /** e.g. "NXL-2026-09-0102-001" — generated once at insert time, null on any row recorded before receipts existed. */
+  receipt_no: string | null
   recorded_by: string
   created_at: string
 }
@@ -353,11 +421,19 @@ export interface Bill {
   maintenance_share: number
   /** The maintenance period actually billed — null when no period has ever been created. Its range may not match `month`. */
   maintenance_period: { start: string; end: string } | null
-  /** Metered charge only (or the broken-meter fallback) — excludes the tanker/Majeera share. */
-  water_metered_charge: number
-  /** This flat's equal/weighted share of the month's living_water_supply_costs. */
-  water_supply_share: number
-  /** water_metered_charge + water_supply_share. */
+  /** This flat's own consumption this month — null while flagged/no reading yet. For the "3,000L × ₹30/1,000L" breakdown. */
+  water_consumption_liters: number | null
+  /** The combined ₹/1,000L rate actually applied — null while flagged/no reading yet. See lib/living/queries.ts's getCombinedWaterRate. */
+  water_rate_per_1000l: number | null
+  /** 'standard' = flat consumption × water_rate_per_1000l; 'slab' = water_tier_breakdown applies. Null while flagged/no reading yet. */
+  water_billing_method: WaterBillingMethod | null
+  /** Set only when water_billing_method is 'slab' — which of the two slab interpretations produced water_tier_breakdown. */
+  water_slab_calculation_method: SlabCalculationMethod | null
+  /** Per-tier detail when water_billing_method is 'slab' — null for 'standard' billing or the broken-meter fallback. */
+  water_tier_breakdown: WaterTierBreakdownEntry[] | null
+  /** Admin-entered correction on top of the computed charge, 0 when none. Included in water_charge already. */
+  water_manual_adjustment: number
+  /** water_consumption_liters/1000 × water_rate_per_1000l, or the slab-computed amount (see water_tier_breakdown), plus water_manual_adjustment — or the broken-meter fallback amount. */
   water_charge: number
   /** maintenance_share + water_charge — this period's own charge, before late fee/previous due/advance adjustments. */
   current_period_total: number
@@ -373,4 +449,60 @@ export interface Bill {
   payment_status: PaymentStatus
   water_is_fallback: boolean
   water_fallback_reason: string | null
+}
+
+/** An apartment-wide announcement — no draft state, posting is immediate. */
+export interface Notice {
+  id: string
+  apartment_id: string
+  title: string
+  body: string
+  created_by: string
+  created_at: string
+}
+
+/** One association meeting — `mom` is only ever shown once `mom_published_at` is set. */
+export interface Meeting {
+  id: string
+  apartment_id: string
+  title: string
+  meeting_date: string
+  agenda: string | null
+  mom: string | null
+  mom_published_at: string | null
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+
+export type RequestStatus = 'open' | 'in_progress' | 'resolved'
+
+/** A resident-raised request (a repair, a complaint) — distinct from a Dispute, which is always about a specific billing reading/amount. */
+export interface ResidentRequest {
+  id: string
+  apartment_id: string
+  flat_id: string
+  raised_by: string
+  title: string
+  description: string | null
+  status: RequestStatus
+  admin_response: string | null
+  raised_at: string
+  resolved_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+/** A published Financial Statement snapshot — never recomputed by an Owner's own session. See lib/living/queries.ts. */
+export interface PublishedStatement {
+  id: string
+  apartment_id: string
+  maintenance_month_id: string
+  opening_balance: number
+  collections: number
+  expenses: number
+  closing_balance: number
+  outstanding_dues: number
+  published_by: string
+  published_at: string
 }

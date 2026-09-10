@@ -24,6 +24,8 @@ export default async function LivingLayout({ children }: { children: React.React
   const flash = await readLivingFlash()
   return (
     <div className={`${theme.theme} ${sourceSerif.variable} ${plexSans.variable} ${plexMono.variable}`}>
+      {/* Google Material Icons ligature font — see MaterialIcon.tsx. React/Next.js hoist a <link> rendered anywhere in the tree into <head>. */}
+      <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
       <Toast initial={flash} />
       {children}
     </div>

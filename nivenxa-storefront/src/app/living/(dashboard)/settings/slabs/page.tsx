@@ -1,33 +1,22 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { daysInMonth, formatCurrency, formatMonthLabel, monthKeyFor } from '@/lib/living/format'
+import { formatMonthLabel } from '@/lib/living/format'
 import { requireMembership } from '@/lib/living/auth'
 import { setLivingError, setLivingNotice } from '@/lib/living/flash'
-import { suggestedBaseRatePer1000L } from '@/lib/living/billing'
-import { getEffectiveTankerRates, getWaterSupplyCost } from '@/lib/living/queries'
+import type { SlabTier } from '@/lib/living/types'
 import theme from '../../../LivingTheme.module.scss'
 import homeStyles from '../../Home.module.scss'
 import Tabs from '../../Tabs'
+import BillingMethodEditor, { type TierRow } from './BillingMethodEditor'
 
 async function saveSlabAction(formData: FormData) {
   'use server'
   const { supabase, apartment } = await requireMembership(['admin'])
 
-  const baseRate = Number(formData.get('base_rate_per_1000l') ?? 0)
-  const tier1To = Number(formData.get('tier1_to') ?? 5000)
-  const tier2To = Number(formData.get('tier2_to') ?? 10000)
-  const tier2Mult = Number(formData.get('tier2_mult') ?? 1.2)
-  const tier3Mult = Number(formData.get('tier3_mult') ?? 1.5)
-
   const { error } = await supabase.from('living_slab_configs').upsert(
     {
       apartment_id: apartment.id,
       effective_from: String(formData.get('effective_from')),
-      base_rate_per_1000l: baseRate,
-      slabs: [
-        { from_liters: 0, to_liters: tier1To, rate_multiplier: 1 },
-        { from_liters: tier1To, to_liters: tier2To, rate_multiplier: tier2Mult },
-        { from_liters: tier2To, to_liters: null, rate_multiplier: tier3Mult },
-      ],
       grace_period_days: Number(formData.get('grace_period_days') ?? 15),
       escalation_cadence: String(formData.get('escalation_cadence') ?? 'monthly'),
       escalation_multiplier: Number(formData.get('escalation_multiplier') ?? 2),
@@ -44,33 +33,87 @@ async function saveSlabAction(formData: FormData) {
   redirect('/living/settings/slabs')
 }
 
+async function saveBillingMethodAction(formData: FormData) {
+  'use server'
+  const { supabase, apartment } = await requireMembership(['admin'])
+
+  const waterBillingMethod = String(formData.get('water_billing_method') ?? 'standard')
+  const slabCalculationMethod = String(formData.get('slab_calculation_method') ?? 'progressive')
+  const tierCount = Number(formData.get('tier_count') ?? 0)
+  const tiers: SlabTier[] = []
+  if (waterBillingMethod === 'slab') {
+    for (let i = 0; i < tierCount; i++) {
+      const fromRaw = formData.get(`tier_from_${i}`)
+      const multiplierRaw = formData.get(`tier_multiplier_${i}`)
+      if (fromRaw === null || fromRaw === '' || multiplierRaw === null || multiplierRaw === '') continue
+      const toRaw = formData.get(`tier_to_${i}`)
+      tiers.push({
+        from_liters: Number(fromRaw),
+        to_liters: toRaw === null || toRaw === '' ? null : Number(toRaw),
+        rate_multiplier: Number(multiplierRaw),
+      })
+    }
+    tiers.sort((a, b) => a.from_liters - b.from_liters)
+  }
+
+  const { error } = await supabase.from('living_slab_configs').upsert(
+    {
+      apartment_id: apartment.id,
+      effective_from: String(formData.get('effective_from')),
+      water_billing_method: waterBillingMethod,
+      slab_calculation_method: slabCalculationMethod,
+      slabs: waterBillingMethod === 'slab' ? tiers : null,
+    },
+    { onConflict: 'apartment_id,effective_from' }
+  )
+  if (error) {
+    await setLivingError(error.message)
+    redirect('/living/settings/slabs')
+  }
+  await setLivingNotice('Saved — applies from ' + formData.get('effective_from') + ' onward.')
+  redirect('/living/settings/slabs')
+}
+
 export default async function LivingSlabSettingsPage() {
   const { supabase, apartment } = await requireMembership(['admin'])
-  const month = monthKeyFor(new Date())
 
-  const [{ data: configs }, supplyCost, tankerRates] = await Promise.all([
-    supabase.from('living_slab_configs').select('*').eq('apartment_id', apartment.id).order('effective_from', { ascending: false }),
-    getWaterSupplyCost(supabase, apartment.id, month),
-    getEffectiveTankerRates(supabase, apartment.id, month),
-  ])
+  const { data: configs } = await supabase
+    .from('living_slab_configs')
+    .select('*')
+    .eq('apartment_id', apartment.id)
+    .order('effective_from', { ascending: false })
 
   const latest = configs?.[0]
-  const suggestedRate = supplyCost && tankerRates ? suggestedBaseRatePer1000L(supplyCost, tankerRates, daysInMonth(month)) : null
-  const tier1 = latest?.slabs?.[0]
-  const tier2 = latest?.slabs?.[1]
-  const tier3 = latest?.slabs?.[2]
 
   return (
     <>
-      <h1 className={theme.heading} style={{ fontSize: '1.6rem', marginBottom: '1.5rem' }}>
-        Slab rates &amp; escalation
+      <h1 className={theme.heading} style={{ fontSize: '1.6rem', marginBottom: '0.3rem' }}>
+        Water Billing Configuration
       </h1>
+      <p className={theme.muted} style={{ marginBottom: '1.5rem' }}>
+        How water is billed against each flat&rsquo;s own consumption, plus broken-meter fallback escalation and
+        sustained-usage-rise alerts. The base rate itself is always live, from actual monthly tanker/Majeera spend — see the{' '}
+        <Link href="/living/water">Water</Link> page.
+      </p>
 
       <Tabs
         tabs={[
           {
+            id: 'method',
+            label: 'Water Billing Configuration',
+            content: (
+              <BillingMethodEditor
+                effectiveFrom={latest?.effective_from ?? new Date().toISOString().slice(0, 10)}
+                initialMethod={latest?.water_billing_method ?? 'standard'}
+                initialSlabMethod={latest?.slab_calculation_method ?? 'progressive'}
+                initialTiers={(latest?.slabs as TierRow[] | null) ?? []}
+                save={saveBillingMethodAction}
+              />
+            ),
+          },
+          {
             id: 'rates',
-            label: 'Rates',
+            label: 'Meter Exceptions',
             content: (
               <div className={theme.card}>
                 <form action={saveSlabAction}>
@@ -78,54 +121,14 @@ export default async function LivingSlabSettingsPage() {
                     <label className={theme.label} htmlFor="effective_from">
                       Effective from
                     </label>
-                    <input id="effective_from" name="effective_from" type="date" className={theme.input} defaultValue={month} required />
-                    <p className={theme.muted} style={{ marginTop: '0.3rem' }}>
-                      Past bills are never rewritten by this change.
-                    </p>
-                  </div>
-
-                  <div className={theme.field}>
-                    <label className={theme.label} htmlFor="base_rate_per_1000l">
-                      Base rate per 1,000L
-                    </label>
                     <input
-                      id="base_rate_per_1000l"
-                      name="base_rate_per_1000l"
-                      type="number"
-                      step="0.01"
+                      id="effective_from"
+                      name="effective_from"
+                      type="date"
                       className={theme.input}
-                      defaultValue={latest?.base_rate_per_1000l ?? suggestedRate ?? 8}
+                      defaultValue={latest?.effective_from ?? new Date().toISOString().slice(0, 10)}
                       required
                     />
-                    {suggestedRate !== null && (
-                      <p className={theme.muted} style={{ marginTop: '0.3rem' }}>
-                        Suggested from this month&rsquo;s tanker/Majeera cost: {formatCurrency(suggestedRate)} per 1,000L — pre-filled
-                        above, edit freely.
-                      </p>
-                    )}
-                  </div>
-
-                  <div className={homeStyles.grid} style={{ marginBottom: '1rem' }}>
-                    <div>
-                      <p className={theme.label}>0 – X litres (base rate)</p>
-                      <input name="tier1_to" type="number" className={theme.input} defaultValue={tier1?.to_liters ?? 5000} />
-                    </div>
-                    <div>
-                      <p className={theme.label}>X – Y litres, rate ×</p>
-                      <input name="tier2_to" type="number" className={theme.input} defaultValue={tier2?.to_liters ?? 10000} />
-                      <input
-                        name="tier2_mult"
-                        type="number"
-                        step="0.01"
-                        className={theme.input}
-                        style={{ marginTop: '0.4rem' }}
-                        defaultValue={tier2?.rate_multiplier ?? 1.2}
-                      />
-                    </div>
-                    <div>
-                      <p className={theme.label}>Y+ litres, rate ×</p>
-                      <input name="tier3_mult" type="number" step="0.01" className={theme.input} defaultValue={tier3?.rate_multiplier ?? 1.5} />
-                    </div>
                   </div>
 
                   <div className={homeStyles.grid} style={{ marginBottom: '1rem' }}>
@@ -216,14 +219,30 @@ export default async function LivingSlabSettingsPage() {
                       <thead>
                         <tr>
                           <th>Effective from</th>
-                          <th className={theme.num}>Base rate</th>
+                          <th>Method</th>
+                          <th className={theme.num}>Tiers</th>
+                          <th className={theme.num}>Grace (days)</th>
+                          <th>Cadence</th>
+                          <th className={theme.num}>Multiplier</th>
+                          <th className={theme.num}>Rise threshold</th>
+                          <th className={theme.num}>Notify after</th>
                         </tr>
                       </thead>
                       <tbody>
                         {configs.map((c) => (
                           <tr key={c.id}>
                             <td>{formatMonthLabel(c.effective_from)}</td>
-                            <td className={theme.num}>{c.base_rate_per_1000l}</td>
+                            <td>
+                              {c.water_billing_method === 'slab'
+                                ? `Slab — ${c.slab_calculation_method === 'whole_consumption' ? 'Whole-consumption' : 'Progressive'}`
+                                : 'Standard'}
+                            </td>
+                            <td className={theme.num}>{c.water_billing_method === 'slab' ? (c.slabs?.length ?? 0) : '—'}</td>
+                            <td className={theme.num}>{c.grace_period_days}</td>
+                            <td>{c.escalation_cadence}</td>
+                            <td className={theme.num}>{c.escalation_multiplier}×</td>
+                            <td className={theme.num}>{c.rise_threshold_percent}%</td>
+                            <td className={theme.num}>{c.notify_admin_at_streak}</td>
                           </tr>
                         ))}
                       </tbody>

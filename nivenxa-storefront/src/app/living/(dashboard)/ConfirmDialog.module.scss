@@ -1,0 +1,77 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(43, 38, 32, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 100;
+}
+
+.dialog {
+  width: 100%;
+  max-width: 22rem;
+  background: var(--living-paper-raised);
+  border: 1px solid var(--living-rule);
+  border-radius: var(--living-radius);
+  box-shadow: var(--living-shadow);
+  padding: 1.25rem;
+}
+
+.message {
+  font-size: 0.9rem;
+  color: var(--living-ink);
+  line-height: 1.45;
+  margin: 0 0 1.1rem;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.cancel {
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.5rem 0.9rem;
+  border-radius: 7px;
+  border: 1px solid var(--living-rule);
+  background: var(--living-paper-raised);
+  color: var(--living-ink-soft);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--living-paper);
+    color: var(--living-ink);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+.confirm {
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.5rem 0.9rem;
+  border-radius: 7px;
+  border: 1px solid var(--living-flag);
+  background: var(--living-flag);
+  color: var(--living-paper-raised);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: #8a3527;
+    border-color: #8a3527;
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: default;
+  }
+}

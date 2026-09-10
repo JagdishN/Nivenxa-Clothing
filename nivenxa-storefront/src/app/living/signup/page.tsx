@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { setLivingError, setLivingNotice } from '@/lib/living/flash'
+import { setLivingError } from '@/lib/living/flash'
 import { createLivingServerClient } from '@/lib/living/supabaseServer'
 import OtpForm from '../_auth/OtpForm'
 import theme from '../LivingTheme.module.scss'
@@ -36,7 +36,7 @@ async function joinApartment(formData: FormData) {
   }
   const status = (data as { status?: string } | null)?.status
   if (status === 'pending') {
-    await setLivingNotice('Request sent — the Admin needs to approve it before you can see your flat.')
+    redirect('/living/signup')
   }
   redirect('/living/home')
 }
@@ -52,6 +52,41 @@ export default async function LivingSignupPage({ searchParams }: { searchParams:
   if (user) {
     const { data: membership } = await supabase.from('living_memberships').select('id').eq('user_id', user.id).maybeSingle()
     if (membership) redirect('/living/home')
+
+    // If the Admin already put this exact email/phone on a flat (Setup →
+    // Flats), there's nothing left to ask — no join code, no approval wait.
+    // Only fires when exactly one unclaimed flat across the whole platform
+    // matches; anything ambiguous falls through to the ordinary flow below.
+    const { data: autoClaim } = await supabase.rpc('living_auto_claim_by_contact')
+    if ((autoClaim as { status?: string } | null)?.status === 'attached') redirect('/living/home')
+
+    // Already asked to join a flat, still waiting on the Admin — without
+    // this check, a pending requester bounces straight back to the
+    // Create/Join tabs on every reload (no membership yet is the only
+    // signal this page otherwise has), with nothing telling them their
+    // request actually went through.
+    const { data: pendingClaim } = await supabase
+      .from('living_flat_claims')
+      .select('*, flat:living_flats(flat_no), apartment:living_apartments(name)')
+      .eq('requested_by', user.id)
+      .eq('status', 'pending')
+      .order('requested_at', { ascending: false })
+      .maybeSingle()
+
+    if (pendingClaim) {
+      const flat = (pendingClaim as unknown as { flat: { flat_no: string } | null }).flat
+      const apartment = (pendingClaim as unknown as { apartment: { name: string } | null }).apartment
+      return (
+        <div className={styles.shell}>
+          <h1 className={styles.title}>Request sent</h1>
+          <p className={styles.subtitle}>
+            {apartment ? `Your request to join ${apartment.name}` : 'Your request'}
+            {flat ? ` as Flat ${flat.flat_no}` : ''} has been sent to the Admin. We&rsquo;ll let you know once it&rsquo;s approved.
+          </p>
+          <p className={styles.hint}>Nothing else to do here for now — you can close this page and check back later.</p>
+        </div>
+      )
+    }
   }
 
   if (!user) {

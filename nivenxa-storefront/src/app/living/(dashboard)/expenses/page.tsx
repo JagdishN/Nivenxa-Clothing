@@ -1,4 +1,3 @@
-import { IconTrash } from '@tabler/icons-react'
 import Link from 'next/link'
 import { requireMembership } from '@/lib/living/auth'
 import { setLivingError, setLivingNotice } from '@/lib/living/flash'
@@ -7,6 +6,7 @@ import { formatCurrency, formatPaymentMethod, formatPeriodLabel, monthKeyFor } f
 import { getCurrentMaintenancePeriod, getEffectiveTankerRates, getExpenseCategories, getExpensesForPeriod, getWaterSupplyCost, sumExpenses } from '@/lib/living/queries'
 import type { Expense, PaymentMethod } from '@/lib/living/types'
 import ConfirmSubmitButton from '../ConfirmSubmitButton'
+import MaterialIcon from '../../MaterialIcon'
 import theme from '../../LivingTheme.module.scss'
 import homeStyles from '../Home.module.scss'
 import Tabs from '../Tabs'
@@ -507,7 +507,7 @@ export default async function LivingExpensesPage() {
                                   className={theme.iconButtonDanger}
                                   title="Delete this expense"
                                 >
-                                  <IconTrash size={20} stroke={1.75} />
+                                  <MaterialIcon name="delete" size={20} />
                                 </ConfirmSubmitButton>
                               </form>
                             </td>
@@ -548,7 +548,7 @@ export default async function LivingExpensesPage() {
                         <input id="names" name="names" className={theme.input} placeholder="Salaries, Utilities, Repairs" required />
                       </div>
                       <button type="submit" className={theme.button}>
-                        Add
+                        <MaterialIcon name="add" size={16} style={{ marginRight: "0.3rem" }} />Add
                       </button>
                     </form>
                   </div>
@@ -574,7 +574,7 @@ export default async function LivingExpensesPage() {
                                     className={theme.iconButtonDanger}
                                     title="Delete category"
                                   >
-                                    <IconTrash size={20} stroke={1.75} />
+                                    <MaterialIcon name="delete" size={20} />
                                   </ConfirmSubmitButton>
                                 </form>
                               </td>

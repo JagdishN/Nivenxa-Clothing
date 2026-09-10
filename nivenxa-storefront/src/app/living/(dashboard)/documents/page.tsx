@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation'
 import { requireMembership } from '@/lib/living/auth'
 import { setLivingError, setLivingNotice } from '@/lib/living/flash'
 import { formatMonthLabel, monthKeyFor } from '@/lib/living/format'
+import ConfirmSubmitButton from '../ConfirmSubmitButton'
+import MaterialIcon from '../../MaterialIcon'
 import theme from '../../LivingTheme.module.scss'
 import homeStyles from '../Home.module.scss'
 import Tabs from '../Tabs'
@@ -42,11 +44,9 @@ async function uploadAction(formData: FormData) {
   redirect('/living/documents')
 }
 
-async function deleteAction(formData: FormData) {
+async function deleteAction(id: string, path: string) {
   'use server'
   const { supabase, apartment } = await requireMembership(['admin', 'treasurer'])
-  const id = String(formData.get('id'))
-  const path = String(formData.get('path'))
 
   await supabase.storage.from(BUCKET).remove([path])
   const { error } = await supabase.from('living_bill_documents').delete().eq('id', id).eq('apartment_id', apartment.id)
@@ -140,7 +140,7 @@ function DocumentList({
 }: {
   docs: { id: string; label: string; month: string; category: string | null; url: string | null; file_path: string }[]
   canManage: boolean
-  deleteAction: (formData: FormData) => void
+  deleteAction: (id: string, path: string) => void
 }) {
   return (
     <div className={homeStyles.rowList}>
@@ -161,13 +161,14 @@ function DocumentList({
               </a>
             )}
             {canManage && (
-              <form action={deleteAction}>
-                <input type="hidden" name="id" value={doc.id} />
-                <input type="hidden" name="path" value={doc.file_path} />
-                <button type="submit" className={theme.buttonGhost}>
-                  Delete
-                </button>
-              </form>
+              <ConfirmSubmitButton
+                formAction={deleteAction.bind(null, doc.id, doc.file_path)}
+                confirmMessage={`Delete "${doc.label}"?`}
+                className={theme.iconButtonDanger}
+                title="Delete document"
+              >
+                <MaterialIcon name="delete" size={18} />
+              </ConfirmSubmitButton>
             )}
           </div>
         </div>

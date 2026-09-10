@@ -1,17 +1,19 @@
 'use client'
 
+import { useState } from 'react'
 import type { ReactNode } from 'react'
+import styles from './ConfirmDialog.module.scss'
 
 /**
- * A submit button that lives inside a Server Component <form> but still needs
- * a client-side confirm() before it's allowed to fire — e.g. Delete buttons
- * using formAction to target a different server action than the form's own.
+ * A button that runs a server action after our own confirm dialog — not
+ * window.confirm(), and not dependent on living inside a <form>. `formAction`
+ * is called directly (Next runs a bound server action just fine outside form
+ * submission, redirect() included), which also means this works correctly as
+ * a bare list item, not just inside a wrapping <form> for the row.
  *
  * `formAction` must already be bound to whatever row it targets (e.g.
- * `deleteFooAction.bind(null, row.id)`), not passed a raw `name`/`value` pair
- * on this button — React encodes a hidden action-id field onto a formAction
- * button itself, and giving it our own `name` collides with that, producing
- * a server/client hydration mismatch on the `name` attribute.
+ * `deleteFooAction.bind(null, row.id)`) — any trailing FormData we pass is
+ * ignored by every action written against this component.
  */
 export default function ConfirmSubmitButton({
   formAction,
@@ -26,18 +28,36 @@ export default function ConfirmSubmitButton({
   title?: string
   children: ReactNode
 }) {
+  const [open, setOpen] = useState(false)
+  const [pending, setPending] = useState(false)
+
+  async function handleConfirm() {
+    setPending(true)
+    await formAction(new FormData())
+    setOpen(false)
+    setPending(false)
+  }
+
   return (
-    <button
-      type="submit"
-      formAction={formAction}
-      title={title}
-      aria-label={title}
-      className={className}
-      onClick={(e) => {
-        if (!window.confirm(confirmMessage)) e.preventDefault()
-      }}
-    >
-      {children}
-    </button>
+    <>
+      <button type="button" title={title} aria-label={title} className={className} onClick={() => setOpen(true)}>
+        {children}
+      </button>
+      {open && (
+        <div className={styles.overlay} onClick={() => !pending && setOpen(false)}>
+          <div className={styles.dialog} role="alertdialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+            <p className={styles.message}>{confirmMessage}</p>
+            <div className={styles.actions}>
+              <button type="button" className={styles.cancel} disabled={pending} onClick={() => setOpen(false)}>
+                Cancel
+              </button>
+              <button type="button" className={styles.confirm} disabled={pending} onClick={handleConfirm}>
+                {pending ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }

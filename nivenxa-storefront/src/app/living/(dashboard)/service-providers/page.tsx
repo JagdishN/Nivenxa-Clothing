@@ -1,10 +1,11 @@
-import { IconDeviceFloppy, IconTrash } from '@tabler/icons-react'
+import { IconDeviceFloppy } from '@tabler/icons-react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { requireMembership } from '@/lib/living/auth'
 import { setLivingError, setLivingNotice } from '@/lib/living/flash'
 import { getServiceTypes } from '@/lib/living/queries'
 import type { ServiceProvider, ServiceType } from '@/lib/living/types'
 import ConfirmSubmitButton from '../ConfirmSubmitButton'
+import MaterialIcon from '../../MaterialIcon'
 import theme from '../../LivingTheme.module.scss'
 import Tabs from '../Tabs'
 
@@ -223,7 +224,7 @@ export default async function LivingServiceProvidersPage() {
                                   className={theme.iconButtonDanger}
                                   title="Delete this provider"
                                 >
-                                  <IconTrash size={20} stroke={1.75} />
+                                  <MaterialIcon name="delete" size={20} />
                                 </ConfirmSubmitButton>
                               </div>
                             </td>
@@ -292,7 +293,7 @@ export default async function LivingServiceProvidersPage() {
                     <input id="notes" name="notes" className={theme.input} placeholder="Available weekends, etc." />
                   </div>
                   <button type="submit" className={theme.button}>
-                    Add
+                    <MaterialIcon name="add" size={16} style={{ marginRight: "0.3rem" }} />Add
                   </button>
                 </form>
                 {serviceTypes.length === 0 && (
@@ -326,7 +327,7 @@ export default async function LivingServiceProvidersPage() {
                       <input id="names" name="names" className={theme.input} placeholder="Plumbing, Electrical, Lift AMC" required />
                     </div>
                     <button type="submit" className={theme.button}>
-                      Add
+                      <MaterialIcon name="add" size={16} style={{ marginRight: "0.3rem" }} />Add
                     </button>
                   </form>
                 </div>
@@ -352,7 +353,7 @@ export default async function LivingServiceProvidersPage() {
                                   className={theme.iconButtonDanger}
                                   title="Delete service"
                                 >
-                                  <IconTrash size={20} stroke={1.75} />
+                                  <MaterialIcon name="delete" size={20} />
                                 </ConfirmSubmitButton>
                               </form>
                             </td>

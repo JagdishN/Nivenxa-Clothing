@@ -57,6 +57,12 @@ alter table living_apartments add column if not exists flat_count int not null d
 -- the Admin's own informed tradeoff, not a bug.
 alter table living_apartments add column if not exists shared_cost_divisor int;
 
+-- The association's real cash position before Living started tracking it —
+-- a one-time seed, same gap living_flat_ledger.previous_due solves per flat.
+-- Null (never set) is treated as 0 by the Financial Statement computation,
+-- not a distinct state worth its own column.
+alter table living_apartments add column if not exists opening_cash_balance numeric;
+
 create table if not exists living_flats (
   id uuid primary key default gen_random_uuid(),
   apartment_id uuid not null references living_apartments (id) on delete cascade,
@@ -135,6 +141,13 @@ create table if not exists living_flat_claims (
   decided_by uuid references auth.users (id)
 );
 
+-- Snapshot of the requester's own auth identity at request time — an Admin
+-- reviewing living_flat_claims has no other way to see WHO is asking (their
+-- own RLS-scoped session can't read auth.users at all), so
+-- living_join_apartment() below captures it once, here, instead.
+alter table living_flat_claims add column if not exists requester_email text;
+alter table living_flat_claims add column if not exists requester_phone text;
+
 create index if not exists living_flat_claims_apartment_id_idx on living_flat_claims (apartment_id, status);
 
 -- ─── Maintenance ────────────────────────────────────────────────────────
@@ -210,6 +223,34 @@ create policy living_flat_ledger_write on living_flat_ledger for all
 
 alter table living_flat_ledger enable row level security;
 
+-- A log of advance-balance moves between two flats' living_flat_ledger rows
+-- for the same period (see transferAdvanceAction in maintenance/page.tsx) —
+-- kept so the Admin can see what moved and undo it (deleteAdvanceTransferAction
+-- reverses the two ledger amounts, then removes this row) rather than the
+-- transfer being an untraceable edit to two plain numbers.
+create table if not exists living_advance_transfers (
+  id uuid primary key default gen_random_uuid(),
+  apartment_id uuid not null references living_apartments (id) on delete cascade,
+  maintenance_month_id uuid not null references living_maintenance_months (id) on delete cascade,
+  from_flat_id uuid not null references living_flats (id) on delete cascade,
+  to_flat_id uuid not null references living_flats (id) on delete cascade,
+  amount numeric not null,
+  transferred_by uuid references auth.users (id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists living_advance_transfers_period_idx on living_advance_transfers (maintenance_month_id, created_at desc);
+
+drop policy if exists living_advance_transfers_select on living_advance_transfers;
+create policy living_advance_transfers_select on living_advance_transfers for select
+  using (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'));
+drop policy if exists living_advance_transfers_write on living_advance_transfers;
+create policy living_advance_transfers_write on living_advance_transfers for all
+  using (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'))
+  with check (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'));
+
+alter table living_advance_transfers enable row level security;
+
 -- One row per actual payment received from a flat, against a specific
 -- maintenance period — a flat can have several in one period (partial
 -- payments over time). Sum of these against a period is that period's
@@ -223,11 +264,26 @@ create table if not exists living_payments (
   flat_id uuid not null references living_flats (id) on delete cascade,
   amount numeric not null check (amount > 0),
   payment_date date not null default current_date,
-  method text not null default 'other' check (method in ('cash', 'upi', 'bank_transfer', 'cheque', 'other')),
+  method text not null default 'other' check (method in ('cash', 'upi', 'bank_transfer', 'cheque', 'other', 'advance')),
   reference_note text,
+  -- e.g. "NXL-2026-09-0102-001" — generated once at insert time (recordPaymentAction)
+  -- from the payment's own year/month + flat_no + a per-flat-per-month sequence.
+  -- Null on any row inserted before this column existed. Also null for the
+  -- system-generated 'advance' rows below (see the comment on that method).
+  receipt_no text,
   recorded_by uuid not null references auth.users (id),
   created_at timestamptz not null default now()
 );
+
+alter table living_payments add column if not exists receipt_no text;
+
+-- `create table if not exists` above is a no-op against an already-seeded
+-- database, so the 'advance' method (a system-written, visibility-only
+-- record of how much advance_payment was applied to a period's bill — see
+-- syncAdvanceApplicationPayment in queries.ts; never a manually-selectable
+-- option in the Record Payment form) needs its own explicit constraint swap.
+alter table living_payments drop constraint if exists living_payments_method_check;
+alter table living_payments add constraint living_payments_method_check check (method in ('cash', 'upi', 'bank_transfer', 'cheque', 'other', 'advance'));
 
 create index if not exists living_payments_period_idx on living_payments (maintenance_month_id);
 create index if not exists living_payments_flat_idx on living_payments (flat_id, payment_date desc);
@@ -340,9 +396,21 @@ create table if not exists living_slab_configs (
   id uuid primary key default gen_random_uuid(),
   apartment_id uuid not null references living_apartments (id) on delete cascade,
   effective_from date not null, -- applies going forward only; history stays untouched
-  base_rate_per_1000l numeric not null,
-  -- [{ from_liters, to_liters (null = unbounded), rate_multiplier }]
-  slabs jsonb not null,
+  -- Vestigial as of the combined-water-rate change (see billing.ts) — the
+  -- base rate is always the live monthly combined rate (getCombinedWaterRate),
+  -- never admin-entered. Left nullable rather than dropped so old rows (and
+  -- anyone still reading them) don't break; new rows never set this.
+  base_rate_per_1000l numeric,
+  -- water_billing_method 'slab': [{ from_liters, to_liters (null = unbounded), rate_multiplier }] —
+  -- multiplies that month's dynamic base rate per band, never a fixed rupee amount. See
+  -- slabWaterCharge in billing.ts for how these combine with slab_calculation_method.
+  slabs jsonb,
+  -- 'standard' = consumption × base rate, flat, regardless of usage (the default).
+  -- 'slab' = `slabs` above applies, per `slab_calculation_method`.
+  water_billing_method text not null default 'standard' check (water_billing_method in ('standard', 'slab')),
+  -- 'progressive' = each band's own litres billed at that band's rate (typical utility billing).
+  -- 'whole_consumption' = total consumption's band determines one rate for the entire consumption.
+  slab_calculation_method text not null default 'progressive' check (slab_calculation_method in ('progressive', 'whole_consumption')),
   grace_period_days int not null default 15,
   escalation_cadence text not null default 'monthly' check (escalation_cadence in ('weekly', 'monthly')),
   escalation_multiplier numeric not null default 2,
@@ -351,6 +419,14 @@ create table if not exists living_slab_configs (
   created_at timestamptz not null default now(),
   unique (apartment_id, effective_from)
 );
+
+-- `create table if not exists` above is a no-op against an already-seeded
+-- database, so an existing NOT NULL constraint needs its own explicit drop,
+-- and columns added after the table already existed need their own add.
+alter table living_slab_configs alter column base_rate_per_1000l drop not null;
+alter table living_slab_configs alter column slabs drop not null;
+alter table living_slab_configs add column if not exists water_billing_method text not null default 'standard' check (water_billing_method in ('standard', 'slab'));
+alter table living_slab_configs add column if not exists slab_calculation_method text not null default 'progressive' check (slab_calculation_method in ('progressive', 'whole_consumption'));
 
 create index if not exists living_slab_configs_apartment_id_idx on living_slab_configs (apartment_id, effective_from desc);
 
@@ -402,8 +478,8 @@ create table if not exists living_water_supply_costs (
   govt_large_tanker_count int not null default 0,
   -- Government norm: 500L/day supplied per Majeera connection — this count
   -- times 500 times the days in the month is how many litres Majeera is
-  -- assumed to have supplied, used only to suggest a base water rate (see
-  -- suggestedBaseRatePer1000L in billing.ts) — never billed on its own.
+  -- assumed to have supplied. Feeds the combined water rate directly now
+  -- (see getCombinedWaterRate in queries.ts) — no longer just a suggestion.
   majeera_connection_count int not null default 0,
   majeera_amount numeric not null default 0,
   majeera_extra_enabled boolean not null default true,
@@ -415,6 +491,12 @@ create table if not exists living_water_supply_costs (
 
 alter table living_water_supply_costs add column if not exists majeera_connection_count int not null default 0;
 
+-- The CUMULATIVE unresolved over/under-recovery as of the end of this
+-- calendar month — null until first needed (see getIncomingGap in
+-- queries.ts), then cached here so computing a later month's combined rate
+-- is an O(1) one-month lookback instead of a full history walk.
+alter table living_water_supply_costs add column if not exists carried_gap numeric;
+
 -- Replaces the single govt_tanker_count column with the small/large split
 -- above — safe to re-run against an already-seeded database (see the same
 -- note on living_tanker_rates above for why these need an explicit add).
@@ -423,6 +505,40 @@ alter table living_water_supply_costs add column if not exists govt_large_tanker
 alter table living_water_supply_costs drop column if exists govt_tanker_count;
 
 create index if not exists living_water_supply_costs_apartment_month_idx on living_water_supply_costs (apartment_id, month);
+
+-- Frozen record of how a flat's water charge for a given month was actually
+-- calculated — written lazily (see getMeteredWaterCharge in queries.ts) the
+-- first time a PAST month's charge is computed, same "walk once, cache on
+-- the row" pattern as living_water_supply_costs.carried_gap. Once a row
+-- exists, later edits to slab config, tanker counts, or readings don't
+-- retroactively change what was already billed — the CURRENT calendar month
+-- is never snapshotted this way (still live/editable), matching every other
+-- "current month mutable" convention already used across Living billing.
+create table if not exists living_water_bill_snapshots (
+  id uuid primary key default gen_random_uuid(),
+  apartment_id uuid not null references living_apartments (id) on delete cascade,
+  flat_id uuid not null references living_flats (id) on delete cascade,
+  month date not null,
+  consumption_liters numeric,
+  base_rate_per_1000l numeric not null,
+  billing_method text not null,
+  slab_calculation_method text,
+  slab_config_id uuid references living_slab_configs (id) on delete set null,
+  -- [{ from_liters, to_liters, rate_multiplier, rate, liters_billed, amount }] — one entry per
+  -- tier touched (progressive), or a single entry covering all consumption (whole_consumption).
+  tier_breakdown jsonb,
+  computed_charge numeric not null,
+  manual_adjustment numeric not null default 0,
+  adjustment_reason text,
+  adjustment_by uuid references auth.users (id),
+  adjustment_at timestamptz,
+  final_charge numeric not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (apartment_id, flat_id, month)
+);
+
+create index if not exists living_water_bill_snapshots_apt_month_idx on living_water_bill_snapshots (apartment_id, month);
 
 -- ─── Documents ──────────────────────────────────────────────────────────
 
@@ -472,6 +588,7 @@ alter table living_water_readings enable row level security;
 alter table living_slab_configs enable row level security;
 alter table living_tanker_rates enable row level security;
 alter table living_water_supply_costs enable row level security;
+alter table living_water_bill_snapshots enable row level security;
 alter table living_bill_documents enable row level security;
 
 -- Every policy below is preceded by `drop policy if exists` — `create
@@ -573,6 +690,24 @@ create policy living_slab_configs_select on living_slab_configs for select
   using (apartment_id = living_my_apartment_id());
 drop policy if exists living_slab_configs_write on living_slab_configs;
 create policy living_slab_configs_write on living_slab_configs for all
+  using (apartment_id = living_my_apartment_id() and living_my_role() = 'admin')
+  with check (apartment_id = living_my_apartment_id() and living_my_role() = 'admin');
+
+-- living_water_bill_snapshots — read: any member (own flat only for an
+-- Owner, same as living_water_readings). Write: admin only, same as the
+-- living_water_supply_costs/living_slab_configs inputs it's computed from —
+-- an Owner's session simply can't cache one (RLS silently no-ops the write
+-- in getMeteredWaterCharge's lazy-cache path; the computed value is still
+-- returned for that one request), self-healing next time an admin session
+-- touches it.
+drop policy if exists living_water_bill_snapshots_select on living_water_bill_snapshots;
+create policy living_water_bill_snapshots_select on living_water_bill_snapshots for select
+  using (
+    apartment_id = living_my_apartment_id()
+    and (living_my_role() in ('admin', 'treasurer') or flat_id = living_owner_flat_id())
+  );
+drop policy if exists living_water_bill_snapshots_write on living_water_bill_snapshots;
+create policy living_water_bill_snapshots_write on living_water_bill_snapshots for all
   using (apartment_id = living_my_apartment_id() and living_my_role() = 'admin')
   with check (apartment_id = living_my_apartment_id() and living_my_role() = 'admin');
 
@@ -685,10 +820,71 @@ begin
   if v_flat.owner_contact is not null and v_flat.owner_contact in (v_user_email, v_user_phone) then
     insert into living_memberships (user_id, apartment_id, role, flat_id) values (auth.uid(), v_apartment_id, 'owner', v_flat.id);
     return jsonb_build_object('status', 'attached');
-  else
-    insert into living_flat_claims (apartment_id, flat_id, requested_by) values (v_apartment_id, v_flat.id, auth.uid());
+  end if;
+
+  -- Duplicate guard: at most one pending claim per flat (someone else may
+  -- already be waiting on this exact flat) and at most one pending claim
+  -- per requester (this account may already be waiting on a different
+  -- flat) — either case just surfaces the existing request rather than
+  -- stacking another row for the Admin to sort through.
+  if exists (select 1 from living_flat_claims where flat_id = v_flat.id and status = 'pending') then
     return jsonb_build_object('status', 'pending');
   end if;
+  if exists (select 1 from living_flat_claims where requested_by = auth.uid() and status = 'pending') then
+    return jsonb_build_object('status', 'pending');
+  end if;
+
+  insert into living_flat_claims (apartment_id, flat_id, requested_by, requester_email, requester_phone)
+    values (v_apartment_id, v_flat.id, auth.uid(), v_user_email, v_user_phone);
+  return jsonb_build_object('status', 'pending');
+end;
+$$;
+
+-- Owner auto-attach purely from a known contact — no join code needed at
+-- all. Admin pre-registers a flat's owner_contact (Setup); the first time
+-- that person authenticates (email/phone OTP), this runs and drops them
+-- straight into their flat if — and only if — exactly one unclaimed flat
+-- across the whole platform matches their identity. More than one match
+-- (two apartments both entered the same contact by mistake, say) is left
+-- alone rather than guessed at — that owner falls back to the ordinary
+-- join-code flow, same as anyone else.
+create or replace function living_auto_claim_by_contact() returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  v_user_email text;
+  v_user_phone text;
+  v_match_count int;
+  v_flat living_flats%rowtype;
+begin
+  if auth.uid() is null then raise exception 'not authenticated'; end if;
+  if exists (select 1 from living_memberships where user_id = auth.uid()) then
+    return jsonb_build_object('status', 'already_member');
+  end if;
+
+  select email, phone into v_user_email, v_user_phone from auth.users where id = auth.uid();
+  if v_user_email is null and v_user_phone is null then
+    return jsonb_build_object('status', 'no_match');
+  end if;
+
+  select count(*) into v_match_count
+    from living_flats f
+    where f.owner_contact is not null
+      and f.owner_contact in (v_user_email, v_user_phone)
+      and not exists (select 1 from living_memberships m where m.flat_id = f.id);
+
+  if v_match_count <> 1 then
+    return jsonb_build_object('status', 'no_match');
+  end if;
+
+  select * into v_flat
+    from living_flats f
+    where f.owner_contact is not null
+      and f.owner_contact in (v_user_email, v_user_phone)
+      and not exists (select 1 from living_memberships m where m.flat_id = f.id)
+    limit 1;
+
+  insert into living_memberships (user_id, apartment_id, role, flat_id) values (auth.uid(), v_flat.apartment_id, 'owner', v_flat.id);
+  return jsonb_build_object('status', 'attached');
 end;
 $$;
 
@@ -1064,3 +1260,140 @@ create policy living_documents_delete on storage.objects for delete
     and (storage.foldername(name))[1] = living_my_apartment_id()::text
     and living_my_role() in ('admin', 'treasurer')
   );
+
+-- ─── Community: Notices, Meetings/MOM, Requests, Financial Statements ────
+
+-- A short apartment-wide announcement — no draft state, posting is
+-- immediate, same as an Event or a master-data category. Delete is the
+-- only correction path (no edit) — short enough that re-posting is fine.
+create table if not exists living_notices (
+  id uuid primary key default gen_random_uuid(),
+  apartment_id uuid not null references living_apartments (id) on delete cascade,
+  title text not null,
+  body text not null,
+  created_by uuid not null references auth.users (id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists living_notices_apartment_idx on living_notices (apartment_id, created_at desc);
+
+drop policy if exists living_notices_select on living_notices;
+create policy living_notices_select on living_notices for select
+  using (apartment_id = living_my_apartment_id());
+drop policy if exists living_notices_write on living_notices;
+create policy living_notices_write on living_notices for all
+  using (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'))
+  with check (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'));
+
+alter table living_notices enable row level security;
+
+-- One row per association meeting — `agenda` is visible to every member as
+-- soon as it's entered (useful transparency ahead of the meeting), `mom`
+-- (Minutes of Meeting) is only ever SHOWN in the UI once mom_published_at is
+-- set, even though RLS itself doesn't distinguish that column (same
+-- apartment-wide select as everything else here — an Owner reading an
+-- in-progress MOM draft via a raw API call is a low-severity gap, not a
+-- security hole, consistent with e.g. Tanker Rates already being
+-- apartment-wide readable).
+create table if not exists living_meetings (
+  id uuid primary key default gen_random_uuid(),
+  apartment_id uuid not null references living_apartments (id) on delete cascade,
+  title text not null,
+  meeting_date date not null,
+  agenda text,
+  mom text,
+  mom_published_at timestamptz,
+  created_by uuid not null references auth.users (id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists living_meetings_apartment_idx on living_meetings (apartment_id, meeting_date desc);
+
+drop policy if exists living_meetings_select on living_meetings;
+create policy living_meetings_select on living_meetings for select
+  using (apartment_id = living_my_apartment_id());
+drop policy if exists living_meetings_write on living_meetings;
+create policy living_meetings_write on living_meetings for all
+  using (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'))
+  with check (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'));
+
+alter table living_meetings enable row level security;
+
+-- A resident-raised request (a repair, a complaint, anything that isn't a
+-- billing Dispute over a specific reading/amount) — Owner-insert,
+-- admin/treasurer-manage. No Owner update/delete policy at all: once
+-- raised, only the Admin/Treasurer moves it through status, and it's never
+-- hard-deleted (same "keep the record" posture as every other financial/
+-- operational row in this schema).
+create table if not exists living_requests (
+  id uuid primary key default gen_random_uuid(),
+  apartment_id uuid not null references living_apartments (id) on delete cascade,
+  flat_id uuid not null references living_flats (id) on delete cascade,
+  raised_by uuid not null references auth.users (id),
+  title text not null,
+  description text,
+  status text not null default 'open' check (status in ('open', 'in_progress', 'resolved')),
+  admin_response text,
+  raised_at timestamptz not null default now(),
+  resolved_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists living_requests_apartment_idx on living_requests (apartment_id, status);
+
+drop policy if exists living_requests_select on living_requests;
+create policy living_requests_select on living_requests for select
+  using (
+    apartment_id = living_my_apartment_id()
+    and (living_my_role() in ('admin', 'treasurer') or flat_id = living_owner_flat_id())
+  );
+drop policy if exists living_requests_insert on living_requests;
+create policy living_requests_insert on living_requests for insert
+  with check (
+    apartment_id = living_my_apartment_id()
+    and living_my_role() = 'owner'
+    and flat_id = living_owner_flat_id()
+    and raised_by = auth.uid()
+  );
+drop policy if exists living_requests_update on living_requests;
+create policy living_requests_update on living_requests for update
+  using (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'))
+  with check (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'));
+
+alter table living_requests enable row level security;
+
+-- A published snapshot of one period's Financial Statement — deliberately
+-- NOT computed at read time the way Bills are. The Outstanding-dues figure
+-- needs every flat's water reading, which living_water_readings' RLS
+-- restricts an Owner to their own flat's rows only (a privacy choice, not a
+-- gap to route around) — so an Owner's own session can never accurately
+-- recompute this. Admin/treasurer compute it live (their session CAN read
+-- every flat's readings, same as Bills/Payments already do) and publish
+-- (upsert) a snapshot here; Owners only ever read the snapshot.
+create table if not exists living_financial_statements (
+  id uuid primary key default gen_random_uuid(),
+  apartment_id uuid not null references living_apartments (id) on delete cascade,
+  maintenance_month_id uuid not null references living_maintenance_months (id) on delete cascade,
+  opening_balance numeric not null,
+  collections numeric not null,
+  expenses numeric not null,
+  closing_balance numeric not null,
+  outstanding_dues numeric not null,
+  published_by uuid not null references auth.users (id),
+  published_at timestamptz not null default now(),
+  unique (maintenance_month_id)
+);
+
+create index if not exists living_financial_statements_apartment_idx on living_financial_statements (apartment_id, published_at desc);
+
+drop policy if exists living_financial_statements_select on living_financial_statements;
+create policy living_financial_statements_select on living_financial_statements for select
+  using (apartment_id = living_my_apartment_id());
+drop policy if exists living_financial_statements_write on living_financial_statements;
+create policy living_financial_statements_write on living_financial_statements for all
+  using (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'))
+  with check (apartment_id = living_my_apartment_id() and living_my_role() in ('admin', 'treasurer'));
+
+alter table living_financial_statements enable row level security;

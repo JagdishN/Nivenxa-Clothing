@@ -1,9 +1,13 @@
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { requireMembership } from '@/lib/living/auth'
+import { formatReceiptNumber } from '@/lib/living/billing'
 import { setLivingError, setLivingNotice } from '@/lib/living/flash'
 import { formatCurrency, formatPaymentMethod, formatPaymentStatus, monthKeyFor } from '@/lib/living/format'
 import { computeBillForFlat, getBillableFlats, getCurrentMaintenancePeriod, getFlats, getPaymentsForPeriod } from '@/lib/living/queries'
 import type { PaymentMethod, PaymentStatus } from '@/lib/living/types'
+import ConfirmSubmitButton from '../ConfirmSubmitButton'
+import MaterialIcon from '../../MaterialIcon'
 import theme from '../../LivingTheme.module.scss'
 import Tabs from '../Tabs'
 
@@ -47,28 +51,52 @@ async function recordPaymentAction(formData: FormData) {
     redirect('/living/payments')
   }
 
-  const { error } = await supabase.from('living_payments').insert({
-    apartment_id: apartment.id,
-    maintenance_month_id: current.id,
-    flat_id: flatId,
-    amount,
-    payment_date: paymentDate,
-    method,
-    reference_note: referenceNote || null,
-    recorded_by: userId,
-  })
-  if (error) {
-    await setLivingError(error.message)
+  const { data: flat } = await supabase.from('living_flats').select('*').eq('id', flatId).eq('apartment_id', apartment.id).maybeSingle()
+  if (!flat) {
+    await setLivingError('Flat not found.')
+    redirect('/living/payments')
+  }
+
+  // Per-flat-per-month running count — e.g. this flat's 2nd payment in
+  // September gets sequence 2, regardless of how many other flats paid.
+  const [year, monthNum] = paymentDate.split('-')
+  const monthStart = `${year}-${monthNum}-01`
+  const nextMonth = new Date(Number(year), Number(monthNum), 1).toISOString().slice(0, 10)
+  const { count } = await supabase
+    .from('living_payments')
+    .select('id', { count: 'exact', head: true })
+    .eq('apartment_id', apartment.id)
+    .eq('flat_id', flatId)
+    .gte('payment_date', monthStart)
+    .lt('payment_date', nextMonth)
+  const receiptNo = formatReceiptNumber(paymentDate, flat.flat_no, (count ?? 0) + 1)
+
+  const { data: payment, error } = await supabase
+    .from('living_payments')
+    .insert({
+      apartment_id: apartment.id,
+      maintenance_month_id: current.id,
+      flat_id: flatId,
+      amount,
+      payment_date: paymentDate,
+      method,
+      reference_note: referenceNote || null,
+      receipt_no: receiptNo,
+      recorded_by: userId,
+    })
+    .select('id')
+    .single()
+  if (error || !payment) {
+    await setLivingError(error?.message ?? 'Could not record the payment.')
     redirect('/living/payments')
   }
   await setLivingNotice('Payment recorded.')
-  redirect('/living/payments')
+  redirect(`/living/payments/receipts/${payment.id}`)
 }
 
-async function deletePaymentAction(formData: FormData) {
+async function deletePaymentAction(id: string) {
   'use server'
   const { supabase, apartment } = await requireMembership(['admin', 'treasurer'])
-  const id = String(formData.get('id') ?? '')
   const { error } = await supabase.from('living_payments').delete().eq('id', id).eq('apartment_id', apartment.id)
   if (error) {
     await setLivingError(error.message)
@@ -221,6 +249,7 @@ export default async function LivingPaymentsPage() {
                           <th className={theme.num}>Amount</th>
                           <th>Method</th>
                           <th>Reference</th>
+                          <th>Receipt</th>
                           <th></th>
                         </tr>
                       </thead>
@@ -233,18 +262,23 @@ export default async function LivingPaymentsPage() {
                             <td>{formatPaymentMethod(p.method)}</td>
                             <td>{p.reference_note ?? '—'}</td>
                             <td>
-                              <form action={deletePaymentAction}>
-                                <input type="hidden" name="id" value={p.id} />
-                                <button type="submit" className={theme.buttonGhost}>
-                                  Delete
-                                </button>
-                              </form>
+                              <Link href={`/living/payments/receipts/${p.id}`}>{p.receipt_no ?? 'View'}</Link>
+                            </td>
+                            <td>
+                              <ConfirmSubmitButton
+                                formAction={deletePaymentAction.bind(null, p.id)}
+                                confirmMessage="Delete this payment? This can't be undone."
+                                className={theme.iconButtonDanger}
+                                title="Delete payment"
+                              >
+                                <MaterialIcon name="delete" size={20} />
+                              </ConfirmSubmitButton>
                             </td>
                           </tr>
                         ))}
                         {payments.length === 0 && (
                           <tr>
-                            <td colSpan={6} className={theme.muted}>
+                            <td colSpan={7} className={theme.muted}>
                               No payments recorded for this period yet.
                             </td>
                           </tr>

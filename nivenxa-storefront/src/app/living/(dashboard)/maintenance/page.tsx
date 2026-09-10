@@ -4,8 +4,10 @@ import { requireMembership } from '@/lib/living/auth'
 import { setLivingError, setLivingNotice } from '@/lib/living/flash'
 import { formatCurrency, formatPeriodLabel, monthKeyFor } from '@/lib/living/format'
 import { maintenanceGrandTotal, round2, splitMaintenance } from '@/lib/living/billing'
-import { getBillableFlats, getCarryForwardExpenses, getCommonWaterCharge, getCurrentMaintenancePeriod, getFlatLedger, getFlats, getPreviousDueSuggestion } from '@/lib/living/queries'
-import type { MaintenanceLineItem } from '@/lib/living/types'
+import { computeBillForFlat, getAdvanceCarryForwardSuggestion, getAdvanceTransfers, getBillableFlats, getCarryForwardExpenses, getCommonWaterCharge, getCurrentMaintenancePeriod, getFlatLedger, getFlats, getPreviousDueSuggestion, syncAdvanceApplicationPayment } from '@/lib/living/queries'
+import type { AdvanceTransfer, MaintenanceLineItem, MaintenanceMonth } from '@/lib/living/types'
+import ConfirmSubmitButton from '../ConfirmSubmitButton'
+import MaterialIcon from '../../MaterialIcon'
 import theme from '../../LivingTheme.module.scss'
 import homeStyles from '../Home.module.scss'
 import Tabs from '../Tabs'
@@ -72,9 +74,10 @@ function syncCommonWaterAmount(lineItems: MaintenanceLineItem[], commonWaterChar
  * affects Maintenance at all.
  *
  * Also seeds each billable flat's new previous_due from what was left unpaid
- * on the period being superseded (getPreviousDueSuggestion) — a one-time
- * carry-forward, not a live sync; the Admin can edit it afterward like any
- * other ledger field.
+ * (getPreviousDueSuggestion) and its new advance_payment from whatever
+ * advance went unused (getAdvanceCarryForwardSuggestion) on the period being
+ * superseded — a one-time carry-forward each direction, not a live sync; the
+ * Admin can edit either afterward like any other ledger field.
  */
 async function startPeriodAction(formData: FormData) {
   'use server'
@@ -142,13 +145,19 @@ async function startPeriodAction(formData: FormData) {
     const flats = getBillableFlats(await getFlats(supabase, apartment.id))
     for (const flat of flats) {
       const previousDue = await getPreviousDueSuggestion(supabase, apartment, flat, priorPeriod)
-      if (previousDue > 0) {
-        await supabase
-          .from('living_flat_ledger')
-          .upsert(
-            { apartment_id: apartment.id, maintenance_month_id: inserted.id, flat_id: flat.id, previous_due: previousDue },
-            { onConflict: 'maintenance_month_id,flat_id' }
-          )
+      const advanceCarryForward = await getAdvanceCarryForwardSuggestion(supabase, apartment, flat, priorPeriod)
+      if (previousDue > 0 || advanceCarryForward > 0) {
+        await supabase.from('living_flat_ledger').upsert(
+          {
+            apartment_id: apartment.id,
+            maintenance_month_id: inserted.id,
+            flat_id: flat.id,
+            previous_due: previousDue,
+            advance_payment: advanceCarryForward,
+          },
+          { onConflict: 'maintenance_month_id,flat_id' }
+        )
+        if (advanceCarryForward > 0) await syncAdvanceApplicationPayment(supabase, apartment, flat, inserted as MaintenanceMonth, userId)
       }
     }
   }
@@ -238,13 +247,12 @@ async function addItemAction(formData: FormData) {
   redirect('/living/maintenance')
 }
 
-async function removeItemAction(formData: FormData) {
+async function removeItemAction(index: number) {
   'use server'
   const { supabase, apartment } = await requireMembership(['admin', 'treasurer'])
   const current = await getCurrentMaintenancePeriod(supabase, apartment.id)
   if (!current) redirect('/living/maintenance')
 
-  const index = Number(formData.get('index'))
   let lineItems = current.line_items.filter((_, i) => i !== index)
   lineItems = syncCommonWaterAmount(lineItems, await getCommonWaterCharge(supabase, apartment, monthKeyFor(new Date())))
   const { error } = await supabase.from('living_maintenance_months').update({ line_items: lineItems }).eq('id', current.id)
@@ -257,7 +265,7 @@ async function removeItemAction(formData: FormData) {
 
 async function saveLedgerAction(formData: FormData) {
   'use server'
-  const { supabase, apartment } = await requireMembership(['admin', 'treasurer'])
+  const { supabase, apartment, userId } = await requireMembership(['admin', 'treasurer'])
   const current = await getCurrentMaintenancePeriod(supabase, apartment.id)
   if (!current) redirect('/living/maintenance')
 
@@ -283,14 +291,171 @@ async function saveLedgerAction(formData: FormData) {
       await setLivingError(`Flat ${flat.flat_no}: ${error.message}`)
       redirect('/living/maintenance')
     }
+    await syncAdvanceApplicationPayment(supabase, apartment, flat, current, userId)
   }
   await setLivingNotice('Advance, late fees & due updated.')
   redirect('/living/maintenance')
 }
 
+/** Moves part or all of one flat's advance balance to another flat, for the current period — the source flat must have a positive advance to move from. */
+async function transferAdvanceAction(formData: FormData) {
+  'use server'
+  const { supabase, apartment, userId } = await requireMembership(['admin', 'treasurer'])
+  const current = await getCurrentMaintenancePeriod(supabase, apartment.id)
+  if (!current) redirect('/living/maintenance')
+
+  const fromFlatId = String(formData.get('from_flat_id'))
+  const toFlatId = String(formData.get('to_flat_id'))
+  const amount = round2(Number(formData.get('transfer_amount') ?? 0) || 0)
+
+  if (!fromFlatId || !toFlatId || fromFlatId === toFlatId) {
+    await setLivingError('Pick two different flats.')
+    redirect('/living/maintenance')
+  }
+  if (amount <= 0) {
+    await setLivingError('Enter a transfer amount greater than 0.')
+    redirect('/living/maintenance')
+  }
+
+  const [fromLedger, toLedger] = await Promise.all([getFlatLedger(supabase, current.id, fromFlatId), getFlatLedger(supabase, current.id, toFlatId)])
+  const fromAdvance = fromLedger?.advance_payment ?? 0
+  if (fromAdvance <= 0) {
+    await setLivingError('That flat has no advance balance to transfer.')
+    redirect('/living/maintenance')
+  }
+  if (amount > fromAdvance) {
+    await setLivingError(`Only ${formatCurrency(fromAdvance)} advance available on that flat.`)
+    redirect('/living/maintenance')
+  }
+
+  const { error: fromError } = await supabase.from('living_flat_ledger').upsert(
+    {
+      apartment_id: apartment.id,
+      maintenance_month_id: current.id,
+      flat_id: fromFlatId,
+      advance_payment: round2(fromAdvance - amount),
+      late_fee: fromLedger?.late_fee ?? 0,
+      previous_due: fromLedger?.previous_due ?? 0,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'maintenance_month_id,flat_id' }
+  )
+  if (fromError) {
+    await setLivingError(fromError.message)
+    redirect('/living/maintenance')
+  }
+
+  const { error: toError } = await supabase.from('living_flat_ledger').upsert(
+    {
+      apartment_id: apartment.id,
+      maintenance_month_id: current.id,
+      flat_id: toFlatId,
+      advance_payment: round2((toLedger?.advance_payment ?? 0) + amount),
+      late_fee: toLedger?.late_fee ?? 0,
+      previous_due: toLedger?.previous_due ?? 0,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'maintenance_month_id,flat_id' }
+  )
+  if (toError) {
+    await setLivingError(toError.message)
+    redirect('/living/maintenance')
+  }
+
+  const allFlats = await getFlats(supabase, apartment.id)
+  const fromFlat = allFlats.find((f) => f.id === fromFlatId)
+  const toFlat = allFlats.find((f) => f.id === toFlatId)
+  if (fromFlat) await syncAdvanceApplicationPayment(supabase, apartment, fromFlat, current, userId)
+  if (toFlat) await syncAdvanceApplicationPayment(supabase, apartment, toFlat, current, userId)
+
+  const { error: logError } = await supabase.from('living_advance_transfers').insert({
+    apartment_id: apartment.id,
+    maintenance_month_id: current.id,
+    from_flat_id: fromFlatId,
+    to_flat_id: toFlatId,
+    amount,
+    transferred_by: userId,
+  })
+  if (logError) {
+    await setLivingError(logError.message)
+    redirect('/living/maintenance')
+  }
+
+  await setLivingNotice(`Transferred ${formatCurrency(amount)} advance.`)
+  redirect('/living/maintenance')
+}
+
+/** Reverses one logged transfer (adds the amount back to the source flat, takes it back off the destination) and removes the log entry — an undo, not just a record delete. */
+async function deleteAdvanceTransferAction(id: string) {
+  'use server'
+  const { supabase, apartment, userId } = await requireMembership(['admin', 'treasurer'])
+
+  const { data: transfer } = await supabase.from('living_advance_transfers').select('*').eq('id', id).eq('apartment_id', apartment.id).maybeSingle<AdvanceTransfer>()
+  if (!transfer) redirect('/living/maintenance')
+
+  const [fromLedger, toLedger] = await Promise.all([
+    getFlatLedger(supabase, transfer.maintenance_month_id, transfer.from_flat_id),
+    getFlatLedger(supabase, transfer.maintenance_month_id, transfer.to_flat_id),
+  ])
+
+  const { error: fromError } = await supabase.from('living_flat_ledger').upsert(
+    {
+      apartment_id: apartment.id,
+      maintenance_month_id: transfer.maintenance_month_id,
+      flat_id: transfer.from_flat_id,
+      advance_payment: round2((fromLedger?.advance_payment ?? 0) + transfer.amount),
+      late_fee: fromLedger?.late_fee ?? 0,
+      previous_due: fromLedger?.previous_due ?? 0,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'maintenance_month_id,flat_id' }
+  )
+  if (fromError) {
+    await setLivingError(fromError.message)
+    redirect('/living/maintenance')
+  }
+
+  const { error: toError } = await supabase.from('living_flat_ledger').upsert(
+    {
+      apartment_id: apartment.id,
+      maintenance_month_id: transfer.maintenance_month_id,
+      flat_id: transfer.to_flat_id,
+      advance_payment: round2((toLedger?.advance_payment ?? 0) - transfer.amount),
+      late_fee: toLedger?.late_fee ?? 0,
+      previous_due: toLedger?.previous_due ?? 0,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'maintenance_month_id,flat_id' }
+  )
+  if (toError) {
+    await setLivingError(toError.message)
+    redirect('/living/maintenance')
+  }
+
+  const { data: maintenanceMonth } = await supabase
+    .from('living_maintenance_months')
+    .select('*')
+    .eq('id', transfer.maintenance_month_id)
+    .maybeSingle<MaintenanceMonth>()
+  const allFlats = await getFlats(supabase, apartment.id)
+  const fromFlat = allFlats.find((f) => f.id === transfer.from_flat_id)
+  const toFlat = allFlats.find((f) => f.id === transfer.to_flat_id)
+  if (maintenanceMonth && fromFlat) await syncAdvanceApplicationPayment(supabase, apartment, fromFlat, maintenanceMonth, userId)
+  if (maintenanceMonth && toFlat) await syncAdvanceApplicationPayment(supabase, apartment, toFlat, maintenanceMonth, userId)
+
+  const { error: deleteError } = await supabase.from('living_advance_transfers').delete().eq('id', id).eq('apartment_id', apartment.id)
+  if (deleteError) {
+    await setLivingError(deleteError.message)
+    redirect('/living/maintenance')
+  }
+
+  await setLivingNotice('Transfer undone.')
+  redirect('/living/maintenance')
+}
+
 async function publishAction() {
   'use server'
-  const { supabase, apartment } = await requireMembership(['admin', 'treasurer'])
+  const { supabase, apartment, userId } = await requireMembership(['admin', 'treasurer'])
   const current = await getCurrentMaintenancePeriod(supabase, apartment.id)
   if (!current) redirect('/living/maintenance')
 
@@ -302,6 +467,16 @@ async function publishAction() {
     await setLivingError(error.message)
     redirect('/living/maintenance')
   }
+
+  // maintenance_share stops being 0 the moment this period is published, which
+  // changes every billable flat's own charges — resync each one's advance-applied
+  // payment record against the now-correct total.
+  const published: MaintenanceMonth = { ...current, status: 'published' }
+  const flats = getBillableFlats(await getFlats(supabase, apartment.id))
+  for (const flat of flats) {
+    await syncAdvanceApplicationPayment(supabase, apartment, flat, published, userId)
+  }
+
   await setLivingNotice('Published — owners can now see their share.')
   redirect('/living/maintenance')
 }
@@ -321,9 +496,21 @@ export default async function LivingMaintenancePage() {
         flats.map(async (flat) => ({
           flat,
           ledger: await getFlatLedger(supabase, maintenanceMonth.id, flat.id),
+          // Read-only, live — how much of the entered Advance is still left (or
+          // still owed) once THIS period's own bill is applied against it. The
+          // Advance/Previous due INPUTS below stay exactly what was entered —
+          // total_due is computed from those entered figures, so collapsing an
+          // input down to its own remaining would double-apply it (the bill
+          // would look unpaid again even though the original entered amount
+          // already fully covered it). This column exists so that doesn't have
+          // to be worked out by hand.
+          bill: await computeBillForFlat(supabase, apartment, flat, thisMonth),
         }))
       )
     : []
+  const flatsWithAdvance = ledgerRows.filter((row) => (row.ledger?.advance_payment ?? 0) > 0)
+  const advanceTransfers = maintenanceMonth ? await getAdvanceTransfers(supabase, maintenanceMonth.id) : []
+  const flatNoById = new Map(allFlats.map((f) => [f.id, f.flat_no]))
 
   // Default the "start a new period" form to the day after the current
   // period ends (or today's month, if none exists yet) — a sane one-click
@@ -422,6 +609,7 @@ export default async function LivingMaintenancePage() {
                         <input name="amount" type="number" step="0.01" className={theme.input} />
                       </div>
                       <button type="submit" className={theme.buttonGhost}>
+                        <MaterialIcon name="add" size={16} style={{ marginRight: '0.3rem' }} />
                         Add
                       </button>
                     </form>
@@ -433,12 +621,14 @@ export default async function LivingMaintenancePage() {
                       {maintenanceMonth.line_items.map((item, i) => (
                         <div key={i} className={homeStyles.row}>
                           <span>{item.description}</span>
-                          <form action={removeItemAction}>
-                            <input type="hidden" name="index" value={i} />
-                            <button type="submit" className={theme.buttonGhost}>
-                              Remove
-                            </button>
-                          </form>
+                          <ConfirmSubmitButton
+                            formAction={removeItemAction.bind(null, i)}
+                            confirmMessage={`Remove "${item.description}" from this period?`}
+                            className={theme.iconButtonDanger}
+                            title="Remove item"
+                          >
+                            <MaterialIcon name="delete" size={18} />
+                          </ConfirmSubmitButton>
                         </div>
                       ))}
                     </div>
@@ -480,8 +670,11 @@ export default async function LivingMaintenancePage() {
                 <>
                   <p className={theme.muted} style={{ marginBottom: '1rem' }}>
                     Per flat, for this billing period. Total due = maintenance + water + late fee + previous due − advance payment.
-                    Previous due is auto-suggested from the prior period&rsquo;s unpaid balance when you start a new period (see{' '}
-                    <Link href="/living/payments">Payments</Link>) — freely editable here either way.
+                    Starting a new period auto-suggests previous due from what&rsquo;s still unpaid, and advance payment from
+                    whatever advance went unused this period (see <Link href="/living/payments">Payments</Link>) — both freely
+                    editable here either way, and neither re-applied afterward. The Advance/Previous due columns are what was
+                    entered at the start of the period, unchanged by this period&rsquo;s bill — <strong>Remaining</strong> shows
+                    what&rsquo;s actually still owed or left over right now, live.
                   </p>
                   <div className={theme.card}>
                     <form action={saveLedgerAction}>
@@ -493,10 +686,11 @@ export default async function LivingMaintenancePage() {
                               <th className={theme.num}>Advance payment</th>
                               <th className={theme.num}>Late fee</th>
                               <th className={theme.num}>Previous due</th>
+                              <th className={theme.num}>Remaining</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {ledgerRows.map(({ flat, ledger }) => (
+                            {ledgerRows.map(({ flat, ledger, bill }) => (
                               <tr key={flat.id}>
                                 <td>{flat.flat_no}</td>
                                 <td>
@@ -520,11 +714,20 @@ export default async function LivingMaintenancePage() {
                                     defaultValue={ledger?.previous_due ?? 0}
                                   />
                                 </td>
+                                <td className={theme.num}>
+                                  {bill.balance_remaining > 0 ? (
+                                    <span className={theme.pillFlag}>Due {formatCurrency(bill.balance_remaining)}</span>
+                                  ) : bill.balance_remaining < 0 ? (
+                                    <span className={theme.pillOk}>Advance {formatCurrency(-bill.balance_remaining)}</span>
+                                  ) : (
+                                    <span className={theme.pillOk}>Settled ₹0</span>
+                                  )}
+                                </td>
                               </tr>
                             ))}
                             {ledgerRows.length === 0 && (
                               <tr>
-                                <td colSpan={4} className={theme.muted}>
+                                <td colSpan={5} className={theme.muted}>
                                   No billable flats yet.
                                 </td>
                               </tr>
@@ -538,6 +741,98 @@ export default async function LivingMaintenancePage() {
                         </button>
                       )}
                     </form>
+                  </div>
+
+                  <div className={theme.card} style={{ marginTop: '1.5rem' }}>
+                    <h2 className={homeStyles.sectionTitle}>Transfer advance between flats</h2>
+                    {flatsWithAdvance.length === 0 ? (
+                      <p className={theme.muted}>No flat currently has an advance balance to transfer.</p>
+                    ) : (
+                      <>
+                        <p className={theme.muted} style={{ marginBottom: '1rem' }}>
+                          Moves part or all of one flat&rsquo;s advance to another, for this period — only flats with an advance
+                          balance above ₹0 can be a source.
+                        </p>
+                        <form action={transferAdvanceAction}>
+                          <div className={homeStyles.grid}>
+                            <div className={theme.field}>
+                              <label className={theme.label} htmlFor="from_flat_id">
+                                From flat
+                              </label>
+                              <select id="from_flat_id" name="from_flat_id" className={theme.select} required>
+                                {flatsWithAdvance.map(({ flat, ledger }) => (
+                                  <option key={flat.id} value={flat.id}>
+                                    {flat.flat_no} — {formatCurrency(ledger?.advance_payment ?? 0)} available
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className={theme.field}>
+                              <label className={theme.label} htmlFor="to_flat_id">
+                                To flat
+                              </label>
+                              <select id="to_flat_id" name="to_flat_id" className={theme.select} required>
+                                {flats.map((flat) => (
+                                  <option key={flat.id} value={flat.id}>
+                                    {flat.flat_no}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className={theme.field}>
+                              <label className={theme.label} htmlFor="transfer_amount">
+                                Amount
+                              </label>
+                              <input id="transfer_amount" name="transfer_amount" className={theme.input} type="number" step="0.01" min="0.01" required />
+                            </div>
+                          </div>
+                          <button type="submit" className={theme.button}>
+                            Transfer
+                          </button>
+                        </form>
+                      </>
+                    )}
+                  </div>
+
+                  <div className={theme.card} style={{ marginTop: '1.5rem' }}>
+                    <h2 className={homeStyles.sectionTitle}>Transfer history</h2>
+                    {advanceTransfers.length > 0 ? (
+                      <div className={theme.tableScroll}>
+                        <table className={theme.table}>
+                          <thead>
+                            <tr>
+                              <th>When</th>
+                              <th>From</th>
+                              <th>To</th>
+                              <th className={theme.num}>Amount</th>
+                              <th></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {advanceTransfers.map((t) => (
+                              <tr key={t.id}>
+                                <td>{new Date(t.created_at).toLocaleString('en-IN')}</td>
+                                <td>{flatNoById.get(t.from_flat_id) ?? '—'}</td>
+                                <td>{flatNoById.get(t.to_flat_id) ?? '—'}</td>
+                                <td className={theme.num}>{formatCurrency(t.amount)}</td>
+                                <td>
+                                  <ConfirmSubmitButton
+                                    formAction={deleteAdvanceTransferAction.bind(null, t.id)}
+                                    confirmMessage="Undo this transfer? The amount moves back to the source flat."
+                                    className={theme.iconButtonDanger}
+                                    title="Undo transfer"
+                                  >
+                                    <MaterialIcon name="delete" size={20} />
+                                  </ConfirmSubmitButton>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className={theme.muted}>No transfers yet for this period.</p>
+                    )}
                   </div>
                 </>
               ),

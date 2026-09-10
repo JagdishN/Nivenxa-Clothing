@@ -12,6 +12,7 @@ const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   bank_transfer: 'Bank transfer',
   cheque: 'Cheque',
   other: 'Other',
+  advance: 'Advance',
 }
 
 export function formatPaymentMethod(method: PaymentMethod): string {
@@ -44,6 +45,12 @@ export function daysInMonth(monthKey: string): number {
   return new Date(year, month, 0).getDate()
 }
 
+/** One calendar month before `monthKey` — e.g. "2026-09-01" -> "2026-08-01". */
+export function monthBefore(monthKey: string): string {
+  const [year, month] = monthKey.split('-').map(Number)
+  return monthKeyFor(new Date(year, month - 2, 1))
+}
+
 /**
  * A maintenance period's actual date range, e.g. "1 Aug – 31 Aug 2026" or,
  * spanning a year boundary, "1 Aug 2026 – 31 Jan 2027" — not assumed to be
@@ -57,4 +64,13 @@ export function formatPeriodLabel(periodStart: string, periodEnd: string): strin
   const startLabel = start.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: sameYear ? undefined : 'numeric' })
   const endLabel = end.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
   return `${startLabel} – ${endLabel}`
+}
+
+/** Digits-only, best-effort Indian mobile number for a wa.me link — 10 digits gets the country code prepended; anything else that's plausibly already got one is used as-is; anything else means no direct number to share to. */
+export function waNumberFor(contact: string | null): string | null {
+  if (!contact) return null
+  const digits = contact.replace(/\D/g, '')
+  if (digits.length === 10) return `91${digits}`
+  if (digits.length >= 11 && digits.length <= 15) return digits
+  return null
 }

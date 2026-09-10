@@ -1,10 +1,10 @@
 import Link from 'next/link'
-import { IconTrash } from '@tabler/icons-react'
 import { requireMembership } from '@/lib/living/auth'
 import { setLivingError, setLivingNotice } from '@/lib/living/flash'
 import { formatCurrency } from '@/lib/living/format'
 import { getEventCategories, getEventCollections, getEventExpenses, getEvents, sumEventCollections, sumEventExpenses } from '@/lib/living/queries'
 import ConfirmSubmitButton from '../ConfirmSubmitButton'
+import MaterialIcon from '../../MaterialIcon'
 import theme from '../../LivingTheme.module.scss'
 import homeStyles from '../Home.module.scss'
 import Tabs from '../Tabs'
@@ -151,8 +151,8 @@ export default async function LivingEventsPage() {
                           </td>
                           <td>
                             <div style={{ display: 'flex', gap: '0.3rem', justifyContent: 'flex-end' }}>
-                              <Link href={`/living/events/${event.id}`} className={theme.buttonGhost}>
-                                Open
+                              <Link href={`/living/events/${event.id}`} className={theme.iconButton} title={`Open ${event.name}`}>
+                                <MaterialIcon name="arrow_forward" size={20} />
                               </Link>
                               <ConfirmSubmitButton
                                 formAction={deleteEventAction.bind(null, event.id)}
@@ -160,7 +160,7 @@ export default async function LivingEventsPage() {
                                 className={theme.iconButtonDanger}
                                 title="Delete this event"
                               >
-                                <IconTrash size={20} stroke={1.75} />
+                                <MaterialIcon name="delete" size={20} />
                               </ConfirmSubmitButton>
                             </div>
                           </td>
@@ -221,7 +221,7 @@ export default async function LivingEventsPage() {
                     <input id="notes" name="notes" className={theme.input} placeholder="Anything worth noting" />
                   </div>
                   <button type="submit" className={theme.button}>
-                    Add event
+                    <MaterialIcon name="add" size={16} style={{ marginRight: "0.3rem" }} />Add event
                   </button>
                 </form>
                 {categories.length === 0 && (
@@ -253,7 +253,7 @@ export default async function LivingEventsPage() {
                       <input id="names" name="names" className={theme.input} placeholder="Ganesh Puja, Durga Puja, Diwali" required />
                     </div>
                     <button type="submit" className={theme.button}>
-                      Add
+                      <MaterialIcon name="add" size={16} style={{ marginRight: "0.3rem" }} />Add
                     </button>
                   </form>
                 </div>
@@ -279,7 +279,7 @@ export default async function LivingEventsPage() {
                                   className={theme.iconButtonDanger}
                                   title="Delete category"
                                 >
-                                  <IconTrash size={20} stroke={1.75} />
+                                  <MaterialIcon name="delete" size={20} />
                                 </ConfirmSubmitButton>
                               </form>
                             </td>

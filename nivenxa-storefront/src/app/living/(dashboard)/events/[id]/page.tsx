@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation'
-import { IconTrash } from '@tabler/icons-react'
 import { requireMembership } from '@/lib/living/auth'
 import { setLivingError, setLivingNotice } from '@/lib/living/flash'
 import { formatCurrency, formatPaymentMethod } from '@/lib/living/format'
@@ -7,6 +6,7 @@ import { getBillableFlats, getEvent, getEventCollections, getEventExpenses, getF
 import type { PaymentMethod } from '@/lib/living/types'
 import ConfirmSubmitButton from '../../ConfirmSubmitButton'
 import RecordCollectionsForm from './RecordCollectionsForm'
+import MaterialIcon from '../../../MaterialIcon'
 import theme from '../../../LivingTheme.module.scss'
 import homeStyles from '../../Home.module.scss'
 import Tabs from '../../Tabs'
@@ -336,7 +336,7 @@ export default async function LivingEventDetailPage({ params }: { params: Promis
                                   className={theme.iconButtonDanger}
                                   title="Delete this collection"
                                 >
-                                  <IconTrash size={20} stroke={1.75} />
+                                  <MaterialIcon name="delete" size={20} />
                                 </ConfirmSubmitButton>
                               </form>
                             </td>
@@ -444,7 +444,7 @@ export default async function LivingEventDetailPage({ params }: { params: Promis
                                   className={theme.iconButtonDanger}
                                   title="Delete this expense"
                                 >
-                                  <IconTrash size={20} stroke={1.75} />
+                                  <MaterialIcon name="delete" size={20} />
                                 </ConfirmSubmitButton>
                               </form>
                             </td>
