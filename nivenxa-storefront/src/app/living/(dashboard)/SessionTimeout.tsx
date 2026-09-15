@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react'
 import { SESSION_DURATION_MS, clearSessionStart, getSessionStart } from './sessionTimer'
 
 /**
- * Client-side 60-minute session cap — mounted once in the dashboard layout,
+ * Client-side 30-minute session cap — mounted once in the dashboard layout,
  * which Next.js keeps alive across client-side navigation (only a full
  * reload or leaving /living tears it down), so the timer isn't reset just by
  * moving between pages. Note this is a UX timeout, not a server-enforced

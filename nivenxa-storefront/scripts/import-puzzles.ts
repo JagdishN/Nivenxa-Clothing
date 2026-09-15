@@ -47,9 +47,32 @@ function loadEnvLocal() {
 loadEnvLocal()
 
 // ─── Config ──────────────────────────────────────────────────────────────
-const TARGET_THEMES = ['fork', 'pin', 'skewer', 'discoveredAttack', 'hangingPiece', 'backRankMate', 'endgame'] as const
+const TARGET_THEMES = [
+  'fork',
+  'pin',
+  'skewer',
+  'discoveredAttack',
+  'hangingPiece',
+  'backRankMate',
+  'endgame',
+  'mateIn1',
+  'mateIn2',
+  'doubleCheck',
+  'deflection',
+  'sacrifice',
+  // Real Lichess theme tags matching the remaining Learn Tactics slugs —
+  // confirmed present in the CSV (npm run import-puzzles scans it directly);
+  // note Lichess has no "doubleAttack" or "overloading" tag at all, so
+  // those two Learn tactics (double-attack, overloading) stay hand-authored.
+  'capturingDefender', // removing-the-defender
+  'intermezzo', // in-between-move
+  'clearance', // clearance
+  'attraction', // decoy
+  'interference', // interference
+  'trappedPiece', // trapped-piece
+] as const
 type TargetTheme = (typeof TARGET_THEMES)[number]
-const PUZZLES_PER_THEME = 8 // within the requested 5-10 spread
+const PUZZLES_PER_THEME = 12
 const PROGRESS_EVERY = 500_000
 
 interface LichessPuzzleRow {

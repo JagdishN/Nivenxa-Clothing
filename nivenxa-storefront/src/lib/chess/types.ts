@@ -280,3 +280,30 @@ export interface ExplainEnginePurposeRequestBody {
 export interface ExplainEnginePurposeResponseBody extends StructuredExplanation {
   explanation: string
 }
+
+// ─── Analysis game-level lessons ─────────────────────────────────────────────
+
+export interface GameLessonMoveSummary {
+  ply: number
+  san: string
+  classification: MoveClassification
+  cpLoss: number
+}
+
+export interface GameLessonsRequestBody {
+  moves: GameLessonMoveSummary[]
+  /** Which side's lessons these are for — the other color's moves are context only. */
+  forColor: 'w' | 'b'
+  tone: ExplanationTone
+}
+
+export interface GameLesson {
+  headline: string
+  body: string
+  /** The ply this lesson is drawn from, so the UI can link back to that position. */
+  ply: number
+}
+
+export interface GameLessonsResponseBody {
+  lessons: GameLesson[]
+}

@@ -1,0 +1,204 @@
+@use '../../../../styles/variables' as v;
+
+.page {
+  composes: pageBackground from '../../ChessTheme.module.scss';
+  min-height: 100vh;
+  padding-bottom: 4rem;
+}
+
+.hero {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: clamp(3rem, 6vw, 4.5rem) clamp(1.5rem, 6vw, 5rem) clamp(1rem, 3vw, 1.5rem);
+  text-align: left;
+}
+
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: clamp(0.6rem, 1vw, 0.7rem);
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--chess-purple);
+  margin-bottom: 0.75rem;
+}
+
+.heading {
+  font-family: var(--font-serif);
+  font-size: clamp(1.8rem, 3.5vw, 2.4rem);
+  font-weight: 400;
+  color: var(--chess-deep);
+}
+
+.tabs {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0 auto clamp(2rem, 5vw, 3rem);
+}
+
+.tab,
+.tabActive {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.5rem 1.1rem;
+  border-radius: 999px;
+  text-decoration: none;
+}
+
+.tab {
+  color: rgba(31, 27, 58, 0.55);
+  border: 1px solid transparent;
+
+  &:hover {
+    color: var(--chess-purple);
+    border-color: rgba(91, 46, 145, 0.25);
+  }
+}
+
+.tabActive {
+  color: var(--chess-purple);
+  background: rgba(91, 46, 145, 0.1);
+  border: 1px solid rgba(91, 46, 145, 0.22);
+}
+
+.wrap {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 clamp(1.5rem, 6vw, 5rem);
+}
+
+.loading,
+.empty {
+  text-align: center;
+  font-family: var(--font-sans);
+  color: rgba(31, 27, 58, 0.5);
+  margin: 3rem 0;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1.5rem;
+}
+
+.filterBtn {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(91, 46, 145, 0.2);
+  background: rgba(255, 255, 255, 0.6);
+  color: rgba(31, 27, 58, 0.6);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--chess-purple);
+  }
+}
+
+.filterBtnActive {
+  color: #fff;
+  background: var(--chess-purple);
+  border-color: var(--chess-purple);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1rem 1.25rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(91, 46, 145, 0.15);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.cardMain {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.cardTitle {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 400;
+  color: var(--chess-deep);
+  margin: 0;
+}
+
+.cardMeta {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  color: rgba(31, 27, 58, 0.55);
+  margin: 0;
+}
+
+.cardOutcome {
+  font-weight: 700;
+  color: var(--chess-purple);
+}
+
+.cardStatus,
+.cardStatusDone {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.cardStatus {
+  color: rgba(31, 27, 58, 0.4);
+}
+
+.cardStatusDone {
+  color: var(--chess-gold);
+}
+
+.cardActions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.continueBtn {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  text-decoration: none;
+  composes: ctaButtonGradient from '../../ChessTheme.module.scss';
+}
+
+.deleteBtn,
+.deleteConfirmBtn {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(31, 27, 58, 0.45);
+
+  &:hover {
+    color: var(--chess-danger);
+  }
+}
+
+.deleteConfirmBtn {
+  color: var(--chess-danger);
+  font-weight: 700;
+}

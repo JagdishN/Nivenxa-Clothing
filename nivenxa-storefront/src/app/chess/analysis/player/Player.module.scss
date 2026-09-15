@@ -1,0 +1,730 @@
+@use '../../../../styles/variables' as v;
+
+.page {
+  composes: pageBackground from '../../ChessTheme.module.scss';
+  min-height: 100vh;
+  padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1.25rem, 5vw, 3rem) 4rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.empty {
+  max-width: 480px;
+  margin: 4rem auto;
+  text-align: center;
+  font-family: var(--font-sans);
+  color: rgba(31, 27, 58, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+
+// ─── Header ─────────────────────────────────────────────────────────────────
+// No text-align here (was center) — this is a flex row, and centering text
+// inside each flex item made the breadcrumb/title/meta jag toward the
+// middle instead of sharing one clean left edge with the workspace below.
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(31, 27, 58, 0.5);
+  text-decoration: none;
+  margin-bottom: 0.5rem;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--chess-purple);
+  }
+}
+
+.matchup {
+  font-family: var(--font-serif);
+  font-size: clamp(1.3rem, 2.5vw, 1.7rem);
+  font-weight: 400;
+  color: var(--chess-deep);
+  margin: 0 0 0.2rem;
+}
+
+.matchMeta {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  color: rgba(31, 27, 58, 0.55);
+  margin: 0;
+}
+
+.levelGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.optionsLabel {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(31, 27, 58, 0.5);
+  margin-right: 0.15rem;
+}
+
+.levelBtn {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(91, 46, 145, 0.22);
+  background: rgba(255, 255, 255, 0.6);
+  color: rgba(31, 27, 58, 0.6);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--chess-purple);
+  }
+}
+
+.levelBtnActive {
+  color: #fff;
+  background: var(--chess-purple);
+  border-color: var(--chess-purple);
+}
+
+.progressNote {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: rgba(31, 27, 58, 0.5);
+  margin: 0 0 1rem;
+}
+
+// ─── Watch / Practice mode switch ──────────────────────────────────────────
+.modeSwitch {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.modeBtn {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(91, 46, 145, 0.22);
+  background: rgba(255, 255, 255, 0.6);
+  color: rgba(31, 27, 58, 0.6);
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: var(--chess-purple);
+  }
+}
+
+.modeBtnActive {
+  color: #fff;
+  background: var(--chess-purple);
+  border-color: var(--chess-purple);
+}
+
+// ─── Workspace: board 55-60% / panel the rest ────────────────────────────
+.workspace {
+  display: flex;
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+  align-items: flex-start;
+
+  @include v.max-lg {
+    flex-direction: column;
+  }
+}
+
+.boardCol {
+  flex: 1 1 58%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.panelCol {
+  flex: 1 1 42%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  @include v.max-lg {
+    width: 100%;
+  }
+}
+
+// ─── Playback controls ──────────────────────────────────────────────────────
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(91, 46, 145, 0.15);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.transportRow {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.transportBtn,
+.transportBtnPrimary {
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(91, 46, 145, 0.25);
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--chess-purple);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(91, 46, 145, 0.08);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+.transportBtnPrimary {
+  color: #fff;
+  background: var(--chess-purple);
+  border-color: var(--chess-purple);
+
+  &:hover:not(:disabled) {
+    background: var(--chess-purple-deep);
+  }
+}
+
+.moveCounter {
+  margin-left: auto;
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: rgba(31, 27, 58, 0.5);
+}
+
+.optionsRow {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(91, 46, 145, 0.1);
+}
+
+.speedGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.speedBtn {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(91, 46, 145, 0.2);
+  background: none;
+  color: rgba(31, 27, 58, 0.55);
+  cursor: pointer;
+}
+
+.speedBtnActive {
+  color: #fff;
+  background: var(--chess-gold);
+  border-color: var(--chess-gold);
+}
+
+.toggleBtn,
+.detailBtn {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid rgba(91, 46, 145, 0.2);
+  background: none;
+  color: rgba(31, 27, 58, 0.55);
+  cursor: pointer;
+}
+
+.toggleBtnActive,
+.detailBtnActive {
+  color: var(--chess-purple);
+  background: rgba(91, 46, 145, 0.1);
+  border-color: var(--chess-purple);
+}
+
+.detailGroup {
+  display: flex;
+  gap: 0.25rem;
+}
+
+// ─── Explanation panel ────────────────────────────────────────────────────
+.panel {
+  padding: 1rem 1.15rem;
+  border-radius: 1.1rem;
+  border: 1px solid rgba(91, 46, 145, 0.15);
+  background: rgba(255, 255, 255, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-height: 140px;
+}
+
+.panelPlaceholder {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: rgba(31, 27, 58, 0.45);
+  font-style: italic;
+  margin: 0;
+}
+
+.panelError {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--chess-danger);
+  margin: 0;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.panelMoveNum {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(31, 27, 58, 0.45);
+}
+
+.panelFlag {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--chess-warning);
+}
+
+.panelPlayed {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  color: var(--chess-deep);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.pill {
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+}
+
+.pillBest,
+.pillGood {
+  color: var(--chess-success);
+  background: rgba(94, 140, 106, 0.14);
+}
+
+.pillNeutral {
+  color: rgba(31, 27, 58, 0.55);
+  background: rgba(31, 27, 58, 0.06);
+}
+
+.pillWarn {
+  color: var(--chess-bronze);
+  background: rgba(214, 168, 95, 0.18);
+}
+
+.pillBad {
+  color: var(--chess-danger);
+  background: rgba(179, 84, 63, 0.14);
+}
+
+.betterIdea {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.7rem;
+  background: rgba(94, 140, 106, 0.1);
+  border: 1px dashed var(--chess-success);
+}
+
+.betterIdeaLabel {
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--chess-success);
+}
+
+.betterIdeaMove {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--chess-deep);
+}
+
+.panelActions {
+  padding-top: 0.6rem;
+  border-top: 1px dashed rgba(91, 46, 145, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.panelPrompt {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--chess-deep);
+  margin: 0;
+}
+
+.practiceHint {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: rgba(31, 27, 58, 0.7);
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.7rem;
+  background: rgba(214, 168, 95, 0.12);
+  margin: 0;
+}
+
+.practiceFeedback {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--chess-deep);
+  margin: 0;
+}
+
+.practiceFeedbackGood {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--chess-success);
+  margin: 0;
+}
+
+// ─── Move list ──────────────────────────────────────────────────────────────
+.moveList {
+  padding: 1rem 1.1rem;
+  border-radius: 1.1rem;
+  border: 1px solid rgba(91, 46, 145, 0.15);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.moveListLabel {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(31, 27, 58, 0.5);
+  margin: 0 0 0.5rem;
+}
+
+.moveListBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.moveRow {
+  display: grid;
+  grid-template-columns: 1.75rem 1fr 1fr;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.moveNum {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: rgba(31, 27, 58, 0.4);
+}
+
+.moveCell {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--chess-deep);
+  text-align: left;
+  padding: 0.3rem 0.55rem;
+  border-radius: 0.6rem;
+  border: 1px solid transparent;
+  background: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+
+  &:hover {
+    background: rgba(91, 46, 145, 0.06);
+  }
+}
+
+.moveCellSelected {
+  border-color: var(--chess-purple);
+  background: rgba(91, 46, 145, 0.1);
+  box-shadow: 0 0 0 1px var(--chess-purple) inset;
+}
+
+.moveSuffix {
+  color: var(--chess-bronze);
+}
+
+// ─── Game Journey ───────────────────────────────────────────────────────────
+.journey {
+  margin-top: 1.5rem;
+  padding: 1rem 1.1rem;
+  border-radius: 1.1rem;
+  border: 1px solid rgba(91, 46, 145, 0.15);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.journeyLabel {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(31, 27, 58, 0.5);
+  margin: 0 0 0.6rem;
+}
+
+.journeyTrack {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.journeyMarker {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 0.8rem;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.journeyMarkerActive {
+  border-color: var(--chess-purple);
+}
+
+.journeyDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.markerBest .journeyDot,
+.markerGood .journeyDot {
+  background: var(--chess-success);
+}
+
+.markerNeutral .journeyDot {
+  background: rgba(31, 27, 58, 0.35);
+}
+
+.markerWarn .journeyDot {
+  background: var(--chess-warning);
+}
+
+.markerBad .journeyDot {
+  background: var(--chess-danger);
+}
+
+.journeyText {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: rgba(31, 27, 58, 0.6);
+  white-space: nowrap;
+}
+
+// ─── Game Summary ───────────────────────────────────────────────────────────
+.summary {
+  margin-top: 1.5rem;
+  padding: 1.25rem 1.4rem;
+  border-radius: 1.1rem;
+  border: 1px solid rgba(91, 46, 145, 0.18);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.summaryHeading {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 400;
+  color: var(--chess-deep);
+  margin: 0 0 0.9rem;
+}
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+
+  @include v.max-sm {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.statCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.75rem 0.5rem;
+  border-radius: 0.8rem;
+  background: rgba(91, 46, 145, 0.05);
+}
+
+.statValue {
+  font-family: var(--font-serif);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.4rem;
+  color: var(--chess-deep);
+}
+
+.statLabel {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(31, 27, 58, 0.5);
+}
+
+.lessons {
+  margin: 1.25rem 0;
+  padding-top: 1rem;
+  border-top: 1px dashed rgba(91, 46, 145, 0.18);
+}
+
+.lessonsHeading {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 400;
+  color: var(--chess-deep);
+  margin: 0 0 0.9rem;
+}
+
+.lessonCard {
+  padding: 0.85rem 1rem;
+  border-radius: 0.9rem;
+  background: rgba(91, 46, 145, 0.05);
+  margin-bottom: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: flex-start;
+}
+
+.lessonHeadline {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--chess-purple);
+  margin: 0;
+}
+
+.lessonBody {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: rgba(31, 27, 58, 0.75);
+  margin: 0;
+}
+
+.summaryActions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.linkBtn {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--chess-purple);
+  background: none;
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.error {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--chess-danger);
+}

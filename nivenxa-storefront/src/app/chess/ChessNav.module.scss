@@ -68,3 +68,56 @@
     right: 0;
   }
 }
+
+// ─── Auth area ──────────────────────────────────────────────────────────
+.authArea {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.authEmail {
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: rgba(31, 27, 58, 0.55);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.authLink {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba(31, 27, 58, 0.62);
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.45rem 0.5rem;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--chess-purple);
+  }
+}
+
+.authLinkPrimary {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--chess-white-soft);
+  padding: 0.5rem 1.1rem;
+  border-radius: 999px;
+  text-decoration: none;
+  composes: ctaButtonGradient from './ChessTheme.module.scss';
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(91, 46, 145, 0.28);
+  }
+}

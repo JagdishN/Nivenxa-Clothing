@@ -7,10 +7,15 @@ import styles from './AuthForm.module.scss'
 
 /**
  * Shared by /living/login and /living/signup — both are the same Supabase
- * email-OTP mechanism, differing only in `shouldCreateUser` and what
- * happens after verification (the parent Server Component re-runs on
- * router.refresh() and redirects from there — see login/page.tsx and
- * signup/page.tsx).
+ * email-OTP mechanism, differing only in `shouldCreateUser`. After a
+ * successful verify this always navigates to /living/home explicitly —
+ * requireMembership() there redirects on to /living/signup by itself if
+ * this account doesn't have a membership yet (e.g. a brand-new signup),
+ * so one target works for both modes. Deliberately not just
+ * router.refresh() and letting the current page's own Server Component
+ * redirect itself: that relies on this page's next render seeing the
+ * just-written session cookie, which raced and silently failed to
+ * navigate at all in practice.
  *
  * Email-only for now — phone OTP needs an SMS gateway (Twilio/MSG91/etc.)
  * wired up in the Supabase dashboard first, which isn't done yet. Dropped
@@ -54,6 +59,7 @@ export default function OtpForm({ mode }: { mode: 'login' | 'signup' }) {
       setError(error.message)
       return
     }
+    router.push('/living/home')
     router.refresh()
   }
 

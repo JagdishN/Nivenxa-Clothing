@@ -1,6 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Board from '@/components/chess/Board'
+import ExplanationBody from '@/components/chess/ExplanationBody'
 import { useChessGame } from '@/lib/chess/useChessGame'
 import { useStockfish } from '@/lib/chess/useStockfish'
 import { useMoveAnalysis } from '@/lib/chess/useMoveAnalysis'
@@ -17,6 +19,8 @@ import { resolveDrawDecision } from '@/lib/chess/drawDecision'
 import { PERSONAS, getPersona } from '@/lib/chess/personas'
 import { TIME_CONTROLS, TIME_CONTROL_MODE_LIST, type TimeControlMode, type TimeControlPreset } from '@/lib/chess/timeControls'
 import { accuracyFromEntries } from '@/lib/chess/moveClassification'
+import { buildNormalizedGameFromPlaySession, type PlayResult } from '@/lib/chess/playToAnalysis'
+import { setActiveGame } from '@/lib/chess/analysisSession'
 import type { ColorChoice, MoveAnalysisEntry, MoveClassification, QualityMoveEntry } from '@/lib/chess/types'
 import styles from './Play.module.scss'
 
@@ -131,55 +135,8 @@ function formatClock(seconds: number): string {
   return `${m}:${String(s).padStart(2, '0')}`
 }
 
-/**
- * Renders the loaded content of one move's explanation — headline, body,
- * and whichever of bullets/suggestion/notice/remember the API filled in.
- * Callers own the row's own header (san, mover, classification pill) since
- * that differs between the live feed and the post-game review list; this
- * only renders what came back from Claude. At 'plain' depth (Expert/Master,
- * review-only) there's no headline — just the original single paragraph.
- */
-function ExplanationBody({ entry }: { entry: MoveAnalysisEntry }) {
-  if (!entry.headline) {
-    return entry.explanation ? <p className={styles.calloutText}>{entry.explanation}</p> : null
-  }
-
-  return (
-    <>
-      <p className={styles.calloutHeadline}>{entry.headline}</p>
-      {entry.explanation && <p className={styles.calloutText}>{entry.explanation}</p>}
-      {entry.bullets && entry.bullets.length > 0 && (
-        <div className={styles.calloutSection}>
-          <span className={styles.calloutSectionLabel}>{entry.kind === 'quality' ? 'Why it works' : 'Why it helps'}</span>
-          <ul className={styles.calloutBullets}>
-            {entry.bullets.map((b, i) => (
-              <li key={i}>{b}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {entry.suggestion && (
-        <div className={styles.calloutSection}>
-          <span className={styles.calloutSectionLabel}>Better idea</span>
-          <p className={styles.calloutText}>{entry.suggestion}</p>
-        </div>
-      )}
-      {entry.notice && (
-        <p className={styles.calloutWatch}>
-          <strong>Watch:</strong> {entry.notice}
-        </p>
-      )}
-      {entry.remember && (
-        <div className={styles.calloutSection}>
-          <span className={styles.calloutSectionLabel}>Remember</span>
-          <p className={styles.calloutText}>{entry.remember}</p>
-        </div>
-      )}
-    </>
-  )
-}
-
 export default function ChessPlayPage() {
+  const router = useRouter()
   const {
     fen,
     turn,
@@ -377,6 +334,15 @@ export default function ChessPlayPage() {
     const mode = activeMode ?? 'classical'
     const presetIndex = activeMode && activePreset ? TIME_CONTROLS[activeMode].presets.indexOf(activePreset) : 0
     beginGame(activeTierId, activeColorChoice, mode, presetIndex, activeStrength, activePersonaSlug)
+  }
+
+  const handleAnalyzeGame = () => {
+    let result: PlayResult = '1/2-1/2'
+    if (outcome === 'player-win') result = humanColor === 'w' ? '1-0' : '0-1'
+    else if (outcome === 'engine-win' || outcome === 'player-resigned') result = humanColor === 'w' ? '0-1' : '1-0'
+    const game = buildNormalizedGameFromPlaySession(analysisEntries, humanColor, activeTierId, result)
+    setActiveGame(game, 'analyze')
+    router.push('/chess/analysis/player')
   }
 
   const handleDraftTierChange = (tier: SkillTier) => {
@@ -709,6 +675,9 @@ export default function ChessPlayPage() {
       <div className={styles.resultActions}>
         <button type="button" className={styles.controlBtnPrimary} onClick={handleReviewGameToggle}>
           {reviewOpen ? 'Hide Review' : 'Review Game'}
+        </button>
+        <button type="button" className={styles.controlBtn} onClick={handleAnalyzeGame}>
+          Analyze My Game
         </button>
         <button type="button" className={styles.controlBtn} onClick={handlePlayAgain}>
           Play Again

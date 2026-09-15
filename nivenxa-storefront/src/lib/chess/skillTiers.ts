@@ -1,4 +1,4 @@
-import type { EngineMoveOptions, ExplanationTone, SkillLevel } from './types'
+import type { EngineMoveOptions, ExplanationDepth, ExplanationTone, SkillLevel } from './types'
 import type { TimeControlMode } from './timeControls'
 
 export type SkillTier = 'beginner' | 'intermediate' | 'expert' | 'master'
@@ -118,4 +118,17 @@ export function resolveExplanationMode(tier: SkillTier, mode: TimeControlMode | 
 
   if (mode === 'rapid' && classicalBaseline === 'live') return 'post-game'
   return classicalBaseline
+}
+
+// Beginner gets the full headline/bullets/remember treatment, Intermediate a
+// shorter version of the same structure. Expert is the odd one out: a very
+// short live one-liner ('minimal') but the original detailed paragraph
+// ('plain') once reviewed post-game — `isReview` is `revealBestMove`, which
+// is true exactly for a post-game/Analysis fetch and false for a live one.
+// Master is always 'plain' since it's never shown live at all.
+export function depthFor(tierId: SkillTier, isReview: boolean): ExplanationDepth {
+  if (tierId === 'beginner') return 'rich'
+  if (tierId === 'intermediate') return 'brief'
+  if (tierId === 'expert') return isReview ? 'plain' : 'minimal'
+  return 'plain'
 }

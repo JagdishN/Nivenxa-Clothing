@@ -1,9 +1,9 @@
 // Marks when the current browser session started, in localStorage (survives
 // page navigation and refresh within the same browser, cleared on sign-out
-// so the next login starts a fresh 60 minutes) — read/written by
+// so the next login starts a fresh 30 minutes) — read/written by
 // SessionTimeout.tsx and AppNav.tsx's manual sign-out form.
 const SESSION_STORAGE_KEY = 'living_session_started_at'
-export const SESSION_DURATION_MS = 60 * 60 * 1000
+export const SESSION_DURATION_MS = 30 * 60 * 1000
 
 export function getSessionStart(): number {
   try {
@@ -14,7 +14,7 @@ export function getSessionStart(): number {
     return now
   } catch {
     // Private browsing / storage disabled — fall back to "just started now",
-    // which just means this one tab gets a fresh 60 minutes rather than
+    // which just means this one tab gets a fresh 30 minutes rather than
     // sharing the clock with other tabs.
     return Date.now()
   }

@@ -259,6 +259,14 @@ export const TACTICS: Tactic[] = [
       },
     ],
     completionSummary: ['You can now find skewers.'],
+    prompt: "Can you find the check that also threatens what's behind the king?",
+    wrongText: 'Not quite. Look for a check — then see what is lined up right behind the king.',
+    correctText: 'The king had to move out of check — and now what was behind it is open to capture.',
+    puzzles: [
+      { fen: '4b3/6p1/2k5/1p1p1pP1/1P1P1P2/5K2/8/3N4 b - - 2 33', correctFrom: 'e8', correctTo: 'h5' },
+      { fen: '8/8/8/8/3r4/7k/6R1/6K1 b - - 0 64', correctFrom: 'd4', correctTo: 'd1' },
+      { fen: '8/8/3k4/3p4/3Kp2p/6bP/6P1/R7 b - - 1 59', correctFrom: 'g3', correctTo: 'e5' },
+    ],
   },
   {
     slug: 'double-attack',
@@ -280,6 +288,20 @@ export const TACTICS: Tactic[] = [
       },
     ],
     completionSummary: ['You can now find double attacks.'],
+    // No Lichess theme tag matches "double attack" (it doesn't exist in
+    // their taxonomy — verified by scanning the imported CSV), so these are
+    // hand-authored, same as the original 5. Each move is verified — not
+    // just legal, but a genuine simultaneous attack on both named squares —
+    // via a custom sliding/jump attack-detector script, matching the same
+    // discipline that caught real design mistakes in the first 5 tactics.
+    prompt: 'Can you find the move that attacks two pieces at once?',
+    wrongText: 'Not quite. Look for one move that threatens two different pieces.',
+    correctText: 'That move attacked two pieces — Black can only save one.',
+    puzzles: [
+      { fen: '4k3/8/8/2n3r1/8/8/8/3QK3 w - - 0 1', correctFrom: 'd1', correctTo: 'd5' },
+      { fen: '4k3/2r5/8/8/8/2n5/7B/4K3 w - - 0 1', correctFrom: 'h2', correctTo: 'e5' },
+      { fen: '4k3/8/8/5r2/8/2n5/8/5RK1 w - - 0 1', correctFrom: 'f1', correctTo: 'f3' },
+    ],
   },
   {
     slug: 'discovered-attack',
@@ -301,6 +323,14 @@ export const TACTICS: Tactic[] = [
       },
     ],
     completionSummary: ['You can now find discovered attacks.'],
+    prompt: 'Can you find the move that uncovers an attack from another piece?',
+    wrongText: 'Not quite. Try moving a piece out of the way and see what opens up behind it.',
+    correctText: 'Moving that piece opened up an attack from the piece behind it.',
+    puzzles: [
+      { fen: '6k1/6pp/p1bp1r1r/1p6/3q4/1P2RPP1/P4QKP/4N1R1 w - - 2 30', correctFrom: 'e3', correctTo: 'e8' },
+      { fen: '6rk/pp1b4/3Nn1pp/3R4/7P/1P6/P4PP1/6K1 w - - 1 35', correctFrom: 'd6', correctTo: 'f7' },
+      { fen: '8/1kp5/1p3qpK/3P1p2/2P2Q1P/5PP1/8/8 b - - 2 54', correctFrom: 'g6', correctTo: 'g5' },
+    ],
   },
   {
     slug: 'removing-the-defender',
@@ -318,6 +348,14 @@ export const TACTICS: Tactic[] = [
       },
     ],
     completionSummary: ['You can now find ways to remove the defender.'],
+    prompt: 'Can you find the move that captures the defender?',
+    wrongText: 'Not quite. Look for the piece that is protecting something else — can you take it?',
+    correctText: 'Now the piece it was protecting has no defender left.',
+    puzzles: [
+      { fen: '2r3k1/5ppp/4q3/p7/1pQ1P3/P2P3P/KP6/2R5 w - - 4 29', correctFrom: 'c4', correctTo: 'e6' },
+      { fen: '4r1k1/3pb2p/2p2ppB/1p6/2nP4/2P2QPN/q1P2P1P/4R1K1 w - - 1 21', correctFrom: 'e1', correctTo: 'e7' },
+      { fen: 'r1bq1rk1/2Bpbppp/p1n1p3/1Np5/Q3P3/5N2/PPP2PPP/R4RK1 b - - 9 12', correctFrom: 'a6', correctTo: 'b5' },
+    ],
   },
   {
     slug: 'deflection',
@@ -335,6 +373,14 @@ export const TACTICS: Tactic[] = [
       },
     ],
     completionSummary: ['You can now find deflections.'],
+    prompt: 'Can you find the move that forces a defender to move away?',
+    wrongText: "Not quite. Look for a way to attack the piece that's doing the defending.",
+    correctText: 'That piece had to move — and now what it was defending is undefended.',
+    puzzles: [
+      { fen: '8/8/8/8/6p1/6kp/5N2/6K1 b - - 1 62', correctFrom: 'h3', correctTo: 'h2' },
+      { fen: '8/pp1r3p/k1p5/P7/1P3Q2/4p2P/2P2qPK/8 w - - 1 37', correctFrom: 'f4', correctTo: 'c4' },
+      { fen: '8/6k1/7R/4P1K1/6P1/6r1/7p/8 b - - 1 52', correctFrom: 'g3', correctTo: 'g4' },
+    ],
   },
   {
     slug: 'back-rank-mate',
@@ -354,6 +400,14 @@ export const TACTICS: Tactic[] = [
       },
     ],
     completionSummary: ['You can now find back-rank mates.'],
+    prompt: 'Can you find the move that checks the king on the back row?',
+    wrongText: 'Not quite. Look at the back row — can the king run anywhere?',
+    correctText: "The king's own pawns blocked every escape.",
+    puzzles: [
+      { fen: '5rk1/p1p2ppp/b7/6b1/4N3/2Pr4/PP3PPP/R1BQ2K1 b - - 0 17', correctFrom: 'd3', correctTo: 'd1' },
+      { fen: '1r4k1/5ppp/8/8/3R4/8/pr4PP/K2R4 w - - 0 36', correctFrom: 'd4', correctTo: 'd8' },
+      { fen: 'r2q2k1/p1p2ppp/2p5/4Q3/1p2B1b1/8/PPP2PPP/R1B3K1 b - - 0 17', correctFrom: 'd8', correctTo: 'd1' },
+    ],
   },
 
   // ─── Learn Later ──────────────────────────────────────────────────────
@@ -375,6 +429,14 @@ export const TACTICS: Tactic[] = [
       },
     ],
     completionSummary: ['You can now find double checks.'],
+    prompt: 'Can you find the move that checks the king with two pieces at once?',
+    wrongText: 'Not quite. Look for a move that uncovers a second check.',
+    correctText: 'Two pieces checked the king at the same time — it had to move.',
+    puzzles: [
+      { fen: '1k1r3r/pP4p1/1nq1pp2/3n3p/2pP1P2/Q1P5/6PP/R4RK1 w - - 0 31', correctFrom: 'a3', correctTo: 'a7' },
+      { fen: '2r5/5kpp/3p4/p3pNb1/Pp2P3/1P1P1QPP/3q1P2/6K1 w - - 0 30', correctFrom: 'f5', correctTo: 'd6' },
+      { fen: '5rk1/pp5p/6P1/3pN2r/3Ppq2/1PP3Q1/P6P/2R1K3 w - - 0 37', correctFrom: 'g6', correctTo: 'h7' },
+    ],
   },
   {
     slug: 'in-between-move',
@@ -396,6 +458,14 @@ export const TACTICS: Tactic[] = [
       },
     ],
     completionSummary: ['You can now find in-between moves.'],
+    prompt: 'Can you find the strong move to play before the expected one?',
+    wrongText: 'Not quite. Is there a check or a bigger threat to play first?',
+    correctText: 'That move was stronger than the one that looked obvious.',
+    puzzles: [
+      { fen: '3q1rk1/1pp2p2/4p1pp/4n3/7P/1P6/1B3PP1/1K1R3R w - - 0 26', correctFrom: 'd1', correctTo: 'd8' },
+      { fen: '2r5/3r1Npk/p1Q4p/8/2p5/P6P/B1P2PP1/3R2K1 b - - 0 35', correctFrom: 'd7', correctTo: 'd1' },
+      { fen: '2R1rk2/5ppp/p7/1p1RN2P/3b1K2/4P3/5P2/8 b - - 0 29', correctFrom: 'd4', correctTo: 'e5' },
+    ],
   },
   {
     slug: 'overloading',
@@ -417,6 +487,17 @@ export const TACTICS: Tactic[] = [
       },
     ],
     completionSummary: ['You can now find overloaded pieces.'],
+    // No Lichess "overloading" theme tag exists either — hand-authored, same
+    // verification discipline as double-attack above: a script confirmed
+    // each defender genuinely guards both named squares before the capture.
+    prompt: 'Can you find the piece that is defending two things at once?',
+    wrongText: 'Not quite. Look for one defender that is protecting two different pieces.',
+    correctText: 'That defender could not protect both pieces at once.',
+    puzzles: [
+      { fen: '4k3/8/4n3/2r3r1/8/8/8/2R1K3 w - - 0 1', correctFrom: 'c1', correctTo: 'c5' },
+      { fen: '4k3/1r6/8/3b4/8/1r6/8/1R2K3 w - - 0 1', correctFrom: 'b1', correctTo: 'b3' },
+      { fen: '4k3/8/8/b2r4/8/8/3n4/3RK3 w - - 0 1', correctFrom: 'd1', correctTo: 'd2' },
+    ],
   },
   {
     slug: 'clearance',
@@ -438,6 +519,14 @@ export const TACTICS: Tactic[] = [
       },
     ],
     completionSummary: ['You can now find clearance moves.'],
+    prompt: 'Can you find the move that clears a square for a check?',
+    wrongText: 'Not quite. What square do you need to clear to give check?',
+    correctText: 'Moving off that square opened the line for the check.',
+    puzzles: [
+      { fen: '5rk1/pp5p/2p3p1/8/2PR1n2/P1N1P2b/1PB4P/6K1 b - - 0 22', correctFrom: 'f4', correctTo: 'e2' },
+      { fen: '1r1r4/6k1/1p6/1Pp1PQ2/8/8/6PP/6K1 b - - 0 35', correctFrom: 'd8', correctTo: 'd1' },
+      { fen: '8/6pk/p2rQ2p/8/Ppnq4/6PP/1P2RP1K/8 w - - 2 42', correctFrom: 'e6', correctTo: 'f5' },
+    ],
   },
   {
     slug: 'decoy',
@@ -459,6 +548,14 @@ export const TACTICS: Tactic[] = [
       },
     ],
     completionSummary: ['You can now find decoys.'],
+    prompt: 'Can you find the move that pulls a piece where you want it?',
+    wrongText: 'Not quite. Look for a way to force a piece onto a bad square — even if it costs material.',
+    correctText: 'That move pulled the piece onto a square where it could be attacked again.',
+    puzzles: [
+      { fen: '3r4/p6k/2P1p1p1/PP6/2P2P2/4B2p/5P1P/3r2RK b - - 4 40', correctFrom: 'd1', correctTo: 'g1' },
+      { fen: 'R4rk1/5ppp/3p4/Q1p5/2q5/1p3P1P/5P1K/8 w - - 0 34', correctFrom: 'a8', correctTo: 'f8' },
+      { fen: 'r1bkr3/ppppn2p/2n4B/4q2Q/8/8/P1P3PP/R4R1K w - - 0 18', correctFrom: 'h5', correctTo: 'e8' },
+    ],
   },
   {
     slug: 'interference',
@@ -480,6 +577,14 @@ export const TACTICS: Tactic[] = [
       },
     ],
     completionSummary: ['You can now find interference.'],
+    prompt: 'Can you find the move that blocks the defender from helping?',
+    wrongText: 'Not quite. Look for a square between an enemy piece and the one it is defending.',
+    correctText: 'That piece is no longer protected — the connection is blocked.',
+    puzzles: [
+      { fen: 'rn1qkb1r/1p1b4/p1p1p1p1/4P1p1/2PP4/3B4/PP3PPP/R1B1K2R w KQkq - 0 13', correctFrom: 'd3', correctTo: 'g6' },
+      { fen: '8/R6p/6k1/1Pp2pp1/2r5/P4KP1/7r/3R4 w - - 2 39', correctFrom: 'd1', correctTo: 'd6' },
+      { fen: 'r2q1rk1/pp3p1p/2n5/2bN2p1/2Bp1Q1N/6Pb/PPP2P1P/R3R1K1 w - - 0 19', correctFrom: 'd5', correctTo: 'f6' },
+    ],
   },
   {
     slug: 'trapped-piece',
@@ -497,6 +602,14 @@ export const TACTICS: Tactic[] = [
       },
     ],
     completionSummary: ['You can now find trapped pieces.'],
+    prompt: 'Can you find the piece with nowhere safe to go?',
+    wrongText: 'Not quite. Look for a piece that cannot escape — then attack it.',
+    correctText: 'That piece had nowhere safe to run.',
+    puzzles: [
+      { fen: '3qr1k1/p5bp/1p3pp1/n3p3/P6Q/R2P2P1/3NPPbP/1rBR1K2 w - - 0 24', correctFrom: 'f1', correctTo: 'g2' },
+      { fen: '8/8/5p2/p1pp1Pp1/1p1k4/1P1B4/P1P1K3/8 b - - 5 52', correctFrom: 'c5', correctTo: 'c4' },
+      { fen: 'r2b2k1/pp3pp1/4pn1p/8/q4B2/2PB1Q2/1P1R1PPP/6K1 w - - 6 24', correctFrom: 'f3', correctTo: 'b7' },
+    ],
   },
 ]
 

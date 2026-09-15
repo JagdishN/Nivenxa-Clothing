@@ -140,3 +140,63 @@ create trigger tournaments_set_updated_at
 
 -- RLS deliberately left disabled on both `puzzles`/`puzzle_attempts` and
 -- `tournaments` — see the note at the top of this file.
+
+-- ─── Analysis — saved games ─────────────────────────────────────────────
+
+-- Chess has no login at all yet (see puzzle_attempts.user_id above), so "My
+-- Games" can't be scoped to a real account. owner_id is a random id the
+-- client generates once and stores in localStorage (analysisOwner.ts) —
+-- games are private to that browser, not to a person. Every access goes
+-- through a Server Action filtering by owner_id (analysisActions.ts); RLS
+-- stays off, same posture as puzzle_attempts, since there's no session to
+-- write policies against yet.
+create table if not exists analysis_games (
+  id uuid primary key default gen_random_uuid(),
+  owner_id text not null,
+  -- Client-generated, stable across re-saves of the same reconstruction —
+  -- the upsert target for "Save this game" being called more than once
+  -- (Verify Game, then again from Game Summary) without creating duplicates.
+  local_id uuid not null,
+  source text not null check (source in ('paste', 'pgn-upload', 'manual', 'image-ocr', 'pdf-ocr', 'nivenxa-play')),
+  white text,
+  black text,
+  event text,
+  played_on date,
+  result text check (result in ('1-0', '0-1', '1/2-1/2', '*')),
+  starting_fen text,
+  -- NormalizedMove[] — see src/lib/chess/analysisTypes.ts.
+  moves jsonb not null,
+  move_count int not null default 0,
+  -- Cached QualityMoveEntry[] once the Player's Stockfish pass has completed
+  -- once, so reopening a saved game from My Games doesn't always re-run the
+  -- full engine pass from scratch.
+  analysis jsonb,
+  accuracy_white int,
+  accuracy_black int,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (owner_id, local_id)
+);
+
+create index if not exists analysis_games_owner_id_idx on analysis_games (owner_id);
+create index if not exists analysis_games_created_at_idx on analysis_games (created_at desc);
+
+drop trigger if exists analysis_games_set_updated_at on analysis_games;
+create trigger analysis_games_set_updated_at
+  before update on analysis_games
+  for each row
+  execute function set_updated_at();
+
+-- Positions a player has flagged from their own analyzed games as worth
+-- practicing again later ("Save as My Puzzle" from a Practice Position) —
+-- same owner_id/no-auth posture as analysis_games above.
+create table if not exists analysis_practice_positions (
+  id uuid primary key default gen_random_uuid(),
+  owner_id text not null,
+  source_game_id uuid references analysis_games (id) on delete set null,
+  fen text not null,
+  note text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists analysis_practice_positions_owner_id_idx on analysis_practice_positions (owner_id);

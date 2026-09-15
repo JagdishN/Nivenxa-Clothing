@@ -26,6 +26,15 @@ export interface BoardProps {
   highlightColor?: 'yellow' | 'green'
   /** [from, to] to draw as an arrow (chessground's shape overlay) — e.g. a "this piece to this square" hint. */
   hintArrow?: Key[]
+  /**
+   * Multiple simultaneous arrows with their own colors — e.g. Analysis
+   * drawing both an attack path (red) and a suggested better move (green) at
+   * once. `hintArrow` stays the single-arrow yellow shorthand for callers
+   * that only ever need one; this is additive, not a replacement.
+   */
+  extraArrows?: { from: Key; to: Key; brush?: 'yellow' | 'green' | 'red' | 'blue' }[]
+  /** Square groups to circle together as one idea (e.g. an open file or a dangerous diagonal), each with its own brush. */
+  lineHighlights?: { squares: Key[]; brush?: 'yellow' | 'green' | 'red' | 'blue' }[]
   onMove?: (from: Key, to: Key) => void
   /**
    * Fires when any square is clicked — used for click-to-identify quizzes
@@ -47,6 +56,8 @@ export default function Board({
   highlightSquares,
   highlightColor = 'yellow',
   hintArrow,
+  extraArrows,
+  lineHighlights,
   onMove = noop,
   onSquareClick,
 }: BoardProps) {
@@ -130,8 +141,24 @@ export default function Board({
     apiRef.current?.setShapes([
       ...(highlightSquares ?? []).map((orig) => ({ orig, brush: highlightColor })),
       ...(hintArrow ? [{ orig: hintArrow[0], dest: hintArrow[1], brush: 'yellow' as const }] : []),
+      ...(extraArrows ?? []).map((a) => ({ orig: a.from, dest: a.to, brush: a.brush ?? 'yellow' })),
+      ...(lineHighlights ?? []).flatMap((l) => l.squares.map((orig) => ({ orig, brush: l.brush ?? 'yellow' }))),
     ])
-  }, [fen, turnColor, dests, orientation, viewOnly, check, lastMove, highlightSquares, highlightColor, hintArrow, onSquareClick])
+  }, [
+    fen,
+    turnColor,
+    dests,
+    orientation,
+    viewOnly,
+    check,
+    lastMove,
+    highlightSquares,
+    highlightColor,
+    hintArrow,
+    extraArrows,
+    lineHighlights,
+    onSquareClick,
+  ])
 
   return (
     <div className={styles.wrap}>

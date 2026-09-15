@@ -1,8 +1,9 @@
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Chess } from 'chess.js'
 import { useStockfish } from './useStockfish'
 import { classifyMove } from './moveClassification'
+import { depthFor } from './skillTiers'
+import { uciToSan } from './uci'
 import type { ExplanationMode, TierConfig } from './skillTiers'
 import type {
   EngineEvaluation,
@@ -10,26 +11,11 @@ import type {
   ExplainEnginePurposeResponseBody,
   ExplainMoveRequestBody,
   ExplainMoveResponseBody,
-  ExplanationDepth,
   ExplanationTone,
   MoveAnalysisEntry,
   MoveResult,
   QualityMoveEntry,
 } from './types'
-
-// Beginner gets the full headline/bullets/remember treatment, Intermediate a
-// shorter version of the same structure. Expert is the odd one out: a very
-// short live one-liner ('minimal') but the original detailed paragraph
-// ('plain') once reviewed post-game — `isReview` is `revealBestMove`, which
-// is true exactly for the post-game Review fetch and false for the live one
-// (see fetchExplanation's two call sites below). Master is always 'plain'
-// since it's never shown live at all.
-function depthFor(tierId: TierConfig['id'], isReview: boolean): ExplanationDepth {
-  if (tierId === 'beginner') return 'rich'
-  if (tierId === 'intermediate') return 'brief'
-  if (tierId === 'expert') return isReview ? 'plain' : 'minimal'
-  return 'plain'
-}
 
 // Analysis runs on its own Stockfish instance (see useStockfish() below) so it
 // never overlaps the gameplay engine's in-flight `go` command on the same
@@ -44,20 +30,6 @@ function evaluationToCp(evaluation: EngineEvaluation): number {
     return evaluation.value === 0 ? 0 : Math.sign(evaluation.value) * 100000
   }
   return evaluation.value
-}
-
-function uciToSan(fen: string, uci: string): string {
-  try {
-    const scratch = new Chess(fen)
-    const move = scratch.move({
-      from: uci.slice(0, 2),
-      to: uci.slice(2, 4),
-      promotion: uci.length > 4 ? uci.slice(4, 5) : undefined,
-    })
-    return move?.san ?? uci
-  } catch {
-    return uci
-  }
 }
 
 export interface RequestExplanationOptions {
