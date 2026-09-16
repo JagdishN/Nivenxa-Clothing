@@ -21,13 +21,13 @@ export const TIME_CONTROLS: Record<TimeControlMode, TimeControlModeConfig> = {
       { minutes: 10, incrementSeconds: 5, label: '10 + 5', category: 'Quick' },
       { minutes: 15, incrementSeconds: 10, label: '15 + 10', category: 'Standard' },
       { minutes: 20, incrementSeconds: 10, label: '20 + 10', category: 'Extended' },
+      { minutes: 25, incrementSeconds: 10, label: '25 + 10', category: 'Long' },
     ],
   },
   classical: {
     label: 'Classical',
     presets: [
-      { minutes: 25, incrementSeconds: 10, label: '25 + 10', category: 'Standard' },
-      { minutes: 30, incrementSeconds: 15, label: '30 + 15', category: 'Extended' },
+      { minutes: 30, incrementSeconds: 15, label: '30 + 15', category: 'Standard' },
       { minutes: 45, incrementSeconds: 15, label: '45 + 15', category: 'Long' },
       { minutes: 60, incrementSeconds: 30, label: '60 + 30', category: 'Full' },
     ],

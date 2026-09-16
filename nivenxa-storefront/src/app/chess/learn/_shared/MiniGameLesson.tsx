@@ -5,6 +5,7 @@ import type { Key } from 'chessground/types'
 import Board from '@/components/chess/Board'
 import { useChessGame } from '@/lib/chess/useChessGame'
 import { useStockfish } from '@/lib/chess/useStockfish'
+import { markLessonCompleted } from '@/lib/chess/basicsProgress'
 import styles from './MiniGameLesson.module.scss'
 
 const GENTLE_SKILL = 0
@@ -20,7 +21,7 @@ function parseUci(uci: string): { from: string; to: string; promotion?: string }
   return { from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci.length > 4 ? uci.slice(4, 5) : undefined }
 }
 
-export default function MiniGameLesson({ example }: { example: MiniGameExample }) {
+export default function MiniGameLesson({ example, slug }: { example: MiniGameExample; slug: string }) {
   const { fen, isCheck, isCheckmate, isDraw, isStalemate, turn, dests, makeMove, reset } = useChessGame(example.fen)
   const { ready, setSkillLevel, getBestMove } = useStockfish()
   const [skillSet, setSkillSet] = useState(false)
@@ -74,10 +75,13 @@ export default function MiniGameLesson({ example }: { example: MiniGameExample }
 
   useEffect(() => {
     if (isCheckmate || isDraw || isStalemate) {
-      const t = setTimeout(() => setGameOver(true), 900)
+      const t = setTimeout(() => {
+        setGameOver(true)
+        markLessonCompleted(slug)
+      }, 900)
       return () => clearTimeout(t)
     }
-  }, [isCheckmate, isDraw, isStalemate])
+  }, [isCheckmate, isDraw, isStalemate, slug])
 
   function handleMove(from: Key, to: Key) {
     if (turn !== 'w' || engineThinking) return

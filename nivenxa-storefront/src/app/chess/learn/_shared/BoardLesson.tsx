@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import type { Key } from 'chessground/types'
 import Board from '@/components/chess/Board'
+import { markLessonCompleted } from '@/lib/chess/basicsProgress'
 import styles from './BoardLesson.module.scss'
 
 const EMPTY_DESTS = new Map<Key, Key[]>()
@@ -18,6 +19,8 @@ export interface BoardDemoStep {
   highlightSquares?: string[]
   text: string[]
   ctaLabel?: string
+  /** Boosts the board's rank/file coordinate labels for steps actively teaching them — see Board.tsx's emphasizeCoordinates. */
+  emphasizeCoordinates?: boolean
 }
 
 export interface BoardSquareQuizStep {
@@ -33,6 +36,7 @@ export interface BoardSquareQuizStep {
   hintText: string
   revealSquaresFrom: 'start' | 'hint'
   correctText: string
+  emphasizeCoordinates?: boolean
 }
 
 export interface BoardYesNoStep {
@@ -57,13 +61,23 @@ export interface BoardLessonExample {
 
 type AttemptState = 'idle' | 'correct' | 'wrong'
 
-function SimpleCheckerboard({ correct }: { correct: boolean }) {
+// `answered` highlights the bottom-right square once the player has picked
+// Yes/No — the concrete visual referent for "light on the right"/"dark on
+// the right" prompts, instead of leaving the reasoning to the text alone.
+function SimpleCheckerboard({ correct, answered }: { correct: boolean; answered: boolean }) {
   const cells = []
   for (let rank = 8; rank >= 1; rank--) {
     for (let fileIdx = 0; fileIdx < 8; fileIdx++) {
       let isLight = (fileIdx + rank) % 2 === 0
       if (!correct) isLight = !isLight
-      cells.push(<span key={`${fileIdx}-${rank}`} className={isLight ? styles.cellLight : styles.cellDark} />)
+      const isBottomRight = rank === 1 && fileIdx === 7
+      const cellClass = isLight ? styles.cellLight : styles.cellDark
+      cells.push(
+        <span
+          key={`${fileIdx}-${rank}`}
+          className={`${cellClass} ${answered && isBottomRight ? styles.cellAnswer : ''}`}
+        />
+      )
     }
   }
   return <div className={styles.simpleBoard}>{cells}</div>
@@ -72,9 +86,11 @@ function SimpleCheckerboard({ correct }: { correct: boolean }) {
 export default function BoardLesson({
   example,
   nextCta,
+  slug,
 }: {
   example: BoardLessonExample
   nextCta?: { href: string; label: string }
+  slug: string
 }) {
   const { steps, fen, lessonName, completionSummary } = example
   const [stepIndex, setStepIndex] = useState(0)
@@ -113,13 +129,22 @@ export default function BoardLesson({
   }, [allDone])
 
   function advanceStep() {
-    if (isLast) setAllDone(true)
-    else setStepIndex((i) => i + 1)
+    if (isLast) {
+      setAllDone(true)
+      markLessonCompleted(slug)
+    } else setStepIndex((i) => i + 1)
   }
 
   function handleSquareClick(key: Key) {
-    if (step.kind !== 'squareQuiz' || attemptState !== 'idle') return
+    // Only 'correct' blocks further input (the step is already advancing).
+    // A 'wrong' flash must NOT block the next click — nothing on this board
+    // shows an in-flight wrong move to explain why a click did nothing, so a
+    // quick correction (miss, then immediately click the right square) has
+    // to register right away rather than silently eating that click for the
+    // rest of the revert window.
+    if (step.kind !== 'squareQuiz' || attemptState === 'correct') return
     const isCorrect = step.correctSquares.includes(key)
+    if (flashTimer.current) clearTimeout(flashTimer.current)
 
     if (!isCorrect) {
       setAttemptState('wrong')
@@ -209,15 +234,22 @@ export default function BoardLesson({
       <div className={styles.boardCol}>
         <div className={styles.boardWrap}>
           {step.kind === 'yesNo' ? (
-            <SimpleCheckerboard correct={step.boardIsCorrect} />
+            <SimpleCheckerboard correct={step.boardIsCorrect} answered={attemptState !== 'idle'} />
           ) : (
             <Board
               fen={displayFen}
               turnColor="white"
               dests={EMPTY_DESTS}
-              viewOnly={step.kind === 'demo' || attemptState !== 'idle' || allDone}
+              // Only 'correct' locks the board (already advancing) — 'wrong'
+              // must stay clickable, or chessground drops the very
+              // corrective click a player makes right after a miss (it
+              // won't bind mousedown at all while viewOnly, live per-click,
+              // not just at mount — see the mount-effect comment above).
+              viewOnly={step.kind === 'demo' || attemptState === 'correct' || allDone}
               highlightSquares={allDone ? undefined : highlightSquares}
               highlightColor="green"
+              emphasizeCoordinates={step.emphasizeCoordinates}
+              pulseHighlights={step.kind === 'squareQuiz' && attemptState === 'correct'}
               onSquareClick={step.kind === 'squareQuiz' ? handleSquareClick : undefined}
             />
           )}
@@ -234,6 +266,12 @@ export default function BoardLesson({
 
       <div className={styles.panelCol}>
         <p className={styles.stageIndicator}>{allDone ? 'Complete' : `Step ${stepIndex + 1} of ${steps.length} · ${stageLabel}`}</p>
+        <div className={styles.progressTrack}>
+          <div
+            className={styles.progressFill}
+            style={{ width: `${Math.round(((allDone ? steps.length : stepIndex + 1) / steps.length) * 100)}%` }}
+          />
+        </div>
 
         <div
           className={`${styles.promptCard} ${attemptState === 'correct' ? styles.promptCardCorrect : ''} ${

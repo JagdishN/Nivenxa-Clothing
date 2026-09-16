@@ -40,8 +40,21 @@
   composes: grid from '../Learn.module.scss';
 }
 
+// ~18% shorter than the shared .categoryCard (168px) and a touch tighter
+// internally — Basics has 13 cards to show, more than a glance should need
+// to scroll for.
 .card {
   composes: categoryCard from '../Learn.module.scss';
+  min-height: 138px;
+  padding: 1.15rem 1.4rem;
+  gap: 0.5rem;
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 .cardNumber {
@@ -54,4 +67,29 @@
 
 .cardDesc {
   composes: categoryDesc from '../Learn.module.scss';
+}
+
+.cardBadge {
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+.badgeCompleted {
+  color: #3f6b49;
+  background: rgba(94, 140, 106, 0.14);
+}
+
+.badgeInProgress {
+  color: #8a6a2f;
+  background: rgba(214, 168, 95, 0.18);
+}
+
+.badgeStart {
+  color: rgba(31, 27, 58, 0.5);
+  background: rgba(31, 27, 58, 0.06);
 }

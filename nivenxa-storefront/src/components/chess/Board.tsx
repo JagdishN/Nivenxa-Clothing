@@ -35,6 +35,10 @@ export interface BoardProps {
   extraArrows?: { from: Key; to: Key; brush?: 'yellow' | 'green' | 'red' | 'blue' }[]
   /** Square groups to circle together as one idea (e.g. an open file or a dangerous diagonal), each with its own brush. */
   lineHighlights?: { squares: Key[]; brush?: 'yellow' | 'green' | 'red' | 'blue' }[]
+  /** Boosts the rank/file coordinate labels' size and weight — for the specific steps of a lesson that are actively teaching coordinates, off (the normal subtle read) everywhere else. */
+  emphasizeCoordinates?: boolean
+  /** Briefly pulses the current `highlightSquares` circles — a lightweight "you got it" animation for a just-found square, distinct from the static highlight itself. */
+  pulseHighlights?: boolean
   onMove?: (from: Key, to: Key) => void
   /**
    * Fires when any square is clicked — used for click-to-identify quizzes
@@ -58,6 +62,8 @@ export default function Board({
   hintArrow,
   extraArrows,
   lineHighlights,
+  emphasizeCoordinates = false,
+  pulseHighlights = false,
   onMove = noop,
   onSquareClick,
 }: BoardProps) {
@@ -162,7 +168,12 @@ export default function Board({
 
   return (
     <div className={styles.wrap}>
-      <div ref={elRef} className={styles.board} />
+      <div
+        ref={elRef}
+        className={`${styles.board} ${emphasizeCoordinates ? styles.board_coordsEmphasized : ''} ${
+          pulseHighlights ? styles.board_pulsing : ''
+        }`}
+      />
     </div>
   )
 }

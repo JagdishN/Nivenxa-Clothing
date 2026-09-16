@@ -190,24 +190,30 @@ export const BASICS: BasicsLesson[] = [
         correctText: 'Right — the dark square is on the right, so this board is turned the wrong way.',
         wrongText: 'Look again — the bottom-right square here is dark. That is the wrong way around.',
       },
-      // Part D — files, ranks, and square names
+      // Part D — files, ranks, and square names. Coordinate labels are
+      // emphasized (see Board.tsx's emphasizeCoordinates) for this whole
+      // part, since it's the last part of the lesson — nothing to "return to
+      // subtle" for within this lesson, only in lessons after it.
       {
         kind: 'demo',
         stageLabel: 'FILES',
         highlightSquares: ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'e8'],
         text: ['The lines going up and down use letters.', 'They go from a to h.'],
+        emphasizeCoordinates: true,
       },
       {
         kind: 'demo',
         stageLabel: 'RANKS',
         highlightSquares: ['a4', 'b4', 'c4', 'd4', 'e4', 'f4', 'g4', 'h4'],
         text: ['The lines going across use numbers.', 'They go from 1 to 8.'],
+        emphasizeCoordinates: true,
       },
       {
         kind: 'demo',
         stageLabel: 'SQUARE NAMES',
         highlightSquares: ['e4'],
         text: ['Every square has a name.', 'It combines its letter and its number.', 'This square is e4.'],
+        emphasizeCoordinates: true,
       },
       {
         kind: 'squareQuiz',
@@ -215,10 +221,11 @@ export const BASICS: BasicsLesson[] = [
         mode: 'any',
         correctSquares: ['e4'],
         prompt: 'Can you find e4?',
-        wrongText: 'Not quite. Remember — letter first, then number.',
+        wrongText: 'Almost — look at file e and rank 4.',
         hintText: 'e4 is the letter e, number 4.',
         revealSquaresFrom: 'hint',
         correctText: "That's e4!",
+        emphasizeCoordinates: true,
       },
       {
         kind: 'squareQuiz',
@@ -226,10 +233,35 @@ export const BASICS: BasicsLesson[] = [
         mode: 'any',
         correctSquares: ['c6'],
         prompt: 'Now find c6.',
-        wrongText: 'Not quite. Try again.',
+        wrongText: 'Almost — look at file c and rank 6.',
         hintText: 'c6 is the letter c, number 6.',
         revealSquaresFrom: 'hint',
         correctText: "That's c6!",
+        emphasizeCoordinates: true,
+      },
+      {
+        kind: 'squareQuiz',
+        stageLabel: 'YOUR TURN',
+        mode: 'any',
+        correctSquares: ['b7'],
+        prompt: 'One more — find b7.',
+        wrongText: 'Almost — look at file b and rank 7.',
+        hintText: 'b7 is the letter b, number 7.',
+        revealSquaresFrom: 'hint',
+        correctText: "That's b7!",
+        emphasizeCoordinates: true,
+      },
+      {
+        kind: 'squareQuiz',
+        stageLabel: 'YOUR TURN',
+        mode: 'any',
+        correctSquares: ['h1'],
+        prompt: 'Last one — find h1.',
+        wrongText: 'Almost — look at file h and rank 1.',
+        hintText: 'h1 is the letter h, number 1.',
+        revealSquaresFrom: 'hint',
+        correctText: "That's h1!",
+        emphasizeCoordinates: true,
       },
       {
         kind: 'squareQuiz',
@@ -241,6 +273,7 @@ export const BASICS: BasicsLesson[] = [
         hintText: 'a1 is the near-left corner, h8 is the far corner.',
         revealSquaresFrom: 'hint',
         correctText: 'You found both corners!',
+        emphasizeCoordinates: true,
       },
     ],
     completionSummary: [

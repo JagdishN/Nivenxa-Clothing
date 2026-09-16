@@ -1,4 +1,4 @@
-import type { EngineMoveOptions, ExplanationDepth, ExplanationTone, SkillLevel } from './types'
+import type { EngineMoveOptions, ExplanationDepth, ExplanationTone, MoveClassification, SkillLevel } from './types'
 import type { TimeControlMode } from './timeControls'
 
 export type SkillTier = 'beginner' | 'intermediate' | 'expert' | 'master'
@@ -6,7 +6,11 @@ export type SkillTier = 'beginner' | 'intermediate' | 'expert' | 'master'
 export interface TierConfig {
   id: SkillTier
   label: string
-  /** Purely about engine strength — explanation timing is derived separately, see resolveExplanationMode below. */
+  /** What Nivenxa acts as at this tier (e.g. "Teacher", "Challenge") — the second line on the setup screen's level card, deliberately not framed as an opponent persona. */
+  experienceLabel: string
+  /** One short line naming the main experience (e.g. "Guides you", "No assistance") — the level card's third line. */
+  experienceVerb: string
+  /** Longer explanation, not shown on the level card by default (only as its hover title) — see the setup screen's tier options. */
   description: string
   /** Stockfish "Skill Level" (0-20) range this tier is allowed to draw from — see `skillForStrength` below. */
   minSkill: SkillLevel
@@ -31,7 +35,9 @@ export const SKILL_TIERS: Record<SkillTier, TierConfig> = {
   beginner: {
     id: 'beginner',
     label: 'Beginner',
-    description: 'Relaxed play. More forgiving of mistakes.',
+    experienceLabel: 'Teacher',
+    experienceVerb: 'Guides you',
+    description: 'Nivenxa explains what happened after every move.',
     minSkill: 0,
     maxSkill: 2,
     defaultSkill: 0,
@@ -43,7 +49,9 @@ export const SKILL_TIERS: Record<SkillTier, TierConfig> = {
   intermediate: {
     id: 'intermediate',
     label: 'Intermediate',
-    description: 'Balanced play. A steady challenge.',
+    experienceLabel: 'Coach',
+    experienceVerb: 'Helps when it matters',
+    description: 'Most moves just play out — Nivenxa speaks up when it matters.',
     minSkill: 3,
     maxSkill: 7,
     defaultSkill: 3,
@@ -55,7 +63,9 @@ export const SKILL_TIERS: Record<SkillTier, TierConfig> = {
   expert: {
     id: 'expert',
     label: 'Expert',
-    description: 'Strong, accurate play.',
+    experienceLabel: 'Challenge',
+    experienceVerb: 'Tests your decisions',
+    description: 'A live position dashboard replaces the coaching feed.',
     minSkill: 8,
     maxSkill: 13,
     defaultSkill: 8,
@@ -67,7 +77,9 @@ export const SKILL_TIERS: Record<SkillTier, TierConfig> = {
   master: {
     id: 'master',
     label: 'Master',
-    description: 'Near full-strength engine play.',
+    experienceLabel: 'Competitive',
+    experienceVerb: 'No assistance',
+    description: 'Board, clock, moves — no commentary during play.',
     minSkill: 14,
     maxSkill: 20,
     defaultSkill: 14,
@@ -131,4 +143,33 @@ export function depthFor(tierId: SkillTier, isReview: boolean): ExplanationDepth
   if (tierId === 'intermediate') return 'brief'
   if (tierId === 'expert') return isReview ? 'plain' : 'minimal'
   return 'plain'
+}
+
+/**
+ * Whether a given move should trigger an auto-fetched live prose explanation
+ * at all — the actual "selective coaching" gate (see useMoveAnalysis's
+ * insertEntry). This is separate from grading/classification, which always
+ * happens for every Expert/Master move and every player move regardless —
+ * this only governs whether prose gets fetched and shown live.
+ *
+ * - Beginner: always — the Teacher explains every move, by design.
+ * - Intermediate: only "notable" moves — a graded ('quality') move that
+ *   wasn't the engine's own best pick (i.e. classification !== 'best'), or
+ *   an ungraded ('purpose') engine move that captures, checks, or mates.
+ *   Everything else just appears in the Moves list, unremarked.
+ * - Expert: never — replaced by the live dashboard (ExpertDashboard), which
+ *   reads classification/eval directly off already-graded entries instead.
+ * - Master: never — already excluded upstream since explanationMode is
+ *   never 'live' for Master (resolveExplanationMode), but explicit here too
+ *   so this function's own contract doesn't depend on that.
+ */
+export function shouldAutoExplainLive(
+  tierId: SkillTier,
+  entry: { kind: 'quality' | 'purpose'; classification?: MoveClassification; san: string }
+): boolean {
+  if (tierId === 'beginner') return true
+  if (tierId === 'expert' || tierId === 'master') return false
+  // intermediate
+  if (entry.kind === 'quality') return entry.classification !== 'best'
+  return entry.san.includes('x') || entry.san.endsWith('+') || entry.san.endsWith('#')
 }

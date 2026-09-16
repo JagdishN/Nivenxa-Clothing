@@ -14,8 +14,13 @@
   composes: puzzleIndicator from './TacticPuzzleSet.module.scss';
 }
 
+// A single short instruction ("Now find c6.") left a lot of dead air under
+// the shared 4.5rem floor — BoardLesson's own steps are consistently
+// shorter than PieceLesson's, so it gets a lower floor here rather than
+// changing the shared default other lesson types still rely on.
 .promptCard {
   composes: promptCard from './PracticePanel.module.scss';
+  min-height: 2.75rem;
 }
 
 .promptCardCorrect {
@@ -110,4 +115,27 @@
 
 .cellDark {
   background: #b58863;
+}
+
+// Bottom-right square, ringed the moment an answer is picked — the concrete
+// visual referent for "light on the right"/"dark on the right".
+.cellAnswer {
+  box-shadow: inset 0 0 0 4px var(--chess-gold);
+}
+
+// ─── Step progress bar — sits under the "Step N of M" text ──────────────────
+.progressTrack {
+  width: 100%;
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(91, 46, 145, 0.12);
+  overflow: hidden;
+  margin: 0.35rem 0 0.1rem;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 9999px;
+  background: var(--chess-purple);
+  transition: width 0.3s ease;
 }

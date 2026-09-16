@@ -1,15 +1,23 @@
 'use client'
+import { useEffect } from 'react'
 import Link from 'next/link'
 import MoveTrainer from '../../_shared/MoveTrainer'
 import PieceLesson from '../../_shared/PieceLesson'
 import BoardLesson from '../../_shared/BoardLesson'
 import MiniGameLesson from '../../_shared/MiniGameLesson'
 import { getNextBasicsLesson, type BasicsLesson } from '@/lib/chess/basics/data'
+import { markLessonStarted } from '@/lib/chess/basicsProgress'
 import styles from './BasicsDetail.module.scss'
 
 export default function BasicsDetail({ lesson }: { lesson: BasicsLesson }) {
   const next = getNextBasicsLesson(lesson.slug)
   const nextCta = next ? { href: `/chess/learn/basics/${next.slug}`, label: `Learn ${next.name} next →` } : undefined
+
+  // A visit to the lesson page is "started" — a plain localStorage write,
+  // not a setState call, so this is safe directly in the effect body.
+  useEffect(() => {
+    markLessonStarted(lesson.slug)
+  }, [lesson.slug])
 
   return (
     <main className={styles.page}>
@@ -23,7 +31,10 @@ export default function BasicsDetail({ lesson }: { lesson: BasicsLesson }) {
 
       <div className={styles.layout}>
         {lesson.miniGame && lesson.miniGameFen ? (
-          <MiniGameLesson example={{ fen: lesson.miniGameFen, completionSummary: lesson.completionSummary }} />
+          <MiniGameLesson
+            example={{ fen: lesson.miniGameFen, completionSummary: lesson.completionSummary }}
+            slug={lesson.slug}
+          />
         ) : lesson.boardSteps && lesson.boardFen ? (
           <BoardLesson
             example={{
@@ -33,6 +44,7 @@ export default function BasicsDetail({ lesson }: { lesson: BasicsLesson }) {
               completionSummary: lesson.completionSummary,
             }}
             nextCta={nextCta}
+            slug={lesson.slug}
           />
         ) : lesson.steps ? (
           <PieceLesson
@@ -42,6 +54,7 @@ export default function BasicsDetail({ lesson }: { lesson: BasicsLesson }) {
               completionSummary: lesson.completionSummary,
             }}
             nextCta={nextCta}
+            slug={lesson.slug}
           />
         ) : lesson.trainer ? (
           <MoveTrainer

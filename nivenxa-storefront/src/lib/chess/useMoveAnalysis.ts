@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useStockfish } from './useStockfish'
 import { classifyMove } from './moveClassification'
-import { depthFor } from './skillTiers'
+import { depthFor, shouldAutoExplainLive } from './skillTiers'
 import { uciToSan } from './uci'
 import type { ExplanationMode, TierConfig } from './skillTiers'
 import type {
@@ -160,9 +160,9 @@ export function useMoveAnalysis(tier: TierConfig, explanationMode: ExplanationMo
   const insertEntry = useCallback(
     (entry: MoveAnalysisEntry) => {
       setEntries((prev) => (prev.some((e) => e.ply === entry.ply) ? prev : [...prev, entry].sort((a, b) => a.ply - b.ply)))
-      if (explanationMode === 'live') fetchExplanation(entry, tier.tone, false)
+      if (explanationMode === 'live' && shouldAutoExplainLive(tier.id, entry)) fetchExplanation(entry, tier.tone, false)
     },
-    [explanationMode, tier.tone, fetchExplanation]
+    [explanationMode, tier.id, tier.tone, fetchExplanation]
   )
 
   // Moves that arrived while the analysis engine was still loading — see the

@@ -178,6 +178,16 @@
   }
 }
 
+.iconButtonSuccess {
+  composes: iconButton;
+
+  &:hover {
+    background: var(--living-ok-soft);
+    border-color: var(--living-ok);
+    color: var(--living-ok);
+  }
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
