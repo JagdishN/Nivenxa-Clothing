@@ -24,8 +24,8 @@
 // squares — subtler than the piece/UI purple-gold palette since this is a
 // board-level reference aid, not chrome.
 .board :global(coords) {
-  opacity: 0.95;
-  font-size: 11px;
+  opacity: 1;
+  font-size: 13px;
   font-weight: 600;
   color: rgba(31, 27, 58, 0.68);
   transition: font-size 0.2s ease, color 0.2s ease, opacity 0.2s ease;

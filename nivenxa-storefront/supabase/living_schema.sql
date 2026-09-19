@@ -150,6 +150,16 @@ alter table living_flat_claims add column if not exists requester_phone text;
 
 create index if not exists living_flat_claims_apartment_id_idx on living_flat_claims (apartment_id, status);
 
+-- The real duplicate-invite guard: at most one PENDING claim per (flat,
+-- requester email) pair — enforced here, not just checked in
+-- living_join_apartment() below, so two near-simultaneous join attempts
+-- can't both slip past an `if exists` check and insert twin rows. Partial
+-- (status = 'pending' only) so a claim that was later approved/rejected
+-- never blocks a fresh resubmission for that same flat/email.
+create unique index if not exists living_flat_claims_pending_flat_email_idx
+  on living_flat_claims (flat_id, lower(requester_email))
+  where status = 'pending';
+
 -- ─── Maintenance ────────────────────────────────────────────────────────
 
 -- `month` is the period's START date — despite the name, it's no longer
@@ -822,20 +832,33 @@ begin
     return jsonb_build_object('status', 'attached');
   end if;
 
-  -- Duplicate guard: at most one pending claim per flat (someone else may
-  -- already be waiting on this exact flat) and at most one pending claim
-  -- per requester (this account may already be waiting on a different
-  -- flat) — either case just surfaces the existing request rather than
-  -- stacking another row for the Admin to sort through.
+  -- Duplicate guard: at most one pending invite per (email, flat) — that
+  -- pair is the real identity of an invite, enforced for real by
+  -- living_flat_claims_pending_flat_email_idx above; this pre-check just
+  -- lets a repeat attempt return a friendly 'duplicate' status instead of
+  -- hitting the unique-violation exception below. This also covers (and is
+  -- deliberately stricter than) the email+flat pair alone: any pending
+  -- claim already on this flat blocks a second one regardless of email
+  -- (someone else may already be waiting on this exact flat), and any
+  -- pending claim already by this account blocks a second one regardless
+  -- of flat (this account may already be waiting elsewhere) — either case
+  -- just surfaces the existing request rather than stacking another row
+  -- for the Admin to sort through.
   if exists (select 1 from living_flat_claims where flat_id = v_flat.id and status = 'pending') then
-    return jsonb_build_object('status', 'pending');
+    return jsonb_build_object('status', 'duplicate');
   end if;
   if exists (select 1 from living_flat_claims where requested_by = auth.uid() and status = 'pending') then
-    return jsonb_build_object('status', 'pending');
+    return jsonb_build_object('status', 'duplicate');
   end if;
 
-  insert into living_flat_claims (apartment_id, flat_id, requested_by, requester_email, requester_phone)
-    values (v_apartment_id, v_flat.id, auth.uid(), v_user_email, v_user_phone);
+  begin
+    insert into living_flat_claims (apartment_id, flat_id, requested_by, requester_email, requester_phone)
+      values (v_apartment_id, v_flat.id, auth.uid(), v_user_email, v_user_phone);
+  exception when unique_violation then
+    -- Closes the race the pre-checks above can't: two near-simultaneous
+    -- calls both passing the checks before either insert commits.
+    return jsonb_build_object('status', 'duplicate');
+  end;
   return jsonb_build_object('status', 'pending');
 end;
 $$;

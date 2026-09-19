@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createChessBrowserClient } from '@/lib/chess/chessSupabaseBrowser'
+import FeedbackModal from '@/components/feedback/FeedbackModal'
 import styles from './ChessNav.module.scss'
 
 const LINKS = [
@@ -24,13 +25,21 @@ export default function ChessNav() {
   // trip, and onAuthStateChange keeps it live across the OTP login flow and
   // sign-out without needing a full page reload.
   const [email, setEmail] = useState<string | null | undefined>(undefined) // undefined = not checked yet
+  const [userId, setUserId] = useState<string | null>(null)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   useEffect(() => {
     const supabase = createChessBrowserClient()
-    supabase.auth.getSession().then(({ data }) => setEmail(data.session?.user.email ?? null))
+    supabase.auth.getSession().then(({ data }) => {
+      setEmail(data.session?.user.email ?? null)
+      setUserId(data.session?.user.id ?? null)
+    })
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => setEmail(session?.user.email ?? null))
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setEmail(session?.user.email ?? null)
+      setUserId(session?.user.id ?? null)
+    })
     return () => subscription.unsubscribe()
   }, [])
 
@@ -61,6 +70,9 @@ export default function ChessNav() {
         })}
       </nav>
       <div className={styles.authArea}>
+        <button type="button" className={styles.feedbackLink} onClick={() => setFeedbackOpen(true)}>
+          Feedback
+        </button>
         {email === undefined ? null : email ? (
           <>
             <span className={styles.authEmail}>{email}</span>
@@ -79,6 +91,13 @@ export default function ChessNav() {
           </>
         )}
       </div>
+
+      <FeedbackModal
+        open={feedbackOpen}
+        onClose={() => setFeedbackOpen(false)}
+        app="chess"
+        identity={{ userId, email, role: 'Chess Player' }}
+      />
     </header>
   )
 }

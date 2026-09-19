@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { setLivingError } from '@/lib/living/flash'
+import { setLivingError, setLivingNotice } from '@/lib/living/flash'
 import { createLivingServerClient } from '@/lib/living/supabaseServer'
 import OtpForm from '../_auth/OtpForm'
 import theme from '../LivingTheme.module.scss'
@@ -35,6 +35,16 @@ async function joinApartment(formData: FormData) {
     redirect('/living/signup?tab=join')
   }
   const status = (data as { status?: string } | null)?.status
+  if (status === 'duplicate') {
+    // Same email + flat already has a pending invite (living_flat_claims_pending_flat_email_idx).
+    // Redirect to the plain signup path, not ?tab=join: if this is the
+    // original requester, that route already renders their "Request sent"
+    // page (keyed on their own pending claim) — the notice just reinforces
+    // it. If it's a different account hitting the same flat, that page has
+    // no claim of theirs to show, so the notice is the only explanation.
+    await setLivingNotice('An Invitation is pending for Approval.')
+    redirect('/living/signup')
+  }
   if (status === 'pending') {
     redirect('/living/signup')
   }

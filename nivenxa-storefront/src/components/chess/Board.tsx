@@ -101,6 +101,7 @@ export default function Board({
       turnColor,
       lastMove,
       viewOnly: false,
+      animation: { enabled: true, duration: 200 },
       movable: {
         free: false,
         color: turnColor,
@@ -134,6 +135,7 @@ export default function Board({
       viewOnly,
       check,
       lastMove,
+      animation: { enabled: true, duration: 200 },
       movable: {
         free: false,
         color: turnColor,
@@ -167,13 +169,23 @@ export default function Board({
   ])
 
   return (
-    <div className={styles.wrap}>
-      <div
-        ref={elRef}
-        className={`${styles.board} ${emphasizeCoordinates ? styles.board_coordsEmphasized : ''} ${
-          pulseHighlights ? styles.board_pulsing : ''
-        }`}
-      />
+    // The modifier classes live on this wrapper, never on the ref'd div
+    // below — chessground adds its own classes (cg-wrap, orientation-*,
+    // manipulable) to that div imperatively via classList, outside React's
+    // knowledge. Any change to that div's className prop makes React
+    // overwrite the whole attribute on the next render, silently wiping
+    // chessground's classes (including cg-wrap itself, which chessground's
+    // own CSS needs for position: relative) — which then sends the
+    // absolutely-positioned board container jumping to the next positioned
+    // ancestor up the tree. Keeping this div's className permanently static
+    // avoids that; the CSS below still matches since these are descendant
+    // selectors, not direct-child ones.
+    <div
+      className={`${styles.wrap} ${emphasizeCoordinates ? styles.board_coordsEmphasized : ''} ${
+        pulseHighlights ? styles.board_pulsing : ''
+      }`}
+    >
+      <div ref={elRef} className={styles.board} />
     </div>
   )
 }

@@ -88,6 +88,23 @@
   cursor: pointer;
   padding: 0;
   margin-top: 0.9rem;
+
+  &:disabled {
+    color: var(--living-ink-soft);
+    cursor: not-allowed;
+  }
+}
+
+.secondaryRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  .switchStep,
+  .hint {
+    margin-top: 0.9rem;
+  }
 }
 
 .choiceGrid {

@@ -13,11 +13,20 @@ async function signOutAction() {
 }
 
 export default async function LivingAppLayout({ children }: { children: React.ReactNode }) {
-  const { membership, apartment } = await requireMembership()
+  const { supabase, userId, membership, apartment } = await requireMembership()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   return (
     <>
-      <AppNav role={membership.role} apartmentName={apartment.name} onSignOut={signOutAction} />
+      <AppNav
+        role={membership.role}
+        apartmentName={apartment.name}
+        onSignOut={signOutAction}
+        userId={userId}
+        email={user?.email ?? null}
+      />
       <SessionTimeout onSignOut={signOutAction} />
       <div className={theme.pageShell}>{children}</div>
     </>
