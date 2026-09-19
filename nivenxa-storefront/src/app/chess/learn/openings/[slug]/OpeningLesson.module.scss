@@ -1,0 +1,362 @@
+@use '../../../../../styles/variables' as v;
+
+// One board, one panel — the whole point of this redesign is that nothing
+// else competes with them, so this file only styles what's inside .workspace.
+.workspace {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: clamp(1.5rem, 3.5vw, 2.5rem);
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 clamp(1.25rem, 5vw, 3rem) clamp(2rem, 4vw, 3rem);
+
+  @include v.max-lg {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+.boardCol {
+  flex: 0 0 auto;
+  width: min(88vw, 480px);
+}
+
+.boardWrap {
+  position: relative;
+  border: 1px solid rgba(91, 46, 145, 0.18);
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 10px 40px rgba(91, 46, 145, 0.07);
+  padding: clamp(0.6rem, 1vw, 0.85rem);
+}
+
+// Fixed height (matching the board's own size) so the panel doesn't jump
+// around as its content changes between Intro/Guided/Practice/Complete —
+// content that runs short just sits at the top rather than resizing the card.
+.panelCol {
+  flex: 1 1 360px;
+  max-width: 400px;
+  min-height: min(88vw, 480px);
+  display: flex;
+  flex-direction: column;
+  padding: 1.4rem 1.5rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(91, 46, 145, 0.15);
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 10px 40px rgba(91, 46, 145, 0.05);
+}
+
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--chess-purple);
+  margin: 0 0 0.6rem;
+}
+
+.ideaText {
+  font-family: var(--font-serif);
+  font-size: clamp(1rem, 1.6vw, 1.15rem);
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--chess-deep);
+  margin: 0;
+
+  & + & {
+    margin-top: 0.3rem;
+  }
+}
+
+.moveTitle {
+  font-family: var(--font-serif);
+  font-size: clamp(1.15rem, 2vw, 1.35rem);
+  font-weight: 400;
+  color: var(--chess-deep);
+  margin: 0 0 0.5rem;
+  line-height: 1.3;
+}
+
+.explanationBlock {
+  margin-bottom: 0.5rem;
+}
+
+.explanationText {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: rgba(31, 27, 58, 0.72);
+  margin: 0;
+
+  & + & {
+    margin-top: 0.3rem;
+  }
+}
+
+.reveal {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--chess-bronze);
+  margin: 0.4rem 0 0;
+}
+
+// Contextual "Good to Know" / "Be Careful" — shown at the move they're
+// actually about, replacing the old always-visible bottom-of-page sections.
+.tipGood,
+.tipCareful {
+  font-family: var(--font-sans);
+  font-size: 0.83rem;
+  line-height: 1.5;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.6rem;
+  margin: 0.6rem 0 0;
+}
+
+.tipGood {
+  background: rgba(94, 140, 106, 0.09);
+  color: var(--chess-deep);
+}
+
+.tipCareful {
+  background: rgba(179, 84, 63, 0.08);
+  color: var(--chess-deep);
+}
+
+// ─── Intro ────────────────────────────────────────────────────────────────
+.learnLabel {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(31, 27, 58, 0.5);
+  margin: 1rem 0 0.5rem;
+}
+
+.learnList {
+  list-style: none;
+  margin: 0 0 auto;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+
+  li {
+    position: relative;
+    padding-left: 1.3rem;
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: rgba(31, 27, 58, 0.78);
+
+    &::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--chess-success);
+      font-weight: 700;
+    }
+
+    strong {
+      color: var(--chess-deep);
+      font-family: var(--font-sans);
+    }
+  }
+}
+
+// ─── Buttons ──────────────────────────────────────────────────────────────
+.primaryBtn {
+  display: inline-block;
+  text-align: center;
+  text-decoration: none;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0.75rem 1.2rem;
+  border-radius: 9999px;
+  border: none;
+  background: var(--chess-purple);
+  color: #fff;
+  cursor: pointer;
+  margin-top: auto;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 8px 24px rgba(91, 46, 145, 0.28);
+    transform: translateY(-1px);
+  }
+}
+
+.primaryBtnSmall {
+  composes: primaryBtn;
+  margin-top: 0;
+  padding: 0.55rem 1rem;
+  font-size: 0.82rem;
+}
+
+.ghostBtn {
+  display: inline-block;
+  text-align: center;
+  text-decoration: none;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.5rem 0.9rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(91, 46, 145, 0.22);
+  background: transparent;
+  color: var(--chess-purple);
+  cursor: pointer;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: rgba(91, 46, 145, 0.06);
+  }
+}
+
+.stepControls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+}
+
+.completeActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+}
+
+// ─── View moves accordion ───────────────────────────────────────────────────
+.movesAccordion {
+  margin-top: 0.75rem;
+}
+
+.movesToggle {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba(31, 27, 58, 0.5);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--chess-purple);
+  }
+}
+
+.movesList {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.movesRow {
+  display: grid;
+  grid-template-columns: 1.5rem 1fr 1fr;
+  gap: 0.4rem;
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8rem;
+  color: rgba(31, 27, 58, 0.7);
+}
+
+.movesNum {
+  color: rgba(31, 27, 58, 0.4);
+}
+
+.movesEmpty {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  color: rgba(31, 27, 58, 0.45);
+  margin: 0.5rem 0 0;
+}
+
+// ─── On-board celebration (reused from PracticePanel's own visual) ─────────
+.celebrate {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  overflow: hidden;
+  background: radial-gradient(ellipse at center, rgba(214, 168, 95, 0.28) 0%, rgba(214, 168, 95, 0) 70%);
+  animation: celebrateGlow 1.3s ease-out;
+}
+
+.spark {
+  position: absolute;
+  bottom: 8%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--chess-gold);
+  opacity: 0;
+  animation: sparkRise 1s ease-out forwards;
+}
+
+.celebrateCheck {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  font-size: 2.75rem;
+  font-weight: 700;
+  color: var(--chess-success);
+  text-shadow: 0 0 24px rgba(94, 140, 106, 0.5);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.6);
+  animation: checkIn 0.6s ease-out 0.4s forwards;
+}
+
+@keyframes celebrateGlow {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes sparkRise {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.8);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-70px) scale(1.1);
+  }
+}
+
+@keyframes checkIn {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.6);
+  }
+  60% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}

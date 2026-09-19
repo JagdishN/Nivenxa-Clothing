@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { LivingRole } from '@/lib/living/types'
-import { clearSessionStart } from './sessionTimer'
+import FeedbackModal from '@/components/feedback/FeedbackModal'
 import styles from './AppNav.module.scss'
 
 type NavLink = { href: string; label: string }
@@ -130,12 +130,17 @@ export default function AppNav({
   role,
   apartmentName,
   onSignOut,
+  userId,
+  email,
 }: {
   role: LivingRole
   apartmentName: string
   onSignOut: () => Promise<void>
+  userId: string
+  email: string | null
 }) {
   const pathname = usePathname()
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
   const entries = NAV_BY_ROLE[role]
   const [menuOpen, setMenuOpen] = useState(false)
   const [openGroup, setOpenGroup] = useState<string | null>(null)
@@ -269,7 +274,17 @@ export default function AppNav({
           {menuOpen && (
             <div className={styles.accountMenu}>
               <span className={styles.roleTag}>{role}</span>
-              <form action={onSignOut} onSubmit={() => clearSessionStart()}>
+              <button
+                type="button"
+                className={styles.signOut}
+                onClick={() => {
+                  setMenuOpen(false)
+                  setFeedbackOpen(true)
+                }}
+              >
+                Feedback
+              </button>
+              <form action={onSignOut}>
                 <button type="submit" className={styles.signOut}>
                   Sign out
                 </button>
@@ -278,6 +293,13 @@ export default function AppNav({
           )}
         </div>
       </div>
+
+      <FeedbackModal
+        open={feedbackOpen}
+        onClose={() => setFeedbackOpen(false)}
+        app="living"
+        identity={{ userId, email, role }}
+      />
     </header>
   )
 }

@@ -26,6 +26,19 @@ export interface BoardProps {
   highlightColor?: 'yellow' | 'green'
   /** [from, to] to draw as an arrow (chessground's shape overlay) — e.g. a "this piece to this square" hint. */
   hintArrow?: Key[]
+  /**
+   * Multiple simultaneous arrows with their own colors — e.g. Analysis
+   * drawing both an attack path (red) and a suggested better move (green) at
+   * once. `hintArrow` stays the single-arrow yellow shorthand for callers
+   * that only ever need one; this is additive, not a replacement.
+   */
+  extraArrows?: { from: Key; to: Key; brush?: 'yellow' | 'green' | 'red' | 'blue' }[]
+  /** Square groups to circle together as one idea (e.g. an open file or a dangerous diagonal), each with its own brush. */
+  lineHighlights?: { squares: Key[]; brush?: 'yellow' | 'green' | 'red' | 'blue' }[]
+  /** Boosts the rank/file coordinate labels' size and weight — for the specific steps of a lesson that are actively teaching coordinates, off (the normal subtle read) everywhere else. */
+  emphasizeCoordinates?: boolean
+  /** Briefly pulses the current `highlightSquares` circles — a lightweight "you got it" animation for a just-found square, distinct from the static highlight itself. */
+  pulseHighlights?: boolean
   onMove?: (from: Key, to: Key) => void
   /**
    * Fires when any square is clicked — used for click-to-identify quizzes
@@ -47,6 +60,10 @@ export default function Board({
   highlightSquares,
   highlightColor = 'yellow',
   hintArrow,
+  extraArrows,
+  lineHighlights,
+  emphasizeCoordinates = false,
+  pulseHighlights = false,
   onMove = noop,
   onSquareClick,
 }: BoardProps) {
@@ -84,6 +101,7 @@ export default function Board({
       turnColor,
       lastMove,
       viewOnly: false,
+      animation: { enabled: true, duration: 200 },
       movable: {
         free: false,
         color: turnColor,
@@ -117,6 +135,7 @@ export default function Board({
       viewOnly,
       check,
       lastMove,
+      animation: { enabled: true, duration: 200 },
       movable: {
         free: false,
         color: turnColor,
@@ -130,11 +149,42 @@ export default function Board({
     apiRef.current?.setShapes([
       ...(highlightSquares ?? []).map((orig) => ({ orig, brush: highlightColor })),
       ...(hintArrow ? [{ orig: hintArrow[0], dest: hintArrow[1], brush: 'yellow' as const }] : []),
+      ...(extraArrows ?? []).map((a) => ({ orig: a.from, dest: a.to, brush: a.brush ?? 'yellow' })),
+      ...(lineHighlights ?? []).flatMap((l) => l.squares.map((orig) => ({ orig, brush: l.brush ?? 'yellow' }))),
     ])
-  }, [fen, turnColor, dests, orientation, viewOnly, check, lastMove, highlightSquares, highlightColor, hintArrow, onSquareClick])
+  }, [
+    fen,
+    turnColor,
+    dests,
+    orientation,
+    viewOnly,
+    check,
+    lastMove,
+    highlightSquares,
+    highlightColor,
+    hintArrow,
+    extraArrows,
+    lineHighlights,
+    onSquareClick,
+  ])
 
   return (
-    <div className={styles.wrap}>
+    // The modifier classes live on this wrapper, never on the ref'd div
+    // below — chessground adds its own classes (cg-wrap, orientation-*,
+    // manipulable) to that div imperatively via classList, outside React's
+    // knowledge. Any change to that div's className prop makes React
+    // overwrite the whole attribute on the next render, silently wiping
+    // chessground's classes (including cg-wrap itself, which chessground's
+    // own CSS needs for position: relative) — which then sends the
+    // absolutely-positioned board container jumping to the next positioned
+    // ancestor up the tree. Keeping this div's className permanently static
+    // avoids that; the CSS below still matches since these are descendant
+    // selectors, not direct-child ones.
+    <div
+      className={`${styles.wrap} ${emphasizeCoordinates ? styles.board_coordsEmphasized : ''} ${
+        pulseHighlights ? styles.board_pulsing : ''
+      }`}
+    >
       <div ref={elRef} className={styles.board} />
     </div>
   )

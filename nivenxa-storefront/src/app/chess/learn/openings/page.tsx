@@ -1,10 +1,19 @@
 import Link from 'next/link'
-import { OPENING_CATEGORIES, DIFFICULTY_LABEL, DIFFICULTY_EMOJI, getOpening } from '@/lib/chess/openings/data'
+import { OPENING_CATEGORIES, OPENINGS, DIFFICULTY_LABEL, DIFFICULTY_EMOJI, type OpeningDifficulty } from '@/lib/chess/openings/data'
 import styles from './OpeningsList.module.scss'
 
+// Derived live from each opening's own `difficulty`, not a separately
+// maintained slug list — that's what let Queen's Gambit get recommended
+// here while its own card said "🟡 Learn next" (see data.ts's comment on
+// OPENING_CATEGORIES). Two tiers, so the strip's own meaning stays
+// consistent with the badges the cards below already show.
+function openingsAt(difficulty: OpeningDifficulty) {
+  return OPENINGS.filter((o) => o.difficulty === difficulty)
+}
+
 export default function ChessLearnOpeningsPage() {
-  const startHere = OPENING_CATEGORIES.find((category) => category.slug === 'start-here')
-  const remainingCategories = OPENING_CATEGORIES.filter((category) => category.slug !== 'start-here')
+  const startHere = openingsAt('start')
+  const tryNext = openingsAt('next')
 
   return (
     <main className={styles.page}>
@@ -13,43 +22,48 @@ export default function ChessLearnOpeningsPage() {
           ← Learn
         </Link>
         <h1 className={styles.heading}>Openings</h1>
-        <p className={styles.subtext}>Choose an opening and learn how it works.</p>
+        <p className={styles.subtext}>Learn simple opening ideas and understand why the first moves matter.</p>
+        <p className={styles.difficultyKey}>
+          Difficulty: {DIFFICULTY_EMOJI.start} {DIFFICULTY_LABEL.start} · {DIFFICULTY_EMOJI.next} {DIFFICULTY_LABEL.next} ·{' '}
+          {DIFFICULTY_EMOJI.later} {DIFFICULTY_LABEL.later}
+        </p>
       </section>
 
-      {/* A short recommendation strip, not a card grid — "Start Here" is a
-          suggestion, and its four openings already have full cards below in
-          their own category, so a second full-size copy here would just be
-          duplicate content pushing the real categories further down. */}
-      {startHere && (
-        <div className={styles.recommendStrip}>
-          <p className={styles.recommendHeading}>⭐ New to openings?</p>
-          <p className={styles.recommendSubtext}>Start with one of these:</p>
-          <div className={styles.recommendLinks}>
-            {startHere.openingSlugs.map((slug) => {
-              const opening = getOpening(slug)
-              if (!opening) return null
-              return (
-                <Link key={slug} href={`/chess/learn/openings/${slug}`} className={styles.recommendLink}>
-                  {opening.name}
-                </Link>
-              )
-            })}
-          </div>
+      <div className={styles.recommendStrip}>
+        <p className={styles.recommendHeading}>Not sure where to start?</p>
+        <div className={styles.recommendChain}>
+          {startHere.map((opening) => (
+            <Link key={opening.slug} href={`/chess/learn/openings/${opening.slug}`} className={styles.recommendChainLink}>
+              {opening.name} <span className={styles.recommendArrow}>→</span>
+            </Link>
+          ))}
         </div>
-      )}
 
-      {remainingCategories.map((category, categoryIndex) => (
+        <p className={styles.recommendSecondaryHeading}>Ready for more?</p>
+        <div className={styles.recommendSecondaryLinks}>
+          {tryNext.map((opening) => (
+            <Link key={opening.slug} href={`/chess/learn/openings/${opening.slug}`} className={styles.recommendSecondaryLink}>
+              {opening.name}
+              <span className={styles.recommendSecondaryArrow}>→</span>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {OPENING_CATEGORIES.map((category) => (
         <div key={category.slug} className={styles.group}>
           <p className={styles.groupHeading}>{category.title}</p>
+          <p className={styles.groupIntro}>{category.intro}</p>
+          <p className={styles.groupNotation}>{category.notation}</p>
           <div className={styles.grid}>
-            {category.openingSlugs.map((slug, openingIndex) => {
-              const opening = getOpening(slug)
+            {category.openingSlugs.map((slug) => {
+              const opening = OPENINGS.find((o) => o.slug === slug)
               if (!opening) return null
               return (
                 <Link
                   key={slug}
                   href={`/chess/learn/openings/${slug}`}
-                  className={`${styles.card} ${categoryIndex === 0 && openingIndex === 0 ? styles.cardFirst : ''}`}
+                  className={`${styles.card} ${opening.difficulty === 'start' ? styles.cardRecommended : ''}`}
                 >
                   <h2 className={styles.cardTitle}>{opening.name}</h2>
                   <p className={styles.cardDesc}>{opening.summary}</p>

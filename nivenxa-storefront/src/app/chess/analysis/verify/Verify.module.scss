@@ -1,0 +1,342 @@
+@use '../../../../styles/variables' as v;
+
+.page {
+  composes: pageBackground from '../../ChessTheme.module.scss';
+  min-height: 100vh;
+  padding: clamp(2rem, 5vw, 3.5rem) clamp(1.25rem, 5vw, 4rem) 4rem;
+}
+
+.header {
+  max-width: 1100px;
+  margin: 0 auto clamp(1.5rem, 3vw, 2rem);
+  text-align: left;
+}
+
+.breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(31, 27, 58, 0.5);
+  text-decoration: none;
+  margin-bottom: 0.9rem;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--chess-purple);
+  }
+}
+
+.heading {
+  font-family: var(--font-serif);
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  font-weight: 400;
+  color: var(--chess-deep);
+  margin-bottom: 0.4rem;
+}
+
+.subheading {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  color: rgba(31, 27, 58, 0.6);
+}
+
+.empty {
+  max-width: 500px;
+  margin: 4rem auto;
+  text-align: center;
+  font-family: var(--font-sans);
+  color: rgba(31, 27, 58, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+
+// ─── Board + move list workspace ──────────────────────────────────────────
+.workspace {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+  align-items: flex-start;
+}
+
+.boardCol {
+  flex: 0 0 auto;
+  width: min(90vw, 460px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+
+  button {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.45rem 0.8rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(91, 46, 145, 0.25);
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--chess-purple);
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+
+    &:hover:not(:disabled) {
+      background: rgba(91, 46, 145, 0.08);
+      border-color: var(--chess-purple);
+    }
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// ─── Uncertain-move resolution ─────────────────────────────────────────────
+.resolvePanel {
+  padding: 1rem 1.1rem;
+  border-radius: 1rem;
+  border: 1px dashed var(--chess-warning);
+  background: rgba(214, 168, 95, 0.1);
+}
+
+.resolveTitle {
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--chess-deep);
+  margin: 0 0 0.3rem;
+}
+
+.resolveGuess {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  color: rgba(31, 27, 58, 0.6);
+  margin: 0 0 0.5rem;
+}
+
+.resolveQuestion {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--chess-deep);
+  margin: 0 0 0.5rem;
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.7rem;
+}
+
+.chip {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.4rem 0.9rem;
+  border-radius: 9999px;
+  border: 1px solid var(--chess-purple);
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--chess-purple);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+
+  &:hover {
+    background: var(--chess-purple);
+    color: #fff;
+  }
+}
+
+.truncateBtn {
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: rgba(31, 27, 58, 0.5);
+  background: none;
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover {
+    color: var(--chess-danger);
+  }
+}
+
+// ─── Move list ──────────────────────────────────────────────────────────────
+.moveCol {
+  flex: 1 1 340px;
+  min-width: 0;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.moveListLabel {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(31, 27, 58, 0.5);
+  margin: 0;
+}
+
+.moveList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.moveRow {
+  display: grid;
+  grid-template-columns: 1.75rem 1fr 1fr;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.moveNum {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: rgba(31, 27, 58, 0.4);
+}
+
+.moveCell {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--chess-deep);
+  text-align: left;
+  padding: 0.3rem 0.55rem;
+  border-radius: 0.6rem;
+  border: 1px solid transparent;
+  background: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+
+  &:hover {
+    background: rgba(91, 46, 145, 0.06);
+  }
+}
+
+.moveCellSelected {
+  border-color: var(--chess-purple);
+  background: rgba(91, 46, 145, 0.1);
+  box-shadow: 0 0 0 1px var(--chess-purple) inset;
+}
+
+.moveCellFlagged {
+  color: var(--chess-bronze);
+  border-color: rgba(214, 168, 95, 0.4);
+}
+
+// ─── Continue / edit actions ────────────────────────────────────────────────
+.confirmBlock {
+  padding: 1rem 1.1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(94, 140, 106, 0.3);
+  background: rgba(94, 140, 106, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.confirmText {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--chess-success);
+  margin: 0;
+}
+
+.pendingNote {
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  color: rgba(31, 27, 58, 0.55);
+}
+
+.actionRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.primaryBtn {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--chess-white-soft);
+  padding: 0.65rem 1.3rem;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  composes: ctaButtonGradient from '../../ChessTheme.module.scss';
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(91, 46, 145, 0.28);
+  }
+}
+
+.secondaryBtn {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--chess-purple);
+  padding: 0.65rem 1.3rem;
+  border-radius: 999px;
+  border: 1px solid var(--chess-purple);
+  background: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(91, 46, 145, 0.08);
+  }
+}
+
+.linkBtn {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(31, 27, 58, 0.55);
+  background: none;
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover:not(:disabled) {
+    color: var(--chess-purple);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.error {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--chess-danger);
+}

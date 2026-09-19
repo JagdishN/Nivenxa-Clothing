@@ -14,6 +14,9 @@ const AUTO_PLAY_DELAY = 650
 const REVERT_DELAY = 700
 // How long the on-board celebration plays before the completion modal appears.
 const CELEBRATE_DURATION = 1300
+// How long the opponent's just-played move + its explanation stays up before
+// the next learner prompt takes over.
+const OPPONENT_REPLY_HOLD = 1400
 
 export interface PracticeExample {
   openingName: string
@@ -22,6 +25,10 @@ export interface PracticeExample {
   moves: string[]
   /** Which side the learner plays — the opponent's moves auto-play. */
   learnerColor: 'w' | 'b'
+  /** One explanation per move, aligned by index with `moves` — same field the Learn tab already shows; reused here so a correct move explains WHY, not just confirms it. */
+  stepExplanations: string[]
+  /** Per-move imperative instruction for the learner's own moves, aligned by index with `moves` — undefined (including for every opponent move) falls back to the generic "What should White play?" prompt. */
+  stepPrompts?: (string | undefined)[]
   /** A short "this is the X!" aside per move, aligned by index with `moves` — reused here to reinforce the defining move the moment the learner plays it correctly. */
   stepReveal?: (string | undefined)[]
   /** Shown in the completion modal — one idea per line, like the Learn tab's completion card. */
@@ -31,6 +38,11 @@ export interface PracticeExample {
 }
 
 type AttemptState = 'idle' | 'correct' | 'reverting'
+// Set the instant the opponent's auto-play move lands, cleared after OPPONENT_REPLY_HOLD —
+// a beat to show what the opponent just played and why, before the next learner prompt appears.
+interface OpponentJustMoved {
+  moveIndex: number
+}
 
 export default function PracticePanel({
   example,
@@ -39,7 +51,8 @@ export default function PracticePanel({
   example: PracticeExample
   onBackToLearn: () => void
 }) {
-  const { openingName, openingWithArticle, moves, learnerColor, stepReveal, completionSummary, nextOpening } = example
+  const { openingName, openingWithArticle, moves, learnerColor, stepExplanations, stepPrompts, stepReveal, completionSummary, nextOpening } =
+    example
   const moveSquares = useMemo(() => computeMoveSquares(moves), [moves])
 
   const { fen, turn, history, dests: liveDests, makeMove, undo, reset } = useChessGame()
@@ -51,13 +64,16 @@ export default function PracticePanel({
   const [attemptState, setAttemptState] = useState<AttemptState>('idle')
   const [lastMove, setLastMove] = useState<Key[] | undefined>(undefined)
   const [showModal, setShowModal] = useState(false)
+  const [opponentJustMoved, setOpponentJustMoved] = useState<OpponentJustMoved | null>(null)
   const revertTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const autoPlayTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const opponentHoldTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     return () => {
       if (revertTimer.current) clearTimeout(revertTimer.current)
       if (autoPlayTimer.current) clearTimeout(autoPlayTimer.current)
+      if (opponentHoldTimer.current) clearTimeout(opponentHoldTimer.current)
     }
   }, [])
 
@@ -80,10 +96,13 @@ export default function PracticePanel({
     if (complete || isLearnerTurn || attemptState === 'reverting') return
     const next = moveSquares[moveIndex]
     if (!next) return
+    const playedIndex = moveIndex
     autoPlayTimer.current = setTimeout(() => {
       makeMove(next.from, next.to)
       setLastMove([next.from, next.to])
       setAttemptState('idle')
+      setOpponentJustMoved({ moveIndex: playedIndex })
+      opponentHoldTimer.current = setTimeout(() => setOpponentJustMoved(null), OPPONENT_REPLY_HOLD)
     }, AUTO_PLAY_DELAY)
     return () => {
       if (autoPlayTimer.current) clearTimeout(autoPlayTimer.current)
@@ -94,6 +113,8 @@ export default function PracticePanel({
     if (!isLearnerTurn || attemptState === 'reverting') return
     const result = makeMove(from, to)
     if (!result) return
+    if (opponentHoldTimer.current) clearTimeout(opponentHoldTimer.current)
+    setOpponentJustMoved(null)
     setLastMove([from, to])
     if (result.san === moves[moveIndex]) {
       setAttemptState('correct')
@@ -116,11 +137,19 @@ export default function PracticePanel({
     setAttemptState('idle')
     setLastMove(undefined)
     setShowModal(false)
+    if (opponentHoldTimer.current) clearTimeout(opponentHoldTimer.current)
+    setOpponentJustMoved(null)
   }
 
   const learnerLabel = learnerColor === 'w' ? 'White' : 'Black'
   const opponentLabel = learnerColor === 'w' ? 'Black' : 'White'
-  const expected = !complete ? moveSquares[moveIndex] : undefined
+  // While 'reverting', the wrong move is still provisionally on the board
+  // (undo() only runs when the revert timer fires), so moveIndex/history.length
+  // is briefly inflated by 1 — correct back down to the move actually being
+  // attempted, or every hint (piece name, highlight square, "is this move 0")
+  // would target the move AFTER the one the learner is stuck on.
+  const targetMoveIndex = attemptState === 'reverting' ? moveIndex - 1 : moveIndex
+  const expected = !complete ? moveSquares[targetMoveIndex] : undefined
   // Caps at 3 — the "let's find it together" hint stays showing for any further miss.
   const hintTier = Math.min(wrongAttempts, 3)
 
@@ -132,30 +161,55 @@ export default function PracticePanel({
   // isLearnerTurn alone — and takes priority over the opponent-replying copy.
   const awaitingLearner = isLearnerTurn || attemptState === 'reverting'
 
+  const pieceName = expected ? PIECE_NAME[expected.piece] : 'piece'
+
   let promptLines: string[]
   if (complete) {
     promptLines = [`You played ${openingWithArticle} yourself!`, 'Well done.']
   } else if (attemptState === 'correct') {
     const justPlayedReveal = stepReveal?.[moveIndex - 1]
+    const whyLines = stepExplanations[moveIndex - 1]?.split('\n') ?? []
     // "This is the X!" (an opening's identity moment) folds into one punchy line;
     // any other reveal (e.g. teaching a term — "This is called a pin.") just
     // follows the normal confirmation on its own line instead of being mangled.
+    // Either way, the move's own "why" (already-written stepExplanations) follows —
+    // a correct move should explain itself, not just get a checkmark.
     const identityMatch = justPlayedReveal?.match(/^This is (the .+)!$/)
-    promptLines = identityMatch ? [`✓ That's ${identityMatch[1]}!`] : justPlayedReveal ? ["✓ That's it!", justPlayedReveal] : ["That's it!"]
+    promptLines = identityMatch
+      ? [`✓ That's ${identityMatch[1]}!`, ...whyLines]
+      : justPlayedReveal
+        ? ["✓ That's it!", justPlayedReveal, ...whyLines]
+        : ["✓ That's it!", ...whyLines]
+  } else if (opponentJustMoved) {
+    const oppWhy = stepExplanations[opponentJustMoved.moveIndex]?.split('\n') ?? []
+    promptLines = [`${opponentLabel} plays ${moves[opponentJustMoved.moveIndex]}.`, ...oppWhy]
   } else if (!awaitingLearner) {
     promptLines = [`${opponentLabel} is replying...`]
   } else if (hintTier === 0) {
-    promptLines =
-      moveIndex === 0 ? [`${learnerLabel} to move.`, `What should ${learnerLabel} play?`] : [`What should ${learnerLabel} play next?`]
+    const contextualPrompt = stepPrompts?.[moveIndex]
+    promptLines = contextualPrompt
+      ? [contextualPrompt]
+      : moveIndex === 0
+        ? [`${learnerLabel} to move.`, `What should ${learnerLabel} play?`]
+        : [`What should ${learnerLabel} play next?`]
   } else if (hintTier === 1) {
-    promptLines = ['Not quite. Try again!', 'Think about the opening you just learned.']
+    // openingWithArticle ("the Italian Game") is built for mid-sentence use —
+    // capitalized here since it's opening a new line, not continuing one.
+    const openingCapitalized = openingWithArticle.charAt(0).toUpperCase() + openingWithArticle.slice(1)
+    promptLines =
+      targetMoveIndex === 0
+        ? ['Good try.', `${openingCapitalized} starts with the ${pieceName}. Can you find it?`]
+        : ['Good try.', `Look for the ${pieceName}.`]
   } else if (hintTier === 2) {
-    promptLines = ['Need a hint?', `Try moving your ${expected ? PIECE_NAME[expected.piece] : 'piece'}.`]
+    promptLines = ["Here's a hint —", `try moving your ${pieceName}.`]
   } else {
-    promptLines = ["Let's find it together."]
+    promptLines = ['Try moving this piece here.']
   }
 
-  const highlightSquares = hintTier === 2 && expected ? [expected.from] : undefined
+  // Highlighting starts from the very first wrong attempt now (tier 1), not
+  // tier 2 — a miss should point at the piece right away, not stay silent
+  // for one more guess. Tier 3+ escalates to the full arrow reveal.
+  const highlightSquares = hintTier >= 1 && hintTier < 3 && expected ? [expected.from] : undefined
   const hintArrow = hintTier >= 3 && expected ? [expected.from, expected.to] : undefined
   const celebrating = complete && !showModal
 
@@ -207,7 +261,7 @@ export default function PracticePanel({
             </button>
           )}
           <button type="button" className={styles.actionBtnGhost} onClick={onBackToLearn}>
-            ← Back to learning
+            ← Review the moves
           </button>
         </div>
       </div>
@@ -219,7 +273,7 @@ export default function PracticePanel({
             <p className={styles.modalHeading}>🎉 You learned {openingWithArticle}!</p>
             {(completionSummary ?? ['You played every move yourself.']).map((line, i) => (
               <p key={i} className={styles.modalBody}>
-                {line}
+                ✓ {line}
               </p>
             ))}
             <div className={styles.modalActions}>
@@ -228,6 +282,12 @@ export default function PracticePanel({
                   Learn {nextOpening.name} next →
                 </Link>
               )}
+              <button type="button" className={styles.modalSecondary} onClick={handlePracticeAgain}>
+                Try Again
+              </button>
+              <Link href="/chess/play" className={styles.modalSecondary}>
+                Play a Game →
+              </Link>
               <Link href="/chess/learn/openings" className={styles.modalSecondary}>
                 Back to Openings
               </Link>

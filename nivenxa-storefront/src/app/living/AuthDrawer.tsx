@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { EASE_OUT_EXPO } from '@/lib/motion'
@@ -10,6 +10,9 @@ import theme from './LivingTheme.module.scss'
 import styles from './AuthDrawer.module.scss'
 
 type Step = 'contact' | 'code' | 'choose' | 'create' | 'join'
+
+const RESEND_COOLDOWN_SECONDS = 30
+const MAX_RESENDS = 3
 
 /**
  * The compact, in-place equivalent of the storefront's SignInDrawer — email
@@ -70,6 +73,9 @@ function AuthDrawerPanel({ mode, onClose }: { mode: AuthDrawerMode; onClose: () 
   const [code, setCode] = useState('')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [resendCount, setResendCount] = useState(0)
+  const [cooldown, setCooldown] = useState(0)
+  const cooldownTimer = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Create-apartment fields
   const [name, setName] = useState('')
@@ -91,8 +97,23 @@ function AuthDrawerPanel({ mode, onClose }: { mode: AuthDrawerMode; onClose: () 
     return () => {
       document.removeEventListener('keydown', onEsc)
       document.body.style.overflow = ''
+      if (cooldownTimer.current) clearInterval(cooldownTimer.current)
     }
   }, [onClose])
+
+  function startCooldown() {
+    setCooldown(RESEND_COOLDOWN_SECONDS)
+    if (cooldownTimer.current) clearInterval(cooldownTimer.current)
+    cooldownTimer.current = setInterval(() => {
+      setCooldown((s) => {
+        if (s <= 1) {
+          if (cooldownTimer.current) clearInterval(cooldownTimer.current)
+          return 0
+        }
+        return s - 1
+      })
+    }, 1000)
+  }
 
   async function requestCode(e: FormEvent) {
     e.preventDefault()
@@ -109,7 +130,24 @@ function AuthDrawerPanel({ mode, onClose }: { mode: AuthDrawerMode; onClose: () 
       )
       return
     }
+    setResendCount(0)
+    startCooldown()
     setStep('code')
+  }
+
+  async function resendCode() {
+    if (cooldown > 0 || resendCount >= MAX_RESENDS || pending) return
+    setError(null)
+    setPending(true)
+    const supabase = createLivingBrowserClient()
+    const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: mode === 'signup' } })
+    setPending(false)
+    if (error) {
+      setError(error.message)
+      return
+    }
+    setResendCount((n) => n + 1)
+    startCooldown()
   }
 
   async function verifyCode(e: FormEvent) {
@@ -176,7 +214,10 @@ function AuthDrawerPanel({ mode, onClose }: { mode: AuthDrawerMode; onClose: () 
     }
     onClose()
     const status = (data as { status?: string } | null)?.status
-    if (status === 'pending') {
+    if (status === 'duplicate') {
+      // Same email + flat already has a pending invite (living_flat_claims_pending_flat_email_idx).
+      setLivingFlashClient('notice', 'An Invitation is pending for Approval.')
+    } else if (status === 'pending') {
       setLivingFlashClient('notice', 'Request sent — the Admin needs to approve it before you can see your flat.')
     }
     router.push('/living/home')
@@ -237,9 +278,27 @@ function AuthDrawerPanel({ mode, onClose }: { mode: AuthDrawerMode; onClose: () 
               <button type="submit" className={theme.button} disabled={pending} style={{ width: '100%' }}>
                 {pending ? 'Verifying…' : 'Verify & continue'}
               </button>
-              <button type="button" className={styles.switchStep} onClick={() => setStep('contact')}>
-                ← Use a different email
-              </button>
+              <div className={styles.secondaryRow}>
+                {resendCount < MAX_RESENDS ? (
+                  <button type="button" className={styles.switchStep} onClick={resendCode} disabled={cooldown > 0 || pending}>
+                    {cooldown > 0 ? `Resend code (${cooldown}s)` : 'Resend code'}
+                  </button>
+                ) : (
+                  <span className={styles.hint}>Maximum resend attempts reached.</span>
+                )}
+                <button
+                  type="button"
+                  className={styles.switchStep}
+                  onClick={() => {
+                    if (cooldownTimer.current) clearInterval(cooldownTimer.current)
+                    setCooldown(0)
+                    setResendCount(0)
+                    setStep('contact')
+                  }}
+                >
+                  ← Use a different email
+                </button>
+              </div>
             </form>
           )}
         </>

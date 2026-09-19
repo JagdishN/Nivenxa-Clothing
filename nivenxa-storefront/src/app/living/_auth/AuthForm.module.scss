@@ -30,6 +30,23 @@
   cursor: pointer;
   padding: 0;
   margin-top: 0.75rem;
+
+  &:disabled {
+    color: var(--living-ink-faint);
+    cursor: not-allowed;
+  }
+}
+
+.secondaryRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  .switchStep,
+  .hint {
+    margin-top: 0.75rem;
+  }
 }
 
 .footer {

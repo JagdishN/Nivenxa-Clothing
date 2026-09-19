@@ -4,6 +4,7 @@ import Link from 'next/link'
 import type { Key } from 'chessground/types'
 import Board from '@/components/chess/Board'
 import { correctSquaresFor, wrongSquarePool, applyRawMove, type MoveFilterMode } from './moveTrainerLogic'
+import { markLessonCompleted } from '@/lib/chess/basicsProgress'
 import styles from './PieceLesson.module.scss'
 
 const REVERT_DELAY = 700
@@ -55,9 +56,11 @@ type AttemptState = 'idle' | 'correct' | 'reverting'
 export default function PieceLesson({
   example,
   nextCta,
+  slug,
 }: {
   example: PieceLessonExample
   nextCta?: { href: string; label: string }
+  slug: string
 }) {
   const { steps, pieceName, completionSummary } = example
   const [stepIndex, setStepIndex] = useState(0)
@@ -116,8 +119,10 @@ export default function PieceLesson({
   }, [step, attemptState, correctSquares, wrongPool])
 
   function advanceStep() {
-    if (isLast) setAllDone(true)
-    else setStepIndex((i) => i + 1)
+    if (isLast) {
+      setAllDone(true)
+      markLessonCompleted(slug)
+    } else setStepIndex((i) => i + 1)
   }
 
   function handleMove(from: Key, to: Key) {

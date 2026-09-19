@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Chess } from 'chess.js'
 import type { Key } from 'chessground/types'
@@ -84,6 +84,24 @@ export default function StepThroughPanel({
   // 0 = starting position (before any move), up to moves.length.
   const [step, setStep] = useState(0)
 
+  // Briefly pulses the just-played move's own two squares right after a step
+  // change — the "Show, don't just Tell" layer on top of chessground's
+  // slide animation: the learner's eye gets pointed at exactly what moved,
+  // for a moment, before it settles into whatever this step's own
+  // stepHighlights/hintArrow are (if any).
+  const [pulsing, setPulsing] = useState(false)
+  const pulseTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => {
+    if (step === 0) return
+    ;(() => {
+      setPulsing(true)
+      pulseTimer.current = setTimeout(() => setPulsing(false), 900)
+    })()
+    return () => {
+      if (pulseTimer.current) clearTimeout(pulseTimer.current)
+    }
+  }, [step])
+
   const atStart = step === 0
   const atEnd = step === moves.length
 
@@ -105,6 +123,13 @@ export default function StepThroughPanel({
     else row.black = { ply: i, san }
   })
 
+  // "Next" only ever reads as generic — name what's about to be shown for
+  // the first couple of steps, where a beginner most needs the orientation,
+  // then settle into a short, still-specific "Next move →".
+  const firstMover = metas[0].turn === 'w' ? 'White' : 'Black'
+  const secondMover = firstMover === 'White' ? 'Black' : 'White'
+  const nextLabel = atStart ? `Show ${firstMover}'s first move →` : step === 1 ? `Show ${secondMover}'s reply →` : 'Next move →'
+
   return (
     <>
       <div className={styles.boardCol}>
@@ -117,11 +142,13 @@ export default function StepThroughPanel({
             lastMove={lastMoves[step]}
             highlightSquares={(() => {
               if (atStart) return undefined
+              if (pulsing) return lastMoves[step]
               const raw = example.stepHighlights?.[step - 1]
               if (!raw) return undefined
               return (Array.isArray(raw) ? raw : [raw]) as Key[]
             })()}
-            hintArrow={!atStart ? (example.stepArrows?.[step - 1] as Key[] | undefined) : undefined}
+            hintArrow={!atStart && !pulsing ? (example.stepArrows?.[step - 1] as Key[] | undefined) : undefined}
+            pulseHighlights={pulsing}
             onMove={noop}
           />
         </div>
@@ -141,7 +168,7 @@ export default function StepThroughPanel({
             onClick={() => setStep((s) => Math.min(moves.length, s + 1))}
             disabled={atEnd}
           >
-            Next →
+            {nextLabel}
           </button>
         </div>
 

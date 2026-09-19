@@ -1,6 +1,8 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Board from '@/components/chess/Board'
+import ExplanationBody from '@/components/chess/ExplanationBody'
 import { useChessGame } from '@/lib/chess/useChessGame'
 import { useStockfish } from '@/lib/chess/useStockfish'
 import { useMoveAnalysis } from '@/lib/chess/useMoveAnalysis'
@@ -14,17 +16,18 @@ import {
   type SkillTier,
 } from '@/lib/chess/skillTiers'
 import { resolveDrawDecision } from '@/lib/chess/drawDecision'
-import { PERSONAS, getPersona } from '@/lib/chess/personas'
 import { TIME_CONTROLS, TIME_CONTROL_MODE_LIST, type TimeControlMode, type TimeControlPreset } from '@/lib/chess/timeControls'
-import { accuracyFromEntries } from '@/lib/chess/moveClassification'
-import type { ColorChoice, MoveAnalysisEntry, MoveClassification, QualityMoveEntry } from '@/lib/chess/types'
+import { accuracyFromEntries, classificationTone, formatClassification } from '@/lib/chess/moveClassification'
+import { buildNormalizedGameFromPlaySession, type PlayResult } from '@/lib/chess/playToAnalysis'
+import { setActiveGame } from '@/lib/chess/analysisSession'
+import type { ColorChoice, MoveAnalysisEntry, QualityMoveEntry } from '@/lib/chess/types'
+import MovePairsTable from './MovePairsTable'
+import ExpertDashboard from './ExpertDashboard'
+import MasterLivePanel from './MasterLivePanel'
+import NivenxaNoticed from './NivenxaNoticed'
 import styles from './Play.module.scss'
 
 const SETUP_STORAGE_KEY = 'nivenxa-chess-setup'
-// The live feed shows just the latest exchange — your move, then Nivenxa's
-// reply — not a scrollback history. Each move still has its own slot in
-// analysisEntries; this is purely a display cap, not a data-loss boundary.
-const LIVE_FEED_SIZE = 2
 // After Nivenxa declines a draw offer, Offer Draw is disabled for this many
 // plies (5 of the player's own moves) so it can't be spammed every turn.
 const DRAW_OFFER_COOLDOWN_PLIES = 10
@@ -100,18 +103,44 @@ function parseUciMove(uci: string) {
   }
 }
 
-function classificationTone(c: MoveClassification): 'success' | 'warning' | 'danger' {
-  if (c === 'inaccuracy') return 'warning'
-  if (c === 'mistake' || c === 'blunder') return 'danger'
-  return 'success'
-}
-
-function formatClassification(c: MoveClassification): string {
-  return c.charAt(0).toUpperCase() + c.slice(1)
-}
-
 function colorLabel(color: 'w' | 'b'): string {
   return color === 'w' ? 'White' : 'Black'
+}
+
+// White/black king glyphs read correctly with no extra styling — U+2654
+// (WHITE CHESS KING) renders as an outline shape, U+265A (BLACK CHESS KING)
+// as a solid one, in effectively every font — so "White"/"Black" stay
+// visually distinct without color-coding text that must also work in dark mode.
+function colorIcon(c: ColorChoice): string {
+  return c === 'w' ? '♔' : c === 'b' ? '♚' : '♔♚'
+}
+
+/** "15 minutes + 10 seconds per move" — spells out a preset's shorthand label so "15+10" is never ambiguous. */
+function presetDescription(p: TimeControlPreset): string {
+  return `${p.minutes} minute${p.minutes === 1 ? '' : 's'} + ${p.incrementSeconds} second${p.incrementSeconds === 1 ? '' : 's'} added per move`
+}
+
+/** "Strength 4 · A demanding Expert challenge" — a dynamic read of where a strength step sits within its own tier's range, not just a bare number. */
+// Master's 7 steps get their own named scale — "gentle" reads oddly for a
+// tier someone deliberately chose as the toughest option, so it isn't just
+// the generic band wording with a different tier name substituted in.
+const MASTER_STRENGTH_NAMES = ['Entry', 'Strong', 'Advanced', 'Demanding', 'Elite', 'Exceptional', 'Peak']
+
+function strengthHint(tier: SkillTier, n: number, totalSteps: number): string {
+  const label = SKILL_TIERS[tier].label
+  if (tier === 'master') return `Strength ${n} · ${MASTER_STRENGTH_NAMES[n - 1] ?? MASTER_STRENGTH_NAMES[0]} Master challenge`
+  const fraction = n / totalSteps
+  const band = n === 1 ? 'gentle' : n === totalSteps ? 'toughest' : fraction <= 0.5 ? 'balanced' : 'demanding'
+  return `Strength ${n} · A ${band} ${label} challenge`
+}
+
+/** The one-line summary a collapsed history row shows instead of the full explanation — just the verdict half of the headline ("e4 — Good opening move" -> "Good opening move"), since the move itself is already in the row's own header. */
+function collapsedSummary(entry: MoveAnalysisEntry): string {
+  if (entry.headline) {
+    const dashIndex = entry.headline.indexOf(' — ')
+    return dashIndex >= 0 ? entry.headline.slice(dashIndex + 3) : entry.headline
+  }
+  return entry.explanation ?? ''
 }
 
 function moveNumberLabel(ply: number, color: 'w' | 'b'): string {
@@ -131,55 +160,8 @@ function formatClock(seconds: number): string {
   return `${m}:${String(s).padStart(2, '0')}`
 }
 
-/**
- * Renders the loaded content of one move's explanation — headline, body,
- * and whichever of bullets/suggestion/notice/remember the API filled in.
- * Callers own the row's own header (san, mover, classification pill) since
- * that differs between the live feed and the post-game review list; this
- * only renders what came back from Claude. At 'plain' depth (Expert/Master,
- * review-only) there's no headline — just the original single paragraph.
- */
-function ExplanationBody({ entry }: { entry: MoveAnalysisEntry }) {
-  if (!entry.headline) {
-    return entry.explanation ? <p className={styles.calloutText}>{entry.explanation}</p> : null
-  }
-
-  return (
-    <>
-      <p className={styles.calloutHeadline}>{entry.headline}</p>
-      {entry.explanation && <p className={styles.calloutText}>{entry.explanation}</p>}
-      {entry.bullets && entry.bullets.length > 0 && (
-        <div className={styles.calloutSection}>
-          <span className={styles.calloutSectionLabel}>{entry.kind === 'quality' ? 'Why it works' : 'Why it helps'}</span>
-          <ul className={styles.calloutBullets}>
-            {entry.bullets.map((b, i) => (
-              <li key={i}>{b}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {entry.suggestion && (
-        <div className={styles.calloutSection}>
-          <span className={styles.calloutSectionLabel}>Better idea</span>
-          <p className={styles.calloutText}>{entry.suggestion}</p>
-        </div>
-      )}
-      {entry.notice && (
-        <p className={styles.calloutWatch}>
-          <strong>Watch:</strong> {entry.notice}
-        </p>
-      )}
-      {entry.remember && (
-        <div className={styles.calloutSection}>
-          <span className={styles.calloutSectionLabel}>Remember</span>
-          <p className={styles.calloutText}>{entry.remember}</p>
-        </div>
-      )}
-    </>
-  )
-}
-
 export default function ChessPlayPage() {
+  const router = useRouter()
   const {
     fen,
     turn,
@@ -210,12 +192,9 @@ export default function ChessPlayPage() {
   // currently active game when reopened via "New Game").
   const [draftTier, setDraftTier] = useState<SkillTier>('beginner')
   const [draftColor, setDraftColor] = useState<ColorChoice>('random')
-  const [draftMode, setDraftMode] = useState<TimeControlMode>('classical')
+  const [draftMode, setDraftMode] = useState<TimeControlMode>('rapid')
   const [draftPresetIndex, setDraftPresetIndex] = useState(0)
   const [draftStrength, setDraftStrength] = useState(() => defaultStrengthFor('beginner'))
-  // Persona picker — Expert/Master only (see the setup screen JSX below).
-  // `null` means "no persona": plain best-move Stockfish, same as before.
-  const [draftPersonaSlug, setDraftPersonaSlug] = useState<string | null>(null)
 
   // The config actually driving the game in progress.
   const [activeTierId, setActiveTierId] = useState<SkillTier>('beginner')
@@ -223,7 +202,6 @@ export default function ChessPlayPage() {
   const [activeMode, setActiveMode] = useState<TimeControlMode | null>(null)
   const [activePreset, setActivePreset] = useState<TimeControlPreset | null>(null)
   const [activeStrength, setActiveStrength] = useState(() => defaultStrengthFor('beginner'))
-  const [activePersonaSlug, setActivePersonaSlug] = useState<string | null>(null)
   const [humanColor, setHumanColor] = useState<'w' | 'b'>('w')
 
   const [skillSet, setSkillSet] = useState(false)
@@ -242,6 +220,11 @@ export default function ChessPlayPage() {
   // Drives an inline "are you sure" swap in place of the button that
   // triggered it, for the two actions that abandon/end a game in progress.
   const [pendingConfirm, setPendingConfirm] = useState<'resign' | 'new-game' | null>(null)
+  // The "•••" overflow menu holding New Game — kept out of the primary
+  // controls row so it isn't the strongest-looking action during a live
+  // game (see moreMenuRef's click-outside effect below).
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false)
+  const moreMenuRef = useRef<HTMLDivElement>(null)
   // 'pending'/'declined' also drive a transient banner near the board;
   // 'declined' clears itself after a few seconds but declinedUntilPly keeps
   // gating the button so the offer can't just be spammed again immediately.
@@ -256,6 +239,19 @@ export default function ChessPlayPage() {
   const [selectedPly, setSelectedPly] = useState<number | null>(null)
   const [panelTab, setPanelTab] = useState<'insight' | 'moves'>('insight')
 
+  // Which non-latest Insight-feed entries the player has manually expanded
+  // (Beginner/Intermediate only) — the latest entry is always shown
+  // expanded regardless of this set, see the feed rendering below.
+  const [expandedHistoryPlies, setExpandedHistoryPlies] = useState<Set<number>>(new Set())
+  const toggleHistoryEntry = (ply: number) => {
+    setExpandedHistoryPlies((prev) => {
+      const next = new Set(prev)
+      if (next.has(ply)) next.delete(ply)
+      else next.add(ply)
+      return next
+    })
+  }
+
   // The ply of the player's own move we're holding the engine's reply for,
   // until its explanation resolves (loaded or errored) — see the effects
   // below. Only ever set in live-explanation contexts; `null` means the
@@ -267,7 +263,6 @@ export default function ChessPlayPage() {
   const [showResultOverlay, setShowResultOverlay] = useState(false)
 
   const tierConfig = SKILL_TIERS[activeTierId]
-  const activePersona = getPersona(activePersonaSlug)
   const explanationMode = resolveExplanationMode(activeTierId, activeMode)
 
   const {
@@ -302,27 +297,27 @@ export default function ChessPlayPage() {
     }
   }, [])
 
-  const beginGame = (
-    tier: SkillTier,
-    color: ColorChoice,
-    mode: TimeControlMode,
-    presetIndex: number,
-    strength: number,
-    personaSlug: string | null
-  ) => {
+  // Closes the "•••" overflow menu on any click outside it — the standard
+  // dismiss behavior for a small popover menu.
+  useEffect(() => {
+    if (!moreMenuOpen) return
+    const handleClick = (e: MouseEvent) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) setMoreMenuOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [moreMenuOpen])
+
+  const beginGame = (tier: SkillTier, color: ColorChoice, mode: TimeControlMode, presetIndex: number, strength: number) => {
     const resolved = resolveColor(color)
     const resolvedMode = tier === 'beginner' ? null : mode
     const resolvedPreset = resolvedMode ? TIME_CONTROLS[resolvedMode].presets[presetIndex] ?? TIME_CONTROLS[resolvedMode].presets[0] : null
-    // Personas only exist at Expert/Master — belt-and-suspenders in case a
-    // stale draft slug somehow survives a tier change.
-    const resolvedPersonaSlug = tier === 'expert' || tier === 'master' ? personaSlug : null
 
     setActiveTierId(tier)
     setActiveColorChoice(color)
     setActiveMode(resolvedMode)
     setActivePreset(resolvedPreset)
     setActiveStrength(clampStrength(tier, strength))
-    setActivePersonaSlug(resolvedPersonaSlug)
     setHumanColor(resolved)
     setOrientation(resolved === 'w' ? 'white' : 'black')
     setSkillSet(false)
@@ -337,6 +332,7 @@ export default function ChessPlayPage() {
     setPanelTab('insight')
     setAwaitingExplanationForPly(null)
     setShowResultOverlay(false)
+    setExpandedHistoryPlies(new Set())
     reset()
     resetAnalysis()
     resetClock(resolvedPreset)
@@ -350,7 +346,7 @@ export default function ChessPlayPage() {
       presetIndex: draftPresetIndex,
       strength: draftStrength,
     })
-    beginGame(draftTier, draftColor, draftMode, draftPresetIndex, draftStrength, draftPersonaSlug)
+    beginGame(draftTier, draftColor, draftMode, draftPresetIndex, draftStrength)
   }
 
   const handleNewGame = () => {
@@ -358,7 +354,6 @@ export default function ChessPlayPage() {
     setDraftTier(activeTierId)
     setDraftColor(activeColorChoice)
     setDraftStrength(activeStrength)
-    setDraftPersonaSlug(activePersonaSlug)
     if (activeMode && activePreset) {
       setDraftMode(activeMode)
       setDraftPresetIndex(TIME_CONTROLS[activeMode].presets.indexOf(activePreset))
@@ -367,8 +362,8 @@ export default function ChessPlayPage() {
   }
 
   // The mid-game "New Game" button goes through this — abandoning an active
-  // game needs a confirm first; the post-game "Change Opponent" button
-  // (there's no active game left to lose) calls handleNewGame directly.
+  // game needs a confirm first; the post-game "New Game" button (there's no
+  // active game left to lose) calls handleNewGame directly.
   const handleNewGameClick = () => {
     setPendingConfirm('new-game')
   }
@@ -376,15 +371,25 @@ export default function ChessPlayPage() {
   const handlePlayAgain = () => {
     const mode = activeMode ?? 'classical'
     const presetIndex = activeMode && activePreset ? TIME_CONTROLS[activeMode].presets.indexOf(activePreset) : 0
-    beginGame(activeTierId, activeColorChoice, mode, presetIndex, activeStrength, activePersonaSlug)
+    beginGame(activeTierId, activeColorChoice, mode, presetIndex, activeStrength)
+  }
+
+  const handleAnalyzeGame = () => {
+    let result: PlayResult = '1/2-1/2'
+    if (outcome === 'player-win') result = humanColor === 'w' ? '1-0' : '0-1'
+    else if (outcome === 'engine-win' || outcome === 'player-resigned') result = humanColor === 'w' ? '0-1' : '1-0'
+    const game = buildNormalizedGameFromPlaySession(analysisEntries, humanColor, activeTierId, result)
+    setActiveGame(game, 'analyze')
+    router.push('/chess/analysis/player')
   }
 
   const handleDraftTierChange = (tier: SkillTier) => {
     setDraftTier(tier)
     setDraftStrength(defaultStrengthFor(tier))
-    // Personas are Expert/Master-only — dropping to Beginner/Intermediate
-    // clears any picked persona rather than silently carrying it forward.
-    if (tier !== 'expert' && tier !== 'master') setDraftPersonaSlug(null)
+    // Rapid is the more practical everyday default — Master leans Classical
+    // instead, matching its own competitive/tournament framing.
+    setDraftMode(tier === 'master' ? 'classical' : 'rapid')
+    setDraftPresetIndex(0)
   }
 
   const handleUndo = () => {
@@ -470,16 +475,14 @@ export default function ChessPlayPage() {
     })
   }
 
-  // Apply the chosen tier's engine strength once the engine is ready — a
-  // persona's own skillLevel/contempt override the tier's strength slider
-  // while it's active (the tier still governs movetime/tone/draw behavior).
+  // Apply the chosen tier's engine strength once the engine is ready.
   useEffect(() => {
     if (ready && screen === 'playing' && !skillSet) {
-      setSkillLevel(activePersona ? activePersona.skillLevel : skillForStrength(activeTierId, activeStrength))
-      setContempt(activePersona ? activePersona.contempt : 0)
+      setSkillLevel(skillForStrength(activeTierId, activeStrength))
+      setContempt(0)
       setSkillSet(true)
     }
-  }, [ready, screen, skillSet, activeTierId, activeStrength, activePersona, setSkillLevel, setContempt])
+  }, [ready, screen, skillSet, activeTierId, activeStrength, setSkillLevel, setContempt])
 
   // Whenever it becomes the engine's turn, let it respond — except in live
   // explanation contexts, where awaitingExplanationForPly (set below) holds
@@ -492,7 +495,7 @@ export default function ChessPlayPage() {
     let cancelled = false
     setEngineThinking(true)
 
-    getMove(fen, { movetime: tierConfig.movetime, persona: activePersona })
+    getMove(fen, { movetime: tierConfig.movetime })
       .then((uci) => {
         if (cancelled) return
         const { from, to, promotion } = parseUciMove(uci)
@@ -520,18 +523,24 @@ export default function ChessPlayPage() {
     endReason,
     awaitingExplanationForPly,
     getMove,
-    activePersona,
     makeMove,
     analyzeMove,
     tierConfig.movetime,
   ])
 
-  // Clears awaitingExplanationForPly once the entry it's watching resolves
-  // (loaded or errored) — the effect above then lets the engine respond.
+  // Clears awaitingExplanationForPly once the entry it's watching either
+  // resolves (loaded/error) or was never going to be explained at all
+  // (idle forever — useMoveAnalysis's shouldAutoExplainLive decided to skip
+  // it, e.g. an unremarkable Intermediate move, or anything at Expert).
+  // Safe to key off "not loading": insertEntry's idle-insert and
+  // fetchExplanation's loading-patch happen synchronously in the same tick
+  // when an explanation IS wanted (React 18 batches them into one render),
+  // so idle only ever means "decided not to explain this one," never a
+  // fetch that's merely about to start.
   useEffect(() => {
     if (awaitingExplanationForPly === null) return
     const entry = analysisEntries.find((e) => e.ply === awaitingExplanationForPly)
-    if (entry && (entry.explanationStatus === 'loaded' || entry.explanationStatus === 'error')) {
+    if (entry && entry.explanationStatus !== 'loading') {
       setAwaitingExplanationForPly(null)
     }
   }, [awaitingExplanationForPly, analysisEntries])
@@ -596,7 +605,7 @@ export default function ChessPlayPage() {
   const engineRow = (
     <div className={styles.playerRow}>
       <div className={styles.playerIdentity}>
-        <span className={styles.playerName}>{colorLabel(engineColor)} · Nivenxa</span>
+        <span className={styles.playerName}>Nivenxa · {colorLabel(engineColor)}</span>
       </div>
       {renderClock(engineColor)}
     </div>
@@ -706,14 +715,21 @@ export default function ChessPlayPage() {
           <span className={styles.statLabel}>Blunders</span>
         </div>
       </div>
+      <NivenxaNoticed entries={playerQualityEntries} tone={tierConfig.tone} onAnalyze={handleAnalyzeGame} />
+      <button type="button" className={styles.resultPrimaryBtn} onClick={handleAnalyzeGame}>
+        Analyze Game →
+      </button>
       <div className={styles.resultActions}>
-        <button type="button" className={styles.controlBtnPrimary} onClick={handleReviewGameToggle}>
-          {reviewOpen ? 'Hide Review' : 'Review Game'}
-        </button>
         <button type="button" className={styles.controlBtn} onClick={handlePlayAgain}>
-          Play Again
+          Rematch
+        </button>
+        <button type="button" className={styles.controlBtn} onClick={handleNewGame}>
+          New Game
         </button>
       </div>
+      <button type="button" className={styles.reviewLinkBtn} onClick={handleReviewGameToggle}>
+        {reviewOpen ? 'Hide Review' : 'Review Game'}
+      </button>
     </>
   )
 
@@ -732,7 +748,21 @@ export default function ChessPlayPage() {
     if (!movePairs[i]) movePairs[i] = [undefined, undefined]
   }
 
-  const insightEntries = reviewing ? (reviewEntry ? [reviewEntry] : []) : analysisEntries.slice(-LIVE_FEED_SIZE)
+  // Intermediate is selective — silently-skipped moves (see
+  // shouldAutoExplainLive in skillTiers.ts) never leave 'idle', so they're
+  // filtered out here before the feed only shows what Nivenxa actually
+  // decided was worth flagging. Beginner still sees every move.
+  const feedSourceEntries =
+    activeTierId === 'intermediate' ? analysisEntries.filter((e) => e.explanationStatus !== 'idle') : analysisEntries
+  // Full history, not just the latest couple — older entries render
+  // collapsed to one line (see the feed rendering below), which is what
+  // keeps a long game's feed from dominating the panel instead of a hard cap.
+  const insightEntries = reviewing ? (reviewEntry ? [reviewEntry] : []) : feedSourceEntries
+  const latestInsightPly = feedSourceEntries[feedSourceEntries.length - 1]?.ply
+  // Whether the game has moves at all yet — distinguishes "hasn't started"
+  // (pre-first-move welcome) from "played moves, nothing notable lately"
+  // (Intermediate only) so the same welcome copy doesn't repeat oddly mid-game.
+  const midGameQuiet = activeTierId === 'intermediate' && insightEntries.length === 0 && analysisEntries.length > 0
 
   // Shown in the Insight tab before any move has been analyzed yet — Beginner
   // gets a concrete starting suggestion, everyone else (who reaches the live
@@ -743,24 +773,37 @@ export default function ChessPlayPage() {
           headline: 'Your first move',
           body: 'Start by moving a centre pawn or developing a knight. Controlling the centre gives your pieces more space.',
         }
-      : {
-          headline: 'Your move',
-          body: 'Control the centre, develop your pieces, and prepare your king for safety.',
-        }
+      : midGameQuiet
+        ? { headline: 'All quiet', body: 'Nothing to flag right now — keep playing your plan.' }
+        : {
+            headline: 'Your move',
+            body: 'Control the centre, develop your pieces, and prepare your king for safety.',
+          }
+
+  // Expert dashboard data — the most recent graded move of any color (drives
+  // the eval, frozen at the last *completed* move) and the most recent
+  // graded move specifically by the player (drives the classification chip,
+  // which persists across Nivenxa's own reply until the player moves again).
+  const qualityEntries = analysisEntries.filter((e): e is QualityMoveEntry => e.kind === 'quality')
+  const latestEntry = qualityEntries[qualityEntries.length - 1]
+  const latestPlayerEntry = [...qualityEntries].reverse().find((e) => e.color === humanColor)
+  const sanHistory = analysisEntries.map((e) => e.san)
 
   const showUndo = activeTierId === 'beginner' || activeTierId === 'intermediate'
-  const showOfferDraw = activeTierId !== 'beginner'
   const belowMinMoves = history.length < DRAW_OFFER_MIN_PLIES
   const inCooldown = declinedUntilPly !== null && history.length < declinedUntilPly
-  const drawOfferDisabled = drawOfferState === 'pending' || drawOfferState === 'accepted' || belowMinMoves || inCooldown
+  // Hidden entirely (not just disabled) until it's actually a real option —
+  // a permanently-greyed-out control with no context reads as broken. Once
+  // past the minimum, it stays visible even during a cooldown, which is a
+  // genuinely temporary/explained disabled state (see drawOfferHint).
+  const showOfferDraw = activeTierId !== 'beginner' && !belowMinMoves
+  const drawOfferDisabled = drawOfferState === 'pending' || drawOfferState === 'accepted' || inCooldown
   const drawOfferHint =
     drawOfferState === 'pending' || drawOfferState === 'accepted'
       ? undefined
-      : belowMinMoves
-        ? 'You can offer a draw later in the game.'
-        : inCooldown
-          ? 'You can offer again in a few moves.'
-          : undefined
+      : inCooldown
+        ? 'You can offer again in a few moves.'
+        : undefined
   const resignHint = playerHasMoved ? undefined : "You can resign once you've made a move."
 
   return (
@@ -772,7 +815,7 @@ export default function ChessPlayPage() {
             <div className={styles.setupDivider} />
 
             <div className={styles.setupArea}>
-              <p className={styles.tierPickerTitle}>Choose your opponent</p>
+              <p className={styles.tierPickerTitle}>Choose Your Level</p>
               <div className={styles.tierGrid}>
                 {SKILL_TIER_LIST.map((t) => (
                   <button
@@ -780,76 +823,67 @@ export default function ChessPlayPage() {
                     type="button"
                     className={`${styles.tierOption} ${draftTier === t.id ? styles.tierOptionSelected : ''}`}
                     onClick={() => handleDraftTierChange(t.id)}
+                    title={t.description}
                   >
-                    <span className={styles.tierOptionLabel}>{t.label}</span>
-                    <span className={styles.tierOptionDesc}>{t.description}</span>
+                    <span className={styles.tierOptionTop}>
+                      <span className={styles.tierOptionLabel}>{t.label}</span>
+                      {draftTier === t.id && (
+                        <span className={styles.tierOptionCheck} aria-hidden="true">
+                          ✓
+                        </span>
+                      )}
+                    </span>
+                    <span className={styles.tierOptionEyebrow}>{t.experienceLabel}</span>
+                    <span className={styles.tierOptionVerb}>{t.experienceVerb}</span>
                   </button>
                 ))}
               </div>
 
               {strengthSteps(draftTier) > 1 && (
                 <>
-                  <p className={styles.setupSectionTitle}>
-                    Strength: {draftStrength} of {strengthSteps(draftTier)}
-                  </p>
-                  <input
-                    type="range"
-                    className={styles.strengthSlider}
-                    min={1}
-                    max={strengthSteps(draftTier)}
-                    value={draftStrength}
-                    onChange={(e) => setDraftStrength(Number(e.target.value))}
-                    aria-label={`Strength within ${SKILL_TIERS[draftTier].label}, ${draftStrength} of ${strengthSteps(draftTier)}`}
-                  />
-                  <p className={styles.setupHint}>A higher strength plays more accurately within {SKILL_TIERS[draftTier].label}.</p>
-                </>
-              )}
-
-              {(draftTier === 'expert' || draftTier === 'master') && (
-                <>
-                  <p className={styles.setupSectionTitle}>Personality (optional)</p>
-                  <div className={styles.tierGrid}>
-                    <button
-                      type="button"
-                      className={`${styles.tierOption} ${draftPersonaSlug === null ? styles.tierOptionSelected : ''}`}
-                      onClick={() => setDraftPersonaSlug(null)}
-                    >
-                      <span className={styles.tierOptionLabel}>Plain</span>
-                      <span className={styles.tierOptionDesc}>Always the engine&rsquo;s single best move.</span>
-                    </button>
-                    {PERSONAS.map((p) => (
+                  <p className={styles.setupSectionTitle}>{SKILL_TIERS[draftTier].label.toUpperCase()} STRENGTH</p>
+                  <div className={styles.strengthSteps} role="group" aria-label={`Strength within ${SKILL_TIERS[draftTier].label}`}>
+                    {Array.from({ length: strengthSteps(draftTier) }, (_, i) => i + 1).map((n) => (
                       <button
-                        key={p.slug}
+                        key={n}
                         type="button"
-                        className={`${styles.tierOption} ${draftPersonaSlug === p.slug ? styles.tierOptionSelected : ''}`}
-                        onClick={() => setDraftPersonaSlug(p.slug)}
+                        className={`${styles.strengthStep} ${draftStrength === n ? styles.strengthStepSelected : ''}`}
+                        onClick={() => setDraftStrength(n)}
+                        aria-pressed={draftStrength === n}
                       >
-                        <span className={styles.tierOptionLabel}>{p.name}</span>
-                        <span className={styles.tierOptionDesc}>{p.description}</span>
+                        {n}
                       </button>
                     ))}
                   </div>
-                  <p className={styles.setupHint}>A persona samples from Nivenxa&rsquo;s top candidate moves instead of always the single best one.</p>
+                  <p className={styles.setupHint}>{strengthHint(draftTier, draftStrength, strengthSteps(draftTier))}</p>
                 </>
               )}
 
-              <p className={styles.setupSectionTitle}>Play as</p>
-              <div className={styles.segmentedRow}>
+              <p className={styles.setupSectionTitle}>Play As</p>
+              <div className={styles.colorGrid}>
                 {(['w', 'b', 'random'] as ColorChoice[]).map((c) => (
                   <button
                     key={c}
                     type="button"
-                    className={`${styles.segmentedOption} ${draftColor === c ? styles.segmentedOptionSelected : ''}`}
+                    className={`${styles.colorOption} ${draftColor === c ? styles.colorOptionSelected : ''}`}
                     onClick={() => setDraftColor(c)}
                   >
-                    {c === 'random' ? 'Random' : colorLabel(c)}
+                    {draftColor === c && (
+                      <span className={styles.colorOptionCheck} aria-hidden="true">
+                        ✓
+                      </span>
+                    )}
+                    <span className={styles.colorOptionIcon} aria-hidden="true">
+                      {colorIcon(c)}
+                    </span>
+                    <span className={styles.colorOptionLabel}>{c === 'random' ? 'Random' : colorLabel(c)}</span>
                   </button>
                 ))}
               </div>
 
               {draftTier !== 'beginner' && (
                 <>
-                  <p className={styles.setupSectionTitle}>Time control</p>
+                  <p className={styles.setupSectionTitle}>Game Pace</p>
                   <div className={styles.segmentedRow}>
                     {TIME_CONTROL_MODE_LIST.map((m) => (
                       <button
@@ -866,10 +900,8 @@ export default function ChessPlayPage() {
                     ))}
                   </div>
 
-                  <div
-                    className={styles.timeControlGrid}
-                    style={{ gridTemplateColumns: `repeat(${TIME_CONTROLS[draftMode].presets.length}, 1fr)` }}
-                  >
+                  <p className={styles.setupSectionTitle}>Time Control</p>
+                  <div className={styles.timeControlGrid}>
                     {TIME_CONTROLS[draftMode].presets.map((p, i) => (
                       <button
                         key={p.label}
@@ -877,12 +909,13 @@ export default function ChessPlayPage() {
                         className={`${styles.timeControlTile} ${draftPresetIndex === i ? styles.timeControlTileSelected : ''}`}
                         onClick={() => setDraftPresetIndex(i)}
                       >
-                        <span className={styles.timeControlLabel}>{p.label}</span>
-                        <span className={styles.timeControlCategory}>{p.category}</span>
+                        {p.label}
                       </button>
                     ))}
                   </div>
-                  <p className={styles.setupHint}>Minutes + increment per move</p>
+                  <p className={styles.setupHint}>
+                    {presetDescription(TIME_CONTROLS[draftMode].presets[draftPresetIndex] ?? TIME_CONTROLS[draftMode].presets[0])}
+                  </p>
                 </>
               )}
 
@@ -898,8 +931,7 @@ export default function ChessPlayPage() {
             <div className={styles.metaRow}>
               <span className={styles.metaText}>
                 {tierConfig.label}
-                {strengthSteps(activeTierId) > 1 && !activePersona ? ` · Strength ${activeStrength}/${strengthSteps(activeTierId)}` : ''}
-                {activePersona ? ` · ${activePersona.name}` : ''}
+                {strengthSteps(activeTierId) > 1 ? ` · Strength ${activeStrength}/${strengthSteps(activeTierId)}` : ''}
                 {activePreset ? ` · ${activePreset.label}` : ''}
               </span>
             </div>
@@ -939,18 +971,9 @@ export default function ChessPlayPage() {
               </div>
 
               <div className={styles.panelCol}>
-                {showGameComplete ? (
-                  <div className={styles.controls}>
-                    <button type="button" className={styles.controlBtn} onClick={handleNewGame}>
-                      Change Opponent
-                    </button>
-                  </div>
-                ) : (
-                  <div className={styles.controls}>
-                    <button type="button" className={styles.controlBtnPrimary} onClick={handleNewGameClick}>
-                      New Game
-                    </button>
-                    <div className={styles.controlsSecondary}>
+                {!showGameComplete && (
+                  <>
+                    <div className={styles.controls}>
                       {showUndo && (
                         <button
                           type="button"
@@ -968,10 +991,36 @@ export default function ChessPlayPage() {
                       >
                         Flip
                       </button>
+                      <div className={styles.moreMenuWrap} ref={moreMenuRef}>
+                        <button
+                          type="button"
+                          className={styles.moreMenuBtn}
+                          onClick={() => setMoreMenuOpen((open) => !open)}
+                          aria-label="More options"
+                          aria-expanded={moreMenuOpen}
+                        >
+                          •••
+                        </button>
+                        {moreMenuOpen && (
+                          <div className={styles.moreMenu} role="menu">
+                            <button
+                              type="button"
+                              className={styles.moreMenuItem}
+                              role="menuitem"
+                              onClick={() => {
+                                setMoreMenuOpen(false)
+                                handleNewGameClick()
+                              }}
+                            >
+                              New Game
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                    <div className={styles.panelDivider} />
+                  </>
                 )}
-                <div className={styles.panelDivider} />
 
                 {!showGameComplete && (
                   <>
@@ -1005,7 +1054,33 @@ export default function ChessPlayPage() {
                 )}
 
                 {!showGameComplete &&
-                  (explanationMode === 'live' ? (
+                  (activeTierId === 'expert' ? (
+                    <ExpertDashboard
+                      strength={activeStrength}
+                      totalSteps={strengthSteps('expert')}
+                      latestEntry={latestEntry}
+                      latestPlayerEntry={latestPlayerEntry}
+                      sanHistory={sanHistory}
+                      fen={fen}
+                      plyCount={history.length}
+                      movePairs={movePairs}
+                      selectedPly={selectedPly}
+                      onSelectMove={handleSelectMove}
+                      reviewing={reviewing}
+                      onBackToLive={handleBackToMoves}
+                    />
+                  ) : activeTierId === 'master' ? (
+                    <MasterLivePanel
+                      movePairs={movePairs}
+                      selectedPly={selectedPly}
+                      onSelectMove={handleSelectMove}
+                      turn={turn}
+                      plyCount={history.length}
+                      fen={fen}
+                      reviewing={reviewing}
+                      onBackToLive={handleBackToMoves}
+                    />
+                  ) : explanationMode === 'live' ? (
                     <div className={styles.panelBody}>
                       <div className={styles.panelTabs}>
                         <button
@@ -1038,15 +1113,10 @@ export default function ChessPlayPage() {
                                 <p className={styles.insightWelcomeText}>{firstMoveGuidance.body}</p>
                               </div>
                             ) : (
-                              insightEntries.map((entry) => (
-                                <div
-                                  key={entry.ply}
-                                  className={
-                                    entry.kind === 'quality'
-                                      ? `${styles.feedRow} ${styles[`feedRow_${classificationTone(entry.classification)}`]}`
-                                      : styles.feedPlain
-                                  }
-                                >
+                              insightEntries.map((entry) => {
+                                const isLatest = !reviewing && entry.ply === latestInsightPly
+                                const isExpanded = reviewing || isLatest || expandedHistoryPlies.has(entry.ply)
+                                const moverLine = (
                                   <span className={styles.entryMover}>
                                     <span className={styles.entryMoverName}>
                                       {entry.color === humanColor ? 'You' : 'Nivenxa'}
@@ -1057,61 +1127,60 @@ export default function ChessPlayPage() {
                                       {entry.san}
                                     </span>
                                   </span>
-                                  {entry.explanationStatus === 'idle' && (
-                                    <span className={styles.calloutLoading}>Waiting…</span>
-                                  )}
-                                  {entry.explanationStatus === 'loading' && (
-                                    <span className={styles.calloutLoading}>{entry.san} — thinking it through…</span>
-                                  )}
-                                  {entry.explanationStatus === 'loaded' && <ExplanationBody entry={entry} />}
-                                  {entry.explanationStatus === 'error' && (
-                                    <span className={styles.calloutError}>
-                                      Couldn&apos;t load explanation for {entry.san}.
-                                    </span>
-                                  )}
-                                </div>
-                              ))
+                                )
+
+                                return (
+                                  <div
+                                    key={entry.ply}
+                                    className={
+                                      entry.kind === 'quality'
+                                        ? `${styles.feedRow} ${styles[`feedRow_${classificationTone(entry.classification)}`]}`
+                                        : styles.feedPlain
+                                    }
+                                  >
+                                    {isLatest || reviewing ? (
+                                      <div className={styles.historyRowHeader}>{moverLine}</div>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        className={styles.historyRowHeader}
+                                        onClick={() => toggleHistoryEntry(entry.ply)}
+                                        aria-expanded={isExpanded}
+                                      >
+                                        <span className={styles.historyChevron} aria-hidden="true">
+                                          {isExpanded ? '▼' : '›'}
+                                        </span>
+                                        {moverLine}
+                                      </button>
+                                    )}
+
+                                    {entry.explanationStatus === 'idle' && (
+                                      <span className={styles.calloutLoading}>Waiting…</span>
+                                    )}
+                                    {entry.explanationStatus === 'loading' && (
+                                      <span className={styles.calloutLoading}>{entry.san} — thinking it through…</span>
+                                    )}
+                                    {entry.explanationStatus === 'loaded' &&
+                                      (isExpanded ? (
+                                        <ExplanationBody entry={entry} />
+                                      ) : (
+                                        <p className={styles.historySummary}>{collapsedSummary(entry)}</p>
+                                      ))}
+                                    {entry.explanationStatus === 'error' && (
+                                      <span className={styles.calloutError}>
+                                        Couldn&apos;t load explanation for {entry.san}.
+                                      </span>
+                                    )}
+                                  </div>
+                                )
+                              })
                             )}
                           </div>
                         </>
                       ) : (
                         <>
                           <p className={styles.panelTitle}>Moves</p>
-                          {movePairs.length === 0 ? (
-                            <div className={styles.feedEmpty}>
-                              <span className={styles.calloutPlaceholder}>Play a move to see it listed here.</span>
-                            </div>
-                          ) : (
-                            <div className={styles.movesTable}>
-                              {movePairs.map(([w, b], i) => (
-                                <div key={i} className={styles.moveRow}>
-                                  <span className={styles.moveNum}>{i + 1}</span>
-                                  {w ? (
-                                    <button
-                                      type="button"
-                                      className={`${styles.moveCell} ${selectedPly === w.ply ? styles.moveCellSelected : ''}`}
-                                      onClick={() => handleSelectMove(w)}
-                                    >
-                                      {w.san}
-                                    </button>
-                                  ) : (
-                                    <span className={styles.moveCell} />
-                                  )}
-                                  {b ? (
-                                    <button
-                                      type="button"
-                                      className={`${styles.moveCell} ${selectedPly === b.ply ? styles.moveCellSelected : ''}`}
-                                      onClick={() => handleSelectMove(b)}
-                                    >
-                                      {b.san}
-                                    </button>
-                                  ) : (
-                                    <span className={styles.moveCell} />
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          )}
+                          <MovePairsTable movePairs={movePairs} selectedPly={selectedPly} onSelectMove={handleSelectMove} />
                         </>
                       )}
                     </div>
@@ -1119,16 +1188,9 @@ export default function ChessPlayPage() {
                     <div className={styles.panelBody}>
                       <p className={styles.panelTitle}>{panelTitleFor(activeTierId)}</p>
                       <div className={styles.panelPlaceholder}>
-                        {activeTierId === 'master' ? (
-                          <div>
-                            <p className={styles.placeholderEmphasis}>Game in progress</p>
-                            <span className={styles.calloutPlaceholder}>Analysis will be available when the game ends.</span>
-                          </div>
-                        ) : (
-                          <span className={styles.calloutPlaceholder}>
-                            Live coaching is off for this time control — full analysis is available after the game.
-                          </span>
-                        )}
+                        <span className={styles.calloutPlaceholder}>
+                          Live coaching is off for this time control — full analysis is available after the game.
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -1185,18 +1247,18 @@ export default function ChessPlayPage() {
                   <p className={styles.confirmModalText}>
                     {pendingConfirm === 'resign'
                       ? 'The game will end and Nivenxa will win.'
-                      : 'This will end the current game.'}
+                      : "Your current game hasn't finished."}
                   </p>
                   <div className={styles.confirmModalActions}>
                     <button type="button" className={styles.controlBtn} onClick={() => setPendingConfirm(null)}>
-                      Cancel
+                      {pendingConfirm === 'resign' ? 'Cancel' : 'Continue Playing'}
                     </button>
                     <button
                       type="button"
                       className={styles.controlBtnDanger}
                       onClick={pendingConfirm === 'resign' ? handleResignConfirm : handleNewGame}
                     >
-                      {pendingConfirm === 'resign' ? 'Resign Game' : 'New Game'}
+                      {pendingConfirm === 'resign' ? 'Resign Game' : 'Start New Game'}
                     </button>
                   </div>
                 </div>

@@ -1,16 +1,24 @@
 'use client'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { createLivingBrowserClient } from '@/lib/living/supabaseBrowser'
 import theme from '../LivingTheme.module.scss'
 import styles from './AuthForm.module.scss'
 
+const RESEND_COOLDOWN_SECONDS = 30
+const MAX_RESENDS = 3
+
 /**
  * Shared by /living/login and /living/signup — both are the same Supabase
- * email-OTP mechanism, differing only in `shouldCreateUser` and what
- * happens after verification (the parent Server Component re-runs on
- * router.refresh() and redirects from there — see login/page.tsx and
- * signup/page.tsx).
+ * email-OTP mechanism, differing only in `shouldCreateUser`. After a
+ * successful verify this always navigates to /living/home explicitly —
+ * requireMembership() there redirects on to /living/signup by itself if
+ * this account doesn't have a membership yet (e.g. a brand-new signup),
+ * so one target works for both modes. Deliberately not just
+ * router.refresh() and letting the current page's own Server Component
+ * redirect itself: that relies on this page's next render seeing the
+ * just-written session cookie, which raced and silently failed to
+ * navigate at all in practice.
  *
  * Email-only for now — phone OTP needs an SMS gateway (Twilio/MSG91/etc.)
  * wired up in the Supabase dashboard first, which isn't done yet. Dropped
@@ -24,6 +32,27 @@ export default function OtpForm({ mode }: { mode: 'login' | 'signup' }) {
   const [step, setStep] = useState<'contact' | 'code'>('contact')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [resendCount, setResendCount] = useState(0)
+  const [cooldown, setCooldown] = useState(0)
+  const cooldownTimer = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => () => {
+    if (cooldownTimer.current) clearInterval(cooldownTimer.current)
+  }, [])
+
+  function startCooldown() {
+    setCooldown(RESEND_COOLDOWN_SECONDS)
+    if (cooldownTimer.current) clearInterval(cooldownTimer.current)
+    cooldownTimer.current = setInterval(() => {
+      setCooldown((s) => {
+        if (s <= 1) {
+          if (cooldownTimer.current) clearInterval(cooldownTimer.current)
+          return 0
+        }
+        return s - 1
+      })
+    }, 1000)
+  }
 
   async function requestCode(e: FormEvent) {
     e.preventDefault()
@@ -40,7 +69,24 @@ export default function OtpForm({ mode }: { mode: 'login' | 'signup' }) {
       )
       return
     }
+    setResendCount(0)
+    startCooldown()
     setStep('code')
+  }
+
+  async function resendCode() {
+    if (cooldown > 0 || resendCount >= MAX_RESENDS || pending) return
+    setError(null)
+    setPending(true)
+    const supabase = createLivingBrowserClient()
+    const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: mode === 'signup' } })
+    setPending(false)
+    if (error) {
+      setError(error.message)
+      return
+    }
+    setResendCount((n) => n + 1)
+    startCooldown()
   }
 
   async function verifyCode(e: FormEvent) {
@@ -54,6 +100,7 @@ export default function OtpForm({ mode }: { mode: 'login' | 'signup' }) {
       setError(error.message)
       return
     }
+    router.push('/living/home')
     router.refresh()
   }
 
@@ -81,9 +128,27 @@ export default function OtpForm({ mode }: { mode: 'login' | 'signup' }) {
         <button type="submit" className={theme.button} disabled={pending} style={{ width: '100%' }}>
           {pending ? 'Verifying…' : 'Verify & continue'}
         </button>
-        <button type="button" className={styles.switchStep} onClick={() => setStep('contact')}>
-          ← Use a different email
-        </button>
+        <div className={styles.secondaryRow}>
+          {resendCount < MAX_RESENDS ? (
+            <button type="button" className={styles.switchStep} onClick={resendCode} disabled={cooldown > 0 || pending}>
+              {cooldown > 0 ? `Resend code (${cooldown}s)` : 'Resend code'}
+            </button>
+          ) : (
+            <span className={styles.hint}>Maximum resend attempts reached.</span>
+          )}
+          <button
+            type="button"
+            className={styles.switchStep}
+            onClick={() => {
+              if (cooldownTimer.current) clearInterval(cooldownTimer.current)
+              setCooldown(0)
+              setResendCount(0)
+              setStep('contact')
+            }}
+          >
+            ← Use a different email
+          </button>
+        </div>
       </form>
     )
   }

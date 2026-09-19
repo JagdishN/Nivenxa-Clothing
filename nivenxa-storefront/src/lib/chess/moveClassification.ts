@@ -43,3 +43,14 @@ export function accuracyFromEntries(entries: QualityMoveEntry[]): number {
   const total = entries.reduce((sum, e) => sum + CLASSIFICATION_WEIGHT[e.classification], 0)
   return Math.round(total / entries.length)
 }
+
+/** Shared presentational mapping — used by Play's feed/review rows and the Expert dashboard's classification chip. */
+export function classificationTone(c: MoveClassification): 'success' | 'warning' | 'danger' {
+  if (c === 'inaccuracy') return 'warning'
+  if (c === 'mistake' || c === 'blunder') return 'danger'
+  return 'success'
+}
+
+export function formatClassification(c: MoveClassification): string {
+  return c.charAt(0).toUpperCase() + c.slice(1)
+}

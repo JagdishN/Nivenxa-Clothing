@@ -62,15 +62,27 @@ Always fill both fields, whether the move was strong or weak.`
       ? ' Also fill "remember": one short standalone tip for the opening/middlegame principle this move illustrates (not specific to this exact position) — a beginner should be able to apply it in a future game.'
       : ' Omit "remember" (set it to null) — this is for a more experienced player who doesn\'t need standing tips.'
 
+  // An "inaccuracy" is an ordinary suboptimal move, not a real error — most
+  // moves in most games are some flavor of this, so headline language here
+  // needs to stay low-key or a player feels like they're constantly doing
+  // something wrong. "mistake"/"blunder" are genuinely meaningful and get
+  // direct, plainer verdict words instead.
+  const headlineInstruction =
+    classification === 'inaccuracy'
+      ? `<the move in SAN followed by \\" — \\" and a gentle, non-alarming phrase — pick whichever best fits from: \\"Playable\\", \\"Safe, but passive\\", \\"Good idea, but there's a stronger option\\", \\"Worth reconsidering\\" (a close variant in that same low-key register is fine too) — never a harsh verdict like \\"Too passive\\" or \\"Weak\\">`
+      : classification === 'mistake' || classification === 'blunder'
+        ? `<the move in SAN followed by \\" — \\" and a direct verdict: \\"${move} — Mistake\\", \\"${move} — Missed opportunity\\" (whichever fits better), or, only for an actual blunder, \\"${move} — Blunder\\">`
+        : `<the move in SAN followed by \\" — \\" and a 2-5 word verdict, e.g. \\"${move} — Good opening move\\">`
+
   return `${context}
 
 Write a short, scannable explanation of this move for a player learning the game, playing live. ${JARGON_RULE}
 Respond with ONLY a single JSON object, no markdown fences, no other text, matching exactly this shape:
 {
-  "headline": "<the move in SAN followed by \\" — \\" and a 2-5 word verdict, e.g. \\"${move} — Good opening move\\" or \\"${move} — Be careful\\">",
+  "headline": "${headlineInstruction}",
   "body": "<one short sentence on what this move accomplishes>",
   "bullets": ${isWeak ? 'null' : '<array of 2-3 short phrases (3-6 words each) on why this move works, or null if the move was weak>'},
-  "suggestion": ${isWeak ? `"<one short sentence recommending what to consider instead${wantsAlternative ? `, informed by ${bestMove} without naming it as \\"the engine's move\\"` : ''}>"` : 'null'},
+  "suggestion": ${isWeak ? `"<one short, encouraging sentence recommending what to consider instead${wantsAlternative ? `, informed by ${bestMove} without naming it as \\"the engine's move\\"` : ''}${classification === 'inaccuracy' ? ' — keep the tone light, this was a minor, ordinary choice, not an error' : ''}>"` : 'null'},
   "remember": "<see instruction below, or null>"
 }
 ${isWeak ? 'The move was weak — fill "suggestion", leave "bullets" null.' : 'The move was solid — fill "bullets", leave "suggestion" null.'}${richExtra}`

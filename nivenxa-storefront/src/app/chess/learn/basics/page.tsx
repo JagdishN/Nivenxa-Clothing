@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { BASICS } from '@/lib/chess/basics/data'
+import BasicsGrid from './BasicsGrid'
 import styles from './BasicsList.module.scss'
 
 export default function ChessLearnBasicsPage() {
@@ -13,15 +14,7 @@ export default function ChessLearnBasicsPage() {
         <p className={styles.subtext}>Learn the board, the pieces, and how the game works — one lesson at a time.</p>
       </section>
 
-      <div className={styles.grid}>
-        {BASICS.map((lesson, i) => (
-          <Link key={lesson.slug} href={`/chess/learn/basics/${lesson.slug}`} className={styles.card}>
-            <span className={styles.cardNumber}>{i + 1}</span>
-            <h2 className={styles.cardTitle}>{lesson.name}</h2>
-            <p className={styles.cardDesc}>{lesson.summary}</p>
-          </Link>
-        ))}
-      </div>
+      <BasicsGrid lessons={BASICS} />
     </main>
   )
 }

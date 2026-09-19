@@ -207,12 +207,18 @@ async function deleteExpenseCategoryAction(id: string) {
   await setLivingNotice('Removed.')
 }
 
-/** How much of an expense's future-cycle rollout is left, in plain words — "—" for a one-off that was never marked to carry forward. */
-function carryForwardLabel(e: Expense): string {
-  if (!e.carry_forward_months) return '—'
-  if (e.carry_forward_months === 1) return e.carry_forward_remaining ? 'Next cycle' : 'Applied'
+/** Whether this expense carries forward into future bill cycles at all — the
+ * scannable Yes/No a grid column needs — plus the split/remaining detail as
+ * a secondary line, so "split over 3 months, 2 left" isn't lost, just no
+ * longer the FIRST thing the column says. */
+function carryForwardLabel(e: Expense): { yesNo: 'Yes' | 'No'; detail: string | null } {
+  if (!e.carry_forward_months) return { yesNo: 'No', detail: null }
+  if (e.carry_forward_months === 1) return { yesNo: 'Yes', detail: e.carry_forward_remaining ? null : 'Applied' }
   const remaining = e.carry_forward_remaining ?? 0
-  return remaining > 0 ? `Splits over ${e.carry_forward_months} mo. (${remaining} left)` : `Split over ${e.carry_forward_months} mo. (done)`
+  return {
+    yesNo: 'Yes',
+    detail: remaining > 0 ? `Split over ${e.carry_forward_months} mo. (${remaining} left)` : `Split over ${e.carry_forward_months} mo. (done)`,
+  }
 }
 
 function categoryBreakdown(expenses: Expense[]): { category: string; total: number }[] {
@@ -432,15 +438,21 @@ export default async function LivingExpensesPage() {
                         shouldn&rsquo;t recur.
                       </p>
                       <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}>
-                          <input type="checkbox" name="include_in_next_cycle" />
+                        <label className={theme.toggleRow}>
+                          <input type="checkbox" name="include_in_next_cycle" className={theme.toggleInput} />
+                          <span className={theme.toggleTrack}>
+                            <span className={theme.toggleThumb} />
+                          </span>
                           <span className={theme.label} style={{ margin: 0 }}>
                             Include in next bill cycle
                           </span>
                         </label>
                         <div>
-                          <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}>
-                            <input type="checkbox" name="split_across_months" />
+                          <label className={theme.toggleRow}>
+                            <input type="checkbox" name="split_across_months" className={theme.toggleInput} />
+                            <span className={theme.toggleTrack}>
+                              <span className={theme.toggleThumb} />
+                            </span>
                             <span className={theme.label} style={{ margin: 0 }}>
                               Split across months
                             </span>
@@ -482,13 +494,15 @@ export default async function LivingExpensesPage() {
                           <th>Paid to</th>
                           <th className={theme.num}>Amount</th>
                           <th>Method</th>
-                          <th>Future bills</th>
+                          <th>Include in next cycle</th>
                           <th>Reference</th>
                           <th></th>
                         </tr>
                       </thead>
                       <tbody>
-                        {expenses.map((e) => (
+                        {expenses.map((e) => {
+                          const carryForward = carryForwardLabel(e)
+                          return (
                           <tr key={e.id}>
                             <td>{new Date(e.expense_date).toLocaleDateString('en-IN')}</td>
                             <td>{e.description}</td>
@@ -497,7 +511,10 @@ export default async function LivingExpensesPage() {
                             <td>{e.paid_to ?? '—'}</td>
                             <td className={theme.num}>{formatCurrency(e.amount)}</td>
                             <td>{formatPaymentMethod(e.method)}</td>
-                            <td>{carryForwardLabel(e)}</td>
+                            <td>
+                              {carryForward.yesNo}
+                              {carryForward.detail && <span className={theme.muted}> · {carryForward.detail}</span>}
+                            </td>
                             <td>{e.reference_note ?? '—'}</td>
                             <td>
                               <form>
@@ -512,7 +529,8 @@ export default async function LivingExpensesPage() {
                               </form>
                             </td>
                           </tr>
-                        ))}
+                          )
+                        })}
                         {expenses.length === 0 && (
                           <tr>
                             <td colSpan={10} className={theme.muted}>

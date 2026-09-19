@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { IconPencil } from '@tabler/icons-react'
+import { IconCheck, IconPencil, IconX } from '@tabler/icons-react'
 import type { Flat } from '@/lib/living/types'
 import MaterialIcon from '../../MaterialIcon'
 import theme from '../../LivingTheme.module.scss'
@@ -109,12 +109,14 @@ export default function FlatRow({
               ))}
             </select>
           </div>
-          <button type="submit" className={theme.button}>
-            Save
-          </button>
-          <button type="button" className={theme.buttonGhost} onClick={() => setEditing(false)}>
-            Cancel
-          </button>
+          <div style={{ display: 'flex', gap: '0.2rem' }}>
+            <button type="submit" className={theme.iconButtonSuccess} title="Save">
+              <IconCheck size={18} stroke={1.75} />
+            </button>
+            <button type="button" className={theme.iconButtonDanger} title="Cancel" onClick={() => setEditing(false)}>
+              <IconX size={18} stroke={1.75} />
+            </button>
+          </div>
         </form>
       </td>
     </tr>

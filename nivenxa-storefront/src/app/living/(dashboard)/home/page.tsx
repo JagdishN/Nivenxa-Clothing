@@ -61,8 +61,16 @@ export default async function LivingAppHomePage() {
 
   const monthlyExpenses = sumExpenses(periodExpenses)
   const collected = bills.reduce((sum, b) => sum + b.amount_paid, 0)
-  const outstanding = bills.reduce((sum, b) => sum + b.balance_remaining, 0)
+  // Summed across every bill, some flats' balance_remaining can be negative
+  // (an overpayment/advance) — if that credit outweighs what other flats
+  // still owe, the raw sum goes negative even though real money is still
+  // outstanding somewhere. A negative "Outstanding" reads as broken, not as
+  // "the community is net ahead", so clamp the DISPLAYED figure at zero
+  // rather than showing a confusing negative or a misleading abs() flip.
+  const outstandingRaw = bills.reduce((sum, b) => sum + b.balance_remaining, 0)
+  const outstanding = Math.max(0, outstandingRaw)
   const flatsPaidCount = bills.filter((b) => b.payment_status === 'paid').length
+  const nonBillableFlats = flats.length - billableFlats.length
 
   return (
     <>
@@ -95,11 +103,16 @@ export default async function LivingAppHomePage() {
           </div>
         </div>
         <div className={theme.card}>
-          <div className={styles.statLabel}>Flats paid</div>
+          <div className={styles.statLabel}>Billable flats paid</div>
           <div className={styles.statValue}>
             {flatsPaidCount} / {billableFlats.length}
           </div>
           <div className={styles.statSub}>
+            {nonBillableFlats > 0 ? (
+              <span className={theme.muted}>
+                {nonBillableFlats} flat{nonBillableFlats === 1 ? '' : 's'} not billed separately ·{' '}
+              </span>
+            ) : null}
             <Link href="/living/bills">Open →</Link>
           </div>
         </div>

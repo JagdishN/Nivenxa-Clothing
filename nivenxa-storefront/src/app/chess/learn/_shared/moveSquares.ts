@@ -17,6 +17,13 @@ export function computeMoveSquares(moves: string[], fen?: string): MoveSquares[]
   })
 }
 
+/** The FEN after replaying the first `count` moves (SAN) from `fen` (or the standard start position). `count` of 0 returns the starting position unchanged. */
+export function fenAfter(moves: string[], count: number, fen?: string): string {
+  const chess = fen ? new Chess(fen) : new Chess()
+  for (const san of moves.slice(0, count)) chess.move(san)
+  return chess.fen()
+}
+
 export const PIECE_NAME: Record<string, string> = {
   p: 'pawn',
   n: 'knight',

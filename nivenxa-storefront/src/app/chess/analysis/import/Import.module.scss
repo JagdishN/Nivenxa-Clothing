@@ -1,0 +1,508 @@
+@use '../../../../styles/variables' as v;
+
+.page {
+  composes: pageBackground from '../../ChessTheme.module.scss';
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+// Same width formula as .formWrap below (not the old narrower max-width +
+// its own padding) so the heading's left edge lines up exactly with the
+// cards' left edge once this is left-aligned — matching the rest of the
+// site, where every opened sub-page (Learn's category/lesson pages, etc.)
+// is left-aligned and only the top-level hub stays centered.
+.hero {
+  position: relative;
+  z-index: 1;
+  width: min(92vw, 1240px);
+  margin: 0 auto;
+  padding: clamp(1rem, 2vw, 1.5rem) 0 0.5rem;
+  text-align: left;
+}
+
+.breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(31, 27, 58, 0.5);
+  text-decoration: none;
+  margin-bottom: 0.3rem;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--chess-purple);
+  }
+}
+
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: clamp(0.6rem, 1vw, 0.7rem);
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--chess-purple);
+  margin-bottom: 0.5rem;
+}
+
+.heading {
+  font-family: var(--font-serif);
+  font-size: clamp(1.7rem, 3.2vw, 2.2rem);
+  font-weight: 400;
+  color: var(--chess-deep);
+  margin-bottom: 0.5rem;
+}
+
+.subtext {
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: rgba(31, 27, 58, 0.68);
+}
+
+// ─── Form ──────────────────────────────────────────────────────────────
+// Widened deliberately beyond the hero above it — a narrow instruction
+// funneling into a wide working area, not a form stretched to match a
+// headline. min()-based rather than a fixed max-width so the workspace
+// actually uses the space on a large monitor instead of floating in a
+// fixed-width island with dead margins on either side.
+.formWrap {
+  position: relative;
+  z-index: 1;
+  width: min(92vw, 1240px);
+  margin: 0 auto;
+  padding: 0.5rem 0 clamp(1.75rem, 3.5vw, 2.5rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+// Upload and Paste are peers — one grid with named areas, so the "OR" pill
+// is a real grid item (not absolutely positioned) and the whole thing
+// reflows to a single stacked column below `md` without extra rules. The
+// OR column is fixed-width rather than `auto` so it centers on the two
+// cards alone, never drifting with unrelated content below the grid.
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    'upload'
+    'or'
+    'paste';
+  gap: 1rem;
+  align-items: stretch;
+
+  @include v.md {
+    grid-template-columns: 1fr 64px 1fr;
+    grid-template-areas: 'upload or paste';
+    gap: 1.75rem;
+  }
+}
+
+.uploadArea,
+.pasteArea {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 1.5rem 2rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(91, 46, 145, 0.18);
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 10px 40px rgba(91, 46, 145, 0.06);
+  transition: opacity 0.25s ease, filter 0.25s ease;
+}
+
+// Mutual exclusivity as a visual cue, not just text — once one method is
+// active, the other quietly recedes rather than staying at full prominence.
+.cardInactive {
+  opacity: 0.6;
+  filter: saturate(0.75);
+}
+
+.uploadArea {
+  grid-area: upload;
+}
+
+.pasteArea {
+  grid-area: paste;
+}
+
+.orDivider {
+  grid-area: or;
+  align-self: center;
+  justify-self: center;
+}
+
+.orPill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: rgba(31, 27, 58, 0.4);
+  background: var(--chess-lavender-bg, #f4eefa);
+  border: 1px solid rgba(91, 46, 145, 0.14);
+}
+
+.cardHeading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 400;
+  color: var(--chess-deep);
+  margin: 0;
+}
+
+// ─── Upload sub-section ───────────────────────────────────────────────────
+.dropzone {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 176px;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  border: 1.5px dashed rgba(91, 46, 145, 0.24);
+  background: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+
+  &:hover {
+    border-color: var(--chess-purple);
+    background: rgba(91, 46, 145, 0.05);
+  }
+}
+
+.dropzoneActive {
+  border-color: var(--chess-purple);
+  border-style: solid;
+  background: rgba(91, 46, 145, 0.08);
+  transform: scale(1.01);
+}
+
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.dropzoneText {
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--chess-deep);
+}
+
+.dropzoneSub {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: rgba(31, 27, 58, 0.4);
+}
+
+.chooseFileBtn {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--chess-purple);
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--chess-purple);
+  background: rgba(255, 255, 255, 0.7);
+  margin-top: 0.2rem;
+}
+
+.formatHint {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: rgba(31, 27, 58, 0.4);
+  margin: 0;
+  text-align: center;
+}
+
+// ─── Uploaded state ─────────────────────────────────────────────────────
+.uploaded {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  min-height: 176px;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(91, 46, 145, 0.25);
+  background: rgba(91, 46, 145, 0.05);
+  text-align: center;
+}
+
+.uploadedThumb {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(91, 46, 145, 0.25);
+  margin-bottom: 0.1rem;
+}
+
+.uploadedCheck {
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--chess-success);
+  margin: 0;
+}
+
+.uploadedName {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--chess-deep);
+  margin: 0;
+  word-break: break-all;
+}
+
+.uploadedMeta {
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  color: rgba(31, 27, 58, 0.55);
+  margin: 0;
+  max-width: 220px;
+}
+
+.uploadedActions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.smallBtn,
+.smallBtnGhost {
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.smallBtn {
+  color: var(--chess-white-soft);
+  border: none;
+  composes: ctaButtonGradient from '../../ChessTheme.module.scss';
+}
+
+.smallBtnGhost {
+  color: rgba(31, 27, 58, 0.55);
+  border: 1px solid rgba(91, 46, 145, 0.25);
+  background: rgba(255, 255, 255, 0.6);
+
+  &:hover {
+    border-color: var(--chess-purple);
+    color: var(--chess-purple);
+  }
+}
+
+// ─── Paste sub-section ────────────────────────────────────────────────────
+// The example is rendered as a styled overlay rather than a native
+// `placeholder` — a plain placeholder string can't give "Example" its own
+// weight/color distinct from the sample moves, and at this size the two
+// were reading as almost-real content instead of a hint.
+.textareaWrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+}
+
+.textarea {
+  flex: 1;
+  min-height: 176px;
+  width: 100%;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--chess-deep);
+  padding: 0.85rem 1rem;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(91, 46, 145, 0.22);
+  background: rgba(255, 255, 255, 0.7);
+  resize: vertical;
+  text-align: left;
+
+  &:focus {
+    outline: none;
+    border-color: var(--chess-purple);
+    box-shadow: 0 0 0 3px rgba(91, 46, 145, 0.12);
+  }
+}
+
+.textareaPlaceholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.85rem 1rem;
+  pointer-events: none;
+}
+
+.placeholderLead {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: rgba(31, 27, 58, 0.42);
+}
+
+.placeholderExampleLabel {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(31, 27, 58, 0.3);
+  margin-top: 0.25rem;
+}
+
+.placeholderExample {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: rgba(31, 27, 58, 0.32);
+  white-space: pre-line;
+}
+
+.moveCountHint,
+.moveCountHintOk {
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.moveCountHint {
+  color: rgba(31, 27, 58, 0.45);
+}
+
+.moveCountHintOk {
+  color: var(--chess-success);
+}
+
+// ─── Conflict banner ────────────────────────────────────────────────────
+.conflictBanner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(179, 84, 63, 0.35);
+  background: rgba(179, 84, 63, 0.08);
+
+  p {
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--chess-deep);
+    margin: 0;
+  }
+
+  .conflictTitle {
+    font-weight: 800;
+  }
+}
+
+.conflictActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+// ─── Error / CTA ────────────────────────────────────────────────────────
+.error {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--chess-danger);
+  margin: 0;
+  text-align: center;
+}
+
+.ctaRow {
+  display: flex;
+  justify-content: center;
+}
+
+.submitBtn {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--chess-white-soft);
+  min-width: 270px;
+  padding: 0.85rem 1.8rem;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  composes: ctaButtonGradient from '../../ChessTheme.module.scss';
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(91, 46, 145, 0.28);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// ─── Reconstruct progress ──────────────────────────────────────────────
+.progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.progressHeadline {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 400;
+  color: var(--chess-deep);
+  margin: 0;
+}
+
+.progressSteps {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.progressStep,
+.progressStepDone {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.progressStep {
+  color: rgba(31, 27, 58, 0.35);
+}
+
+.progressStepDone {
+  color: var(--chess-success);
+}

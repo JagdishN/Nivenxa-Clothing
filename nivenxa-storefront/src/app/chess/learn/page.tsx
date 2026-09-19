@@ -5,7 +5,7 @@ const CATEGORIES = [
   {
     slug: 'basics',
     title: 'Chess Basics',
-    desc: 'Learn the board, pieces, moves, and how the game works.',
+    desc: 'Learn the board, meet the pieces, see how they move, and learn how to win.',
     flow: 'Learn → Try the moves yourself',
   },
   {
