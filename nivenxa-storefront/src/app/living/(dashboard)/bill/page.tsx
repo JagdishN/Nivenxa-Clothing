@@ -2,9 +2,10 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { requireMembership } from '@/lib/living/auth'
 import { setLivingError, setLivingNotice } from '@/lib/living/flash'
-import { formatCurrency, formatMonthLabel, formatPaymentStatus, formatPeriodLabel, monthKeyFor } from '@/lib/living/format'
+import { formatBalanceMeaning, formatCurrency, formatMonthLabel, formatPaymentStatus, formatPeriodLabel, monthKeyFor } from '@/lib/living/format'
 import { riseStreak } from '@/lib/living/billing'
-import { computeBillForFlat, getBillHistoryForFlat, getCurrentMaintenancePeriod, getEffectiveSlabConfig, getFlats, getReadingHistory } from '@/lib/living/queries'
+import { computeBillForFlat, getBillHistoryForFlat, getCurrentMaintenancePeriod, getEffectiveSlabConfig, getFlats, getReadingHistory, getReimbursementBalanceForFlat } from '@/lib/living/queries'
+import type { PaymentStatus } from '@/lib/living/types'
 import theme from '../../LivingTheme.module.scss'
 import homeStyles from '../Home.module.scss'
 
@@ -12,6 +13,13 @@ function disputeStatusPillClass(status: string): string {
   if (status === 'resolved') return theme.pillOk
   if (status === 'reviewed') return theme.pill
   return theme.pillBrass
+}
+
+function paymentStatusPillClass(status: PaymentStatus): string {
+  if (status === 'paid') return theme.pillOk
+  if (status === 'partial') return theme.pillBrass
+  if (status === 'not_billed') return theme.pill
+  return theme.pillFlag
 }
 
 async function setNoteAction(formData: FormData) {
@@ -63,12 +71,13 @@ export default async function LivingBillPage() {
   const flat = flats.find((f) => f.id === membership.flat_id)
   if (!flat) redirect('/living/home')
 
-  const [bill, history, slab, currentPeriod, billHistory] = await Promise.all([
+  const [bill, history, slab, currentPeriod, billHistory, reimbursementBalance] = await Promise.all([
     computeBillForFlat(supabase, apartment, flat, month),
     getReadingHistory(supabase, flat.id, 6),
     getEffectiveSlabConfig(supabase, apartment.id, month),
     getCurrentMaintenancePeriod(supabase, apartment.id),
     getBillHistoryForFlat(supabase, apartment, flat),
+    getReimbursementBalanceForFlat(supabase, apartment.id, flat.id),
   ])
   const pastBills = billHistory.filter((entry) => entry.period.id !== currentPeriod?.id)
 
@@ -163,6 +172,12 @@ export default async function LivingBillPage() {
               <span className={theme.num}>−{formatCurrency(bill.advance_payment)}</span>
             </div>
           )}
+          {bill.reimbursement_credit !== 0 && (
+            <div className={homeStyles.billLine}>
+              <span>Reimbursement adjustment</span>
+              <span className={theme.num}>−{formatCurrency(bill.reimbursement_credit)}</span>
+            </div>
+          )}
           <div className={homeStyles.billTotal}>
             <span>Total due</span>
             <span className={theme.num}>{formatCurrency(bill.total_due)}</span>
@@ -174,15 +189,16 @@ export default async function LivingBillPage() {
             </div>
           )}
           <div className={homeStyles.billLine}>
-            <span>
-              Balance{' '}
-              <span className={bill.payment_status === 'paid' ? theme.pillOk : bill.payment_status === 'partial' ? theme.pillBrass : theme.pillFlag}>
-                {formatPaymentStatus(bill.payment_status)}
-              </span>
-            </span>
-            <span className={theme.num}>{formatCurrency(bill.balance_remaining)}</span>
+            <span className={paymentStatusPillClass(bill.payment_status)}>{formatPaymentStatus(bill.payment_status)}</span>
+            <span className={theme.num}>{formatBalanceMeaning(bill.balance_remaining, reimbursementBalance, { audience: 'resident' })}</span>
           </div>
         </div>
+        {reimbursementBalance > 0.005 && (
+          <p className={theme.muted} style={{ marginTop: '0.75rem' }}>
+            This is separate from your Bill Status above — see <Link href="/living/my-account">Account History</Link> for the
+            expenses behind it.
+          </p>
+        )}
         {bill.water_fallback_reason && (
           <p className={homeStyles.statSub} style={{ marginTop: '0.75rem' }}>
             {bill.water_fallback_reason}
@@ -213,13 +229,7 @@ export default async function LivingBillPage() {
                       <td className={theme.num}>{formatCurrency(pastBill.water_charge)}</td>
                       <td className={theme.num}>{formatCurrency(pastBill.total_due)}</td>
                       <td>
-                        <span
-                          className={
-                            pastBill.payment_status === 'paid' ? theme.pillOk : pastBill.payment_status === 'partial' ? theme.pillBrass : theme.pillFlag
-                          }
-                        >
-                          {formatPaymentStatus(pastBill.payment_status)}
-                        </span>
+                        <span className={paymentStatusPillClass(pastBill.payment_status)}>{formatPaymentStatus(pastBill.payment_status)}</span>
                       </td>
                     </tr>
                   ))}

@@ -504,7 +504,7 @@ export default async function LivingMaintenancePage() {
           // would look unpaid again even though the original entered amount
           // already fully covered it). This column exists so that doesn't have
           // to be worked out by hand.
-          bill: await computeBillForFlat(supabase, apartment, flat, thisMonth),
+          bill: await computeBillForFlat(supabase, apartment, flat, thisMonth, { allFlats, maintenanceMonth }),
         }))
       )
     : []
@@ -718,7 +718,11 @@ export default async function LivingMaintenancePage() {
                                   {bill.balance_remaining > 0 ? (
                                     <span className={theme.pillFlag}>Due {formatCurrency(bill.balance_remaining)}</span>
                                   ) : bill.balance_remaining < 0 ? (
-                                    <span className={theme.pillOk}>Advance {formatCurrency(-bill.balance_remaining)}</span>
+                                    bill.reimbursement_credit > 0.005 ? (
+                                      <span className={theme.pillOk}>Reimb. Credit {formatCurrency(-bill.balance_remaining)}</span>
+                                    ) : (
+                                      <span className={theme.pillOk}>Advance {formatCurrency(-bill.balance_remaining)}</span>
+                                    )
                                   ) : (
                                     <span className={theme.pillOk}>Settled ₹0</span>
                                   )}

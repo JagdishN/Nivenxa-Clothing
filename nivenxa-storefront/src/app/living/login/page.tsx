@@ -11,10 +11,10 @@ export default async function LivingLoginPage() {
   return (
     <div className={styles.shell}>
       <h1 className={styles.title}>Login</h1>
-      <p className={styles.subtitle}>Sign in with the email or phone your Apartment has on file.</p>
+      <p className={styles.subtitle}>Enter the email registered with your apartment.</p>
       <OtpForm mode="login" />
       <p className={styles.footer}>
-        New to Nivenxa Living? <Link href="/living/signup">Sign up</Link>
+        New to Nivenxa Living? <Link href="/living/signup">Create an Apartment</Link>
       </p>
     </div>
   )

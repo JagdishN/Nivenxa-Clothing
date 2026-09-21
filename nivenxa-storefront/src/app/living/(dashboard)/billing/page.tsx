@@ -23,7 +23,9 @@ export default async function LivingBillingOverviewPage() {
     getWaterSupplyCost(supabase, apartment.id, month),
   ])
   const billableFlats = getBillableFlats(flats)
-  const bills = await Promise.all(billableFlats.map((flat) => computeBillForFlat(supabase, apartment, flat, month)))
+  const bills = await Promise.all(
+    billableFlats.map((flat) => computeBillForFlat(supabase, apartment, flat, month, { allFlats: flats, maintenanceMonth: currentPeriod }))
+  )
 
   const maintenanceReady = currentPeriod?.status === 'published'
   const maintenanceTotal = currentPeriod ? maintenanceGrandTotal(currentPeriod.line_items) : 0
@@ -32,7 +34,11 @@ export default async function LivingBillingOverviewPage() {
   const billsGenerated = maintenanceReady ? billableFlats.length : 0
   const billsTotal = bills.reduce((sum, b) => sum + b.total_due, 0)
   const collected = bills.reduce((sum, b) => sum + b.amount_paid, 0)
-  const outstanding = bills.reduce((sum, b) => sum + b.balance_remaining, 0)
+  // Only sum flats that actually owe money — a flat's own advance/overpayment
+  // (a negative balance_remaining) is that flat's credit, not money that
+  // offsets some other flat's unpaid balance. Netting the raw sum let one
+  // flat's advance hide another flat's real unpaid balance.
+  const outstanding = bills.reduce((sum, b) => sum + Math.max(0, b.balance_remaining), 0)
   const flatsPaidCount = bills.filter((b) => b.payment_status === 'paid').length
   const collectionsComplete = billableFlats.length > 0 && flatsPaidCount === billableFlats.length
   const collectionsStarted = flatsPaidCount > 0

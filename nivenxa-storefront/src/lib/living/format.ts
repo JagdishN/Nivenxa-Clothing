@@ -1,9 +1,28 @@
 import type { PaymentMethod, PaymentStatus } from './types'
 
 const currencyFormatter = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 })
+const currencyFormatterCompact = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })
 
 export function formatCurrency(amount: number): string {
   return currencyFormatter.format(amount)
+}
+
+/** Rounded to the nearest rupee, no paise — for headline dashboard tiles only (Overview's Financial Summary). Anywhere money is reconciled (bills, ledgers, receipts) keeps exact paise via formatCurrency. */
+export function formatCurrencyCompact(amount: number): string {
+  return currencyFormatterCompact.format(amount)
+}
+
+/** "Today, 10:42 AM" / "Yesterday, 3:15 PM" / "12 Sep, 6:05 PM" — Recent Activity's timestamp, from a real created_at (not a user-editable date field). */
+export function formatActivityTimestamp(iso: string): string {
+  const d = new Date(iso)
+  const now = new Date()
+  const time = d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true })
+  const isSameDay = (a: Date, b: Date) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
+  if (isSameDay(d, now)) return `Today, ${time}`
+  const yesterday = new Date(now)
+  yesterday.setDate(yesterday.getDate() - 1)
+  if (isSameDay(d, yesterday)) return `Yesterday, ${time}`
+  return `${d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}, ${time}`
 }
 
 const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
@@ -23,10 +42,34 @@ const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
   paid: 'Paid',
   partial: 'Partial',
   unpaid: 'Unpaid',
+  not_billed: 'Not billed',
 }
 
 export function formatPaymentStatus(status: PaymentStatus): string {
   return PAYMENT_STATUS_LABELS[status]
+}
+
+/**
+ * Never render a raw signed balance to anyone — this is the one place that decides what a
+ * positive/negative/zero balance actually MEANS in plain language. `reimbursementOwed` is that
+ * flat's separate "association owes resident" figure (see getReimbursementBalanceForFlat) — when a
+ * negative balance is actually driven by an unsettled reimbursement rather than a plain overpayment,
+ * this says so explicitly instead of the generic "Advance available" copy. `audience: 'resident'`
+ * says "you"; `audience: 'admin'` (the default) names the flat/resident via `subjectLabel`.
+ */
+export function formatBalanceMeaning(
+  balance: number,
+  reimbursementOwed: number,
+  options: { audience?: 'resident' | 'admin'; subjectLabel?: string } = {}
+): string {
+  const { audience = 'admin', subjectLabel = 'resident' } = options
+  if (Math.abs(balance) < 0.005) return 'Bill Status: Paid'
+  if (balance > 0) return `Amount due ${formatCurrency(balance)}`
+  const magnitude = formatCurrency(Math.abs(balance))
+  if (reimbursementOwed > 0.005) {
+    return audience === 'resident' ? `Association owes you ${magnitude}` : `Association owes ${subjectLabel} ${magnitude}`
+  }
+  return `Advance available ${magnitude}`
 }
 
 export function formatMonthLabel(monthDateString: string): string {

@@ -2,7 +2,17 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+// This Month's row uses the same 4-column grid as Financial Summary above
+// it, sized for one status line + one action link instead of a headline
+// number — deliberately shorter than .statValue's cards.
+.statusGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .statLabel {
@@ -29,12 +39,12 @@
 }
 
 .section {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .sectionTitle {
   font-size: 1.05rem;
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.6rem;
 }
 
 .rowList {
@@ -101,4 +111,96 @@
   font-family: var(--font-living-serif), Georgia, serif;
   font-size: 1.2rem;
   font-weight: 600;
+}
+
+// Community/Latest Meeting + Recent Activity side by side on Overview —
+// collapses to one column below the same breakpoint the rest of Living's
+// dashboard uses. align-items: start is deliberate: the left column (two
+// short, content-height cards) and the right column (one taller card, full
+// of transactions) have no reason to match height, and grid's default
+// stretch would otherwise force the left column's wrapper to fill the row.
+.twoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Two independent cards stacked in the left column (Community, Latest
+// Meeting) — tighter than the 1.25rem used between major sections, since
+// these two are related secondary info sitting together, not separate
+// sections of the page.
+.stackCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+// This Month's compact status cards — a status line + a lighter action
+// link, not a big number, so they carry noticeably less visual weight than
+// the Financial Summary KPI cards above them.
+.statusTile {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  padding: 0.8rem 0.95rem;
+  border: 1px solid var(--living-rule);
+  border-radius: var(--living-radius);
+  background: var(--living-paper-raised);
+  transition: border-color 0.15s ease;
+}
+
+a.statusTile:hover {
+  border-color: var(--living-water);
+}
+
+.statusTileValue {
+  font-family: var(--font-living-serif), Georgia, serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-top: 0.3rem;
+}
+
+.statusTileAction {
+  font-size: 0.78rem;
+  color: var(--living-water);
+  margin-top: 0.3rem;
+}
+
+.statusDot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-right: 0.4rem;
+  background: currentColor;
+}
+
+// Recent Activity — a plain divided list, not a list of bordered boxes.
+.activityEntry {
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--living-rule);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.activityTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.activityTime {
+  font-size: 0.78rem;
+  color: var(--living-ink-soft);
+  margin-top: 0.15rem;
 }

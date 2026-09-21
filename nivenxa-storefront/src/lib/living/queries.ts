@@ -1,10 +1,23 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { cache } from 'react'
 import { brokenMeterCharge, combinedWaterRatePer1000L, maintenanceGrandTotal, paymentStatus, riseStreak, round2, slabWaterCharge, splitMaintenance, tankerAndMajeeraLiters, waterSupplyCostTotal } from './billing'
 import { daysInMonth, monthBefore, monthKeyFor } from './format'
-import type { AdvanceTransfer, Apartment, Bill, EventCategory, EventCollection, EventExpense, Expense, ExpenseCategory, Flat, FlatClaim, FlatLedgerEntry, InventoryCategory, InventoryUnit, LivingEvent, MaintenanceMonth, Meeting, Notice, Payment, PublishedStatement, ResidentRequest, ServiceType, SlabCalculationMethod, SlabConfig, TankerRates, WaterBillingMethod, WaterBillSnapshot, WaterReading, WaterSupplyCost, WaterTierBreakdownEntry } from './types'
+import type { AdvanceTransfer, Apartment, Bill, EventCategory, EventCollection, EventExpense, Expense, ExpenseCategory, Flat, FlatClaim, FlatLedgerEntry, InventoryCategory, InventoryUnit, LivingEvent, MaintenanceMonth, Meeting, Notice, Payment, PaymentMethod, PublishedStatement, ReimbursementSettlement, ResidentRequest, ServiceType, SlabCalculationMethod, SlabConfig, TankerRates, WaterBillingMethod, WaterBillSnapshot, WaterReading, WaterSupplyCost, WaterTierBreakdownEntry } from './types'
 
-/** The slab config in force for a given month — the most recent one whose `effective_from` doesn't exceed it. */
-export async function getEffectiveSlabConfig(supabase: SupabaseClient, apartmentId: string, month: string): Promise<SlabConfig | null> {
+/**
+ * The slab config in force for a given month — the most recent one whose
+ * `effective_from` doesn't exceed it. `cache()`-wrapped: every bill-
+ * computing page calls this (and the other apartment-wide, month-scoped
+ * lookups below) once PER FLAT — for ~28 flats in one request that's ~28
+ * identical round trips for a value that's the same all 28 times. React's
+ * `cache()` dedupes repeat calls with the same arguments within a single
+ * request/render (reset on the next request), so this collapses to one
+ * real query — this is what actually fixed the multi-second Overview/Bills/
+ * Payments/Maintenance loads; the earlier `preloaded`-param threading only
+ * caught the top-level getFlats/getCurrentMaintenancePeriod duplication,
+ * not this deeper one inside the water-charge computation chain.
+ */
+export const getEffectiveSlabConfig = cache(async (supabase: SupabaseClient, apartmentId: string, month: string): Promise<SlabConfig | null> => {
   const { data } = await supabase
     .from('living_slab_configs')
     .select('*')
@@ -14,10 +27,10 @@ export async function getEffectiveSlabConfig(supabase: SupabaseClient, apartment
     .limit(1)
     .maybeSingle<SlabConfig>()
   return data
-}
+})
 
-/** The tanker rates in force for a given month — same "most recent effective_from" pattern as getEffectiveSlabConfig. */
-export async function getEffectiveTankerRates(supabase: SupabaseClient, apartmentId: string, month: string): Promise<TankerRates | null> {
+/** The tanker rates in force for a given month — same "most recent effective_from" pattern as getEffectiveSlabConfig, same cache() reasoning. */
+export const getEffectiveTankerRates = cache(async (supabase: SupabaseClient, apartmentId: string, month: string): Promise<TankerRates | null> => {
   const { data } = await supabase
     .from('living_tanker_rates')
     .select('*')
@@ -27,9 +40,9 @@ export async function getEffectiveTankerRates(supabase: SupabaseClient, apartmen
     .limit(1)
     .maybeSingle<TankerRates>()
   return data
-}
+})
 
-export async function getWaterSupplyCost(supabase: SupabaseClient, apartmentId: string, month: string): Promise<WaterSupplyCost | null> {
+export const getWaterSupplyCost = cache(async (supabase: SupabaseClient, apartmentId: string, month: string): Promise<WaterSupplyCost | null> => {
   const { data } = await supabase
     .from('living_water_supply_costs')
     .select('*')
@@ -37,12 +50,13 @@ export async function getWaterSupplyCost(supabase: SupabaseClient, apartmentId: 
     .eq('month', month)
     .maybeSingle<WaterSupplyCost>()
   return data
-}
+})
 
-export async function getFlats(supabase: SupabaseClient, apartmentId: string): Promise<Flat[]> {
+/** Same cache() reasoning as getEffectiveSlabConfig above — called once per flat by every per-flat bill/water computation, always for the exact same apartment. */
+export const getFlats = cache(async (supabase: SupabaseClient, apartmentId: string): Promise<Flat[]> => {
   const { data } = await supabase.from('living_flats').select('*').eq('apartment_id', apartmentId).order('flat_no')
   return data ?? []
-}
+})
 
 /**
  * Flats that get their own personal bill and count toward the equal-split
@@ -123,7 +137,7 @@ export async function getReadingHistory(supabase: SupabaseClient, flatId: string
 }
 
 /** Sum of every flat's own metered consumption (current - previous) for `month` — every flat with a real reading, not just billable ones (a merged child-meter and the shared/common meter both draw from the same supply). The denominator side of the true-up: see getIncomingGap. */
-export async function getTotalConsumptionForMonth(supabase: SupabaseClient, apartmentId: string, month: string): Promise<number> {
+export const getTotalConsumptionForMonth = cache(async (supabase: SupabaseClient, apartmentId: string, month: string): Promise<number> => {
   const { data } = await supabase
     .from('living_water_readings')
     .select('current_reading, previous_reading')
@@ -132,7 +146,7 @@ export async function getTotalConsumptionForMonth(supabase: SupabaseClient, apar
     .not('current_reading', 'is', null)
     .not('previous_reading', 'is', null)
   return (data ?? []).reduce((sum, r) => sum + ((r.current_reading as number) - (r.previous_reading as number)), 0)
-}
+})
 
 /**
  * The cumulative unresolved over/under-recovery carried INTO `month` from
@@ -146,7 +160,7 @@ export async function getTotalConsumptionForMonth(supabase: SupabaseClient, apar
  * returned and used for that one request, it just doesn't get cached until
  * an admin/treasurer session next touches it.
  */
-export async function getIncomingGap(supabase: SupabaseClient, apartmentId: string, month: string): Promise<number> {
+export const getIncomingGap = cache(async (supabase: SupabaseClient, apartmentId: string, month: string): Promise<number> => {
   const priorMonth = monthBefore(month)
   const priorCost = await getWaterSupplyCost(supabase, apartmentId, priorMonth)
   if (!priorCost) return 0
@@ -162,7 +176,7 @@ export async function getIncomingGap(supabase: SupabaseClient, apartmentId: stri
 
   await supabase.from('living_water_supply_costs').update({ carried_gap: newGap }).eq('id', priorCost.id)
   return newGap
-}
+})
 
 /**
  * The single ₹/1,000L rate billed against every flat's own metered
@@ -174,7 +188,7 @@ export async function getIncomingGap(supabase: SupabaseClient, apartmentId: stri
  * inputs, never stored — cheap (one cached lookback + the already-fetched
  * month's own numbers), and correctable if the Admin edits a tanker count.
  */
-export async function getCombinedWaterRate(supabase: SupabaseClient, apartmentId: string, month: string): Promise<number> {
+export const getCombinedWaterRate = cache(async (supabase: SupabaseClient, apartmentId: string, month: string): Promise<number> => {
   const [supplyCost, tankerRates, incomingGap] = await Promise.all([
     getWaterSupplyCost(supabase, apartmentId, month),
     getEffectiveTankerRates(supabase, apartmentId, month),
@@ -184,7 +198,7 @@ export async function getCombinedWaterRate(supabase: SupabaseClient, apartmentId
   const liters = tankerAndMajeeraLiters(supplyCost, daysInMonth(month))
   const cost = waterSupplyCostTotal(supplyCost, tankerRates)
   return combinedWaterRatePer1000L(cost, liters, incomingGap) ?? 0
-}
+})
 
 export async function getWaterBillSnapshot(supabase: SupabaseClient, apartmentId: string, flatId: string, month: string): Promise<WaterBillSnapshot | null> {
   const { data } = await supabase
@@ -445,13 +459,18 @@ async function computeBillAgainstPeriod(
   apartment: Apartment,
   flat: Flat,
   maintenanceMonth: MaintenanceMonth | null,
-  month: string
+  month: string,
+  preloadedAllFlats?: Flat[]
 ): Promise<Bill> {
-  const [allFlats, own] = await Promise.all([getFlats(supabase, apartment.id), getMeteredWaterCharge(supabase, apartment, flat, month)])
+  const [allFlats, own] = await Promise.all([
+    preloadedAllFlats ?? getFlats(supabase, apartment.id),
+    getMeteredWaterCharge(supabase, apartment, flat, month),
+  ])
   const billableFlats = getBillableFlats(allFlats)
-  const [ledger, payments] = await Promise.all([
+  const [ledger, payments, reimbursementCreditThisPeriod] = await Promise.all([
     maintenanceMonth ? getFlatLedger(supabase, maintenanceMonth.id, flat.id) : Promise.resolve(null),
     maintenanceMonth ? getPaymentsForFlat(supabase, maintenanceMonth.id, flat.id) : Promise.resolve([]),
+    maintenanceMonth ? getBillAdjustmentCreditForPeriod(supabase, maintenanceMonth.id, flat.id) : Promise.resolve(0),
   ])
   const advancePayment = ledger?.advance_payment ?? 0
   const lateFee = ledger?.late_fee ?? 0
@@ -488,7 +507,7 @@ async function computeBillAgainstPeriod(
     }
   }
 
-  const totalDue = round2(maintenanceShare + meteredCharge + lateFee + previousDue - advancePayment)
+  const totalDue = round2(maintenanceShare + meteredCharge + lateFee + previousDue - advancePayment - reimbursementCreditThisPeriod)
   const amountPaid = round2(sumPayments(payments))
 
   return {
@@ -507,18 +526,36 @@ async function computeBillAgainstPeriod(
     advance_payment: round2(advancePayment),
     late_fee: round2(lateFee),
     previous_due: round2(previousDue),
+    reimbursement_credit: round2(reimbursementCreditThisPeriod),
     total_due: totalDue,
     amount_paid: amountPaid,
     balance_remaining: round2(totalDue - amountPaid),
-    payment_status: paymentStatus(totalDue, amountPaid),
+    payment_status: paymentStatus(totalDue, amountPaid, maintenanceMonth !== null && maintenanceMonth.status === 'published'),
     water_is_fallback: waterIsFallback,
     water_fallback_reason: waterFallbackReason,
   }
 }
 
-export async function computeBillForFlat(supabase: SupabaseClient, apartment: Apartment, flat: Flat, month: string): Promise<Bill> {
-  const maintenanceMonth = await getCurrentMaintenancePeriod(supabase, apartment.id)
-  return computeBillAgainstPeriod(supabase, apartment, flat, maintenanceMonth, month)
+/**
+ * `preloaded` lets a caller that's already fetched this apartment's full flat
+ * list and current maintenance period for the page (every screen that computes
+ * a bill for every billable flat in a loop — Home, Billing, Bills, Ledgers,
+ * Payments, Maintenance) pass them straight through instead of each of N
+ * flats separately re-querying the same two apartment-wide rows. Omit it and
+ * this fetches them itself, unchanged from before — every single-flat caller
+ * (receipts, the CSV export route, getPreviousDueSuggestion's past-period
+ * variant) keeps working exactly as it did.
+ */
+export async function computeBillForFlat(
+  supabase: SupabaseClient,
+  apartment: Apartment,
+  flat: Flat,
+  month: string,
+  preloaded?: { allFlats?: Flat[]; maintenanceMonth?: MaintenanceMonth | null }
+): Promise<Bill> {
+  const maintenanceMonth =
+    preloaded?.maintenanceMonth !== undefined ? preloaded.maintenanceMonth : await getCurrentMaintenancePeriod(supabase, apartment.id)
+  return computeBillAgainstPeriod(supabase, apartment, flat, maintenanceMonth, month, preloaded?.allFlats)
 }
 
 /**
@@ -639,6 +676,27 @@ export async function getPaymentsForFlat(supabase: SupabaseClient, maintenanceMo
   return data ?? []
 }
 
+/** Sum of this flat's 'bill_adjustment' reimbursement settlements against one period — the reimbursement_credit term in computeBillAgainstPeriod. 'cash' settlements never reduce a bill, so they're excluded here (see getCashReimbursementSettlementsForPeriod for where those show up instead). */
+async function getBillAdjustmentCreditForPeriod(supabase: SupabaseClient, maintenanceMonthId: string, flatId: string): Promise<number> {
+  const { data } = await supabase
+    .from('living_reimbursement_settlements')
+    .select('amount')
+    .eq('maintenance_month_id', maintenanceMonthId)
+    .eq('flat_id', flatId)
+    .eq('settlement_type', 'bill_adjustment')
+  return ((data as { amount: number }[]) ?? []).reduce((sum, row) => sum + row.amount, 0)
+}
+
+/** Sum of every 'cash' reimbursement settlement stamped against one period, apartment-wide — real association cash leaving, subtracted in computeFinancialStatements' closing-balance walk alongside expensesTotal. 'bill_adjustment' settlements never move cash, so they're excluded here (see getBillAdjustmentCreditForPeriod for where those show up instead). */
+async function getCashReimbursementSettlementsForPeriod(supabase: SupabaseClient, maintenanceMonthId: string): Promise<number> {
+  const { data } = await supabase
+    .from('living_reimbursement_settlements')
+    .select('amount')
+    .eq('maintenance_month_id', maintenanceMonthId)
+    .eq('settlement_type', 'cash')
+  return round2(((data as { amount: number }[]) ?? []).reduce((sum, row) => sum + row.amount, 0))
+}
+
 /** Every published maintenance period for the apartment, oldest first — walked in order to build a flat's full ledger history below. */
 export async function getPublishedMaintenancePeriods(supabase: SupabaseClient, apartmentId: string): Promise<MaintenanceMonth[]> {
   const { data } = await supabase
@@ -650,10 +708,20 @@ export async function getPublishedMaintenancePeriods(supabase: SupabaseClient, a
   return data ?? []
 }
 
+/**
+ * 'opening'/'bill'/'payment' all share ONE running balance: what this flat owes the association
+ * (or, negative, an advance on file). 'resident_expense'/'reimbursement_settlement' share a
+ * COMPLETELY SEPARATE running balance: what the association owes this flat for expenses they
+ * funded personally — a different account, deliberately never netted into the first one (Bill
+ * Status must stay separate from a reimbursement balance everywhere). Each transaction's own
+ * `balance` field is whichever of the two running totals that transaction kind belongs to.
+ */
 export type LedgerTransaction =
   | { kind: 'opening'; date: string; amount: number; balance: number }
   | { kind: 'bill'; date: string; periodStart: string; periodEnd: string; amount: number; balance: number }
   | { kind: 'payment'; date: string; method: Payment['method']; referenceNote: string | null; amount: number; balance: number }
+  | { kind: 'resident_expense'; date: string; expenseId: string; description: string; amount: number; balance: number }
+  | { kind: 'reimbursement_settlement'; date: string; settlementType: ReimbursementSettlement['settlement_type']; amount: number; balance: number }
 
 export interface FlatLedgerHistory {
   openingBalance: number
@@ -739,7 +807,52 @@ export async function getFlatLedgerHistory(supabase: SupabaseClient, apartment: 
     }
   }
 
-  return { openingBalance, transactions, closingBalance: balance }
+  // Resident-paid expenses and their settlements are a completely separate account (what the
+  // association owes THIS flat, not what this flat owes the association) — walked on their own
+  // running balance, then merged into the same chronological list purely for display. See the
+  // LedgerTransaction doc comment above.
+  const [residentExpenses, settlements] = await Promise.all([
+    supabase
+      .from('living_expenses')
+      .select('*')
+      .eq('resident_flat_id', flat.id)
+      .eq('paid_by', 'resident')
+      .is('voided_at', null)
+      .order('expense_date', { ascending: true })
+      .then((res) => (res.data as Expense[]) ?? []),
+    supabase
+      .from('living_reimbursement_settlements')
+      .select('*')
+      .eq('flat_id', flat.id)
+      .order('created_at', { ascending: true })
+      .then((res) => (res.data as ReimbursementSettlement[]) ?? []),
+  ])
+
+  type ReimbursementEvent =
+    | { date: string; kind: 'resident_expense'; expenseId: string; description: string; amount: number }
+    | { date: string; kind: 'reimbursement_settlement'; settlementType: ReimbursementSettlement['settlement_type']; amount: number }
+  const reimbursementEvents: ReimbursementEvent[] = [
+    ...residentExpenses.map((e): ReimbursementEvent => ({ date: e.expense_date, kind: 'resident_expense', expenseId: e.id, description: e.description, amount: e.amount })),
+    ...settlements.map((s): ReimbursementEvent => ({ date: s.created_at.slice(0, 10), kind: 'reimbursement_settlement', settlementType: s.settlement_type, amount: s.amount })),
+  ].sort((a, b) => a.date.localeCompare(b.date))
+
+  let reimbursementBalance = 0
+  for (const event of reimbursementEvents) {
+    if (event.kind === 'resident_expense') {
+      reimbursementBalance = round2(reimbursementBalance + event.amount)
+      transactions.push({ kind: 'resident_expense', date: event.date, expenseId: event.expenseId, description: event.description, amount: event.amount, balance: reimbursementBalance })
+    } else {
+      reimbursementBalance = round2(reimbursementBalance - event.amount)
+      transactions.push({ kind: 'reimbursement_settlement', date: event.date, settlementType: event.settlementType, amount: event.amount, balance: reimbursementBalance })
+    }
+  }
+  // Keep 'opening' pinned first (it anchors the balance walk above), sort everything else by date
+  // so the two independent event streams (association balance vs. reimbursement balance) read as
+  // one chronological timeline.
+  const [opening, ...rest] = transactions
+  rest.sort((a, b) => a.date.localeCompare(b.date))
+
+  return { openingBalance, transactions: [opening, ...rest], closingBalance: balance }
 }
 
 export interface FlatBillHistoryEntry {
@@ -812,7 +925,7 @@ export function sumPayments(payments: Payment[]): number {
   return payments.reduce((sum, p) => (p.method === 'advance' ? sum : sum + p.amount), 0)
 }
 
-/** Every expense recorded for a period, newest first — the Expenses page's log. */
+/** Every expense recorded for a period, newest first — the Expenses page's log. Includes voided rows (struck through there for audit) — see sumExpenses for the totals-only view. */
 export async function getExpensesForPeriod(supabase: SupabaseClient, maintenanceMonthId: string): Promise<Expense[]> {
   const { data } = await supabase
     .from('living_expenses')
@@ -822,8 +935,29 @@ export async function getExpensesForPeriod(supabase: SupabaseClient, maintenance
   return data ?? []
 }
 
+/** One expense by id, apartment-scoped — the expense detail page's main query. */
+export async function getExpenseById(supabase: SupabaseClient, apartmentId: string, expenseId: string): Promise<Expense | null> {
+  const { data } = await supabase.from('living_expenses').select('*').eq('id', expenseId).eq('apartment_id', apartmentId).maybeSingle<Expense>()
+  return data
+}
+
+/** source_ref values already used within one period (manual expenses never set one) — the sync action's dedup identity. Includes voided rows on purpose, so reversing a synced expense doesn't make it silently reappear on the next sync. */
+export async function getExistingSourceRefs(supabase: SupabaseClient, maintenanceMonthId: string): Promise<Set<string>> {
+  const { data } = await supabase.from('living_expenses').select('source_ref').eq('maintenance_month_id', maintenanceMonthId).not('source_ref', 'is', null)
+  return new Set(((data as { source_ref: string }[]) ?? []).map((r) => r.source_ref))
+}
+
+/** How many of this apartment's expenses (any period) currently use each category name — category is matched by name string, not a foreign key, same as everywhere else this list is used. Feeds the Categories tab's usage display; countExpensesUsingCategory is the authoritative recheck at delete time. */
+export async function getCategoryUsageCounts(supabase: SupabaseClient, apartmentId: string): Promise<Map<string, number>> {
+  const { data } = await supabase.from('living_expenses').select('category').eq('apartment_id', apartmentId).not('category', 'is', null)
+  const counts = new Map<string, number>()
+  for (const row of (data as { category: string }[]) ?? []) counts.set(row.category, (counts.get(row.category) ?? 0) + 1)
+  return counts
+}
+
+/** Excludes voided rows — every consumer (Overview totals, category breakdown, computeFinancialStatements) wants the real, still-standing total. The Log page renders getExpensesForPeriod's raw list unfiltered so voided rows stay visible for audit; this is the only function that drops them. */
 export function sumExpenses(expenses: Expense[]): number {
-  return expenses.reduce((sum, e) => sum + e.amount, 0)
+  return expenses.reduce((sum, e) => (e.voided_at ? sum : sum + e.amount), 0)
 }
 
 /**
@@ -843,10 +977,143 @@ export async function getCarryForwardExpenses(supabase: SupabaseClient, apartmen
   return data ?? []
 }
 
-/** Shared master data — same list for every apartment, not filtered by apartment_id. */
-export async function getExpenseCategories(supabase: SupabaseClient): Promise<ExpenseCategory[]> {
-  const { data } = await supabase.from('living_expense_categories').select('*').order('name')
+/** System categories (apartment_id null — SQL-seeded, shared by every apartment, read-only here) plus this apartment's own — active AND inactive, since the Categories tab needs to show a deactivated one to let it be reactivated. Callers building a picker (Record Expense) filter to is_active themselves. */
+export async function getExpenseCategories(supabase: SupabaseClient, apartmentId: string): Promise<ExpenseCategory[]> {
+  const { data } = await supabase
+    .from('living_expense_categories')
+    .select('*')
+    .or(`apartment_id.is.null,apartment_id.eq.${apartmentId}`)
+    .order('apartment_id', { ascending: true, nullsFirst: true })
+    .order('name')
   return data ?? []
+}
+
+/** How many of this apartment's own (still-active-or-not, category is matched by name string) expenses currently use this category name — the usage count behind the Categories tab's delete-protection ("used by N expenses"). */
+export async function countExpensesUsingCategory(supabase: SupabaseClient, apartmentId: string, categoryName: string): Promise<number> {
+  const { count } = await supabase
+    .from('living_expenses')
+    .select('id', { count: 'exact', head: true })
+    .eq('apartment_id', apartmentId)
+    .eq('category', categoryName)
+  return count ?? 0
+}
+
+/** One resident-paid expense's reimbursement detail — the expense itself plus every settlement against it, oldest first, with a running remaining balance. The "why does this balance exist" drill-down. */
+export interface ReimbursementDetail {
+  expense: Expense
+  settlements: (ReimbursementSettlement & { runningRemaining: number })[]
+  totalSettled: number
+  remaining: number
+}
+export async function getReimbursementDetailForExpense(supabase: SupabaseClient, expenseId: string): Promise<ReimbursementDetail | null> {
+  const [{ data: expense, error: expenseError }, { data: settlementRows, error: settlementsError }] = await Promise.all([
+    supabase.from('living_expenses').select('*').eq('id', expenseId).maybeSingle<Expense>(),
+    supabase.from('living_reimbursement_settlements').select('*').eq('expense_id', expenseId).order('created_at', { ascending: true }),
+  ])
+  if (expenseError) throw new Error(expenseError.message)
+  if (settlementsError) throw new Error(settlementsError.message)
+  if (!expense) return null
+  const settlementsOldestFirst = (settlementRows as ReimbursementSettlement[]) ?? []
+  let runningRemaining = expense.amount
+  const settlements = settlementsOldestFirst.map((s) => {
+    runningRemaining = round2(runningRemaining - s.amount)
+    return { ...s, runningRemaining }
+  })
+  const totalSettled = round2(settlementsOldestFirst.reduce((sum, s) => sum + s.amount, 0))
+  return { expense, settlements, totalSettled, remaining: round2(expense.amount - totalSettled) }
+}
+
+/** This one flat's reimbursement balance — every non-voided resident-paid expense minus every settlement against it, apartment-wide (not scoped to one period). */
+export async function getReimbursementBalanceForFlat(supabase: SupabaseClient, apartmentId: string, flatId: string): Promise<number> {
+  const [{ data: expenses, error: expensesError }, { data: settlements, error: settlementsError }] = await Promise.all([
+    supabase.from('living_expenses').select('amount').eq('apartment_id', apartmentId).eq('resident_flat_id', flatId).eq('paid_by', 'resident').is('voided_at', null),
+    supabase.from('living_reimbursement_settlements').select('amount').eq('apartment_id', apartmentId).eq('flat_id', flatId),
+  ])
+  if (expensesError) throw new Error(expensesError.message)
+  if (settlementsError) throw new Error(settlementsError.message)
+  const owed = ((expenses as { amount: number }[]) ?? []).reduce((sum, e) => sum + e.amount, 0)
+  const settled = ((settlements as { amount: number }[]) ?? []).reduce((sum, s) => sum + s.amount, 0)
+  return round2(owed - settled)
+}
+
+export interface OutstandingReimbursementRow {
+  expense: Expense
+  flat: Flat
+  settled: number
+  remaining: number
+}
+/** One row per resident-paid expense that still has a remaining balance — the Reimbursements tab's table. A settlement always ties to one specific expense (schema), so this is the right granularity for its action buttons; getApartmentReimbursementsDue's flat-aggregated total is a separate, coarser summary figure. */
+export async function getOutstandingReimbursementExpenses(supabase: SupabaseClient, apartmentId: string, preloadedFlats?: Flat[]): Promise<OutstandingReimbursementRow[]> {
+  // Joined manually (fetch + Map lookup) rather than a PostgREST embed (`flat:living_flats(*)`) —
+  // an embed depends on the API's schema cache already knowing about resident_flat_id's FK, which
+  // can lag behind a freshly-applied migration and silently returns flat: null per row instead of
+  // erroring, which then got every row filtered out here. This has no such dependency.
+  const [{ data: expenses, error: expensesError }, flats] = await Promise.all([
+    supabase.from('living_expenses').select('*').eq('apartment_id', apartmentId).eq('paid_by', 'resident').is('voided_at', null).order('expense_date', { ascending: false }),
+    preloadedFlats ?? getFlats(supabase, apartmentId),
+  ])
+  if (expensesError) throw new Error(expensesError.message)
+  const rows = (expenses as Expense[]) ?? []
+  if (rows.length === 0) return []
+
+  const flatsById = new Map(flats.map((f) => [f.id, f]))
+  const { data: settlements, error: settlementsError } = await supabase.from('living_reimbursement_settlements').select('expense_id, amount').eq('apartment_id', apartmentId)
+  if (settlementsError) throw new Error(settlementsError.message)
+  const settledByExpense = new Map<string, number>()
+  for (const s of (settlements as { expense_id: string; amount: number }[]) ?? []) {
+    settledByExpense.set(s.expense_id, (settledByExpense.get(s.expense_id) ?? 0) + s.amount)
+  }
+
+  const result: OutstandingReimbursementRow[] = []
+  for (const e of rows) {
+    const flat = e.resident_flat_id ? flatsById.get(e.resident_flat_id) : undefined
+    if (!flat) continue
+    const settled = round2(settledByExpense.get(e.id) ?? 0)
+    const remaining = round2(e.amount - settled)
+    if (remaining > 0.005) result.push({ expense: e, flat, settled, remaining })
+  }
+  return result
+}
+
+export interface ReimbursementDueRow {
+  flat: Flat
+  expensePaidByResident: number
+  settled: number
+  remaining: number
+}
+/** Every flat with a nonzero reimbursement balance, apartment-wide — feeds the Reimbursements tab and Overview's "Resident Reimbursements Due" figure. */
+export async function getApartmentReimbursementsDue(
+  supabase: SupabaseClient,
+  apartmentId: string,
+  preloadedFlats?: Flat[]
+): Promise<{ total: number; flatCount: number; byFlat: ReimbursementDueRow[] }> {
+  const [flats, { data: expenses, error: expensesError }, { data: settlements, error: settlementsError }] = await Promise.all([
+    preloadedFlats ?? getFlats(supabase, apartmentId),
+    supabase.from('living_expenses').select('resident_flat_id, amount').eq('apartment_id', apartmentId).eq('paid_by', 'resident').is('voided_at', null),
+    supabase.from('living_reimbursement_settlements').select('flat_id, amount').eq('apartment_id', apartmentId),
+  ])
+  if (expensesError) throw new Error(expensesError.message)
+  if (settlementsError) throw new Error(settlementsError.message)
+  const owedByFlat = new Map<string, number>()
+  for (const e of (expenses as { resident_flat_id: string | null; amount: number }[]) ?? []) {
+    if (!e.resident_flat_id) continue
+    owedByFlat.set(e.resident_flat_id, (owedByFlat.get(e.resident_flat_id) ?? 0) + e.amount)
+  }
+  const settledByFlat = new Map<string, number>()
+  for (const s of (settlements as { flat_id: string; amount: number }[]) ?? []) {
+    settledByFlat.set(s.flat_id, (settledByFlat.get(s.flat_id) ?? 0) + s.amount)
+  }
+  const flatsById = new Map(flats.map((f) => [f.id, f]))
+  const byFlat: ReimbursementDueRow[] = []
+  for (const [flatId, owed] of owedByFlat) {
+    const flat = flatsById.get(flatId)
+    if (!flat) continue
+    const settled = settledByFlat.get(flatId) ?? 0
+    const remaining = round2(owed - settled)
+    if (remaining > 0.005) byFlat.push({ flat, expensePaidByResident: round2(owed), settled: round2(settled), remaining })
+  }
+  byFlat.sort((a, b) => b.remaining - a.remaining)
+  return { total: round2(byFlat.reduce((sum, r) => sum + r.remaining, 0)), flatCount: byFlat.length, byFlat }
 }
 
 /** Shared master data — same list for every apartment, not filtered by apartment_id. */
@@ -903,17 +1170,25 @@ export interface RiseAlert {
   streak: number
 }
 
-/** Flats whose rise streak has reached the apartment's notify_admin_at_streak threshold — surfaced on the Admin/Treasurer home. */
-export async function getRiseAlerts(supabase: SupabaseClient, apartment: Apartment, month: string): Promise<RiseAlert[]> {
+/**
+ * Flats whose rise streak has reached the apartment's notify_admin_at_streak
+ * threshold — surfaced on the Admin/Treasurer home. `preloadedFlats` lets a
+ * caller that already fetched this apartment's flat list (Home does) pass
+ * it straight through instead of a second, redundant getFlats() round trip;
+ * the per-flat streak lookups run in parallel rather than one-by-one — with
+ * ~28 flats, sequential awaits here were the largest single contributor to
+ * a multi-second Home page load.
+ */
+export async function getRiseAlerts(supabase: SupabaseClient, apartment: Apartment, month: string, preloadedFlats?: Flat[]): Promise<RiseAlert[]> {
   const slab = await getEffectiveSlabConfig(supabase, apartment.id, month)
   if (!slab) return []
-  const flats = await getFlats(supabase, apartment.id)
+  const flats = preloadedFlats ?? (await getFlats(supabase, apartment.id))
 
+  const streaks = await Promise.all(flats.map((flat) => getRiseStreakForFlat(supabase, flat.id, slab.rise_threshold_percent)))
   const alerts: RiseAlert[] = []
-  for (const flat of flats) {
-    const streak = await getRiseStreakForFlat(supabase, flat.id, slab.rise_threshold_percent)
-    if (streak >= slab.notify_admin_at_streak) alerts.push({ flat, streak })
-  }
+  flats.forEach((flat, i) => {
+    if (streaks[i] >= slab.notify_admin_at_streak) alerts.push({ flat, streak: streaks[i] })
+  })
   return alerts
 }
 
@@ -933,6 +1208,22 @@ export async function getOpenDisputes(supabase: SupabaseClient, apartmentId: str
   return (data as unknown as (WaterReading & { flat: Flat })[])
     .filter((row) => row.dispute && row.dispute.status !== 'resolved')
     .map((row) => ({ reading: row, flat: row.flat }))
+}
+
+export interface FlaggedReading {
+  reading: WaterReading
+  flat: Flat
+}
+
+/** Meters currently marked broken/flagged (WaterReading.flagged) apartment-wide — distinct from a dispute (a resident contesting a reading/charge). Surfaced on Overview's Needs Attention. */
+export async function getFlaggedReadings(supabase: SupabaseClient, apartmentId: string): Promise<FlaggedReading[]> {
+  const { data } = await supabase
+    .from('living_water_readings')
+    .select('*, flat:living_flats(*)')
+    .eq('apartment_id', apartmentId)
+    .eq('flagged', true)
+    .order('month', { ascending: false })
+  return ((data as unknown as (WaterReading & { flat: Flat })[]) ?? []).map((row) => ({ reading: row, flat: row.flat }))
 }
 
 export interface PendingClaimWithFlat extends FlatClaim {
@@ -1048,11 +1339,19 @@ export async function computeFinancialStatements(supabase: SupabaseClient, apart
   const statements: ComputedStatement[] = []
 
   for (const period of periods) {
-    const [payments, expenses] = await Promise.all([getPaymentsForPeriod(supabase, period.id), getExpensesForPeriod(supabase, period.id)])
+    const [payments, expenses, cashSettlements] = await Promise.all([
+      getPaymentsForPeriod(supabase, period.id),
+      getExpensesForPeriod(supabase, period.id),
+      getCashReimbursementSettlementsForPeriod(supabase, period.id),
+    ])
     const collections = round2(sumPayments(payments))
+    // expensesTotal is untouched by settlements on purpose — a resident-paid expense is a real
+    // expense the moment it's recorded, whether or not cash has moved yet (accrual, not cash-basis,
+    // for the expense side). cashSettlements is the actual cash outflow when the association later
+    // pays that resident back — real association cash leaving, same as any other expense payout.
     const expensesTotal = round2(sumExpenses(expenses))
     const openingBalance = round2(runningBalance)
-    const closingBalance = round2(openingBalance + collections - expensesTotal)
+    const closingBalance = round2(openingBalance + collections - expensesTotal - cashSettlements)
     runningBalance = closingBalance
 
     const bills = await Promise.all(flats.map((flat) => computeBillAgainstPeriod(supabase, apartment, flat, period, waterMonthFor(period))))
@@ -1062,4 +1361,71 @@ export async function computeFinancialStatements(supabase: SupabaseClient, apart
   }
 
   return statements.reverse()
+}
+
+/**
+ * "How much cash does the association actually have right now" — Overview's
+ * Financial Summary "Closing/Available Balance" card. Deliberately reads
+ * from `publishedStatements` (a plain getPublishedStatements() call, one
+ * cheap query, snapshot values already computed once at publish time) —
+ * NOT computeFinancialStatements(), which recomputes every billable flat's
+ * bill for every published period on every call and is only meant for the
+ * Statements page itself. Calling that here would re-run the same expensive
+ * walk on every single Overview page load (confirmed: this exact mistake
+ * took /living/home from ~2s to 15-28s in dev before being caught).
+ *
+ * If the current period is itself already published, its own snapshot IS
+ * this figure (most authoritative, don't recompute). Otherwise the baseline
+ * is the most recent published period's closing balance (or the
+ * apartment's opening_cash_balance if none has ever been published), plus
+ * whatever the in-progress period has collected/spent so far — the caller
+ * already has both of those numbers from its own bill computation, so this
+ * is a pure function, no I/O.
+ */
+export function getCurrentAvailableBalance(
+  apartment: Apartment,
+  publishedStatements: PublishedStatementWithPeriod[],
+  currentPeriodId: string | null,
+  currentPeriodCollected: number,
+  currentPeriodExpenses: number
+): number {
+  const currentStatement = currentPeriodId ? publishedStatements.find((s) => s.maintenance_month_id === currentPeriodId) : undefined
+  if (currentStatement) return currentStatement.closing_balance
+  const baseline = publishedStatements[0] ? publishedStatements[0].closing_balance : apartment.opening_cash_balance ?? 0
+  return round2(baseline + currentPeriodCollected - currentPeriodExpenses)
+}
+
+export type ActivityEntry =
+  | { kind: 'payment'; createdAt: string; flatNo: string; amount: number; method: PaymentMethod }
+  | { kind: 'expense'; createdAt: string; category: string | null; description: string; amount: number }
+
+/**
+ * The most recent payments + expenses across the whole apartment, merged and
+ * sorted by when they were actually recorded (created_at — a real
+ * timestamp, not the user-editable payment/expense date, which is only a
+ * date with no time component and can be backdated) — Overview's "Recent
+ * Activity" and /living/activity. System-written 'advance' payment rows are
+ * excluded, same as everywhere else that sums/lists real payments (see
+ * sumPayments).
+ */
+export async function getRecentActivity(supabase: SupabaseClient, apartmentId: string, limit = 8): Promise<ActivityEntry[]> {
+  const [{ data: payments }, { data: expenses }] = await Promise.all([
+    supabase.from('living_payments').select('*, flat:living_flats(*)').eq('apartment_id', apartmentId).order('created_at', { ascending: false }).limit(limit),
+    supabase.from('living_expenses').select('*').eq('apartment_id', apartmentId).order('created_at', { ascending: false }).limit(limit),
+  ])
+
+  const paymentEntries: ActivityEntry[] = ((payments as unknown as PaymentWithFlat[]) ?? [])
+    .filter((p) => p.method !== 'advance')
+    .map((p) => ({ kind: 'payment', createdAt: p.created_at, flatNo: p.flat.flat_no, amount: p.amount, method: p.method }))
+  const expenseEntries: ActivityEntry[] = ((expenses as Expense[]) ?? []).map((e) => ({
+    kind: 'expense',
+    createdAt: e.created_at,
+    category: e.category,
+    description: e.description,
+    amount: e.amount,
+  }))
+
+  return [...paymentEntries, ...expenseEntries]
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, limit)
 }

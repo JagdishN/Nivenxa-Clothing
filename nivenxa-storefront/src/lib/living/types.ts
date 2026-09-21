@@ -18,6 +18,8 @@ export interface Apartment {
   shared_cost_divisor: number | null
   /** The association's real cash position before Living started tracking it — a one-time seed for Financial Statements. Null is treated as 0. */
   opening_cash_balance: number | null
+  /** Bank/UPI details shown on a bill's "Pay Now" — no real payment gateway integration, just instructions. */
+  payment_instructions: string | null
   created_by: string
   created_at: string
 }
@@ -74,6 +76,8 @@ export interface MaintenanceMonth {
   month: string
   /** Period end date, Admin-chosen — together with `month` this is the actual billed date range, shown verbatim on bills. */
   period_end: string
+  /** When this period's bill is due — defaults to period_end, admin-editable. Null on periods created before this column existed. */
+  due_date: string | null
   line_items: MaintenanceLineItem[]
   status: MaintenanceStatus
   published_at: string | null
@@ -250,7 +254,8 @@ export interface AdvanceTransfer {
 
 /** 'advance' is system-written only — see syncAdvanceApplicationPayment in queries.ts — never a manually-selectable option in the Record Payment form. */
 export type PaymentMethod = 'cash' | 'upi' | 'bank_transfer' | 'cheque' | 'other' | 'advance'
-export type PaymentStatus = 'unpaid' | 'partial' | 'paid'
+/** 'not_billed' = the flat is excluded from billing, or the period isn't published yet — never derived from or mixed with a reimbursement-owed balance, which is a separate figure entirely. */
+export type PaymentStatus = 'unpaid' | 'partial' | 'paid' | 'not_billed'
 
 /** One actual payment received from a flat against a specific maintenance period — see the schema comment. */
 export interface Payment {
@@ -268,6 +273,11 @@ export interface Payment {
   created_at: string
 }
 
+/** 'association' = paid from apartment funds (the default). 'resident' = a resident funded an association expense out of pocket — see resident_flat_id and living_reimbursement_settlements. */
+export type ExpensePaidBy = 'association' | 'resident'
+/** Where an expense row came from. 'manual' = typed in directly, never touched by the Maintenance/Water sync's dedup check regardless of category. The synced kinds carry a source_ref used as that dedup identity. */
+export type ExpenseSource = 'manual' | 'maintenance_sync' | 'water_sync'
+
 /** One actual expense paid out by the apartment against a specific maintenance period — the outgoing counterpart to Payment. */
 export interface Expense {
   id: string
@@ -280,19 +290,56 @@ export interface Expense {
   paid_to: string | null
   method: PaymentMethod
   reference_note: string | null
-  /** Total number of future billing cycles this expense's amount should be spread across — null/0 means it's a one-off, never fed into a future Maintenance line item. 1 = "Include in next bill cycle"; >1 = "Split across months". */
+  /** Total number of future billing cycles this expense's amount should be added to residents' bills over — null/0 means it's not billed to residents at all. 1 = next billing cycle only; >1 = spread across that many cycles. Independent of paid_by — a resident can fund an expense AND the association can still recover it from every flat's bill; that's separate from reimbursing the resident, which is a living_reimbursement_settlements transaction. */
   carry_forward_months: number | null
   /** How many of those cycles are still left to apply — decremented by startPeriodAction each time a new period picks up its share. */
   carry_forward_remaining: number | null
+  /** Who actually funded this expense — see ExpensePaidBy. Default 'association'. */
+  paid_by: ExpensePaidBy
+  /** Required iff paid_by = 'resident' — which flat is owed a reimbursement for this expense. */
+  resident_flat_id: string | null
+  /** Storage path in the private expense-receipts bucket, null when no receipt was attached. */
+  receipt_path: string | null
+  expense_notes: string | null
+  /** The person recording the expense is its approver — set to the same user/time as created_by/created_at at insert. */
+  approved_by: string | null
+  approved_at: string | null
+  source: ExpenseSource
+  /** Dedup identity for synced rows only (e.g. "maintenance:Watchman Salary", "water:tanker") — null for manual expenses. Unique per (maintenance_month_id, source_ref). */
+  source_ref: string | null
+  /** Denormalized from the chosen category's ExpenseCategory.is_recurring at insert time — not user-editable per expense. */
+  is_recurring: boolean | null
+  /** Soft void — set instead of a hard delete once an expense is financially referenced (settlement, applied carry-forward, or sync origin). Excluded from every total via sumExpenses, but stays visible in the Log for audit. */
+  voided_at: string | null
+  voided_by: string | null
+  void_reason: string | null
   recorded_by: string
   created_at: string
 }
 
-/** Shared master data, same list across every apartment on the platform — not scoped to one apartment_id. */
+/** null apartment_id = a system category, seeded once via SQL, shared by every apartment and read-only to admins. Non-null = that one apartment's own category. */
 export interface ExpenseCategory {
   id: string
   name: string
-  created_by: string
+  apartment_id: string | null
+  is_recurring: boolean | null
+  is_active: boolean
+  created_by: string | null
+  created_at: string
+}
+
+/** One settlement of a resident's reimbursement balance — append-only, never edited or deleted (a correction is a new compensating row). Distinct from Expense: recording the original resident-paid expense is one accrual event, a settlement here is a later payout/credit against that existing liability, never a second expense. */
+export interface ReimbursementSettlement {
+  id: string
+  apartment_id: string
+  expense_id: string
+  flat_id: string
+  settlement_type: 'cash' | 'bill_adjustment'
+  amount: number
+  /** Only meaningful for 'bill_adjustment' (which period's bill it reduced) — also stamped for 'cash' so the Financial Statement's cash walk can bucket the payout by period like every other cash movement. */
+  maintenance_month_id: string | null
+  note: string | null
+  settled_by: string
   created_at: string
 }
 
@@ -440,7 +487,9 @@ export interface Bill {
   advance_payment: number
   late_fee: number
   previous_due: number
-  /** maintenance_share + water_charge + late_fee + previous_due - advance_payment, rounded to 2 decimals. */
+  /** Sum of this flat's 'bill_adjustment' reimbursement settlements against this period — see living_reimbursement_settlements. Distinct from advance_payment: an advance is the resident's own overpayment, this is the association paying down what it owes the resident for an expense the resident funded. */
+  reimbursement_credit: number
+  /** maintenance_share + water_charge + late_fee + previous_due - advance_payment - reimbursement_credit, rounded to 2 decimals. */
   total_due: number
   /** Sum of living_payments recorded against this flat for the current period. */
   amount_paid: number

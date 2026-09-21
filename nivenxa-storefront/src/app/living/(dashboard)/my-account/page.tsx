@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { requireMembership } from '@/lib/living/auth'
-import { formatCurrency, formatPaymentMethod, formatPeriodLabel } from '@/lib/living/format'
-import { getFlatLedgerHistory, getFlats } from '@/lib/living/queries'
+import { formatBalanceMeaning, formatCurrency, formatPaymentMethod, formatPeriodLabel } from '@/lib/living/format'
+import { getFlatLedgerHistory, getFlats, getReimbursementBalanceForFlat } from '@/lib/living/queries'
 import theme from '../../LivingTheme.module.scss'
 import homeStyles from '../Home.module.scss'
 
@@ -34,7 +34,15 @@ export default async function LivingMyAccountPage() {
     )
   }
 
-  const history = await getFlatLedgerHistory(supabase, apartment, flat)
+  const [history, reimbursementBalance] = await Promise.all([
+    getFlatLedgerHistory(supabase, apartment, flat),
+    getReimbursementBalanceForFlat(supabase, apartment.id, flat.id),
+  ])
+  // Two independent accounts, never netted together — what you owe the association (opening/bill/
+  // payment) rendered below as usual, and what the association owes YOU for expenses you funded
+  // personally, as its own section further down, only when there's anything to show.
+  const mainTransactions = history.transactions.filter((t) => t.kind === 'opening' || t.kind === 'bill' || t.kind === 'payment')
+  const reimbursementTransactions = history.transactions.filter((t) => t.kind === 'resident_expense' || t.kind === 'reimbursement_settlement')
 
   return (
     <>
@@ -47,13 +55,20 @@ export default async function LivingMyAccountPage() {
 
       <div className={homeStyles.grid} style={{ marginBottom: '1.5rem' }}>
         <div className={theme.card}>
-          <div className={homeStyles.statLabel}>Current balance</div>
-          <div className={`${homeStyles.statValue} ${history.closingBalance > 0 ? theme.warnText : ''}`}>{formatCurrency(history.closingBalance)}</div>
-          <div className={homeStyles.statSub}>{history.closingBalance > 0 ? 'Still owed' : history.closingBalance < 0 ? 'In credit' : 'Settled'}</div>
+          <div className={homeStyles.statLabel}>Bill Balance</div>
+          <div className={homeStyles.statValue} style={{ fontSize: '1.25rem' }}>
+            {formatBalanceMeaning(history.closingBalance, reimbursementBalance, { audience: 'resident' })}
+          </div>
         </div>
+        {reimbursementBalance > 0.005 && (
+          <div className={theme.card}>
+            <div className={homeStyles.statLabel}>Association owes you</div>
+            <div className={homeStyles.statValue} style={{ fontSize: '1.25rem' }}>{formatCurrency(reimbursementBalance)}</div>
+          </div>
+        )}
       </div>
 
-      <div className={theme.card}>
+      <div className={theme.card} style={{ marginBottom: reimbursementTransactions.length > 0 ? '1.5rem' : 0 }}>
         <div className={theme.tableScroll}>
           <table className={theme.table}>
             <thead>
@@ -66,7 +81,7 @@ export default async function LivingMyAccountPage() {
               </tr>
             </thead>
             <tbody>
-              {history.transactions.map((t, i) => (
+              {mainTransactions.map((t, i) => (
                 <tr key={i}>
                   <td>{new Date(t.date).toLocaleDateString('en-IN')}</td>
                   <td>
@@ -90,7 +105,7 @@ export default async function LivingMyAccountPage() {
                   </td>
                 </tr>
               ))}
-              {history.transactions.length === 0 && (
+              {mainTransactions.length === 0 && (
                 <tr>
                   <td colSpan={5} className={theme.muted}>
                     Nothing on record yet.
@@ -101,6 +116,49 @@ export default async function LivingMyAccountPage() {
           </table>
         </div>
       </div>
+
+      {reimbursementTransactions.length > 0 && (
+        <div className={theme.card}>
+          <h2 className={homeStyles.sectionTitle}>Expenses You&rsquo;ve Funded</h2>
+          <p className={theme.muted} style={{ marginBottom: '0.75rem' }}>
+            A separate account from your Bill Balance above — never netted into it unless a settlement was specifically an
+            adjustment against your bill.
+          </p>
+          <div className={theme.tableScroll}>
+            <table className={theme.table}>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Description</th>
+                  <th className={theme.num}>Owed</th>
+                  <th className={theme.num}>Settled</th>
+                  <th className={`${theme.num} ${theme.totalCol}`}>Remaining</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reimbursementTransactions.map((t, i) => (
+                  <tr key={i}>
+                    <td>{new Date(t.date).toLocaleDateString('en-IN')}</td>
+                    <td>
+                      {t.kind === 'resident_expense' && `Paid by you — ${t.description}`}
+                      {t.kind === 'reimbursement_settlement' && (t.settlementType === 'cash' ? 'Reimbursed to you' : 'Adjusted against your bill')}
+                    </td>
+                    <td className={theme.num}>
+                      <Amount value={t.kind === 'resident_expense' ? t.amount : 0} variant="warn" />
+                    </td>
+                    <td className={theme.num}>
+                      <Amount value={t.kind === 'reimbursement_settlement' ? t.amount : 0} variant="credit" />
+                    </td>
+                    <td className={`${theme.num} ${theme.totalCol}`} style={{ fontWeight: 700 }}>
+                      {formatCurrency(t.balance)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </>
   )
 }

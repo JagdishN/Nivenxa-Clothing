@@ -16,6 +16,7 @@ const PAYMENT_METHODS: PaymentMethod[] = ['cash', 'upi', 'bank_transfer', 'chequ
 function statusPillClass(status: PaymentStatus): string {
   if (status === 'paid') return theme.pillOk
   if (status === 'partial') return theme.pillBrass
+  if (status === 'not_billed') return theme.pill
   return theme.pillFlag
 }
 
@@ -110,9 +111,17 @@ export default async function LivingPaymentsPage() {
   const { supabase, apartment } = await requireMembership(['admin', 'treasurer'])
   const month = monthKeyFor(new Date())
   const current = await getCurrentMaintenancePeriod(supabase, apartment.id)
-  const flats = getBillableFlats(await getFlats(supabase, apartment.id))
+  const allFlats = await getFlats(supabase, apartment.id)
+  const flats = getBillableFlats(allFlats)
 
-  const rows = current ? await Promise.all(flats.map(async (flat) => ({ flat, bill: await computeBillForFlat(supabase, apartment, flat, month) }))) : []
+  const rows = current
+    ? await Promise.all(
+        flats.map(async (flat) => ({
+          flat,
+          bill: await computeBillForFlat(supabase, apartment, flat, month, { allFlats, maintenanceMonth: current }),
+        }))
+      )
+    : []
   const payments = current ? await getPaymentsForPeriod(supabase, current.id) : []
   const flatById = new Map(flats.map((f) => [f.id, f]))
 

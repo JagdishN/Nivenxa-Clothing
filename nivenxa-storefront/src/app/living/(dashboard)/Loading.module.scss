@@ -1,0 +1,53 @@
+// Shown the instant a nav link is clicked, for however briefly the next
+// page's own server-side data fetch takes — without this, App Router leaves
+// the browser showing nothing at all until that fetch resolves, which is
+// what read as "tab click is not smooth." Same card/rule tokens as the rest
+// of Living, so it reads as this page loading, not a generic spinner.
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-top: 0.25rem;
+}
+
+.bar {
+  border-radius: var(--living-radius);
+  background: linear-gradient(90deg, var(--living-rule) 0%, var(--living-paper-raised) 50%, var(--living-rule) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.title {
+  width: min(280px, 60%);
+  height: 1.6rem;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  height: 6rem;
+}
+
+.line {
+  height: 2.75rem;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar {
+    animation: none;
+    background: var(--living-rule);
+  }
+}

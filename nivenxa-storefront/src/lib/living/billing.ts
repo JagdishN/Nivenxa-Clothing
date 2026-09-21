@@ -32,11 +32,28 @@ export function formatReceiptNumber(paymentDate: string, flatNo: string, sequenc
   return `NXL-${year}-${month}-${flatNo}-${String(sequence).padStart(3, '0')}`
 }
 
-/** Nothing owed (e.g. a fully-credited flat) → paid; nothing paid → unpaid; covers the due (or overpays it) → paid; anything in between → partial. */
-export function paymentStatus(totalDue: number, amountPaid: number): PaymentStatus {
+/**
+ * Nothing owed (e.g. a fully-credited flat) → paid; nothing paid → unpaid; covers the due (or
+ * overpays it) → paid; anything in between → partial. `isBilled` defaults true so every existing
+ * caller is unaffected — pass false (no maintenance period at all, or the current one is still
+ * draft/unpublished) to get 'not_billed' instead, a status distinct from 'unpaid' since there's no
+ * real bill to be unpaid against yet. Never derived from or mixed with a reimbursement balance —
+ * see reimbursementStatus below, which is a completely separate figure.
+ */
+export function paymentStatus(totalDue: number, amountPaid: number, isBilled: boolean = true): PaymentStatus {
+  if (!isBilled) return 'not_billed'
   if (totalDue <= 0) return 'paid'
   if (amountPaid <= 0) return 'unpaid'
   return amountPaid >= totalDue ? 'paid' : 'partial'
+}
+
+/** Status of a flat's reimbursement balance — 'none' covers both "nothing was ever owed" and "owed but nothing settled yet"; the actual remaining amount is a separate number (see getReimbursementBalanceForFlat), this only describes settlement progress. */
+export type ReimbursementStatus = 'none' | 'partially_settled' | 'settled'
+export function reimbursementStatus(owed: number, settled: number): ReimbursementStatus {
+  if (owed <= 0) return 'none'
+  const remaining = owed - settled
+  if (remaining <= 0) return 'settled'
+  return settled > 0 ? 'partially_settled' : 'none'
 }
 
 /**

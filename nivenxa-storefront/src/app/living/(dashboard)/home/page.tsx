@@ -1,21 +1,31 @@
 import Link from 'next/link'
 import { requireMembership } from '@/lib/living/auth'
-import { formatCurrency, formatMonthLabel, formatPeriodLabel, monthKeyFor } from '@/lib/living/format'
+import { formatActivityTimestamp, formatCurrency, formatCurrencyCompact, formatMonthLabel, formatPeriodLabel, monthKeyFor } from '@/lib/living/format'
 import {
   computeBillForFlat,
   getAllPaymentsForFlat,
   getBillableFlats,
+  getCurrentAvailableBalance,
   getCurrentMaintenancePeriod,
   getExpensesForPeriod,
   getFlats,
+  getMeetings,
   getOpenDisputes,
   getPendingClaims,
-  getRiseAlerts,
+  getPublishedStatements,
+  getRecentActivity,
   sumExpenses,
+  type ActivityEntry,
 } from '@/lib/living/queries'
+import InviteResidentButton from '../InviteResidentButton'
 import theme from '../../LivingTheme.module.scss'
 import styles from '../Home.module.scss'
 import ownerStyles from './OwnerHome.module.scss'
+
+function activityTitle(entry: ActivityEntry): string {
+  if (entry.kind === 'payment') return `Payment received · Flat ${entry.flatNo}`
+  return `Expense added · ${entry.category ?? entry.description}`
+}
 
 export default async function LivingAppHomePage() {
   const { supabase, membership, apartment } = await requireMembership()
@@ -45,151 +55,207 @@ export default async function LivingAppHomePage() {
     )
   }
 
-  const [flats, pendingClaims, openDisputes, riseAlerts] = await Promise.all([
+  const [flats, pendingClaims, openDisputes, meetings, publishedStatements] = await Promise.all([
     getFlats(supabase, apartment.id),
     getPendingClaims(supabase, apartment.id),
     getOpenDisputes(supabase, apartment.id),
-    getRiseAlerts(supabase, apartment, month),
+    getMeetings(supabase, apartment.id),
+    getPublishedStatements(supabase, apartment.id),
   ])
 
   const billableFlats = getBillableFlats(flats)
   const currentPeriod = await getCurrentMaintenancePeriod(supabase, apartment.id)
   const [bills, periodExpenses] = await Promise.all([
-    Promise.all(billableFlats.map((flat) => computeBillForFlat(supabase, apartment, flat, month))),
+    Promise.all(
+      billableFlats.map((flat) => computeBillForFlat(supabase, apartment, flat, month, { allFlats: flats, maintenanceMonth: currentPeriod }))
+    ),
     currentPeriod ? getExpensesForPeriod(supabase, currentPeriod.id) : Promise.resolve([]),
   ])
 
   const monthlyExpenses = sumExpenses(periodExpenses)
   const collected = bills.reduce((sum, b) => sum + b.amount_paid, 0)
-  // Summed across every bill, some flats' balance_remaining can be negative
-  // (an overpayment/advance) — if that credit outweighs what other flats
-  // still owe, the raw sum goes negative even though real money is still
-  // outstanding somewhere. A negative "Outstanding" reads as broken, not as
-  // "the community is net ahead", so clamp the DISPLAYED figure at zero
-  // rather than showing a confusing negative or a misleading abs() flip.
-  const outstandingRaw = bills.reduce((sum, b) => sum + b.balance_remaining, 0)
-  const outstanding = Math.max(0, outstandingRaw)
+  // A flat's own balance_remaining can be negative (an overpayment/advance) —
+  // that's THAT flat's credit, not money that offsets some other flat's
+  // unpaid balance. Netting the raw sum across every bill let one flat's
+  // advance cancel out another flat's real unpaid balance and show
+  // "Outstanding ₹0.00" while a flat still genuinely owed money. Summing
+  // only the positive balances is what "Outstanding" actually means: total
+  // still owed to the community, per flat, never offset by unrelated credit.
+  const outstanding = bills.reduce((sum, b) => sum + Math.max(0, b.balance_remaining), 0)
   const flatsPaidCount = bills.filter((b) => b.payment_status === 'paid').length
-  const nonBillableFlats = flats.length - billableFlats.length
+  const unpaidCount = billableFlats.length - flatsPaidCount
+
+  // A short preview list dominated by one activity kind reads as repetitive
+  // — fetch a bigger recency-sorted pool, then cap EACH kind at 2 entries so
+  // a burst of payments (or expenses) doesn't crowd out the other kind.
+  // /living/activity (the uncapped, filterable full list) doesn't do this —
+  // a variety cap only makes sense on a 5-item teaser.
+  const recentActivityPool = await getRecentActivity(supabase, apartment.id, 10)
+  const shownByKind: Record<ActivityEntry['kind'], number> = { payment: 0, expense: 0 }
+  const recentActivity: ActivityEntry[] = []
+  for (const entry of recentActivityPool) {
+    if (shownByKind[entry.kind] >= 2) continue
+    shownByKind[entry.kind]++
+    recentActivity.push(entry)
+    if (recentActivity.length >= 5) break
+  }
+  const availableBalance = getCurrentAvailableBalance(apartment, publishedStatements, currentPeriod?.id ?? null, collected, monthlyExpenses)
+
+  const maintenanceReady = currentPeriod?.status === 'published'
+  const statementPublished = currentPeriod ? publishedStatements.some((s) => s.maintenance_month_id === currentPeriod.id) : false
+  const latestMeeting = meetings[0]
 
   return (
     <>
       <h1 className={theme.heading} style={{ fontSize: '1.6rem', marginBottom: '0.3rem' }}>
         {apartment.name}
       </h1>
-      <p className={theme.muted} style={{ marginBottom: '1.5rem' }}>{formatMonthLabel(month)}</p>
+      <p className={theme.muted} style={{ marginBottom: '1.25rem' }}>{formatMonthLabel(month)}</p>
 
-      {/* "How's my apartment doing this month" — the headline cards an Admin/Treasurer actually opens this page to check. */}
+      <h2 className={styles.sectionTitle}>Financial Summary</h2>
       <div className={styles.grid}>
         <div className={theme.card}>
-          <div className={styles.statLabel}>Monthly expenses</div>
-          <div className={styles.statValue}>{formatCurrency(monthlyExpenses)}</div>
+          <div className={styles.statLabel}>Collected</div>
+          <div className={`${styles.statValue} ${theme.creditText}`}>{formatCurrencyCompact(collected)}</div>
           <div className={styles.statSub}>
-            <Link href="/living/expenses">Open →</Link>
+            <Link href="/living/payments">View payments →</Link>
           </div>
         </div>
         <div className={theme.card}>
-          <div className={styles.statLabel}>Collected</div>
-          <div className={`${styles.statValue} ${theme.creditText}`}>{formatCurrency(collected)}</div>
+          <div className={styles.statLabel}>Expenses</div>
+          <div className={styles.statValue}>{formatCurrencyCompact(monthlyExpenses)}</div>
           <div className={styles.statSub}>
-            <Link href="/living/payments">Open →</Link>
+            <Link href="/living/expenses">View expenses →</Link>
           </div>
         </div>
         <div className={theme.card}>
           <div className={styles.statLabel}>Outstanding</div>
-          <div className={`${styles.statValue} ${outstanding > 0 ? theme.warnText : ''}`}>{formatCurrency(outstanding)}</div>
+          <div className={`${styles.statValue} ${outstanding > 0 ? theme.warnText : ''}`}>{formatCurrencyCompact(outstanding)}</div>
           <div className={styles.statSub}>
-            <Link href="/living/billing/ledgers">Open →</Link>
+            <Link href="/living/billing/ledgers">View pending →</Link>
           </div>
         </div>
         <div className={theme.card}>
-          <div className={styles.statLabel}>Billable flats paid</div>
-          <div className={styles.statValue}>
-            {flatsPaidCount} / {billableFlats.length}
-          </div>
+          <div className={styles.statLabel}>Closing Balance</div>
+          <div className={styles.statValue}>{formatCurrencyCompact(availableBalance)}</div>
           <div className={styles.statSub}>
-            {nonBillableFlats > 0 ? (
-              <span className={theme.muted}>
-                {nonBillableFlats} flat{nonBillableFlats === 1 ? '' : 's'} not billed separately ·{' '}
-              </span>
-            ) : null}
-            <Link href="/living/bills">Open →</Link>
+            <Link href="/living/statements">View statement →</Link>
           </div>
         </div>
       </div>
 
-      {/* Configuration/administrative numbers — demoted to one compact strip rather than four equally-weighted cards. */}
-      <div className={theme.card} style={{ marginBottom: '1.5rem' }}>
-        <h2 className={styles.sectionTitle} style={{ marginBottom: '1rem' }}>
-          Community overview
-        </h2>
-        <div className={styles.miniStats}>
-          <div className={styles.miniStat}>
-            <span className={styles.miniStatLabel}>Flats</span>
-            <span className={styles.miniStatValue}>
-              {flats.length} / {apartment.flat_count}
-            </span>
-            <span className={styles.statSub}>{apartment.flat_split === 'equal' ? 'Equal split' : 'Weighted by sq ft'}</span>
+      {/* Compact status cards, not KPI cards — each holds one status line and one action
+          link, so the row reads at a glance without competing with Financial Summary above it. */}
+      <h2 className={styles.sectionTitle}>This Month</h2>
+      <div className={styles.statusGrid}>
+        <Link href="/living/bills" className={styles.statusTile}>
+          <div className={styles.statLabel}>Collections</div>
+          <div className={styles.statusTileValue}>
+            {flatsPaidCount} / {billableFlats.length} Paid
           </div>
-          {membership.role === 'admin' && (
-            <div className={styles.miniStat}>
-              <span className={styles.miniStatLabel}>Join code</span>
-              <span className={`${styles.miniStatValue} ${styles.joinCode}`}>{apartment.join_code}</span>
-              <span className={styles.statSub}>Share with owners to join</span>
-            </div>
-          )}
-          <div className={styles.miniStat}>
-            <span className={styles.miniStatLabel}>Open disputes</span>
-            <span className={styles.miniStatValue}>{openDisputes.length}</span>
-            <span className={styles.statSub}>
-              <Link href="/living/disputes">Review queue →</Link>
-            </span>
+          <div className={styles.statusTileAction}>{unpaidCount > 0 ? `${unpaidCount} pending ›` : 'All caught up ›'}</div>
+        </Link>
+        <Link href="/living/maintenance" className={styles.statusTile}>
+          <div className={styles.statLabel}>Billing</div>
+          <div className={styles.statusTileValue} style={{ color: maintenanceReady ? 'var(--living-ok)' : 'var(--living-brass)' }}>
+            <span className={styles.statusDot} />
+            {maintenanceReady ? 'Ready' : 'Not started'}
           </div>
-          {membership.role === 'admin' && (
-            <div className={styles.miniStat}>
-              <span className={styles.miniStatLabel}>Pending flat requests</span>
-              <span className={styles.miniStatValue}>{pendingClaims.length}</span>
-              <span className={styles.statSub}>
-                <Link href="/living/setup">Review in Setup →</Link>
-              </span>
-            </div>
-          )}
-        </div>
+          <div className={styles.statusTileAction}>View ›</div>
+        </Link>
+        <Link href="/living/statements" className={styles.statusTile}>
+          <div className={styles.statLabel}>Statement</div>
+          <div className={styles.statusTileValue} style={{ color: statementPublished ? 'var(--living-ok)' : 'var(--living-brass)' }}>
+            <span className={styles.statusDot} />
+            {statementPublished ? 'Shared' : 'Not Shared'}
+          </div>
+          <div className={styles.statusTileAction}>{statementPublished ? 'View ›' : 'Share ›'}</div>
+        </Link>
+        {/* Hidden, not a "Not tracked yet" placeholder, until the reimbursement/ledger
+            subsystem exists — a tile that always says "not tracked" reads as broken, not
+            as a real status. Once getApartmentReimbursementsDue() exists, this becomes:
+            <Link href="/living/reimbursements" className={styles.statusTile}>
+              <div className={styles.statLabel}>Reimbursements</div>
+              <div className={styles.statusTileValue}>{formatCurrencyCompact(due)} Due</div>
+              <div className={styles.statusTileAction}>{flatCount} resident{flatCount === 1 ? '' : 's'} ›</div>
+            </Link> */}
       </div>
 
-      {riseAlerts.length > 0 && (
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>Sustained water-usage rises</h2>
-          <div className={styles.rowList}>
-            {riseAlerts.map((alert) => (
-              <div key={alert.flat.id} className={styles.row}>
-                <span>
-                  Flat {alert.flat.flat_no} — risen {alert.streak} months in a row
-                </span>
-                <span className={theme.pillFlag}>Check in</span>
-              </div>
-            ))}
+      {/* Left column is two independent, content-height cards (Community, Latest Meeting) —
+          NOT stretched to match Recent Activity's height. .twoCol's align-items: start is
+          what stops the grid from forcing every card in the row to match the tallest one. */}
+      <div className={styles.twoCol}>
+        <div className={styles.stackCol}>
+          <div className={theme.card} style={{ padding: '1.1rem 1.3rem' }}>
+            <h2 className={styles.sectionTitle}>Community</h2>
+            <p style={{ margin: 0, fontSize: '0.92rem' }}>{flats.length} Flats · {billableFlats.length} Billable</p>
+            <p style={{ margin: '0.15rem 0 0.6rem', fontSize: '0.92rem' }}>
+              {membership.role === 'admin' && (
+                <>
+                  <Link href="/living/setup">
+                    {pendingClaims.length} Pending Request{pendingClaims.length === 1 ? '' : 's'}
+                  </Link>
+                  {' · '}
+                </>
+              )}
+              <Link href="/living/disputes">
+                {openDisputes.length} Dispute{openDisputes.length === 1 ? '' : 's'}
+              </Link>
+            </p>
+            {membership.role === 'admin' && <InviteResidentButton apartmentName={apartment.name} joinCode={apartment.join_code} />}
+          </div>
+
+          <div className={theme.card} style={{ padding: '1.1rem 1.3rem' }}>
+            <h2 className={styles.sectionTitle}>Latest Meeting</h2>
+            {latestMeeting ? (
+              <>
+                <p style={{ margin: 0, fontWeight: 600, fontSize: '0.92rem' }}>{latestMeeting.title}</p>
+                <p className={styles.statSub} style={{ marginBottom: '0.5rem' }}>
+                  {new Date(latestMeeting.meeting_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </p>
+                <p className={styles.statSub} style={{ margin: 0 }}>
+                  <Link href={`/living/meetings/${latestMeeting.id}`}>View MOM →</Link>
+                  {' · '}
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(`${latestMeeting.title} — ${apartment.name}: nivenxa.com/living/meetings/${latestMeeting.id}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Share →
+                  </a>
+                </p>
+              </>
+            ) : (
+              <>
+                <p className={theme.muted} style={{ margin: '0 0 0.4rem' }}>No meeting minutes added yet.</p>
+                <Link href="/living/meetings" className={styles.statSub}>
+                  Add Meeting Minutes →
+                </Link>
+              </>
+            )}
           </div>
         </div>
-      )}
 
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>Quick links</h2>
-        <div className={styles.rowList}>
-          <div className={styles.row}>
-            <span>This month&rsquo;s maintenance line items</span>
-            <Link href="/living/maintenance">Open →</Link>
-          </div>
-          {membership.role === 'admin' && (
-            <div className={styles.row}>
-              <span>Water readings entry</span>
-              <Link href="/living/water">Open →</Link>
+        <div className={theme.card}>
+          <h2 className={styles.sectionTitle}>Recent Activity</h2>
+          {recentActivity.length > 0 ? (
+            <div>
+              {recentActivity.map((entry, i) => (
+                <div key={i} className={styles.activityEntry}>
+                  <div className={styles.activityTop}>
+                    <span>{activityTitle(entry)}</span>
+                    <span>{formatCurrency(entry.amount)}</span>
+                  </div>
+                  <div className={styles.activityTime}>{formatActivityTimestamp(entry.createdAt)}</div>
+                </div>
+              ))}
             </div>
+          ) : (
+            <p className={theme.muted}>No activity recorded yet.</p>
           )}
-          <div className={styles.row}>
-            <span>Bill &amp; payment documents</span>
-            <Link href="/living/documents">Open →</Link>
-          </div>
+          <p className={styles.statSub} style={{ marginTop: '0.6rem' }}>
+            <Link href="/living/activity">View all activity →</Link>
+          </p>
         </div>
       </div>
     </>
