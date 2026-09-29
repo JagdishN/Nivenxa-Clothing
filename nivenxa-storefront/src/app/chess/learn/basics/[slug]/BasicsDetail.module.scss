@@ -1,9 +1,40 @@
+@use '../../../../../styles/variables' as v;
+
+// Deliberately its own `.page` (not composed from OpeningDetail.module.scss,
+// which stays plain/neutral by design for Openings) — Basics is reached from
+// the lavender Learn catalogue and should stay visually continuous with it
+// all the way through completion, not drop to a plain white canvas the
+// moment a lesson opens.
+//
+// Above the tablet breakpoint this is also a fixed-height flex column (nav
+// sits above it, outside this element, as an ordinary block sibling in
+// chess/layout.tsx — see BasicsDetail.tsx's viewport measurement, which
+// reads the real gap below nav+hero rather than guessing it in CSS) so the
+// workspace below can consume exactly what's left and the whole lesson
+// fits without page scroll. Below the breakpoint this reverts to a normal
+// scrollable page — trying to force a no-scroll fit at phone/tablet widths
+// would just cramp the board instead.
 .page {
-  composes: page from '../../openings/[slug]/OpeningDetail.module.scss';
+  composes: pageBackground from '../../../ChessTheme.module.scss';
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
+
+  @include v.lg {
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
 }
 
 .hero {
   composes: hero from '../../openings/[slug]/OpeningDetail.module.scss';
+  flex: 0 0 auto;
+  // Tighter than Openings' hero, and tighter still now that the lesson-level
+  // description line is gone (the teaching panel owns explanation now, not
+  // this hero) — the board+panel workspace should be visible almost
+  // immediately, not after an intro block's worth of vertical space.
+  padding-bottom: clamp(0.4rem, 0.8vw, 0.6rem);
 }
 
 .breadcrumb {
@@ -12,45 +43,22 @@
 
 .heading {
   composes: heading from '../../openings/[slug]/OpeningDetail.module.scss';
+  margin-bottom: 0;
 }
 
-.subtext {
-  composes: subtext from '../../openings/[slug]/OpeningDetail.module.scss';
-}
+// The actual board+panel workspace — see BasicsWorkspace.module.scss (the
+// shared home for this sizing across every Basics lesson engine: BoardLesson,
+// PieceLesson, MiniGameLesson, MoveTrainer). Previously this composed
+// `.layout` from OpeningDetail.module.scss, which no longer defines that
+// class after Openings moved to its own OpeningLesson.module.scss workspace —
+// that left Basics silently falling back to no layout at all (everything
+// stacked full-width, exactly the "board on top, panel below, scroll to
+// find Next" symptom reported).
+.workspace {
+  composes: workspace from '../../_shared/BasicsWorkspace.module.scss';
 
-.layout {
-  composes: layout from '../../openings/[slug]/OpeningDetail.module.scss';
-}
-
-// The two plain intro lessons (The Board, Meet the Pieces) lay out their
-// own board+panel — same frame as MoveTrainer/StepThroughPanel for
-// consistency, since they share this `.layout` row.
-.boardCol {
-  composes: boardCol from '../../_shared/StepThroughPanel.module.scss';
-}
-
-.boardWrap {
-  composes: boardWrap from '../../_shared/StepThroughPanel.module.scss';
-}
-
-.panelCol {
-  composes: panelCol from '../../_shared/StepThroughPanel.module.scss';
-}
-
-.explanation {
-  composes: explanation from '../../_shared/MoveTrainer.module.scss';
-}
-
-.explanationText {
-  composes: explanationText from '../../_shared/MoveTrainer.module.scss';
-}
-
-.actions {
-  composes: actions from '../../_shared/PracticePanel.module.scss';
-}
-
-.actionBtn {
-  composes: actionBtn from '../../_shared/PracticePanel.module.scss';
-  display: inline-block;
-  text-decoration: none;
+  @include v.lg {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
 }

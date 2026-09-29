@@ -1,17 +1,61 @@
 .boardCol {
-  composes: boardCol from './StepThroughPanel.module.scss';
+  composes: boardCol from './BasicsWorkspace.module.scss';
 }
 
 .boardWrap {
-  composes: boardWrap from './PracticePanel.module.scss';
+  composes: boardWrap from './BasicsWorkspace.module.scss';
 }
 
 .panelCol {
-  composes: panelCol from './StepThroughPanel.module.scss';
+  composes: panelCol from './BasicsWorkspace.module.scss';
 }
 
-.stageIndicator {
-  composes: puzzleIndicator from './TacticPuzzleSet.module.scss';
+// Step counter (left) and stage eyebrow (right) share one row — see item
+// 13's "16 of 20 ... Your Turn" layout, rather than one run-on line.
+.stepCounterRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.stepCounter {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: rgba(31, 27, 58, 0.5);
+  margin: 0;
+}
+
+.stageEyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--chess-purple);
+  margin: 0;
+}
+
+// The short per-step teaching title (BoardDemoStep.headline etc.) — sits
+// between the progress line and the explanation body.
+.stepHeadline {
+  font-family: var(--font-serif);
+  font-size: clamp(1.05rem, 1.8vw, 1.2rem);
+  font-weight: 400;
+  color: var(--chess-deep);
+  margin: 0;
+  line-height: 1.3;
+}
+
+// Always rendered before .actions (the fixed Back/Next footer) — pushes it
+// to the bottom of the panel for every step, so lesson navigation sits in
+// exactly the same place regardless of how much (or little) content is
+// above it. Yes/No, by contrast, renders in .answerRow right after the
+// question — that's answering, not navigating, and belongs near the prompt.
+.actionsSpacer {
+  flex: 1 1 auto;
 }
 
 // A single short instruction ("Now find c6.") left a lot of dead air under
@@ -31,12 +75,39 @@
   composes: promptCardDone from './PracticePanel.module.scss';
 }
 
+// The plain (no border, no background) variant — used for the ordinary
+// "reading a prompt" or "wrong, try again" states, which don't need their
+// own bordered rectangle inside the already-bordered panel. Only a genuine
+// reaction moment (correct / lesson complete) gets the card treatment above.
+.promptPlain {
+  min-height: 2.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 .promptText {
   composes: promptText from './PracticePanel.module.scss';
 }
 
+// Yes/No, right under the question — a plain flex row, not part of the
+// fixed navigation footer below.
+.answerRow {
+  display: flex;
+  gap: 0.6rem;
+}
+
 .actions {
   composes: actions from './PracticePanel.module.scss';
+  justify-content: space-between;
+}
+
+// Back is always rendered (never removed from the layout) so the footer's
+// own height/position never shifts — just made invisible and inert when it
+// doesn't apply yet (step 1) or mid-advance (a correct answer already
+// moving on).
+.actionBtnHidden {
+  visibility: hidden;
 }
 
 .actionBtn {

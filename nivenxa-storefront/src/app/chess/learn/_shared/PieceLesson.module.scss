@@ -2,19 +2,38 @@
 // a piece lesson is structurally the same "step through several small
 // exercises, then celebrate" shape, just with demo steps mixed in.
 .boardCol {
-  composes: boardCol from './StepThroughPanel.module.scss';
+  composes: boardCol from './BasicsWorkspace.module.scss';
 }
 
 .boardWrap {
-  composes: boardWrap from './PracticePanel.module.scss';
+  composes: boardWrap from './BasicsWorkspace.module.scss';
 }
 
 .panelCol {
-  composes: panelCol from './StepThroughPanel.module.scss';
+  composes: panelCol from './BasicsWorkspace.module.scss';
 }
 
-.stageIndicator {
-  composes: puzzleIndicator from './TacticPuzzleSet.module.scss';
+.stepCounterRow {
+  composes: stepCounterRow from './BoardLesson.module.scss';
+}
+
+.stepCounter {
+  composes: stepCounter from './BoardLesson.module.scss';
+}
+
+.stageEyebrow {
+  composes: stageEyebrow from './BoardLesson.module.scss';
+}
+
+// Same step-progress bar as BoardLesson, under the "Step N of M" label —
+// piece-movement lessons didn't have one before; adding it here makes every
+// Basics lesson type show progress the same way.
+.progressTrack {
+  composes: progressTrack from './BoardLesson.module.scss';
+}
+
+.progressFill {
+  composes: progressFill from './BoardLesson.module.scss';
 }
 
 .promptCard {
@@ -29,12 +48,25 @@
   composes: promptCardDone from './PracticePanel.module.scss';
 }
 
+.promptPlain {
+  composes: promptPlain from './BoardLesson.module.scss';
+}
+
 .promptText {
   composes: promptText from './PracticePanel.module.scss';
 }
 
 .actions {
   composes: actions from './PracticePanel.module.scss';
+  justify-content: space-between;
+}
+
+.actionsSpacer {
+  composes: actionsSpacer from './BoardLesson.module.scss';
+}
+
+.actionBtnHidden {
+  composes: actionBtnHidden from './BoardLesson.module.scss';
 }
 
 .actionBtn {

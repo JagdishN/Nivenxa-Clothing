@@ -90,6 +90,8 @@ export interface BasicsLesson {
   /** Your First Mini Game only — routes to `MiniGameLesson` instead of any quiz engine. */
   miniGame?: boolean
   miniGameFen?: string
+  /** Natural-sounding completion line — e.g. "You learned how the chessboard works!" Falls back to a generic "You learned {name}!" when absent, which reads fine for some lesson names ("You learned Checkmate!") and awkwardly for others ("You learned The Chessboard!" / "You learned How Pawns Move!"), so this should be set for every lesson in practice. */
+  completionHeadline?: string
   completionSummary?: string[]
 }
 
@@ -102,48 +104,54 @@ export const BASICS: BasicsLesson[] = [
     slug: 'the-chessboard',
     name: 'The Chessboard',
     description: 'A chessboard has 64 squares, two colours, one correct direction, and a name for every square.',
-    summary: 'Learn the board — squares, colours, direction, and names.',
+    summary: 'Discover the squares, coordinates, and the right way to face the board.',
     boardFen: EMPTY_FEN,
+    completionHeadline: 'You learned how the chessboard works!',
     boardSteps: [
       // Part A — meet the board
       {
         kind: 'demo',
         stageLabel: 'MEET THE BOARD',
-        text: ['A chessboard has 64 squares.', 'It has 8 rows and 8 columns.'],
+        headline: 'Meet the chessboard',
+        text: ['A chessboard has 64 squares, arranged in an 8 × 8 grid — 8 across and 8 down.'],
       },
       {
         kind: 'demo',
         stageLabel: 'ONE ROW',
+        headline: 'Rows go across',
         highlightSquares: ['a4', 'b4', 'c4', 'd4', 'e4', 'f4', 'g4', 'h4'],
-        text: ['Here is one row.', 'It has 8 squares.'],
+        text: ['This is one row. Every row on the board has 8 squares.'],
       },
       {
         kind: 'demo',
         stageLabel: 'ONE COLUMN',
+        headline: 'Columns go up and down',
         highlightSquares: ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8'],
-        text: ['Here is one column.', 'It also has 8 squares, going the other way.'],
+        text: ['This is one column — the same idea, the other way. It also has 8 squares.'],
       },
       // Part B — two colours
       {
         kind: 'demo',
         stageLabel: 'TWO COLOURS',
-        text: ['The squares use two colours.', 'The colours take turns from one square to the next.'],
+        headline: 'Light and dark squares',
+        text: ['Every square is either light or dark.', 'The colours alternate across the board — light, dark, light, dark.'],
       },
       {
         kind: 'demo',
         stageLabel: 'LIGHT AND DARK',
+        headline: 'Not always black and white',
         text: [
-          'Chessboards can use different colours.',
-          'They might be white and black, cream and brown, or even white and green.',
-          'Whatever the colours are, we call them light squares and dark squares.',
+          "Boards come in different colours — cream and brown, white and green, even purple. It doesn't matter which.",
+          'Whichever colours a board uses, we always just call them light squares and dark squares.',
         ],
       },
       {
         kind: 'squareQuiz',
         stageLabel: 'YOUR TURN',
+        headline: 'Spot the colour',
         mode: 'any',
         correctSquares: allLightSquares(),
-        prompt: 'Click a light square.',
+        prompt: 'Can you find a light square? Click any one on the board.',
         wrongText: "Not quite — that's a dark square.",
         hintText: 'Try a2, c2, e2, or g2.',
         revealSquaresFrom: 'hint',
@@ -152,9 +160,10 @@ export const BASICS: BasicsLesson[] = [
       {
         kind: 'squareQuiz',
         stageLabel: 'YOUR TURN',
+        headline: 'Spot the colour',
         mode: 'any',
         correctSquares: allDarkSquares(),
-        prompt: 'Now click a dark square.',
+        prompt: 'Now can you find a dark square?',
         wrongText: "Not quite — that's a light square.",
         hintText: 'Try a1, c1, e1, or g1.',
         revealSquaresFrom: 'hint',
@@ -163,20 +172,19 @@ export const BASICS: BasicsLesson[] = [
       // Part C — board direction (real pieces, for a concrete "is this right" judgement)
       {
         kind: 'demo',
-        stageLabel: 'PUT IT THE RIGHT WAY',
-        fen: START_FEN,
-        text: ["Now let's set up the board correctly.", 'The square at your bottom-right should be a light square.'],
-      },
-      {
-        kind: 'demo',
-        stageLabel: 'REMEMBER',
+        stageLabel: 'LIGHT ON THE RIGHT',
+        headline: 'Light square on the right',
         fen: START_FEN,
         highlightSquares: ['h1'],
-        text: ['A simple memory line:', 'Light on the right.'],
+        text: [
+          'When the board is facing the right way, the square in your bottom-right corner is light.',
+          'An easy way to remember it: light on right.',
+        ],
       },
       {
         kind: 'yesNo',
         stageLabel: 'IS THIS RIGHT?',
+        headline: 'Is this board facing the right way?',
         boardIsCorrect: true,
         prompt: 'Is this board the right way around?',
         correctText: 'Yes — the light square is on the right.',
@@ -185,8 +193,9 @@ export const BASICS: BasicsLesson[] = [
       {
         kind: 'yesNo',
         stageLabel: 'IS THIS RIGHT?',
+        headline: 'Is this board set correctly?',
         boardIsCorrect: false,
-        prompt: 'What about this one — is it the right way around?',
+        prompt: 'Is this board the right way around?',
         correctText: 'Right — the dark square is on the right, so this board is turned the wrong way.',
         wrongText: 'Look again — the bottom-right square here is dark. That is the wrong way around.',
       },
@@ -197,78 +206,112 @@ export const BASICS: BasicsLesson[] = [
       {
         kind: 'demo',
         stageLabel: 'FILES',
+        headline: 'Files go up and down',
         highlightSquares: ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'e8'],
-        text: ['The lines going up and down use letters.', 'They go from a to h.'],
-        emphasizeCoordinates: true,
-      },
-      {
-        kind: 'demo',
-        stageLabel: 'RANKS',
-        highlightSquares: ['a4', 'b4', 'c4', 'd4', 'e4', 'f4', 'g4', 'h4'],
-        text: ['The lines going across use numbers.', 'They go from 1 to 8.'],
-        emphasizeCoordinates: true,
-      },
-      {
-        kind: 'demo',
-        stageLabel: 'SQUARE NAMES',
-        highlightSquares: ['e4'],
-        text: ['Every square has a name.', 'It combines its letter and its number.', 'This square is e4.'],
+        text: ['The vertical columns are called files.', 'They are named with letters, a through h.'],
         emphasizeCoordinates: true,
       },
       {
         kind: 'squareQuiz',
         stageLabel: 'YOUR TURN',
+        headline: 'Find the square',
+        mode: 'any',
+        correctSquares: ['f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8'],
+        prompt: 'Can you find the f-file? Click any square on it.',
+        wrongText: 'Almost — the f-file is the 6th column from the left.',
+        hintText: 'Files go a, b, c, d, e, f… count 6 in from the left edge.',
+        revealSquaresFrom: 'hint',
+        correctText: "That's the f-file!",
+        emphasizeCoordinates: true,
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'RANKS',
+        headline: 'Ranks go across',
+        highlightSquares: ['a4', 'b4', 'c4', 'd4', 'e4', 'f4', 'g4', 'h4'],
+        text: ['The horizontal rows are called ranks.', 'They are numbered 1 to 8.'],
+        emphasizeCoordinates: true,
+      },
+      {
+        kind: 'squareQuiz',
+        stageLabel: 'YOUR TURN',
+        headline: 'Find the square',
+        mode: 'any',
+        correctSquares: ['a6', 'b6', 'c6', 'd6', 'e6', 'f6', 'g6', 'h6'],
+        prompt: 'Can you find rank 6? Click any square on it.',
+        wrongText: 'Almost — rank 6 is the 6th row from the bottom.',
+        hintText: 'Ranks are numbered 1 to 8, starting from the row closest to you.',
+        revealSquaresFrom: 'hint',
+        correctText: "That's rank 6!",
+        emphasizeCoordinates: true,
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'SQUARE NAMES',
+        headline: 'Every square has a name',
+        highlightSquares: ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'e8', 'a4', 'b4', 'c4', 'd4', 'e4', 'f4', 'g4', 'h4'],
+        text: ['Combine the file letter and the rank number.', 'The e-file crosses rank 4 at e4 — so this square is called e4.'],
+        emphasizeCoordinates: true,
+      },
+      {
+        kind: 'squareQuiz',
+        stageLabel: 'YOUR TURN',
+        headline: 'Find the square',
         mode: 'any',
         correctSquares: ['e4'],
         prompt: 'Can you find e4?',
         wrongText: 'Almost — look at file e and rank 4.',
         hintText: 'e4 is the letter e, number 4.',
         revealSquaresFrom: 'hint',
-        correctText: "That's e4!",
+        correctText: "Exactly! That's e4.",
         emphasizeCoordinates: true,
       },
       {
         kind: 'squareQuiz',
         stageLabel: 'YOUR TURN',
+        headline: 'Find the square',
         mode: 'any',
         correctSquares: ['c6'],
         prompt: 'Now find c6.',
         wrongText: 'Almost — look at file c and rank 6.',
         hintText: 'c6 is the letter c, number 6.',
         revealSquaresFrom: 'hint',
-        correctText: "That's c6!",
+        correctText: "Exactly! That's c6.",
         emphasizeCoordinates: true,
       },
       {
         kind: 'squareQuiz',
         stageLabel: 'YOUR TURN',
+        headline: 'Find the square',
         mode: 'any',
         correctSquares: ['b7'],
         prompt: 'One more — find b7.',
         wrongText: 'Almost — look at file b and rank 7.',
         hintText: 'b7 is the letter b, number 7.',
         revealSquaresFrom: 'hint',
-        correctText: "That's b7!",
+        correctText: "Exactly! That's b7.",
         emphasizeCoordinates: true,
       },
       {
         kind: 'squareQuiz',
         stageLabel: 'YOUR TURN',
+        headline: 'Find the square',
         mode: 'any',
         correctSquares: ['h1'],
         prompt: 'Last one — find h1.',
         wrongText: 'Almost — look at file h and rank 1.',
         hintText: 'h1 is the letter h, number 1.',
         revealSquaresFrom: 'hint',
-        correctText: "That's h1!",
+        correctText: "Exactly! That's h1.",
         emphasizeCoordinates: true,
       },
       {
         kind: 'squareQuiz',
         stageLabel: 'SHOW WHAT YOU LEARNED',
+        headline: 'Show what you learned',
         mode: 'all',
         correctSquares: ['a1', 'h8'],
-        prompt: '⭐ Show what you learned — find both a1 and h8.',
+        prompt: '⭐ Find both corners of the board — a1 and h8.',
         wrongText: 'Not quite. Try again.',
         hintText: 'a1 is the near-left corner, h8 is the far corner.',
         revealSquaresFrom: 'hint',
@@ -277,16 +320,18 @@ export const BASICS: BasicsLesson[] = [
       },
     ],
     completionSummary: [
-      'A chessboard has 64 squares, in 8 rows and 8 columns, alternating light and dark.',
-      'Set up the board with a light square on your right.',
-      'Every square has a name — its letter (a-h) and its number (1-8).',
+      'The board has 64 squares, in 8 rows and 8 columns, alternating light and dark.',
+      'Files run up and down. Ranks run across.',
+      'Every square has a name — its file letter (a-h) and its rank number (1-8).',
+      'Light square goes on your right.',
     ],
   },
   {
     slug: 'meet-the-pieces',
     name: 'Meet Your Pieces',
     description: 'White and Black have the same six piece types, and some pieces are stronger than others.',
-    summary: 'Meet every piece — both colours, and how strong each one is.',
+    summary: 'Meet every piece and learn what makes each one special.',
+    completionHeadline: 'You met every piece on the board!',
     boardFen: START_FEN,
     boardSteps: [
       {
@@ -447,7 +492,8 @@ export const BASICS: BasicsLesson[] = [
     slug: 'set-up-the-pieces',
     name: 'Set Up the Board',
     description: 'Every piece has its own starting square.',
-    summary: 'Learn where each piece begins.',
+    summary: 'Learn where every piece belongs before the game begins.',
+    completionHeadline: 'You can set up the board yourself!',
     boardFen: EMPTY_FEN,
     boardSteps: [
       {
@@ -571,7 +617,8 @@ export const BASICS: BasicsLesson[] = [
     slug: 'pawns',
     name: 'How Pawns Move',
     description: 'Pawns move forward, and capture diagonally.',
-    summary: 'Learn how pawns move and capture.',
+    summary: 'Move forward, capture diagonally, and reach the other side.',
+    completionHeadline: 'You learned how pawns move!',
     steps: [
       {
         kind: 'demo',
@@ -666,7 +713,8 @@ export const BASICS: BasicsLesson[] = [
     slug: 'rooks',
     name: 'How Rooks Move',
     description: 'The rook moves straight — up, down, left, or right — as far as the path is clear.',
-    summary: 'Learn how rooks move, block, and capture.',
+    summary: 'Move in straight lines across rows and files.',
+    completionHeadline: 'You learned how rooks move!',
     steps: [
       {
         kind: 'demo',
@@ -750,7 +798,8 @@ export const BASICS: BasicsLesson[] = [
     slug: 'bishops',
     name: 'How Bishops Move',
     description: 'The bishop moves diagonally, as far as the path is clear.',
-    summary: 'Learn how bishops move, block, and capture.',
+    summary: 'Move diagonally across the board.',
+    completionHeadline: 'You learned how bishops move!',
     steps: [
       {
         kind: 'demo',
@@ -845,7 +894,8 @@ export const BASICS: BasicsLesson[] = [
     slug: 'knights',
     name: 'How Knights Move',
     description: 'The knight moves in an L shape, and can jump over other pieces.',
-    summary: 'Learn how knights move and jump.',
+    summary: "Learn the knight's unique L-shaped move.",
+    completionHeadline: 'You learned how knights move!',
     steps: [
       {
         kind: 'demo',
@@ -933,7 +983,8 @@ export const BASICS: BasicsLesson[] = [
     slug: 'queen',
     name: 'How Queens Move',
     description: 'The queen moves like a rook and a bishop combined.',
-    summary: 'Learn how the queen moves, blocks, and captures.',
+    summary: 'Discover how the most powerful piece moves.',
+    completionHeadline: 'You learned how the queen moves!',
     steps: [
       {
         kind: 'demo',
@@ -1020,7 +1071,8 @@ export const BASICS: BasicsLesson[] = [
     slug: 'king',
     name: 'How Kings Move',
     description: 'The king moves one square at a time, and must always stay safe.',
-    summary: 'Learn how the king moves and stays safe.',
+    summary: 'Move safely, one square at a time.',
+    completionHeadline: 'You learned how the king moves!',
     steps: [
       {
         kind: 'demo',
@@ -1105,7 +1157,8 @@ export const BASICS: BasicsLesson[] = [
     slug: 'check',
     name: 'Check',
     description: 'A move that attacks the king is called check.',
-    summary: 'Learn what check means and how to give it.',
+    summary: 'Discover what happens when the king comes under attack.',
+    completionHeadline: 'You learned what check means!',
     steps: [
       {
         kind: 'demo',
@@ -1155,7 +1208,8 @@ export const BASICS: BasicsLesson[] = [
     slug: 'escaping-check',
     name: 'Getting Out of Check',
     description: 'There are three ways out of check: move, block, or capture.',
-    summary: 'Learn the three ways to get your king out of check.',
+    summary: 'Learn the three ways to escape check.',
+    completionHeadline: 'You learned how to escape check!',
     steps: [
       {
         kind: 'demo',
@@ -1232,7 +1286,8 @@ export const BASICS: BasicsLesson[] = [
     slug: 'checkmate',
     name: 'Checkmate',
     description: 'Checkmate ends the game — the king is in check with no way to escape.',
-    summary: 'Learn how to find checkmate.',
+    summary: 'Learn why checkmate means the king has no safe way out.',
+    completionHeadline: 'You learned what checkmate means!',
     steps: [
       {
         kind: 'demo',
@@ -1284,7 +1339,7 @@ export const BASICS: BasicsLesson[] = [
     slug: 'mini-game',
     name: 'Your First Mini Game',
     description: 'Use everything you learned in a small game against Nivenxa.',
-    summary: 'Play a real, small game — your first time putting it all together.',
+    summary: "Play your first mini game and put everything you've learned into practice.",
     miniGame: true,
     miniGameFen: MINI_GAME_FEN,
     completionSummary: [

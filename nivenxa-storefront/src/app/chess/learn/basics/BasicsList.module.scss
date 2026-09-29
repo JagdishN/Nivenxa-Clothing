@@ -1,13 +1,49 @@
+@use '../../../../styles/variables' as v;
+
 // Basics is a strict, linear curriculum (not tiered like Openings/Tactics),
 // so its list reuses the top-level Learn page's plain numbered-card
-// treatment rather than the Start-Here/Learn-Next/Learn-Later grouping.
+// treatment — but with its own hero (compact, centered — the user came here
+// to pick a lesson, so the cards should arrive sooner, not after a large
+// intro block) and its own narrower, shorter card grid.
 .page {
   composes: page from '../Learn.module.scss';
 }
 
+// Contains the whole page — hero, progress, and grid together — inside one
+// centered column on a wide monitor, rather than letting the grid float
+// alone in a much wider page. The page's own lavender background (composed
+// above) still spans edge-to-edge behind this, so what's outside the column
+// reads as backdrop, not empty space.
+//
+// This is also where the real outer gutter lives (not on .hero/.grid
+// individually) — a responsive floor+ceiling so the grid never sits flush
+// against the viewport/scrollbar on a laptop-width screen, where 1400px
+// (or even the grid's own 1200px) can exceed the actual viewport and its
+// own max-width stops binding at all. Roughly: ~16px at phone widths,
+// ~24-30px tablet, ~32-41px laptop, capping at 64px on a large desktop —
+// see the clamp() below, tuned to approximate that ladder continuously
+// rather than as hard breakpoint steps.
+.pageInner {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 4vw, 4rem);
+}
+
+// Hero shares the grid's own max-width (below) rather than a narrower cap
+// of its own — both are centered in the same .pageInner, so with matching
+// widths their left/right edges land in exactly the same place, instead of
+// a narrow heading block sitting above a much wider grid (which read as
+// "the grid is shifted" even though both were technically centered). The
+// heading/subtext text itself still reads centered via text-align. No
+// horizontal padding of its own — .pageInner's padding above is the one
+// place that's set, so it isn't stacked twice.
 .hero {
-  composes: hero from '../Learn.module.scss';
-  text-align: left;
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(0.7rem, 1.5vw, 1rem) 0 clamp(0.35rem, 0.7vw, 0.5rem);
+  text-align: center;
 }
 
 .breadcrumb {
@@ -15,11 +51,11 @@
   align-items: center;
   gap: 0.4rem;
   font-family: var(--font-sans);
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: rgba(31, 27, 58, 0.5);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(31, 27, 58, 0.62);
   text-decoration: none;
-  margin-bottom: clamp(0.9rem, 2vw, 1.2rem);
+  margin-bottom: clamp(0.4rem, 0.8vw, 0.55rem);
   transition: color 0.2s ease;
 
   &:hover {
@@ -29,25 +65,147 @@
 
 .heading {
   composes: heading from '../Learn.module.scss';
+  margin-bottom: 0.3rem;
 }
 
 .subtext {
   composes: subtext from '../Learn.module.scss';
-  margin-inline: 0;
+  margin-inline: auto;
+  margin-bottom: 0;
 }
 
+// ─── Overall course progress — one line + one bar, folded into the hero ────
+// (not a separate floating block below it). Deliberately kept narrow/compact
+// (not stretched to the hero's full width) — a progress bar doesn't need to
+// be wide to read clearly, only the heading area needs to align with the
+// grid. One color (purple) for progress, so it reads as a distinct signal
+// from the gold used for card numbering/accents elsewhere on the page.
+.progressBlock {
+  position: relative;
+  z-index: 1;
+  max-width: 360px;
+  margin: clamp(0.4rem, 1vw, 0.6rem) auto 0;
+}
+
+.progressLabel {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(31, 27, 58, 0.6);
+  margin: 0 0 0.4rem;
+}
+
+.progressPercent {
+  font-variant-numeric: tabular-nums;
+  color: var(--chess-purple);
+}
+
+.progressTrack {
+  width: 100%;
+  height: 6px;
+  border-radius: 9999px;
+  background: rgba(91, 46, 145, 0.12);
+  overflow: hidden;
+}
+
+// A much smaller radius than .progressTrack's full pill — at a small
+// filled percentage (e.g. 8%) matching the track's own rounded ends made
+// the fill read as a separate little pill sitting on top of the track
+// rather than a filled portion of it. Still rounded, just not a capsule.
+.progressFill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--chess-purple);
+  transition: width 0.3s ease;
+}
+
+// ─── Card grid — fixed 3 columns. Max-width trimmed ~80px from the previous
+// pass (1280 -> 1200) — not a return to the earlier narrow version, just
+// enough to guarantee the .pageInner gutter above actually has room to show
+// up at large-desktop widths instead of the grid's own max-width eating
+// all the way out to (almost) the gutter's inner edge. No horizontal
+// padding of its own, same reasoning as .hero above. ───────────────────────
 .grid {
-  composes: grid from '../Learn.module.scss';
+  position: relative;
+  z-index: 1;
+  display: grid;
+  // minmax(0, 1fr), not a bare 1fr — a grid item's implicit min-width is
+  // `auto` (its content's min-content size) unless overridden, same trap as
+  // the flexbox min-width:auto bug elsewhere in this app. The title/desc
+  // below are forced single-line (white-space: nowrap), which gives a long
+  // lesson name a large min-content width — without this, whichever card
+  // has the longest one-line text forced its whole column wider, breaking
+  // the equal 3-column split and pushing the grid past its own right edge.
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1.25rem, 2vw, 1.75rem);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(0.75rem, 1.5vw, 1rem) 0 clamp(3rem, 5vw, 4rem);
+
+  @include v.max-lg {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @include v.max-sm {
+    grid-template-columns: 1fr;
+  }
 }
 
-// ~18% shorter than the shared .categoryCard (168px) and a touch tighter
-// internally — Basics has 13 cards to show, more than a glance should need
-// to scroll for.
+// A touch shorter than the previous pass (padding only — not another
+// height-percentage cut, which would start to feel cramped at this
+// density) now that cards are noticeably wider: ~400px instead of ~330px,
+// which is what actually gives 02/04/07's icons and the one-line titles
+// enough room to stop feeling squeezed.
 .card {
   composes: categoryCard from '../Learn.module.scss';
-  min-height: 138px;
-  padding: 1.15rem 1.4rem;
-  gap: 0.5rem;
+  min-height: 132px;
+  min-width: 0;
+  padding: 0.75rem 1rem;
+  gap: 0.3rem;
+}
+
+// Hover should say "you can click this", not "this card is selected" — the
+// composed-in base hover (from Learn.module.scss's .categoryCard, shared
+// with Openings/Tactics) uses a full purple border + a fairly heavy lift,
+// which reads as too strong a state change for a plain mouseover. That
+// stronger purple treatment stays reserved for .cardInProgress (the actual
+// current/next-lesson status, not a transient hover) — hence excluding it
+// and .cardCompleted here rather than trying to out-specificity their own
+// hover rules below. The :not()s (not a bare .card:hover) are also what
+// makes this reliably beat the cross-file composed rule regardless of
+// webpack's chunk order, without resorting to !important.
+.card:hover:not(.cardCompleted):not(.cardInProgress) {
+  border-color: rgba(31, 27, 58, 0.28);
+  box-shadow: 0 10px 28px rgba(31, 27, 58, 0.08);
+  transform: translateY(-2px);
+}
+
+// Completed stays the same white surface as every other card — a tinted/
+// muted card reads as "unavailable", which is the opposite of what
+// finishing a lesson should communicate. Only the footer (✓ Completed,
+// green, plus a "Review →" invite) and a light border tint signal it.
+.cardCompleted {
+  border-color: rgba(94, 140, 106, 0.4);
+
+  &:hover {
+    border-color: rgba(94, 140, 106, 0.6);
+  }
+}
+
+// A lesson in progress (or the single next-recommended lesson, see
+// BasicsGrid.tsx) gets a slightly stronger purple border plus a thin top
+// accent — not a label, just enough presence to read as "this one wants
+// your attention" at a glance next to a plain not-started card.
+.cardInProgress {
+  border-color: rgba(91, 46, 145, 0.45);
+  border-top: 2px solid var(--chess-purple);
+
+  &:hover {
+    border-color: var(--chess-purple);
+  }
 }
 
 .cardTop {
@@ -57,39 +215,144 @@
   gap: 0.5rem;
 }
 
+// No container/background behind it — the glyph + its movement marks are
+// the whole icon. Sized to actually read at a glance (see BasicsIcon.tsx's
+// own notes on why the artwork itself now uses most of this box). Nudged
+// down/right a couple px — every icon shares the same fixed 32x32 viewBox
+// (a consistent anchor by construction), but sitting flush against the
+// card's top-left corner read as tighter than the breathing room the title
+// gets below it.
+.cardIcon {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  margin: 3px 0 0 2px;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+// The movement-indicator arrows/marks drawn around each piece glyph — needs
+// real contrast to read at actual card size, so this starts strong rather
+// than starting faint and relying on hover to make it visible at all.
+.moveMarks {
+  opacity: 0.85;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.card:hover .moveMarks {
+  opacity: 1;
+}
+
+// The de-emphasized half of a two-part icon (Escaping Check's own incoming
+// attack, drawn present but deliberately secondary to its escape arrow) —
+// a dedicated class, not an `opacity` attribute on the element: SVG
+// presentation attributes are the lowest-priority style source there is,
+// so a plain `opacity="0.4"` there gets silently overridden by .moveMarks'
+// own opacity the moment both are applied to the same element. This stays
+// visibly fainter than .moveMarks even on hover, preserving the contrast
+// that's the whole point of drawing it lighter in the first place.
+.moveMarksFaint {
+  opacity: 0.4;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.card:hover .moveMarksFaint {
+  opacity: 0.7;
+}
+
 .cardNumber {
   composes: categoryNumber from '../Learn.module.scss';
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  opacity: 0.75;
 }
 
+// One line, forced — a title that wraps to 2 lines on one card while its
+// row-neighbours stay at 1 pushes that whole row taller (grid rows stretch
+// to their tallest item), which is what put "Start →" at different heights
+// from card to card. Wider cards (see .grid) make truncation rare in
+// practice for these lesson names; this is the guarantee, not the fix.
 .cardTitle {
   composes: categoryTitle from '../Learn.module.scss';
+  font-size: clamp(1.02rem, 1.5vw, 1.15rem);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+// Up to two lines, no ellipsis — truncating "Discover the squares,
+// coordinates, and the right wa…" mid-word reads badly for a learning
+// catalogue; there's enough card height now to just let it wrap. Safe from
+// the grid min-width:auto trap that .cardTitle's forced single line exists
+// to guard against (see below) — wrapped text's min-content width is only
+// its longest single word, not the whole string, so this can't force one
+// card's column wider than its neighbours the way nowrap text could.
 .cardDesc {
   composes: categoryDesc from '../Learn.module.scss';
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.cardBadge {
-  font-family: var(--font-sans);
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  padding: 0.25rem 0.6rem;
-  border-radius: 9999px;
-  white-space: nowrap;
+// ─── Card footer — one of three states, see BasicsGrid.tsx ─────────────────
+.cardFooter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: auto;
+  padding-top: 0.15rem;
+}
+
+.cardFooterRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .badgeCompleted {
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  font-weight: 700;
   color: #3f6b49;
-  background: rgba(94, 140, 106, 0.14);
 }
 
-.badgeInProgress {
-  color: #8a6a2f;
-  background: rgba(214, 168, 95, 0.18);
+.cardStepLine {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: rgba(31, 27, 58, 0.55);
 }
 
-.badgeStart {
-  color: rgba(31, 27, 58, 0.5);
-  background: rgba(31, 27, 58, 0.06);
+.cardMiniTrack {
+  flex: 1 1 auto;
+  height: 3px;
+  border-radius: 9999px;
+  background: rgba(91, 46, 145, 0.12);
+  overflow: hidden;
+}
+
+.cardMiniFill {
+  display: block;
+  height: 100%;
+  border-radius: 9999px;
+  background: var(--chess-purple);
+}
+
+.cardCta {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--chess-purple);
+  margin-left: auto;
+  transition: transform 150ms ease;
+
+  .card:hover & {
+    transform: translateX(2px);
+  }
 }

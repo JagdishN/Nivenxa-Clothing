@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_APP_VERSION: process.env.npm_package_version,
   },
+  // The dev-only floating "N" build-activity indicator sits bottom-left by
+  // default, exactly where lesson panels (Chess Learn) place their own
+  // Next/step controls — it has no equivalent in production, so disabling it
+  // costs nothing there and removes a real overlap in dev.
+  devIndicators: false,
   turbopack: {
     resolveAlias: {
       'next-intl/config': './src/i18n/request.ts',

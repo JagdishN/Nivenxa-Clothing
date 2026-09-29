@@ -2,15 +2,15 @@
 // this is the same "watch, then do it yourself" register as Openings'
 // Practice mode, just for a single-move discovery instead of a sequence.
 .boardCol {
-  composes: boardCol from './StepThroughPanel.module.scss';
+  composes: boardCol from './BasicsWorkspace.module.scss';
 }
 
 .boardWrap {
-  composes: boardWrap from './StepThroughPanel.module.scss';
+  composes: boardWrap from './BasicsWorkspace.module.scss';
 }
 
 .panelCol {
-  composes: panelCol from './StepThroughPanel.module.scss';
+  composes: panelCol from './BasicsWorkspace.module.scss';
 }
 
 .explanation {
@@ -46,6 +46,8 @@
 
 .actions {
   composes: actions from './PracticePanel.module.scss';
+  margin-top: auto;
+  padding-top: 0.75rem;
 }
 
 // Used for a Link here (the "Learn X next" CTA), unlike PracticePanel's own

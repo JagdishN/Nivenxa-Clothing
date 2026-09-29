@@ -1,0 +1,103 @@
+@use '../../../../styles/variables' as v;
+
+// ─── Shared board+panel workspace for every Chess Basics lesson engine ─────
+// (BoardLesson, PieceLesson, MiniGameLesson, MoveTrainer — all Basics-only,
+// see BasicsDetail.tsx). One board, one panel, side by side, both sized so a
+// standard lesson step never needs the page itself to scroll — matches the
+// no-scroll board+panel pattern already proven on Openings
+// (openings/[slug]/OpeningLesson.module.scss), sized slightly larger since
+// Basics is the first thing a brand-new player sees.
+//
+// Deliberately NOT composed from StepThroughPanel.module.scss/
+// PracticePanel.module.scss — those are still shared by Endgames/Rules/
+// Tactics (via the StepThroughPanel/TacticPuzzleSet components) and kept at
+// their existing sizing; this file exists so Basics can be resized on its
+// own without touching those other sections.
+// The board's own square size — and the panel's matching height — both
+// resolve to whatever's smallest of: 90% of viewport width, the ACTUAL
+// vertical space left below nav+hero (measured in BasicsDetail.tsx via
+// ResizeObserver and written to --basics-workspace-h on the .workspace
+// element; the 70vh here is only a pre-hydration/no-JS fallback), and a
+// 620px hard cap so the board doesn't balloon on a tall, narrow window.
+// aspect-ratio:1 on Board.tsx's own root then turns this width into the
+// board's height too — this is the whole no-page-scroll mechanism. This is
+// a function of the LESSON and the viewport only (re-measured on lesson
+// change/resize — see BasicsDetail.tsx), never of which step is showing, so
+// both the board and the panel stay pixel-for-pixel identical across all 20
+// steps of a lesson — the content changes, the shell does not.
+$workspace-size: min(90vw, var(--basics-workspace-h, 70vh), 620px);
+// A fixed panel width, not a flex-basis that's free to grow/shrink with its
+// own content — that content-driven sizing was the actual bug behind the
+// "layout rearranges itself between steps" report (a short prompt like "Can
+// you find e4?" let the panel settle narrower than a longer explanation
+// would). Paired with min-width: 0 below, which overrides the flex item's
+// default content-based min-width floor — without it, a flex item can still
+// grow past an explicit width to fit its own content regardless of
+// flex-grow, which is what let this happen in the first place.
+$panel-width: 380px;
+
+.workspace {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 clamp(1.25rem, 5vw, 3rem) clamp(1rem, 3vw, 2rem);
+
+  @include v.max-lg {
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(1.25rem, 3vw, 1.75rem);
+  }
+}
+
+.boardCol {
+  flex: 0 0 auto;
+  width: $workspace-size;
+
+  @include v.max-lg {
+    width: min(90vw, 560px);
+  }
+}
+
+.boardWrap {
+  position: relative;
+  border: 1px solid rgba(91, 46, 145, 0.18);
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 10px 40px rgba(91, 46, 145, 0.07);
+  padding: clamp(0.6rem, 1vw, 0.85rem);
+  // The lesson's board must never resize/reflow on its own — only what's
+  // drawn on it (highlights, orientation) may change. Position/size
+  // transitions are deliberately NOT added here; the only allowed motion is
+  // inside the board (chessground's own piece/shape animations).
+}
+
+// Height pinned to the board's own size (not just a min-height floor) so the
+// panel never grows past it — a step with more text scrolls internally
+// (overflow-y below) instead of pushing the panel taller than the board
+// and reopening the very page-scroll this layout exists to avoid.
+.panelCol {
+  flex: 0 1 $panel-width;
+  min-width: 0;
+  width: $panel-width;
+  height: $workspace-size;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.4rem 1.5rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(91, 46, 145, 0.15);
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 10px 40px rgba(91, 46, 145, 0.05);
+  overflow-y: auto;
+  overflow-wrap: break-word;
+
+  @include v.max-lg {
+    height: auto;
+    width: min(92vw, 480px);
+  }
+}

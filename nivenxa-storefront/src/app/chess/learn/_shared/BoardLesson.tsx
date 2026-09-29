@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import type { Key } from 'chessground/types'
 import Board from '@/components/chess/Board'
-import { markLessonCompleted } from '@/lib/chess/basicsProgress'
+import { markLessonCompleted, updateLessonStep } from '@/lib/chess/basicsProgress'
 import styles from './BoardLesson.module.scss'
 
 const EMPTY_DESTS = new Map<Key, Key[]>()
@@ -14,6 +14,8 @@ const CELEBRATE_DURATION = 1300
 export interface BoardDemoStep {
   kind: 'demo'
   stageLabel: string
+  /** A short teaching title shown above the body text — e.g. "Light and dark squares" — distinct from `stageLabel`, which is the small eyebrow above it (e.g. "TWO COLOURS"). Optional so older steps without one still render fine. */
+  headline?: string
   /** Overrides the lesson-level `fen` for just this step — e.g. a lesson mostly about the empty board can still show one step on the starting position. */
   fen?: string
   highlightSquares?: string[]
@@ -26,6 +28,8 @@ export interface BoardDemoStep {
 export interface BoardSquareQuizStep {
   kind: 'squareQuiz'
   stageLabel: string
+  /** Same short teaching title as BoardDemoStep.headline — shown above the prompt while idle. */
+  headline?: string
   /** Overrides the lesson-level `fen` for just this step. */
   fen?: string
   /** 'any' — the step completes the instant any one of `correctSquares` is clicked (e.g. "click a light square", many valid answers). 'all' — every square in `correctSquares` must be found, any order (e.g. "find all four knights"). */
@@ -42,6 +46,8 @@ export interface BoardSquareQuizStep {
 export interface BoardYesNoStep {
   kind: 'yesNo'
   stageLabel: string
+  /** Same short teaching title as BoardDemoStep.headline — shown above the question. */
+  headline?: string
   /** Whether THIS presentation (rendered via a plain, deliberately correct-or-flipped checkerboard, not the real board — see SimpleCheckerboard below) is actually the correctly-oriented board. */
   boardIsCorrect: boolean
   prompt: string
@@ -56,10 +62,21 @@ export interface BoardLessonExample {
   /** Default position for the lesson — nothing here ever moves a piece, only clicks/observes it. A step can override this with its own `fen`. */
   fen: string
   lessonName: string
+  /** Natural-sounding completion line — e.g. "You learned how the chessboard works!" A generic "You learned {lessonName}!" reads fine for some lesson names and awkwardly for others ("You learned The Chessboard!"), so this is opt-in per lesson rather than always templated. */
+  completionHeadline?: string
   completionSummary?: string[]
 }
 
 type AttemptState = 'idle' | 'correct' | 'wrong'
+
+// Data stores stageLabel as e.g. 'YOUR TURN', 'TWO COLOURS' — real title
+// case ("Your Turn") reads better next to the plain "N of M" counter than
+// shouting the same ALL-CAPS text next to it. Done in JS rather than CSS
+// text-transform, since CSS can't chain "force lowercase" + "capitalize
+// each word" in one declaration.
+function titleCase(s: string): string {
+  return s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())
+}
 
 // `answered` highlights the bottom-right square once the player has picked
 // Yes/No — the concrete visual referent for "light on the right"/"dark on
@@ -92,7 +109,7 @@ export default function BoardLesson({
   nextCta?: { href: string; label: string }
   slug: string
 }) {
-  const { steps, fen, lessonName, completionSummary } = example
+  const { steps, fen, lessonName, completionHeadline, completionSummary } = example
   const [stepIndex, setStepIndex] = useState(0)
   const step = steps[stepIndex]
   const isLast = stepIndex === steps.length - 1
@@ -106,10 +123,19 @@ export default function BoardLesson({
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
+    // A timer armed by the PREVIOUS step (e.g. its correct-answer auto-advance)
+    // can still be pending here if the step changed for some other reason —
+    // clearing both before resetting local state stops a stale timeout from
+    // flipping attemptState or calling advanceStep again after we've already
+    // landed on a new step, which otherwise leaves the board looking frozen
+    // (viewOnly briefly true, with no click producing any visible reaction).
+    if (advanceTimer.current) clearTimeout(advanceTimer.current)
+    if (flashTimer.current) clearTimeout(flashTimer.current)
     setAttemptState('idle')
     setWrongAttempts(0)
     setFoundSquares(new Set())
-  }, [stepIndex])
+    updateLessonStep(slug, stepIndex + 1, steps.length)
+  }, [stepIndex, slug, steps.length])
 
   useEffect(
     () => () => {
@@ -133,6 +159,15 @@ export default function BoardLesson({
       setAllDone(true)
       markLessonCompleted(slug)
     } else setStepIndex((i) => i + 1)
+  }
+
+  // Revisiting a previous explanation shouldn't cost restarting the whole
+  // lesson — the existing stepIndex-change effect above already resets
+  // attemptState/wrongAttempts/foundSquares for whichever step this lands on.
+  function handleBack() {
+    if (advanceTimer.current) clearTimeout(advanceTimer.current)
+    if (flashTimer.current) clearTimeout(flashTimer.current)
+    setStepIndex((i) => Math.max(0, i - 1))
   }
 
   function handleSquareClick(key: Key) {
@@ -192,10 +227,17 @@ export default function BoardLesson({
   const hintTier = step.kind === 'squareQuiz' ? Math.min(wrongAttempts, 2) : 0
   const showHintSquares = step.kind === 'squareQuiz' && (step.revealSquaresFrom === 'start' || hintTier >= 2)
 
+  // Shown above the prompt/body text while the step is still being read or
+  // attempted — the short teaching title from item 8's hierarchy ("TWO
+  // COLOURS" eyebrow -> "Light and dark squares" headline -> body). Not
+  // shown once a correct/wrong reaction line has replaced the prompt, or at
+  // completion — those are confirmations, not new teaching content.
+  const headline = !allDone && attemptState === 'idle' && step.headline
+
   let promptLines: string[]
   let stageLabel: string
   if (allDone) {
-    promptLines = [`You learned ${lessonName}!`]
+    promptLines = [completionHeadline ?? `You learned ${lessonName}!`]
     stageLabel = 'COMPLETE'
   } else if (step.kind === 'demo') {
     promptLines = step.text
@@ -228,6 +270,16 @@ export default function BoardLesson({
         : undefined
   const celebrating = allDone && !showModal
   const displayFen = step.kind !== 'yesNo' && step.fen ? step.fen : fen
+
+  // A card surface (border + tint) is reserved for a genuine reaction
+  // moment — correct, or the lesson's own completion — everything else
+  // (reading a prompt, a wrong-answer nudge) is plain text directly in the
+  // panel, not another bordered rectangle inside the already-bordered panel.
+  const isReactionMoment = attemptState === 'correct' || allDone
+  // Back is always rendered, in the same footer position, for every step —
+  // just invisible (not unmounted) when it doesn't apply yet, so the footer
+  // itself never moves. See item 5/18 of the layout-consistency brief.
+  const showBack = !allDone && stepIndex > 0 && attemptState !== 'correct'
 
   return (
     <>
@@ -265,7 +317,10 @@ export default function BoardLesson({
       </div>
 
       <div className={styles.panelCol}>
-        <p className={styles.stageIndicator}>{allDone ? 'Complete' : `Step ${stepIndex + 1} of ${steps.length} · ${stageLabel}`}</p>
+        <div className={styles.stepCounterRow}>
+          <span className={styles.stepCounter}>{allDone ? 'Complete' : `${stepIndex + 1} of ${steps.length}`}</span>
+          {!allDone && stageLabel && <span className={styles.stageEyebrow}>{titleCase(stageLabel)}</span>}
+        </div>
         <div className={styles.progressTrack}>
           <div
             className={styles.progressFill}
@@ -273,10 +328,16 @@ export default function BoardLesson({
           />
         </div>
 
+        {headline && <p className={styles.stepHeadline}>{headline}</p>}
+
         <div
-          className={`${styles.promptCard} ${attemptState === 'correct' ? styles.promptCardCorrect : ''} ${
-            allDone ? styles.promptCardDone : ''
-          }`}
+          className={
+            isReactionMoment
+              ? `${styles.promptCard} ${attemptState === 'correct' ? styles.promptCardCorrect : ''} ${
+                  allDone ? styles.promptCardDone : ''
+                }`
+              : styles.promptPlain
+          }
         >
           {promptLines.map((line, i) => (
             <p key={i} className={styles.promptText}>
@@ -285,21 +346,37 @@ export default function BoardLesson({
           ))}
         </div>
 
+        {/* Yes/No lives right under the question it answers, not in the
+            fixed footer below — that footer is for lesson navigation
+            (Back/Next), a different thing from answering the question. */}
+        {!allDone && step.kind === 'yesNo' && attemptState === 'idle' && (
+          <div className={styles.answerRow}>
+            <button type="button" className={styles.actionBtn} onClick={() => handleYesNo(true)}>
+              Yes
+            </button>
+            <button type="button" className={styles.actionBtnGhost} onClick={() => handleYesNo(false)}>
+              No
+            </button>
+          </div>
+        )}
+
+        {/* Fixed footer — always in the same position for every step, so
+            Back/Next never jump around as the question above changes shape. */}
+        <div className={styles.actionsSpacer} />
         <div className={styles.actions}>
+          <button
+            type="button"
+            className={`${styles.actionBtnGhost} ${!showBack ? styles.actionBtnHidden : ''}`}
+            onClick={handleBack}
+            disabled={!showBack}
+            tabIndex={showBack ? 0 : -1}
+          >
+            ← Back
+          </button>
           {!allDone && step.kind === 'demo' && (
             <button type="button" className={styles.actionBtn} onClick={advanceStep}>
               {step.ctaLabel ?? 'Next →'}
             </button>
-          )}
-          {!allDone && step.kind === 'yesNo' && attemptState === 'idle' && (
-            <>
-              <button type="button" className={styles.actionBtn} onClick={() => handleYesNo(true)}>
-                Yes
-              </button>
-              <button type="button" className={styles.actionBtnGhost} onClick={() => handleYesNo(false)}>
-                No
-              </button>
-            </>
           )}
           {allDone && (
             <button type="button" className={styles.actionBtnGhost} onClick={handlePracticeAgain}>
@@ -313,7 +390,7 @@ export default function BoardLesson({
         <div className={styles.modalBackdrop} onClick={() => setShowModal(false)}>
           <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
             <p className={styles.modalTag}>✓ {lessonName} completed</p>
-            <p className={styles.modalHeading}>🎉 You learned {lessonName}!</p>
+            <p className={styles.modalHeading}>🎉 {completionHeadline ?? `You learned ${lessonName}!`}</p>
             {(completionSummary ?? []).map((line, i) => (
               <p key={i} className={styles.modalBody}>
                 {line}

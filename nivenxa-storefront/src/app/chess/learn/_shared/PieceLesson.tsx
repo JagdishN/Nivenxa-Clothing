@@ -4,7 +4,7 @@ import Link from 'next/link'
 import type { Key } from 'chessground/types'
 import Board from '@/components/chess/Board'
 import { correctSquaresFor, wrongSquarePool, applyRawMove, type MoveFilterMode } from './moveTrainerLogic'
-import { markLessonCompleted } from '@/lib/chess/basicsProgress'
+import { markLessonCompleted, updateLessonStep } from '@/lib/chess/basicsProgress'
 import styles from './PieceLesson.module.scss'
 
 const REVERT_DELAY = 700
@@ -48,10 +48,19 @@ export type PieceLessonStep = PieceDemoStep | PieceTryStep
 export interface PieceLessonExample {
   steps: PieceLessonStep[]
   pieceName: string
+  /** Natural-sounding completion line — e.g. "You learned how pawns move!" The old template ("You learned the {pieceName}!") reads as "You learned the How Pawns Move!" once lesson names became full questions, so this is required in practice, not just cosmetic. */
+  completionHeadline: string
   completionSummary?: string[]
 }
 
 type AttemptState = 'idle' | 'correct' | 'reverting'
+
+// Same title-casing as BoardLesson.tsx — data stores stageLabel in ALL CAPS
+// ('SEE IT MOVE', 'YOUR TURN'); this reads as "See It Move" next to the
+// plain "N of M" counter instead of shouting the same text beside it.
+function titleCase(s: string): string {
+  return s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())
+}
 
 export default function PieceLesson({
   example,
@@ -62,7 +71,7 @@ export default function PieceLesson({
   nextCta?: { href: string; label: string }
   slug: string
 }) {
-  const { steps, pieceName, completionSummary } = example
+  const { steps, pieceName, completionHeadline, completionSummary } = example
   const [stepIndex, setStepIndex] = useState(0)
   const step = steps[stepIndex]
   const isLast = stepIndex === steps.length - 1
@@ -78,11 +87,18 @@ export default function PieceLesson({
 
   // eslint-disable-next-line react-hooks/exhaustive-deps -- `step` is derived from stepIndex; re-running on step identity would be redundant.
   useEffect(() => {
+    // A timer armed by the PREVIOUS step can still be pending here — clear
+    // both before resetting local state so a stale timeout can't flip
+    // attemptState or call advanceStep again after we've already landed on
+    // a new step (see BoardLesson.tsx's identical fix for the full reasoning).
+    if (revertTimer.current) clearTimeout(revertTimer.current)
+    if (advanceTimer.current) clearTimeout(advanceTimer.current)
     setDisplayFen(step.fen)
     setAttemptState('idle')
     setWrongAttempts(0)
     setLastMove(undefined)
-  }, [stepIndex])
+    updateLessonStep(slug, stepIndex + 1, steps.length)
+  }, [stepIndex, slug, steps.length])
 
   useEffect(
     () => () => {
@@ -125,6 +141,16 @@ export default function PieceLesson({
     } else setStepIndex((i) => i + 1)
   }
 
+  // Revisiting a previous explanation shouldn't cost restarting the whole
+  // lesson — the existing stepIndex-change effect above already resets
+  // attemptState/wrongAttempts/lastMove/displayFen for whichever step this
+  // lands on.
+  function handleBack() {
+    if (advanceTimer.current) clearTimeout(advanceTimer.current)
+    if (revertTimer.current) clearTimeout(revertTimer.current)
+    setStepIndex((i) => Math.max(0, i - 1))
+  }
+
   function handleMove(from: Key, to: Key) {
     if (step.kind !== 'try') return
     if (attemptState !== 'idle' || from !== step.pieceSquare) return
@@ -158,7 +184,7 @@ export default function PieceLesson({
   let promptLines: string[]
   let stageLabel: string
   if (allDone) {
-    promptLines = [`You learned the ${pieceName}!`]
+    promptLines = [completionHeadline]
     stageLabel = 'COMPLETE'
   } else if (step.kind === 'demo') {
     promptLines = step.text
@@ -182,6 +208,8 @@ export default function PieceLesson({
   const hintArrow = step.kind === 'demo' && step.arrows?.[0] ? (step.arrows[0] as Key[]) : undefined
   const celebrating = allDone && !showModal
   const turnColor = step.pieceColor === 'w' ? 'white' : 'black'
+  const isReactionMoment = attemptState === 'correct' || allDone
+  const showBack = !allDone && stepIndex > 0 && attemptState !== 'correct'
 
   return (
     <>
@@ -211,12 +239,25 @@ export default function PieceLesson({
       </div>
 
       <div className={styles.panelCol}>
-        <p className={styles.stageIndicator}>{allDone ? 'Complete' : `Step ${stepIndex + 1} of ${steps.length} · ${stageLabel}`}</p>
+        <div className={styles.stepCounterRow}>
+          <span className={styles.stepCounter}>{allDone ? 'Complete' : `${stepIndex + 1} of ${steps.length}`}</span>
+          {!allDone && stageLabel && <span className={styles.stageEyebrow}>{titleCase(stageLabel)}</span>}
+        </div>
+        <div className={styles.progressTrack}>
+          <div
+            className={styles.progressFill}
+            style={{ width: `${Math.round(((allDone ? steps.length : stepIndex + 1) / steps.length) * 100)}%` }}
+          />
+        </div>
 
         <div
-          className={`${styles.promptCard} ${attemptState === 'correct' ? styles.promptCardCorrect : ''} ${
-            allDone ? styles.promptCardDone : ''
-          }`}
+          className={
+            isReactionMoment
+              ? `${styles.promptCard} ${attemptState === 'correct' ? styles.promptCardCorrect : ''} ${
+                  allDone ? styles.promptCardDone : ''
+                }`
+              : styles.promptPlain
+          }
         >
           {promptLines.map((line, i) => (
             <p key={i} className={styles.promptText}>
@@ -225,7 +266,18 @@ export default function PieceLesson({
           ))}
         </div>
 
+        {/* Fixed footer — always in the same position for every step. */}
+        <div className={styles.actionsSpacer} />
         <div className={styles.actions}>
+          <button
+            type="button"
+            className={`${styles.actionBtnGhost} ${!showBack ? styles.actionBtnHidden : ''}`}
+            onClick={handleBack}
+            disabled={!showBack}
+            tabIndex={showBack ? 0 : -1}
+          >
+            ← Back
+          </button>
           {!allDone && step.kind === 'demo' && (
             <button type="button" className={styles.actionBtn} onClick={advanceStep}>
               {step.ctaLabel ?? 'Next →'}
@@ -243,7 +295,7 @@ export default function PieceLesson({
         <div className={styles.modalBackdrop} onClick={() => setShowModal(false)}>
           <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
             <p className={styles.modalTag}>✓ {pieceName} completed</p>
-            <p className={styles.modalHeading}>🎉 You learned the {pieceName}!</p>
+            <p className={styles.modalHeading}>🎉 {completionHeadline}</p>
             {(completionSummary ?? []).map((line, i) => (
               <p key={i} className={styles.modalBody}>
                 {line}
