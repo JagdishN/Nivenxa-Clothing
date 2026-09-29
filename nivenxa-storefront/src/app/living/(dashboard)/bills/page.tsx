@@ -1,25 +1,28 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { requireMembership } from '@/lib/living/auth'
-import { formatCurrency, formatMonthLabel, formatPaymentStatus, formatPeriodLabel, monthKeyFor } from '@/lib/living/format'
-import { computeBillForFlat, getBillableFlats, getFlats } from '@/lib/living/queries'
+import { formatBalanceMeaning, formatCurrency, formatMonthLabel, formatPaymentStatus, formatPeriodLabel, monthKeyFor } from '@/lib/living/format'
+import { computeBillForFlat, getApartmentReimbursementsDue, getBillableFlats, getCurrentMaintenancePeriod, getFlats } from '@/lib/living/queries'
 import type { PaymentStatus } from '@/lib/living/types'
 import theme from '../../LivingTheme.module.scss'
 import homeStyles from '../Home.module.scss'
 
-type QuickFilter = 'all' | 'due' | 'unpaid'
+type QuickFilter = 'all' | 'unpaid' | 'partial' | 'paid' | 'advance' | 'reimbursement_due'
 
 function statusPillClass(status: PaymentStatus): string {
   if (status === 'paid') return theme.pillOk
   if (status === 'partial') return theme.pillBrass
+  if (status === 'not_billed') return theme.pill
   return theme.pillFlag
 }
 
-/** Zero is noise in a 30-row table — render it as a plain dash instead of ₹0.00 / −₹0.00. */
-function Amount({ value, sign, variant }: { value: number; sign?: string; variant?: 'warn' | 'credit' }): ReactNode {
+/** Adjustments nets Late fee + Previous due − Advance − Reimbursement credit into one figure — same
+ * components computeBillForFlat already nets into total_due, just surfaced as one column instead of
+ * three. The full breakdown stays one click away on the flat's own ledger (linked from Flat below). */
+function AdjustmentAmount({ value }: { value: number }): ReactNode {
   if (Math.abs(value) < 0.005) return <span className={theme.dash}>—</span>
-  const className = variant === 'warn' ? theme.warnText : variant === 'credit' ? theme.creditText : undefined
-  return <span className={className}>{sign}{formatCurrency(value)}</span>
+  const isCredit = value < 0
+  return <span className={isCredit ? theme.creditText : theme.warnText}>{isCredit ? '−' : ''}{formatCurrency(Math.abs(value))}</span>
 }
 
 function filterHref(filter: QuickFilter, q: string): string {
@@ -39,11 +42,19 @@ function filterHref(filter: QuickFilter, q: string): string {
 export default async function LivingBillsPage({ searchParams }: { searchParams: Promise<{ q?: string; filter?: string }> }) {
   const { q: qParam, filter: filterParam } = await searchParams
   const q = (qParam ?? '').trim()
-  const filter: QuickFilter = filterParam === 'due' || filterParam === 'unpaid' ? filterParam : 'all'
+  const validFilters: QuickFilter[] = ['unpaid', 'partial', 'paid', 'advance', 'reimbursement_due']
+  const filter: QuickFilter = validFilters.includes(filterParam as QuickFilter) ? (filterParam as QuickFilter) : 'all'
 
   const { supabase, apartment } = await requireMembership(['admin', 'treasurer'])
   const month = monthKeyFor(new Date())
-  const flats = getBillableFlats(await getFlats(supabase, apartment.id))
+  const [allFlats, maintenanceMonth] = await Promise.all([getFlats(supabase, apartment.id), getCurrentMaintenancePeriod(supabase, apartment.id)])
+  const flats = getBillableFlats(allFlats)
+
+  const [bills, reimbursementsDue] = await Promise.all([
+    Promise.all(flats.map((flat) => computeBillForFlat(supabase, apartment, flat, month, { allFlats, maintenanceMonth }))),
+    getApartmentReimbursementsDue(supabase, apartment.id, allFlats),
+  ])
+  const reimbursementByFlat = new Map(reimbursementsDue.byFlat.map((r) => [r.flat.id, r.remaining]))
 
   const rows: {
     flatId: string
@@ -51,37 +62,35 @@ export default async function LivingBillsPage({ searchParams }: { searchParams: 
     ownerName: string | null
     maintenance: number
     water: number
-    periodTotal: number
-    lateFee: number
-    previousDue: number
-    advance: number
+    adjustments: number
     total: number
     paid: number
     balance: number
     status: PaymentStatus
     fallback: boolean
-  }[] = []
-  let maintenancePeriod: { start: string; end: string } | null = null
-  for (const flat of flats) {
-    const bill = await computeBillForFlat(supabase, apartment, flat, month)
-    maintenancePeriod ??= bill.maintenance_period
-    rows.push({
+    advance: number
+    previousDue: number
+    reimbursementOwed: number
+  }[] = flats.map((flat, i) => {
+    const bill = bills[i]
+    return {
       flatId: flat.id,
       flatNo: flat.flat_no,
       ownerName: flat.owner_name,
       maintenance: bill.maintenance_share,
       water: bill.water_charge,
-      periodTotal: bill.current_period_total,
-      lateFee: bill.late_fee,
-      previousDue: bill.previous_due,
-      advance: bill.advance_payment,
+      adjustments: bill.late_fee + bill.previous_due - bill.advance_payment - bill.reimbursement_credit,
       total: bill.total_due,
       paid: bill.amount_paid,
       balance: bill.balance_remaining,
       status: bill.payment_status,
       fallback: bill.water_is_fallback,
-    })
-  }
+      advance: bill.advance_payment,
+      previousDue: bill.previous_due,
+      reimbursementOwed: reimbursementByFlat.get(flat.id) ?? 0,
+    }
+  })
+  const maintenancePeriod = bills[0]?.maintenance_period ?? null
 
   // Summary cards always reflect the whole apartment — the numbers an Admin
   // actually opens this page to check — regardless of the table's own
@@ -90,22 +99,23 @@ export default async function LivingBillsPage({ searchParams }: { searchParams: 
     (acc, r) => ({
       maintenance: acc.maintenance + r.maintenance,
       water: acc.water + r.water,
-      periodTotal: acc.periodTotal + r.periodTotal,
-      lateFee: acc.lateFee + r.lateFee,
-      previousDue: acc.previousDue + r.previousDue,
-      advance: acc.advance + r.advance,
+      adjustments: acc.adjustments + r.adjustments,
       total: acc.total + r.total,
       paid: acc.paid + r.paid,
       balance: acc.balance + r.balance,
+      previousDue: acc.previousDue + r.previousDue,
     }),
-    { maintenance: 0, water: 0, periodTotal: 0, lateFee: 0, previousDue: 0, advance: 0, total: 0, paid: 0, balance: 0 }
+    { maintenance: 0, water: 0, adjustments: 0, total: 0, paid: 0, balance: 0, previousDue: 0 }
   )
 
   const qLower = q.toLowerCase()
   const visibleRows = rows.filter((r) => {
     if (qLower && !r.flatNo.toLowerCase().includes(qLower) && !(r.ownerName ?? '').toLowerCase().includes(qLower)) return false
-    if (filter === 'due' && r.previousDue <= 0) return false
-    if (filter === 'unpaid' && r.status === 'paid') return false
+    if (filter === 'unpaid' && r.status !== 'unpaid') return false
+    if (filter === 'partial' && r.status !== 'partial') return false
+    if (filter === 'paid' && r.status !== 'paid') return false
+    if (filter === 'advance' && r.advance <= 0.005) return false
+    if (filter === 'reimbursement_due' && r.reimbursementOwed <= 0.005) return false
     return true
   })
 
@@ -177,13 +187,22 @@ export default async function LivingBillsPage({ searchParams }: { searchParams: 
               </button>
             </form>
             <Link href={filterHref('all', q)} className={filter === 'all' ? theme.filterChipActive : theme.filterChip}>
-              All flats
-            </Link>
-            <Link href={filterHref('due', q)} className={filter === 'due' ? theme.filterChipActive : theme.filterChip}>
-              With previous dues
+              All
             </Link>
             <Link href={filterHref('unpaid', q)} className={filter === 'unpaid' ? theme.filterChipActive : theme.filterChip}>
               Unpaid
+            </Link>
+            <Link href={filterHref('partial', q)} className={filter === 'partial' ? theme.filterChipActive : theme.filterChip}>
+              Partially Paid
+            </Link>
+            <Link href={filterHref('paid', q)} className={filter === 'paid' ? theme.filterChipActive : theme.filterChip}>
+              Paid
+            </Link>
+            <Link href={filterHref('advance', q)} className={filter === 'advance' ? theme.filterChipActive : theme.filterChip}>
+              Advance
+            </Link>
+            <Link href={filterHref('reimbursement_due', q)} className={filter === 'reimbursement_due' ? theme.filterChipActive : theme.filterChip}>
+              Reimbursement Due
             </Link>
           </div>
 
@@ -193,15 +212,11 @@ export default async function LivingBillsPage({ searchParams }: { searchParams: 
                 <thead>
                   <tr>
                     <th>Flat</th>
-                    <th>Owner</th>
+                    <th>Resident</th>
                     <th className={theme.num}>Maintenance</th>
                     <th className={theme.num}>Water</th>
-                    <th className={theme.num}>Current Cycle Total</th>
-                    <th className={theme.num}>Late fee</th>
-                    <th className={theme.num}>Previous due</th>
-                    <th className={theme.num}>Advance</th>
-                    <th className={`${theme.num} ${theme.totalCol}`}>Total due</th>
-                    <th className={theme.num}>Paid</th>
+                    <th className={theme.num}>Adjustments</th>
+                    <th className={`${theme.num} ${theme.totalCol}`}>Amount Due</th>
                     <th className={theme.num}>Balance</th>
                     <th>Status</th>
                   </tr>
@@ -222,25 +237,13 @@ export default async function LivingBillsPage({ searchParams }: { searchParams: 
                           </span>
                         )}
                       </td>
-                      <td className={theme.num}>{formatCurrency(r.periodTotal)}</td>
                       <td className={theme.num}>
-                        <Amount value={r.lateFee} />
-                      </td>
-                      <td className={theme.num}>
-                        <Amount value={r.previousDue} variant="warn" />
-                      </td>
-                      <td className={theme.num}>
-                        <Amount value={r.advance} sign="−" variant="credit" />
+                        <AdjustmentAmount value={r.adjustments} />
                       </td>
                       <td className={`${theme.num} ${theme.totalCol}`} style={{ fontWeight: 700 }}>
                         {formatCurrency(r.total)}
                       </td>
-                      <td className={theme.num}>
-                        <Amount value={r.paid} />
-                      </td>
-                      <td className={theme.num}>
-                        <Amount value={r.balance} />
-                      </td>
+                      <td className={theme.num}>{formatBalanceMeaning(r.balance, r.reimbursementOwed, { subjectLabel: `Flat ${r.flatNo}` })}</td>
                       <td>
                         <span className={statusPillClass(r.status)}>{formatPaymentStatus(r.status)}</span>
                       </td>
@@ -248,7 +251,7 @@ export default async function LivingBillsPage({ searchParams }: { searchParams: 
                   ))}
                   {visibleRows.length === 0 && (
                     <tr>
-                      <td colSpan={12} className={theme.muted}>
+                      <td colSpan={8} className={theme.muted}>
                         No flats match this search/filter.
                       </td>
                     </tr>
@@ -266,22 +269,10 @@ export default async function LivingBillsPage({ searchParams }: { searchParams: 
                       {formatCurrency(totals.water)}
                     </td>
                     <td className={theme.num} style={{ fontWeight: 700 }}>
-                      {formatCurrency(totals.periodTotal)}
-                    </td>
-                    <td className={theme.num} style={{ fontWeight: 700 }}>
-                      {formatCurrency(totals.lateFee)}
-                    </td>
-                    <td className={theme.num} style={{ fontWeight: 700 }}>
-                      {formatCurrency(totals.previousDue)}
-                    </td>
-                    <td className={theme.num} style={{ fontWeight: 700 }}>
-                      −{formatCurrency(totals.advance)}
+                      <AdjustmentAmount value={totals.adjustments} />
                     </td>
                     <td className={`${theme.num} ${theme.totalCol}`} style={{ fontWeight: 700 }}>
                       {formatCurrency(totals.total)}
-                    </td>
-                    <td className={theme.num} style={{ fontWeight: 700 }}>
-                      {formatCurrency(totals.paid)}
                     </td>
                     <td className={theme.num} style={{ fontWeight: 700 }}>
                       {formatCurrency(totals.balance)}

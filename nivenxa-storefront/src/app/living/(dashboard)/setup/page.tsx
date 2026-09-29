@@ -15,7 +15,7 @@ import styles from './Setup.module.scss'
 // when that field is set/edited) — NOT the number used for the "X / Y" cap
 // on adding flats day-to-day. That's apartment.flat_count, the Admin's own
 // configured building size, set at signup and editable below.
-const PLATFORM_MAX_FLATS = 30
+const PLATFORM_MAX_FLATS = 75
 
 async function uploadFlatsAction(formData: FormData) {
   'use server'

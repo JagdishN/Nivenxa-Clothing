@@ -23,7 +23,7 @@ const group = (label: string, overviewHref: string | null, sections: NavSection[
 // that area's pages, grouped the way they're actually used together.
 const NAV_BY_ROLE: Record<LivingRole, NavEntry[]> = {
   admin: [
-    link('/living/home', 'Dashboard'),
+    link('/living/home', 'Overview'),
     group('Billing', '/living/billing', [
       { heading: 'Monthly Billing', links: [
         { href: '/living/maintenance', label: 'Maintenance' },
@@ -65,7 +65,7 @@ const NAV_BY_ROLE: Record<LivingRole, NavEntry[]> = {
     ]),
   ],
   treasurer: [
-    link('/living/home', 'Dashboard'),
+    link('/living/home', 'Overview'),
     group('Billing', '/living/billing', [
       { heading: 'Monthly Billing', links: [
         { href: '/living/maintenance', label: 'Maintenance' },

@@ -13,7 +13,7 @@ export default function LivingNav() {
           Login
         </AuthTrigger>
         <AuthTrigger mode="signup" className={styles.linkPrimary}>
-          Sign Up
+          Create Apartment
         </AuthTrigger>
       </nav>
     </header>

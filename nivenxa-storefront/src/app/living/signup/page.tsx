@@ -102,8 +102,8 @@ export default async function LivingSignupPage({ searchParams }: { searchParams:
   if (!user) {
     return (
       <div className={styles.shell}>
-        <h1 className={styles.title}>Sign Up</h1>
-        <p className={styles.subtitle}>Start with your email or phone — you&rsquo;ll set up or join an Apartment next.</p>
+        <h1 className={styles.title}>Create Apartment</h1>
+        <p className={styles.subtitle}>Start with your email — you&rsquo;ll set up or join an Apartment next.</p>
         <OtpForm mode="signup" />
       </div>
     )
@@ -149,8 +149,8 @@ export default async function LivingSignupPage({ searchParams }: { searchParams:
             <label className={theme.label} htmlFor="flat_count">
               Number of flats
             </label>
-            <input id="flat_count" name="flat_count" type="number" min={1} max={30} className={theme.input} defaultValue={1} required />
-            <p className={styles.hint}>Up to 30 — you can change this later in Setup.</p>
+            <input id="flat_count" name="flat_count" type="number" min={1} max={75} className={theme.input} defaultValue={1} required />
+            <p className={styles.hint}>Up to 75 — you can change this later in Setup.</p>
           </div>
           <div className={theme.field}>
             <span className={theme.label}>Maintenance split</span>

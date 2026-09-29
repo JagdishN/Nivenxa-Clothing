@@ -24,14 +24,14 @@ export default async function LivingLandingPage() {
 
       <section className={styles.hero}>
         <span className={styles.tagline}>Built for Standalone Apartments</span>
-        <h1 className={styles.title}>Maintenance, water billing, and collections — without hiring a society management company.</h1>
+        <h1 className={styles.title}>Maintenance, water billing and collections — made simple for standalone apartments.</h1>
         <p className={styles.subtitle}>
-          Nivenxa Living is a self-serve tool for standalone apartment buildings — up to 30 flats, run by an owner or a watchman, no
-          RWA process in between.
+          Manage monthly maintenance, water usage, expenses, payments and resident records in one place. Built for standalone
+          apartment communities managed directly by owners, committee members and apartment staff.
         </p>
         <div className={styles.heroActions}>
           <AuthTrigger mode="signup" className={styles.heroBtnPrimary}>
-            Sign Up
+            Create Apartment
           </AuthTrigger>
           <AuthTrigger mode="login" className={styles.heroBtnGhost}>
             Login
@@ -70,14 +70,14 @@ export default async function LivingLandingPage() {
         <div className={styles.sectionEyebrow}>Built for standalone, not societies</div>
         <h2 className={styles.sectionTitle}>No RWA bureaucracy, no per-society sales process.</h2>
         <p className={styles.sectionBody}>
-          A tool sized for a 5–30 flat building, not a 500-unit complex — three roles, one apartment, everything scoped to it and
+          A tool sized for a 5–75 flat building, not a 500-unit complex — three roles, one apartment, everything scoped to it and
           invisible to anyone outside it.
         </p>
       </section>
 
       <div className={styles.closingCta}>
         <AuthTrigger mode="signup" className={styles.heroBtnPrimary}>
-          Sign Up
+          Create Apartment
         </AuthTrigger>
       </div>
     </AuthDrawerProvider>

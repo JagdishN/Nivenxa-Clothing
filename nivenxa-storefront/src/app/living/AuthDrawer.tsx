@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { EASE_OUT_EXPO } from '@/lib/motion'
 import { setLivingFlashClient } from '@/lib/living/flashClient'
 import { createLivingBrowserClient } from '@/lib/living/supabaseBrowser'
+import OtpInput from './_auth/OtpInput'
 import type { AuthDrawerMode } from './AuthDrawerProvider'
 import theme from './LivingTheme.module.scss'
 import styles from './AuthDrawer.module.scss'
@@ -146,6 +147,7 @@ function AuthDrawerPanel({ mode, onClose }: { mode: AuthDrawerMode; onClose: () 
       setError(error.message)
       return
     }
+    setCode('')
     setResendCount((n) => n + 1)
     startCooldown()
   }
@@ -153,12 +155,22 @@ function AuthDrawerPanel({ mode, onClose }: { mode: AuthDrawerMode; onClose: () 
   async function verifyCode(e: FormEvent) {
     e.preventDefault()
     setError(null)
+    if (code.trim().length < 6) {
+      setError('Enter all 6 digits.')
+      return
+    }
     setPending(true)
     const supabase = createLivingBrowserClient()
     const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: code.trim(), type: 'email' })
     if (error) {
       setPending(false)
-      setError(error.message)
+      const message = error.message.toLowerCase()
+      setError(
+        message.includes('expired') || message.includes('invalid')
+          ? 'That code is incorrect or has expired — check the digits or request a new one.'
+          : error.message
+      )
+      setCode('')
       return
     }
 
@@ -232,9 +244,9 @@ function AuthDrawerPanel({ mode, onClose }: { mode: AuthDrawerMode; onClose: () 
         <>
           <header className={styles.header}>
             <p className={styles.eyebrow}>Account</p>
-            <h2 className={styles.title}>{mode === 'login' ? 'Login' : 'Sign Up'}</h2>
+            <h2 className={styles.title}>{mode === 'login' ? 'Login' : 'Create Apartment'}</h2>
             <p className={styles.subtitle}>
-              {mode === 'login' ? 'Sign in with the email your Apartment has on file.' : "Start with your email — you'll set up or join an Apartment next."}
+              {mode === 'login' ? 'Enter the email registered with your apartment.' : "Start with your email — you'll set up or join an Apartment next."}
             </p>
           </header>
 
@@ -255,25 +267,15 @@ function AuthDrawerPanel({ mode, onClose }: { mode: AuthDrawerMode; onClose: () 
                 />
               </div>
               <button type="submit" className={theme.button} disabled={pending} style={{ width: '100%' }}>
-                {pending ? 'Sending…' : 'Send code'}
+                {pending ? 'Sending…' : 'Send Verification Code'}
               </button>
             </form>
           ) : (
             <form onSubmit={verifyCode}>
               <p className={styles.hint}>We sent a code to {email}.</p>
               <div className={theme.field}>
-                <label className={theme.label} htmlFor="drawer-code">
-                  6-digit code
-                </label>
-                <input
-                  id="drawer-code"
-                  className={theme.input}
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  required
-                />
+                <label className={theme.label}>6-digit code</label>
+                <OtpInput value={code} onChange={setCode} />
               </div>
               <button type="submit" className={theme.button} disabled={pending} style={{ width: '100%' }}>
                 {pending ? 'Verifying…' : 'Verify & continue'}
@@ -293,6 +295,8 @@ function AuthDrawerPanel({ mode, onClose }: { mode: AuthDrawerMode; onClose: () 
                     if (cooldownTimer.current) clearInterval(cooldownTimer.current)
                     setCooldown(0)
                     setResendCount(0)
+                    setCode('')
+                    setError(null)
                     setStep('contact')
                   }}
                 >
@@ -365,13 +369,13 @@ function AuthDrawerPanel({ mode, onClose }: { mode: AuthDrawerMode; onClose: () 
                 id="drawer-flat-count"
                 type="number"
                 min={1}
-                max={30}
+                max={75}
                 className={theme.input}
                 value={flatCount}
                 onChange={(e) => setFlatCount(Number(e.target.value) || 1)}
                 required
               />
-              <p className={styles.hint}>Up to 30 — you can change this later in Setup.</p>
+              <p className={styles.hint}>Up to 75 — you can change this later in Setup.</p>
             </div>
             <div className={theme.field}>
               <span className={theme.label}>Maintenance split</span>

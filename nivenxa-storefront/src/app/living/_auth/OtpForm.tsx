@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { createLivingBrowserClient } from '@/lib/living/supabaseBrowser'
+import OtpInput from './OtpInput'
 import theme from '../LivingTheme.module.scss'
 import styles from './AuthForm.module.scss'
 
@@ -85,6 +86,7 @@ export default function OtpForm({ mode }: { mode: 'login' | 'signup' }) {
       setError(error.message)
       return
     }
+    setCode('')
     setResendCount((n) => n + 1)
     startCooldown()
   }
@@ -92,12 +94,22 @@ export default function OtpForm({ mode }: { mode: 'login' | 'signup' }) {
   async function verifyCode(e: FormEvent) {
     e.preventDefault()
     setError(null)
+    if (code.trim().length < 6) {
+      setError('Enter all 6 digits.')
+      return
+    }
     setPending(true)
     const supabase = createLivingBrowserClient()
     const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: code.trim(), type: 'email' })
     setPending(false)
     if (error) {
-      setError(error.message)
+      const message = error.message.toLowerCase()
+      setError(
+        message.includes('expired') || message.includes('invalid')
+          ? 'That code is incorrect or has expired — check the digits or request a new one.'
+          : error.message
+      )
+      setCode('')
       return
     }
     router.push('/living/home')
@@ -112,18 +124,8 @@ export default function OtpForm({ mode }: { mode: 'login' | 'signup' }) {
           We sent a code to {email}.
         </p>
         <div className={theme.field}>
-          <label className={theme.label} htmlFor="otp-code">
-            6-digit code
-          </label>
-          <input
-            id="otp-code"
-            className={theme.input}
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            required
-          />
+          <label className={theme.label}>6-digit code</label>
+          <OtpInput value={code} onChange={setCode} />
         </div>
         <button type="submit" className={theme.button} disabled={pending} style={{ width: '100%' }}>
           {pending ? 'Verifying…' : 'Verify & continue'}
@@ -143,6 +145,8 @@ export default function OtpForm({ mode }: { mode: 'login' | 'signup' }) {
               if (cooldownTimer.current) clearInterval(cooldownTimer.current)
               setCooldown(0)
               setResendCount(0)
+              setCode('')
+              setError(null)
               setStep('contact')
             }}
           >
@@ -171,7 +175,7 @@ export default function OtpForm({ mode }: { mode: 'login' | 'signup' }) {
         />
       </div>
       <button type="submit" className={theme.button} disabled={pending} style={{ width: '100%' }}>
-        {pending ? 'Sending…' : 'Send code'}
+        {pending ? 'Sending…' : 'Send Verification Code'}
       </button>
     </form>
   )

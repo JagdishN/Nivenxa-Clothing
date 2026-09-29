@@ -2,8 +2,8 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { requireMembership } from '@/lib/living/auth'
 import { round2 } from '@/lib/living/billing'
-import { formatCurrency, formatMonthLabel, monthKeyFor } from '@/lib/living/format'
-import { computeBillForFlat, getBillableFlats, getFlats } from '@/lib/living/queries'
+import { formatBalanceMeaning, formatCurrency, formatMonthLabel, monthKeyFor } from '@/lib/living/format'
+import { computeBillForFlat, getApartmentReimbursementsDue, getBillableFlats, getCurrentMaintenancePeriod, getFlats } from '@/lib/living/queries'
 import MaterialIcon from '../../../MaterialIcon'
 import theme from '../../../LivingTheme.module.scss'
 import homeStyles from '../../Home.module.scss'
@@ -27,17 +27,21 @@ export default async function LivingLedgersPage({ searchParams }: { searchParams
 
   const { supabase, apartment } = await requireMembership(['admin', 'treasurer'])
   const month = monthKeyFor(new Date())
-  const flats = getBillableFlats(await getFlats(supabase, apartment.id))
+  const [allFlats, maintenanceMonth] = await Promise.all([getFlats(supabase, apartment.id), getCurrentMaintenancePeriod(supabase, apartment.id)])
+  const flats = getBillableFlats(allFlats)
+  const reimbursementsDue = await getApartmentReimbursementsDue(supabase, apartment.id, allFlats)
+  const reimbursementByFlat = new Map(reimbursementsDue.byFlat.map((r) => [r.flat.id, r.remaining]))
 
   const rows = await Promise.all(
     flats.map(async (flat) => {
-      const bill = await computeBillForFlat(supabase, apartment, flat, month)
+      const bill = await computeBillForFlat(supabase, apartment, flat, month, { allFlats, maintenanceMonth })
       return {
         flat,
         opening: bill.previous_due,
         billed: round2(bill.total_due - bill.previous_due),
         paid: bill.amount_paid,
         balance: bill.balance_remaining,
+        reimbursementOwed: reimbursementByFlat.get(flat.id) ?? 0,
       }
     })
   )
@@ -125,7 +129,7 @@ export default async function LivingLedgersPage({ searchParams }: { searchParams
                         <Amount value={r.paid} variant="credit" />
                       </td>
                       <td className={`${theme.num} ${theme.totalCol}`} style={{ fontWeight: 700 }}>
-                        {formatCurrency(r.balance)}
+                        {formatBalanceMeaning(r.balance, r.reimbursementOwed, { subjectLabel: `Flat ${r.flat.flat_no}` })}
                       </td>
                       <td>
                         <Link href={`/living/billing/ledgers/${r.flat.id}`} className={theme.iconButton} title={`Open Flat ${r.flat.flat_no}'s ledger`}>

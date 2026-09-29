@@ -786,8 +786,8 @@ begin
   if exists (select 1 from living_memberships where user_id = auth.uid()) then
     raise exception 'this account already belongs to an apartment';
   end if;
-  if p_flat_count < 1 or p_flat_count > 30 then
-    raise exception 'flat count must be between 1 and 30';
+  if p_flat_count < 1 or p_flat_count > 75 then
+    raise exception 'flat count must be between 1 and 75';
   end if;
 
   insert into living_apartments (name, address, admin_contact, join_code, flat_split, flat_count, created_by)
