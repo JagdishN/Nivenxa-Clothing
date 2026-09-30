@@ -3,12 +3,140 @@ import { useEffect, useRef } from 'react'
 import { Chessground } from 'chessground'
 import type { Api } from 'chessground/api'
 import type { Color, Key } from 'chessground/types'
+import type { DrawShape } from 'chessground/draw'
 import 'chessground/assets/chessground.base.css'
 import 'chessground/assets/chessground.brown.css'
 import 'chessground/assets/chessground.cburnett.css'
 import styles from './Board.module.scss'
 
 function noop() {}
+
+// Hex colors for the `band: true` highlight — matches chessground's own
+// brush colors (chessground/dist/state.js's default brushes) so a banded
+// square reads as "the same color" as the ring-circle brush of the same
+// name used everywhere else, just a different shape. No 'purple' here —
+// purple is reserved for app chrome (buttons, progress, nav); painted onto
+// the board itself it fought the natural cream/brown squares and hid
+// whether a square was actually light or dark. Board highlights stay gold
+// (teaching/hint), green (correct), red (wrong) only.
+const BAND_COLOR: Record<string, string> = {
+  yellow: '#e68f00',
+  green: '#15781b',
+  red: '#882020',
+  blue: '#003088',
+}
+
+const BAND_STROKE = 6
+const BAND_INSET = 6
+
+// A custom-drawn ring for "correct/found" squares, replacing chessground's
+// own native circle brush there. Chessground's ring size is NOT actually
+// configurable via any brush property — its radius/stroke-width in
+// `chessground/dist/svg.js`'s `renderCircle`/`circleWidth` are hardcoded
+// constants (`circleWidth()` always returns `[3/64, 4/64]` regardless of
+// `brush.lineWidth`, which only affects ARROW thickness, never circles) —
+// so the only way to actually resize it is to stop using the native brush
+// for this one case and draw the ring ourselves. Chessground's own native
+// radius works out to ~46.9 in this 0-100 system (radius = 0.5 - (4/64)/2
+// of a square); r=37 here is a second, further reduction from an earlier
+// r=41 pass, each on direct "make the green circle smaller" feedback.
+function smallRingSvg(color: string): string {
+  return `<circle cx="50" cy="50" r="37" fill="none" stroke="${color}" stroke-width="5.5"/>`
+}
+
+// A single square's outline (fallback for a highlight that isn't one
+// straight line — e.g. scattered squares) — an inset rounded rect, stroke
+// only, so the square's own color/theme is never touched.
+function soloOutlineSvg(color: string): string {
+  return `<rect x="7" y="7" width="86" height="86" rx="10" fill="none" stroke="${color}" stroke-width="7" stroke-opacity="0.75"/>`
+}
+
+// One square's slice of a CONTINUOUS band running the length of a whole
+// file or rank — see buildBandShapes. Built from plain axis-aligned rects
+// (no path arcs): two long edges spanning the square's full local
+// 0-100 box (so they connect seamlessly with the same square in every
+// neighbor), plus a short end-cap only on the square that's the actual
+// start or end of the line. The result reads as one rectangle framing the
+// whole rank/file, not eight separate boxes.
+function bandSliceSvg(color: string, vertical: boolean, isFirst: boolean, isLast: boolean): string {
+  const m = BAND_INSET
+  const sw = BAND_STROKE
+  const rects: string[] = []
+  if (vertical) {
+    rects.push(`<rect x="${m}" y="0" width="${sw}" height="100" fill="${color}"/>`)
+    rects.push(`<rect x="${100 - m - sw}" y="0" width="${sw}" height="100" fill="${color}"/>`)
+    if (isFirst) rects.push(`<rect x="${m}" y="${m}" width="${100 - 2 * m}" height="${sw}" fill="${color}"/>`)
+    if (isLast) rects.push(`<rect x="${m}" y="${100 - m - sw}" width="${100 - 2 * m}" height="${sw}" fill="${color}"/>`)
+  } else {
+    rects.push(`<rect x="0" y="${m}" width="100" height="${sw}" fill="${color}"/>`)
+    rects.push(`<rect x="0" y="${100 - m - sw}" width="100" height="${sw}" fill="${color}"/>`)
+    if (isFirst) rects.push(`<rect x="${m}" y="${m}" width="${sw}" height="${100 - 2 * m}" fill="${color}"/>`)
+    if (isLast) rects.push(`<rect x="${100 - m - sw}" y="${m}" width="${sw}" height="${100 - 2 * m}" fill="${color}"/>`)
+  }
+  return `<g opacity="0.85">${rects.join('')}</g>`
+}
+
+// Splits an arbitrary square set into continuous-band groups (a full file —
+// all 8 ranks of one letter present — or a full rank — all 8 files of one
+// number present) plus whatever's left over. Handles a single pure
+// file/rank (the common case) and a combined file+rank crossing (e.g.
+// teaching "e4" by outlining the whole e-file AND rank 4 at once, which
+// then read as two crossing bands rather than 16 separate outlined
+// squares) by greedily removing whichever full line is largest first.
+function buildBandShapes(squares: Key[], color: string): DrawShape[] {
+  let pool = [...new Set(squares)]
+  const groups: { line: Key[]; vertical: boolean }[] = []
+
+  while (pool.length > 0) {
+    const byFile = new Map<string, Key[]>()
+    const byRank = new Map<string, Key[]>()
+    for (const sq of pool) {
+      const file = sq[0]
+      const rank = sq[1]
+      ;(byFile.get(file) ?? byFile.set(file, []).get(file)!).push(sq as Key)
+      ;(byRank.get(rank) ?? byRank.set(rank, []).get(rank)!).push(sq as Key)
+    }
+    const fullFile = [...byFile.entries()].find(([, sqs]) => sqs.length === 8)
+    const fullRank = [...byRank.entries()].find(([, sqs]) => sqs.length === 8)
+    if (fullFile) {
+      groups.push({ line: fullFile[1], vertical: true })
+      pool = pool.filter((sq) => !fullFile[1].includes(sq as Key))
+    } else if (fullRank) {
+      groups.push({ line: fullRank[1], vertical: false })
+      pool = pool.filter((sq) => !fullRank[1].includes(sq as Key))
+    } else {
+      break
+    }
+  }
+
+  const shapes: DrawShape[] = []
+  for (const { line, vertical } of groups) {
+    const sorted = [...line].sort((a, b) => (vertical ? a.charCodeAt(1) - b.charCodeAt(1) : a.charCodeAt(0) - b.charCodeAt(0)))
+    sorted.forEach((orig, i) => {
+      shapes.push({ orig, customSvg: { html: bandSliceSvg(color, vertical, i === 0, i === sorted.length - 1) } })
+    })
+  }
+  for (const orig of pool) {
+    shapes.push({ orig, customSvg: { html: soloOutlineSvg(color) } })
+  }
+  // Where a file band and a rank band cross (e.g. teaching e4: the e-file
+  // meets rank 4 right there), add a solid dot on top of both lines' own
+  // shapes — the crossing point is the actual point of the lesson, not
+  // just an incidental overlap of two outlines, so it gets its own mark
+  // rather than being left to read as "two lines happen to meet here."
+  if (groups.length >= 2) {
+    const crossingCount = new Map<string, number>()
+    for (const { line } of groups) {
+      for (const sq of line) crossingCount.set(sq, (crossingCount.get(sq) ?? 0) + 1)
+    }
+    for (const [sq, count] of crossingCount) {
+      if (count >= 2) {
+        shapes.push({ orig: sq as Key, customSvg: { html: `<circle cx="50" cy="50" r="16" fill="${color}" opacity="0.9"/>` } })
+      }
+    }
+  }
+  return shapes
+}
 
 export interface BoardProps {
   fen: string
@@ -22,8 +150,8 @@ export interface BoardProps {
   lastMove?: Key[]
   /** Squares to circle (chessground's shape overlay) — e.g. the square a piece newly aims at. */
   highlightSquares?: Key[]
-  /** Circle color for `highlightSquares` — yellow for a hint/callout, green for "these are legal squares." */
-  highlightColor?: 'yellow' | 'green'
+  /** Circle color for `highlightSquares` — yellow for a hint/callout/concept, green for "these are legal squares," red for an incorrect attempt. Deliberately no purple: that's reserved for app chrome (buttons, progress), not the board itself. */
+  highlightColor?: 'yellow' | 'green' | 'red'
   /** [from, to] to draw as an arrow (chessground's shape overlay) — e.g. a "this piece to this square" hint. */
   hintArrow?: Key[]
   /**
@@ -33,10 +161,29 @@ export interface BoardProps {
    * that only ever need one; this is additive, not a replacement.
    */
   extraArrows?: { from: Key; to: Key; brush?: 'yellow' | 'green' | 'red' | 'blue' }[]
-  /** Square groups to circle together as one idea (e.g. an open file or a dangerous diagonal), each with its own brush. */
-  lineHighlights?: { squares: Key[]; brush?: 'yellow' | 'green' | 'red' | 'blue' }[]
+  /**
+   * Square groups to circle together as one idea (e.g. an open file or a
+   * dangerous diagonal), each with its own brush. `band: true` draws a
+   * genuine continuous outline down the whole file/rank (see
+   * `buildBandShapes`) instead of the usual per-square ring-circle — a
+   * full file or rank reads as ONE highlighted lane, not eight separate
+   * outlined boxes. A combined file+rank set (teaching e.g. "e4" by
+   * outlining the whole e-file and rank 4 together) is automatically split
+   * into two crossing bands; any squares that don't form a full straight
+   * line fall back to an individual outline per square. Deliberately an
+   * outline, never a filled wash — a solid fill blends differently
+   * depending on the board's own theme (a gold wash read as a muddy olive
+   * stripe over the green theme specifically) and hides whether the square
+   * underneath was actually light or dark; an outline never recolors the
+   * square itself, so it reads the same way on every board theme.
+   */
+  lineHighlights?: { squares: Key[]; brush?: 'yellow' | 'green' | 'red' | 'blue'; band?: boolean }[]
   /** Boosts the rank/file coordinate labels' size and weight — for the specific steps of a lesson that are actively teaching coordinates, off (the normal subtle read) everywhere else. */
   emphasizeCoordinates?: boolean
+  /** Hides the rank/file coordinate labels entirely — default true (shown) everywhere. The Chessboard lesson passes `false` for every step before it actually introduces files/ranks, so a beginner isn't looking at coordinate letters/numbers before that concept exists yet. */
+  showCoordinates?: boolean
+  /** The board's own square colors — 'cream' (the default, matches chessground's own brown theme), 'green', or 'purple'. See BoardLesson's colorPicker step, the only place this is currently learner-chosen. */
+  boardTheme?: 'cream' | 'green' | 'purple'
   /** Briefly pulses the current `highlightSquares` circles — a lightweight "you got it" animation for a just-found square, distinct from the static highlight itself. */
   pulseHighlights?: boolean
   onMove?: (from: Key, to: Key) => void
@@ -63,6 +210,8 @@ export default function Board({
   extraArrows,
   lineHighlights,
   emphasizeCoordinates = false,
+  showCoordinates = true,
+  boardTheme = 'cream',
   pulseHighlights = false,
   onMove = noop,
   onSquareClick,
@@ -150,7 +299,16 @@ export default function Board({
       ...(highlightSquares ?? []).map((orig) => ({ orig, brush: highlightColor })),
       ...(hintArrow ? [{ orig: hintArrow[0], dest: hintArrow[1], brush: 'yellow' as const }] : []),
       ...(extraArrows ?? []).map((a) => ({ orig: a.from, dest: a.to, brush: a.brush ?? 'yellow' })),
-      ...(lineHighlights ?? []).flatMap((l) => l.squares.map((orig) => ({ orig, brush: l.brush ?? 'yellow' }))),
+      ...(lineHighlights ?? []).flatMap((l) =>
+        l.band
+          ? buildBandShapes(l.squares, BAND_COLOR[l.brush ?? 'yellow'])
+          : l.brush === 'green'
+            ? // A found/correct square — drawn smaller than chessground's
+              // native ring (see smallRingSvg's own comment for why the
+              // native brush can't just be resized via config).
+              l.squares.map((orig) => ({ orig, customSvg: { html: smallRingSvg(BAND_COLOR.green) } }))
+            : l.squares.map((orig) => ({ orig, brush: l.brush ?? 'yellow' }))
+      ),
     ])
   }, [
     fen,
@@ -183,6 +341,8 @@ export default function Board({
     <div
       className={`${styles.wrap} ${emphasizeCoordinates ? styles.board_coordsEmphasized : ''} ${
         pulseHighlights ? styles.board_pulsing : ''
+      } ${showCoordinates ? '' : styles.board_coordsHidden} ${
+        boardTheme === 'green' ? styles.board_themeGreen : boardTheme === 'purple' ? styles.board_themePurple : styles.board_themeCream
       }`}
     >
       <div ref={elRef} className={styles.board} />

@@ -10,6 +10,16 @@
   composes: panelCol from './BasicsWorkspace.module.scss';
 }
 
+// A TRY IT step (squareQuiz/yesNo) is almost always shorter than a LEARN
+// step (a demo's explanatory text) — the shared 320px floor was sized for
+// the longer LEARN content, which left visibly empty space under a short
+// interaction prompt. Applied conditionally in BoardLesson.tsx based on
+// `step.kind`, not globally, so LEARN steps keep the taller floor.
+.panelColCompact {
+  composes: panelCol from './BasicsWorkspace.module.scss';
+  min-height: 250px;
+}
+
 // Step counter (left) and stage eyebrow (right) share one row — see item
 // 13's "16 of 20 ... Your Turn" layout, rather than one run-on line.
 .stepCounterRow {
@@ -47,6 +57,59 @@
   color: var(--chess-deep);
   margin: 0;
   line-height: 1.3;
+
+  // The target itself ("Find **b7**," "Find **e4**") is the one word on a
+  // TRY IT screen the learner actually needs to register — a bold weight
+  // shift alone barely reads against this serif font's own light default
+  // weight, so this also bumps size and switches to the purple accent,
+  // making the target the clear visual focal point of the whole card.
+  strong {
+    font-weight: 700;
+    color: var(--chess-purple);
+    font-size: 1.08em;
+  }
+}
+
+// ─── Quick Check found-square chips — see BoardLesson.tsx ─────────────────
+.foundChips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.foundChip {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.3rem 0.65rem;
+  border-radius: 9999px;
+  background: rgba(63, 107, 73, 0.12);
+  color: #3f6b49;
+}
+
+.foundChipsCount {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(31, 27, 58, 0.55);
+}
+
+// The one memorable rule a demo step distills down to ("LIGHT ON RIGHT,"
+// "FILE = VERTICAL ↕") — deliberately its own standout line, not folded
+// into .promptText as just another sentence, since the whole point is that
+// this ONE line is what the learner should actually retain.
+.rememberLine {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: var(--chess-purple);
+  background: rgba(91, 46, 145, 0.07);
+  border-radius: 0.6rem;
+  padding: 0.45rem 0.7rem;
+  margin: 0;
 }
 
 // Always rendered before .actions (the fixed Back/Next footer) — pushes it
@@ -86,8 +149,99 @@
   justify-content: center;
 }
 
+// Bumped up from the shared 0.95rem/1.5 — now that the panel is no longer
+// stretched to the board's height (see BasicsWorkspace.module.scss), the
+// instruction/question is meant to read as the strongest thing on the card
+// after the title, not get lost in the same size as everything else.
 .promptText {
   composes: promptText from './PracticePanel.module.scss';
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+// ─── Board color picker — see BoardLesson.tsx's colorPicker step ──────────
+.themeRow {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.themeSwatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.5rem;
+  border: 1.5px solid rgba(91, 46, 145, 0.18);
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    border-color: var(--chess-purple);
+    transform: translateY(-1px);
+  }
+}
+
+// The just-picked swatch, held visible through the brief 'correct' window
+// (see BoardLesson.tsx) rather than the whole row disappearing instantly.
+// Made deliberately unmissable, not just a subtle border-color swap: a
+// thicker border, a visible tinted background (not just a color change —
+// the untinted white card made a 2px border shift genuinely easy to miss),
+// and an outer glow ring, on feedback that the previous version's
+// selected/unselected difference was too subtle to register at a glance.
+.themeSwatchSelected {
+  border-color: #3f6b49;
+  border-width: 3px;
+  background: rgba(63, 107, 73, 0.1);
+  box-shadow: 0 0 0 4px rgba(63, 107, 73, 0.15);
+  cursor: default;
+
+  &:hover {
+    border-color: #3f6b49;
+    transform: none;
+  }
+}
+
+.themeSwatchPreview {
+  position: relative;
+  display: block;
+  width: 44px;
+  height: 44px;
+  border-radius: 0.4rem;
+  box-shadow: inset 0 0 0 1px rgba(31, 27, 58, 0.12);
+}
+
+// A corner badge, not a full overlay wash — reads unambiguously as "this
+// one is selected" (the standard checkmark-badge pattern) without hiding
+// the preview swatch underneath it. A white ring around the badge keeps it
+// legible regardless of which theme's colors sit behind it.
+.themeSwatchCheck {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #fff;
+  background: #3f6b49;
+  border: 2px solid #fff;
+  border-radius: 9999px;
+  box-shadow: 0 1px 4px rgba(31, 27, 58, 0.3);
+}
+
+.themeSwatchLabel {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: rgba(31, 27, 58, 0.7);
+  text-align: center;
+  line-height: 1.2;
 }
 
 // Yes/No, right under the question — a plain flex row, not part of the
@@ -95,6 +249,85 @@
 .answerRow {
   display: flex;
   gap: 0.6rem;
+}
+
+// Yes and No before an answer is picked are equally-weighted choices, not a
+// primary+secondary pair — using .actionBtn/.actionBtnGhost here read as
+// "Yes is the recommended answer," which isn't true for the steps where the
+// right answer is No. Both share this one outlined style instead; the
+// panel already communicates the reaction afterward (promptCardCorrect,
+// the wrong-text line, the checkerboard ring color), so the buttons
+// themselves don't need a third "was this the one you picked" state.
+.answerBtn {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.6rem 1.4rem;
+  border-radius: 9999px;
+  border: 1.5px solid rgba(91, 46, 145, 0.3);
+  background: rgba(91, 46, 145, 0.05);
+  color: var(--chess-purple);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    background: rgba(91, 46, 145, 0.12);
+    border-color: var(--chess-purple);
+    transform: translateY(-1px);
+  }
+}
+
+// ─── "Show what you learned" checkpoint — see item 7: a small recap card
+// (label + a checklist of what this lesson covered) shown above the usual
+// prompt on a squareQuiz step that opts in via `checkpointItems`, so the
+// lesson's final quiz reads as "you've reached a milestone," not just
+// another ordinary step that happens to come last. ───────────────────────
+.checkpointCard {
+  border: 1px solid rgba(91, 46, 145, 0.18);
+  border-radius: 0.85rem;
+  background: rgba(91, 46, 145, 0.05);
+  padding: 0.7rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.checkpointLabel {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--chess-purple);
+  margin: 0;
+}
+
+.checkpointList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+// Bold weight on every item, not just the checkmark — an ALL-CAPS phrase
+// ("LIGHT ON RIGHT →") already reads as visually "heavier" than a mixed-
+// case one ("e + 4 = e4") at the same regular weight, which made the list
+// read as inconsistent even though every line uses the same font/size. A
+// shared bold weight evens that out regardless of each line's own casing —
+// "e + 4 = e4" stays lowercase (real chess notation), it just carries the
+// same visual weight as its neighbors now.
+.checkpointItem {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: rgba(31, 27, 58, 0.8);
+
+  &::before {
+    content: '✓ ';
+    color: #3f6b49;
+    font-weight: 700;
+  }
 }
 
 .actions {
@@ -138,8 +371,35 @@
   composes: modalCard from './PracticePanel.module.scss';
 }
 
-.modalTag {
-  composes: modalTag from './PracticePanel.module.scss';
+// A small celebratory moment for the completion modal itself — the inline
+// board celebration (.celebrate/.spark/.celebrateCheck, composed below)
+// plays BEFORE the modal opens and is gone by the time it does, so the
+// modal otherwise had no visual reward of its own beyond plain text.
+// Deliberately modest (one icon, one pop-in) rather than a burst of
+// confetti, on explicit "not excessive" guidance.
+.modalBadge {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(214, 168, 95, 0.35), rgba(91, 46, 145, 0.16));
+  box-shadow: 0 8px 24px rgba(91, 46, 145, 0.18);
+  animation: modalBadgePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both;
+}
+
+@keyframes modalBadgePop {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .modalHeading {
@@ -180,18 +440,16 @@
   box-shadow: 0 12px 32px rgba(31, 27, 58, 0.18);
 }
 
-.cellLight {
-  background: #f0d9b5;
-}
-
-.cellDark {
-  background: #b58863;
-}
-
 // Bottom-right square, ringed the moment an answer is picked — the concrete
-// visual referent for "light on the right"/"dark on the right".
-.cellAnswer {
-  box-shadow: inset 0 0 0 4px var(--chess-gold);
+// visual referent for "light on the right"/"dark on the right". Two colors,
+// not one: green for a correct Yes/No, warm red/amber for a wrong one — the
+// same grammar the real board's square highlights use (see BoardLesson.tsx).
+.cellAnswerCorrect {
+  box-shadow: inset 0 0 0 4px #15781b;
+}
+
+.cellAnswerWrong {
+  box-shadow: inset 0 0 0 4px #c2410c;
 }
 
 // ─── Step progress bar — sits under the "Step N of M" text ──────────────────

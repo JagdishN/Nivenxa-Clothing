@@ -23,16 +23,46 @@
 // single neutral tone that has enough contrast on both light and dark
 // squares — subtler than the piece/UI purple-gold palette since this is a
 // board-level reference aid, not chrome.
+// !important throughout this block is deliberate, not lazy: chessground's
+// own chessground.base.css sets `text-transform: uppercase` and fixed
+// `bottom`/`left` offsets on these exact selectors at EQUAL CSS specificity
+// to a plain `.board :global(coords...)` rule, so the winner came down to
+// import/bundle order — which a previous pass got wrong (the intended fix
+// silently lost the cascade, and the uppercase/cramped-margin complaint
+// came right back). !important makes the override unconditional instead of
+// hoping this module's output lands later in the bundle than chessground's
+// own CSS.
 .board :global(coords) {
-  opacity: 1;
+  opacity: 1 !important;
   font-size: 13px;
   font-weight: 700;
-  color: rgba(31, 27, 58, 0.75);
+  // Standard chess notation is lowercase (a-h) — matches every square name
+  // in this lesson's own text (e4, b7, h1...); chessground's base CSS
+  // force-uppercases coords by default.
+  text-transform: lowercase !important;
   // A soft light halo, not a hard outline — keeps the letter/number readable
   // regardless of whether it's sitting over a light or a dark square,
   // rather than relying on one flat color to have enough contrast on both.
   text-shadow: 0 0 3px rgba(255, 255, 255, 0.85), 0 0 1px rgba(255, 255, 255, 0.85);
   transition: font-size 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+}
+
+// The actual color fix has to target the CHILD `coord` elements, not the
+// `coords` container above — chessground.brown.css sets `color` directly on
+// alternating `:nth-child` children (half white, half dark gray, tuned to
+// sit on alternating brown-theme squares) via `.orientation-white .files
+// :nth-child(even)` and friends. An explicit color on a CHILD always wins
+// over anything set on its PARENT regardless of specificity or !important —
+// that's how inheritance works — so the `color` this block's container rule
+// used to set never reached the actual letters/numbers at all; it silently
+// did nothing since day one. This is why the white-tinted half of the
+// alternating pair (a/c/e/g on one orientation) went fully invisible the
+// moment a lighter board theme (green/white) put white-on-white behind
+// them — on the brown theme it was a real bug too, just harder to notice.
+// !important here is required for the same reason as the block above:
+// beating chessground's own same-selector-shape rules unconditionally.
+.board :global(coords coord) {
+  color: rgba(31, 27, 58, 0.75) !important;
 }
 
 // Used on the specific lesson steps actively teaching coordinates (see
@@ -41,17 +71,43 @@
 .board_coordsEmphasized :global(coords) {
   font-size: 16px;
   font-weight: 800;
-  color: var(--chess-purple);
-  opacity: 1;
+  opacity: 1 !important;
   text-shadow: 0 0 3px rgba(255, 255, 255, 0.9), 0 0 2px rgba(255, 255, 255, 0.9);
 }
 
+// Same neutral dark tone as the base (non-emphasized) rule above, not the
+// purple accent — this board now has three possible themes, including a
+// purple one (dark squares ~#8c6bb1), where purple TEXT on purple SQUARES
+// is exactly the low-contrast pairing this whole coordinate-legibility
+// effort exists to avoid. The neutral tone + white halo combination is
+// theme-agnostic by construction; a specific accent color isn't.
+.board_coordsEmphasized :global(coords coord) {
+  color: rgba(31, 27, 58, 0.9) !important;
+}
+
+// Fully hides the coordinate labels — used by The Chessboard lesson for
+// every step before it actually introduces files/ranks, so a beginner
+// isn't looking at coordinate letters/numbers before that concept exists
+// yet (see Board.tsx's `showCoordinates`). `visibility: hidden`, not
+// `display: none` — keeps the layout's own box model untouched, only the
+// labels themselves disappear.
+.board_coordsHidden :global(coords) {
+  visibility: hidden !important;
+}
+
+// A dedicated margin, not the edge chessground places them at by default
+// (`left: -15px` / `bottom: -4px` in chessground.base.css — genuinely
+// outside the board's own bounds). These labels are the whole point of
+// this lesson's coordinate steps, not decoration, so they get real
+// clearance from the board/card boundary instead of sitting flush against
+// it (where the larger 16px/800-weight emphasized size then reads as
+// clipped/cramped).
 .board_coordsEmphasized :global(coords.ranks) {
-  left: 6px;
+  left: 6px !important;
 }
 
 .board_coordsEmphasized :global(coords.files) {
-  bottom: -2px;
+  bottom: 6px !important;
 }
 
 // A brief "you got it" pulse on the just-found square's highlight circle —
@@ -68,10 +124,37 @@
   }
 }
 
-.board_pulsing :global(.cg-shapes circle) {
+// Found/correct squares now render via customSvg (see Board.tsx's
+// smallRingSvg), which lands in chessground's `.cg-custom-svgs` container,
+// not `.cg-shapes` — this needs both selectors now, or the pulse would
+// silently stop firing for every found-square ring.
+.board_pulsing :global(.cg-shapes circle),
+.board_pulsing :global(.cg-custom-svgs circle) {
   transform-box: fill-box;
   transform-origin: center;
   animation: boardHighlightPulse 0.5s ease-out;
+}
+
+// ─── Board color themes — see BoardLesson's colorPicker step ──────────────
+// A pure-CSS checkerboard (no image asset needed): a 2x2 conic-gradient
+// tile, alternating the theme's two colors across its four quadrants, tiled
+// at 1/4 the board's width/height so four tiles span the board = 8 squares
+// per side. Overrides chessground.brown.css's own `cg-board` background —
+// higher specificity (a class + element, vs. its bare element selector) so
+// it wins regardless of stylesheet import order. 'cream' is defined here
+// too (not just left to fall through to brown.css's own default) so all
+// three themes are self-contained and explicit, matching the exact hex
+// values shown in the picker's own preview swatches.
+.board_themeCream :global(cg-board) {
+  background: repeating-conic-gradient(#f0d9b5 0% 25%, #b58863 0% 50%) 0 0 / 25% 25%;
+}
+
+.board_themeGreen :global(cg-board) {
+  background: repeating-conic-gradient(#eeeed2 0% 25%, #769656 0% 50%) 0 0 / 25% 25%;
+}
+
+.board_themePurple :global(cg-board) {
+  background: repeating-conic-gradient(#f1e8f7 0% 25%, #8c6bb1 0% 50%) 0 0 / 25% 25%;
 }
 
 // Chessground's default check highlight is a bright red radial glow — swapped
