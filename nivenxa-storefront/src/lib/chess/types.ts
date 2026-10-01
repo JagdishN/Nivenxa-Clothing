@@ -114,15 +114,19 @@ export interface ChessTournament {
   format: TournamentFormat
   topPlayers: TournamentPlayerPreview[]
   prizePool?: TournamentPrizePool
+  /** Freeform, e.g. "₹650" — shown as primary info on the tournament card. */
+  entryFee?: string
+  /** Freeform comma-separated age/skill categories, e.g. "U7, U9, U11, U14". */
+  categories?: string
   organizer: {
     name: string
     verified: boolean
     /** International format, e.g. "+91XXXXXXXXXX" — powers the wa.me Register fallback. */
     whatsapp?: string
   }
-  /** Organizer's own payment QR, shown purely informationally — Nivenxa never processes this payment. */
+  /** Organizer's own payment QR/note, shown purely informationally — Nivenxa never processes this payment. `note` (prize breakdown, payment instructions) is real content on its own and shouldn't require a QR image to exist to show — a tournament can have a note with no QR uploaded yet. */
   payment?: {
-    qrUrl: string
+    qrUrl?: string
     note?: string
   }
   trust: {

@@ -3,7 +3,8 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
 import type { ChessTournament } from '@/lib/chess/types'
-import { RegisterAction, PaymentInfo, formatDateRange } from './tournaments/TournamentListing'
+import { RegisterAction, PaymentInfo } from './tournaments/TournamentListing'
+import { formatDateRange } from '@/lib/chess/tournamentFormat'
 import styles from './Chess.module.scss'
 
 const fadeUp = (delay = 0) => ({

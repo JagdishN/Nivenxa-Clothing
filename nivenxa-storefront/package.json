@@ -14,7 +14,9 @@
     "import-puzzles": "tsx scripts/import-puzzles.ts",
     "apply-schema": "tsx scripts/apply-schema.ts",
     "apply-living-schema": "tsx scripts/apply-schema.ts supabase/living_schema.sql",
-    "seed-living-demo": "tsx scripts/seed-living-demo.ts"
+    "seed-living-demo": "tsx scripts/seed-living-demo.ts",
+    "add-tournament": "tsx scripts/add-nivenxa-tournament.ts",
+    "upload-tournament-qr": "tsx scripts/upload-tournament-qr.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",

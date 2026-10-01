@@ -25,6 +25,10 @@ export interface TournamentRow {
   format: string
   top_players: string | null
   prize_pool: string | null
+  /** Freeform, e.g. "₹650" — shown as primary info on the card, see TournamentListing.tsx. */
+  entry_fee: string | null
+  /** Freeform comma-separated age/skill categories, e.g. "U7, U9, U11, U14". */
+  categories: string | null
   organizer_name: string
   organizer_verified: boolean
   register_url: string | null
@@ -56,7 +60,7 @@ const CATEGORY_BY_TYPE: Record<string, TournamentCategory> = {
  * matching column in the flat schema and are approximated here — documented
  * inline below rather than left as silent guesses.
  */
-function mapRowToChessTournament(row: TournamentRow, lifecycleStatus: 'live' | 'upcoming'): ChessTournament {
+function mapRowToChessTournament(row: TournamentRow, lifecycleStatus: 'live' | 'upcoming' | 'completed'): ChessTournament {
   const mapUrl = row.latitude != null && row.longitude != null ? `https://www.google.com/maps?q=${row.latitude},${row.longitude}` : undefined
 
   // `source` in the DB is a lowercase provenance tag ('manual'/'imported'/'submitted'),
@@ -113,12 +117,20 @@ function mapRowToChessTournament(row: TournamentRow, lifecycleStatus: 'live' | '
           .filter((p) => p.name.length > 0)
       : [],
     prizePool: row.prize_pool ? { label: row.prize_pool, verified: row.verified } : undefined,
+    entryFee: row.entry_fee ?? undefined,
+    categories: row.categories ?? undefined,
     organizer: {
       name: row.organizer_name,
       verified: row.organizer_verified,
       whatsapp: row.organizer_whatsapp ?? undefined,
     },
-    payment: row.payment_qr_url ? { qrUrl: row.payment_qr_url, note: row.payment_note ?? undefined } : undefined,
+    // Previously gated entirely behind payment_qr_url existing — meant a
+    // tournament with real prize/payment text in payment_note but no QR
+    // image uploaded yet (like this one) showed none of it anywhere.
+    payment:
+      row.payment_qr_url || row.payment_note
+        ? { qrUrl: row.payment_qr_url ?? undefined, note: row.payment_note ?? undefined }
+        : undefined,
     trust: {
       score: row.verified ? 100 : 0,
       reasons: row.verified ? ['Verified by Nivenxa Chess admin'] : [],
@@ -131,17 +143,31 @@ function mapRowToChessTournament(row: TournamentRow, lifecycleStatus: 'live' | '
  * is allowed to show. Both queries filter on `verified = true` in application
  * code; note that RLS is currently OFF (see supabase/schema.sql), so this
  * filter is not a security boundary yet, only a display one.
+ *
+ * Also filters on `is_nivenxa_organized = true` — the Tournaments tab was
+ * previously a multi-source discovery board (FIDE/Lichess/ChessResults/
+ * academy/club listings, see the now-unused `seedTournaments.ts`/
+ * `TournamentService.ts`), explicitly narrowed (2026-10-01) to show only
+ * Nivenxa's own organized events. Third-party tournament rows can still
+ * exist in the table (e.g. for internal reference) but never surface here.
  */
 export async function getPublicTournaments(): Promise<TournamentGroup[]> {
   const supabase = getSupabase()
   const todayIso = new Date().toISOString().slice(0, 10)
 
   const [liveResult, upcomingResult] = await Promise.all([
-    supabase.from('tournaments').select('*').eq('verified', true).eq('is_live', true).order('start_date', { ascending: true }),
     supabase
       .from('tournaments')
       .select('*')
       .eq('verified', true)
+      .eq('is_nivenxa_organized', true)
+      .eq('is_live', true)
+      .order('start_date', { ascending: true }),
+    supabase
+      .from('tournaments')
+      .select('*')
+      .eq('verified', true)
+      .eq('is_nivenxa_organized', true)
       .eq('is_live', false)
       .gte('start_date', todayIso)
       .order('start_date', { ascending: true }),
@@ -157,10 +183,49 @@ export async function getPublicTournaments(): Promise<TournamentGroup[]> {
     { status: 'live', label: 'Live Now', tournaments: live },
     { status: 'upcoming', label: 'Upcoming', tournaments: upcoming },
   ]
-  // Mirrors the previous seed-based service's behavior: always show the "Live Now"
-  // group (even empty, so its own empty-state copy renders), only show "Upcoming"
-  // when it actually has entries.
-  return groups.filter((group) => group.status === 'live' || group.tournaments.length > 0)
+  // An empty "Live Now" used to always render anyway (with its own "nothing
+  // live right now" copy) — changed on direct feedback that a parent should
+  // land straight on real tournaments, not read past an empty section
+  // first. Both groups are dropped equally when empty now.
+  return groups.filter((group) => group.tournaments.length > 0)
+}
+
+/**
+ * Completed Nivenxa-organized tournaments for /chess/tournaments/archive —
+ * replaces the old TournamentService.getArchivedTournamentGroups() (hardcoded
+ * FIDE/Tata Steel/Lichess seed data, unrelated to anything Nivenxa actually
+ * ran), per the 2026-10-01 Nivenxa-only pivot. "Completed" = verified,
+ * Nivenxa-organized, start_date before today — most recent first.
+ */
+export async function getNivenxaArchiveTournaments(): Promise<TournamentGroup[]> {
+  const supabase = getSupabase()
+  const todayIso = new Date().toISOString().slice(0, 10)
+
+  const { data, error } = await supabase
+    .from('tournaments')
+    .select('*')
+    .eq('verified', true)
+    .eq('is_nivenxa_organized', true)
+    .lt('start_date', todayIso)
+    .order('start_date', { ascending: false })
+
+  if (error) console.error('getNivenxaArchiveTournaments: query failed —', error.message)
+
+  const completed = ((data ?? []) as TournamentRow[]).map((row) => mapRowToChessTournament(row, 'completed'))
+  return [{ status: 'completed', label: 'Completed', tournaments: completed }]
+}
+
+/** One tournament, for /chess/tournaments/[id] (the "View Details" destination). Only returns verified, Nivenxa-organized rows — same visibility rule as everywhere else public. */
+export async function getTournamentById(id: string): Promise<ChessTournament | null> {
+  const supabase = getSupabase()
+  const { data, error } = await supabase.from('tournaments').select('*').eq('id', id).eq('verified', true).eq('is_nivenxa_organized', true).maybeSingle()
+  if (error) console.error('getTournamentById: query failed —', error.message)
+  if (!data) return null
+
+  const row = data as TournamentRow
+  const todayIso = new Date().toISOString().slice(0, 10)
+  const lifecycleStatus = row.is_live ? 'live' : row.start_date < todayIso ? 'completed' : 'upcoming'
+  return mapRowToChessTournament(row, lifecycleStatus)
 }
 
 /**

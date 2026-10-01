@@ -1,20 +1,21 @@
 'use client'
 
-import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import Link from 'next/link'
 import type { ChessTournament, TournamentGroup } from '@/lib/chess/types'
+import { formatDateRange } from '@/lib/chess/tournamentFormat'
 import styles from './Tournaments.module.scss'
 
 /**
  * Renders `children` into a `document.body` portal, positioned (fixed,
- * viewport-relative) below-and-right-aligned to `anchorRef`. Needed because
- * `.tableShell` sets `overflow-x: auto` for the table's horizontal scroll —
- * per the CSS spec, that silently resolves `overflow-y` to `auto` as well,
- * which clips any plain `position: absolute` popover that tries to extend
- * below the table's own height (confirmed live: the payment QR panel's DOM
- * content existed but never became visible on screen). A portal escapes
- * that ancestor entirely instead of trying to fight the overflow rule.
+ * viewport-relative) above-and-right-aligned to `anchorRef` — anchored by
+ * `bottom` (not `top`) so the panel grows upward from the button regardless
+ * of its own height, instead of opening downward and risking getting cut off
+ * by the viewport or whatever sits below the card. Needed because a card can
+ * sit near the edge of the page, and a plain `position: absolute` popover
+ * risks being clipped by an ancestor's overflow rule — a portal escapes that
+ * entirely instead of trying to fight each possible ancestor.
  */
 function AnchoredPopover({
   anchorRef,
@@ -30,7 +31,7 @@ function AnchoredPopover({
   children: React.ReactNode
 }) {
   const panelRef = useRef<HTMLDivElement>(null)
-  const [pos, setPos] = useState<{ top: number; right: number } | null>(null)
+  const [pos, setPos] = useState<{ bottom: number; right: number } | null>(null)
 
   useEffect(() => {
     if (!open) return
@@ -38,7 +39,7 @@ function AnchoredPopover({
     function updatePosition() {
       const rect = anchorRef.current?.getBoundingClientRect()
       if (!rect) return
-      setPos({ top: rect.bottom + 8, right: window.innerWidth - rect.right })
+      setPos({ bottom: window.innerHeight - rect.top + 8, right: window.innerWidth - rect.right })
     }
     updatePosition()
 
@@ -46,8 +47,6 @@ function AnchoredPopover({
       const target = event.target as Node
       if (!panelRef.current?.contains(target) && !anchorRef.current?.contains(target)) onClose()
     }
-    // capture: true so this also fires for scrolling *inside* .tableShell
-    // (its own scroll container), not just window-level scroll.
     window.addEventListener('pointerdown', handlePointerDown)
     window.addEventListener('scroll', updatePosition, true)
     window.addEventListener('resize', updatePosition)
@@ -61,122 +60,10 @@ function AnchoredPopover({
   if (!open || !pos || typeof document === 'undefined') return null
 
   return createPortal(
-    <div ref={panelRef} className={className} style={{ position: 'fixed', top: pos.top, right: pos.right, zIndex: 50 }}>
+    <div ref={panelRef} className={className} style={{ position: 'fixed', bottom: pos.bottom, right: pos.right, zIndex: 50 }}>
       {children}
     </div>,
     document.body
-  )
-}
-
-export function formatDateRange(tournament: ChessTournament) {
-  const start = new Date(tournament.dates.startsAt)
-  const end = tournament.dates.endsAt ? new Date(tournament.dates.endsAt) : undefined
-
-  const dateFormatter = new Intl.DateTimeFormat('en', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
-
-  if (!end || dateFormatter.format(start) === dateFormatter.format(end)) {
-    return dateFormatter.format(start)
-  }
-
-  return `${dateFormatter.format(start)} - ${dateFormatter.format(end)}`
-}
-
-function fideLabel(value: boolean | null) {
-  if (value === true) return 'Yes'
-  if (value === false) return 'No'
-  return 'Review'
-}
-
-function getInitials(name: string) {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase()
-}
-
-function PlayerPreview({ tournament }: { tournament: ChessTournament }) {
-  const [open, setOpen] = useState(false)
-  const buttonRef = useRef<HTMLButtonElement>(null)
-
-  if (!tournament.topPlayers.length) {
-    return <span className={styles.mutedValue}>No toppers enrolled yet</span>
-  }
-
-  return (
-    <div className={styles.playerPreview}>
-      <button
-        ref={buttonRef}
-        type="button"
-        className={styles.playerPreviewButton}
-        aria-label={`Preview top players for ${tournament.title}`}
-        aria-expanded={open}
-        onClick={() => setOpen((current) => !current)}
-      >
-        <Image
-          src="/images/Chess/player-preview.png"
-          alt=""
-          width={72}
-          height={72}
-          className={styles.playerIcon}
-          aria-hidden="true"
-        />
-      </button>
-
-      <AnchoredPopover anchorRef={buttonRef} open={open} onClose={() => setOpen(false)} className={styles.playerPanel}>
-        <p className={styles.playerPanelTitle}>Top Players</p>
-        {tournament.topPlayers.map((player) => (
-          <div key={`${tournament.id}-${player.name}`} className={styles.playerCard}>
-            <div className={styles.playerAvatar} aria-hidden="true">
-              {getInitials(player.name)}
-            </div>
-            <div className={styles.playerBody}>
-              <div className={styles.playerTopLine}>
-                <span className={styles.playerName}>{player.name}</span>
-                {player.rating && <span className={styles.playerRating}>{player.rating}</span>}
-              </div>
-              <div className={styles.playerMeta}>
-                {player.title && <span className={styles.playerTitle}>{player.title}</span>}
-                {player.country && <span>{player.country}</span>}
-                {!player.title && !player.country && <span>Preview available after publication</span>}
-              </div>
-            </div>
-          </div>
-        ))}
-      </AnchoredPopover>
-    </div>
-  )
-}
-
-function LocationLink({ tournament }: { tournament: ChessTournament }) {
-  if (!tournament.links.mapUrl) {
-    return <span className={styles.mutedValue}>Not mapped</span>
-  }
-
-  return (
-    <a
-      href={tournament.links.mapUrl}
-      className={styles.mapLink}
-      target="_blank"
-      rel="noreferrer"
-      aria-label={`Open map for ${tournament.title} at ${tournament.location.label}`}
-      title={tournament.location.label}
-    >
-      <Image
-        src="/images/Shared/map.png"
-        alt=""
-        width={72}
-        height={72}
-        className={styles.mapIcon}
-        aria-hidden="true"
-      />
-    </a>
   )
 }
 
@@ -196,7 +83,7 @@ export function RegisterAction({ tournament }: { tournament: ChessTournament }) 
   // deep link, then a plain non-link note — never a broken/placeholder href.
   if (tournament.links.registrationUrl) {
     return (
-      <a href={tournament.links.registrationUrl} className={styles.registerLink} target="_blank" rel="noreferrer">
+      <a href={tournament.links.registrationUrl} className={styles.registerBtn} target="_blank" rel="noreferrer">
         Register
       </a>
     )
@@ -205,7 +92,7 @@ export function RegisterAction({ tournament }: { tournament: ChessTournament }) 
   const whatsappLink = buildWhatsAppRegisterLink(tournament)
   if (whatsappLink) {
     return (
-      <a href={whatsappLink} className={styles.registerLink} target="_blank" rel="noreferrer">
+      <a href={whatsappLink} className={styles.registerBtn} target="_blank" rel="noreferrer">
         Register via WhatsApp
       </a>
     )
@@ -233,9 +120,9 @@ export function PaymentInfo({ tournament }: { tournament: ChessTournament }) {
       </button>
 
       <AnchoredPopover anchorRef={buttonRef} open={open} onClose={() => setOpen(false)} className={styles.paymentPanel}>
-        <p className={styles.paymentPanelTitle}>Pay the organizer directly</p>
+        <p className={styles.paymentPanelTitle}>Scan to pay</p>
         <p className={styles.paymentPanelSubtext}>
-          This is the organizer&rsquo;s own payment method — Nivenxa does not process or handle this payment.
+          Official Nivenxa payment QR for this tournament — pay via UPI or bank transfer using the details below.
         </p>
         {/* eslint-disable-next-line @next/next/no-img-element -- external Supabase Storage URL, not worth a next.config.ts remotePatterns entry for a QR image */}
         <img src={tournament.payment.qrUrl} alt={`Payment QR for ${tournament.title}`} className={styles.paymentQrImage} />
@@ -245,94 +132,135 @@ export function PaymentInfo({ tournament }: { tournament: ChessTournament }) {
   )
 }
 
+/**
+ * One tournament, reduced to exactly what a parent needs to decide whether
+ * to register in about 5 seconds: who's running it, Date, Venue, Categories,
+ * then Entry Fee/Prize Pool/Time Control/Format as one even stat row — wide
+ * (not a narrow column with empty space beside it), since this is meant to
+ * read as the main content of the page, not one card among many in a grid.
+ * Country, FIDE-rated, and top players are still dropped entirely (genuinely
+ * secondary for a local youth event); anything else goes on the "View
+ * Details" page instead of being crammed in here.
+ */
+function TournamentCard({ tournament }: { tournament: ChessTournament }) {
+  const categories = tournament.categories
+    ? tournament.categories
+        .split(',')
+        .map((c) => c.trim())
+        .filter(Boolean)
+    : []
+
+  return (
+    <article className={styles.card}>
+      <div className={styles.cardTop}>
+        <h3 className={styles.cardTitle}>{tournament.title}</h3>
+        {/* Who's running it, not just that someone verified it — "✓
+            Verified organizer" on its own left the actual organizer name
+            unstated, which is the more important fact. */}
+        <p className={styles.cardOrganizer}>
+          {tournament.organizer.verified && <span aria-hidden="true">✓ </span>}
+          Organized by {tournament.organizer.name}
+        </p>
+      </div>
+
+      <div className={styles.cardMetaRow}>
+        <span className={styles.cardMetaItem}>
+          <span className={styles.cardMetaIcon} aria-hidden="true">
+            📅
+          </span>
+          {formatDateRange(tournament)}
+        </span>
+        <span className={styles.cardMetaItem}>
+          <span className={styles.cardMetaIcon} aria-hidden="true">
+            📍
+          </span>
+          {tournament.links.mapUrl ? (
+            <a href={tournament.links.mapUrl} target="_blank" rel="noreferrer" className={styles.cardVenueLink}>
+              {tournament.location.label}
+            </a>
+          ) : (
+            tournament.location.label
+          )}
+        </span>
+      </div>
+
+      {categories.length > 0 && (
+        <div className={styles.cardCategories}>
+          {categories.map((c) => (
+            <span key={c} className={styles.categoryPill}>
+              {c}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className={styles.cardStats}>
+        {tournament.entryFee && (
+          <div className={styles.cardStat}>
+            <span className={styles.cardStatValue}>{tournament.entryFee}</span>
+            <span className={styles.cardStatLabel}>Entry Fee</span>
+          </div>
+        )}
+        {tournament.prizePool && (
+          <div className={styles.cardStat}>
+            <span className={styles.cardStatValue}>{tournament.prizePool.label}</span>
+            <span className={styles.cardStatLabel}>Prize Pool</span>
+          </div>
+        )}
+        {tournament.timeControl !== 'Unknown' && (
+          <div className={styles.cardStat}>
+            <span className={styles.cardStatValue}>{tournament.timeControl}</span>
+            <span className={styles.cardStatLabel}>Time Control</span>
+          </div>
+        )}
+        {tournament.format !== 'Unknown' && (
+          <div className={styles.cardStat}>
+            <span className={styles.cardStatValue}>{tournament.format}</span>
+            <span className={styles.cardStatLabel}>Format</span>
+          </div>
+        )}
+      </div>
+
+      <div className={styles.cardActions}>
+        <Link href={`/chess/tournaments/${tournament.id}`} className={styles.viewDetailsBtn}>
+          View Details
+        </Link>
+        <RegisterAction tournament={tournament} />
+        <PaymentInfo tournament={tournament} />
+      </div>
+    </article>
+  )
+}
+
 export default function TournamentListing({ groups }: { groups: TournamentGroup[] }) {
-  if (!groups.length) {
+  // An empty group (e.g. "Live Now" with nothing live right now) is dropped
+  // entirely rather than rendered with its own "nothing here" copy — a
+  // parent scanning the page should land straight on real tournaments, not
+  // read past a section that has nothing in it first.
+  const visibleGroups = groups.filter((group) => group.tournaments.length > 0)
+
+  if (!visibleGroups.length) {
     return (
       <section className={styles.emptyState}>
-        <p className={styles.groupLabel}>Curated Selection</p>
         <h2 className={styles.groupTitle}>No tournaments ready yet</h2>
-        <p className={styles.emptyText}>
-          The calendar only shows events that pass Nivenxa Chess validation.
-        </p>
+        <p className={styles.emptyText}>The calendar only shows events that pass Nivenxa Chess validation.</p>
       </section>
     )
   }
 
   return (
     <div className={styles.groups}>
-      {groups.map((group) => (
+      {visibleGroups.map((group) => (
         <section key={group.status} className={styles.group} aria-labelledby={`${group.status}-heading`}>
-          <div className={styles.groupHeader}>
-            <p className={styles.groupLabel}>Curated Selection</p>
-            <h2 id={`${group.status}-heading`} className={styles.groupTitle}>{group.label}</h2>
-          </div>
+          <h2 id={`${group.status}-heading`} className={styles.groupTitle}>
+            {group.label}
+          </h2>
 
-          {!group.tournaments.length ? (
-            <div className={styles.groupEmpty}>
-              <p>No live tournaments right now. Upcoming verified tournaments are listed below.</p>
-            </div>
-          ) : (
-          <div className={styles.tableShell}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Tournament</th>
-                  <th>Country</th>
-                  <th>Tournament Type</th>
-                  <th>Dates</th>
-                  <th>Location</th>
-                  <th>FIDE Rated</th>
-                  <th>Time Control</th>
-                  <th>Format</th>
-                  <th>Top Players</th>
-                  <th>Prize Pool</th>
-                  <th>Organizer</th>
-                  <th>Register</th>
-                </tr>
-              </thead>
-              <tbody>
-                {group.tournaments.map((tournament) => (
-                  <tr key={tournament.id}>
-                    <td data-label="Tournament">
-                      <a
-                        href={tournament.links.tournamentUrl}
-                        className={styles.tournamentLink}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {tournament.title}
-                      </a>
-                      <span className={styles.source}>{tournament.source.name}</span>
-                    </td>
-                    <td data-label="Country">{tournament.country}</td>
-                    <td data-label="Tournament Type">
-                      <span className={`${styles.typePill} ${styles[`type${tournament.tournamentType}`]}`}>
-                        {tournament.tournamentType}
-                      </span>
-                    </td>
-                    <td data-label="Dates">{formatDateRange(tournament)}</td>
-                    <td data-label="Location"><LocationLink tournament={tournament} /></td>
-                    <td data-label="FIDE Rated">{fideLabel(tournament.fideRated)}</td>
-                    <td data-label="Time Control">{tournament.timeControl}</td>
-                    <td data-label="Format">{tournament.format}</td>
-                    <td data-label="Top Players"><PlayerPreview tournament={tournament} /></td>
-                    <td data-label="Prize Pool">
-                      {tournament.prizePool?.label ?? <span className={styles.mutedValue}>Not announced</span>}
-                    </td>
-                    <td data-label="Organizer">
-                      <span>{tournament.organizer.name}</span>
-                      {tournament.organizer.verified && <span className={styles.verified}>Verified</span>}
-                    </td>
-                    <td data-label="Register">
-                      <RegisterAction tournament={tournament} />
-                      <PaymentInfo tournament={tournament} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className={styles.cardGrid}>
+            {group.tournaments.map((tournament) => (
+              <TournamentCard key={tournament.id} tournament={tournament} />
+            ))}
           </div>
-          )}
         </section>
       ))}
     </div>
