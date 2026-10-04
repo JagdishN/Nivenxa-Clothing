@@ -14,6 +14,7 @@ import {
   getPendingClaims,
   getPublishedStatements,
   getRecentActivity,
+  getRelevantWaterMonth,
   sumExpenses,
   type ActivityEntry,
 } from '@/lib/living/queries'
@@ -35,6 +36,8 @@ export default async function LivingAppHomePage() {
     const flatId = membership.flat_id
     const flat = flatId ? (await getFlats(supabase, apartment.id)).find((f) => f.id === flatId) : undefined
     const firstName = flat?.owner_name?.trim().split(/\s+/)[0]
+    const ownerCurrentPeriod = await getCurrentMaintenancePeriod(supabase, apartment.id)
+    const ownerBillMonth = getRelevantWaterMonth(ownerCurrentPeriod, month)
 
     return (
       <>
@@ -42,10 +45,10 @@ export default async function LivingAppHomePage() {
           <span className={ownerStyles.greeting}>Hello{firstName ? `, ${firstName}` : ''}</span>
           {flat && <span className={ownerStyles.flatTag}>Flat {flat.flat_no}</span>}
         </div>
-        <p className={ownerStyles.monthLabel}>{formatMonthLabel(month)}</p>
+        <p className={ownerStyles.monthLabel}>{formatMonthLabel(ownerBillMonth)}</p>
 
         {flat ? (
-          <OwnerHero supabase={supabase} apartment={apartment} flat={flat} month={month} />
+          <OwnerHero supabase={supabase} apartment={apartment} flat={flat} month={ownerBillMonth} maintenanceMonth={ownerCurrentPeriod} />
         ) : (
           <div className={theme.card}>
             <p className={theme.muted}>Your account isn&rsquo;t linked to a flat yet — check with your Admin.</p>
@@ -65,9 +68,10 @@ export default async function LivingAppHomePage() {
 
   const billableFlats = getBillableFlats(flats)
   const currentPeriod = await getCurrentMaintenancePeriod(supabase, apartment.id)
+  const billMonth = getRelevantWaterMonth(currentPeriod, month)
   const [bills, periodExpenses] = await Promise.all([
     Promise.all(
-      billableFlats.map((flat) => computeBillForFlat(supabase, apartment, flat, month, { allFlats: flats, maintenanceMonth: currentPeriod }))
+      billableFlats.map((flat) => computeBillForFlat(supabase, apartment, flat, billMonth, { allFlats: flats, maintenanceMonth: currentPeriod }))
     ),
     currentPeriod ? getExpensesForPeriod(supabase, currentPeriod.id) : Promise.resolve([]),
   ])
@@ -273,14 +277,16 @@ async function OwnerHero({
   apartment,
   flat,
   month,
+  maintenanceMonth,
 }: {
   supabase: Awaited<ReturnType<typeof requireMembership>>['supabase']
   apartment: Awaited<ReturnType<typeof requireMembership>>['apartment']
   flat: Awaited<ReturnType<typeof getFlats>>[number]
   month: string
+  maintenanceMonth: Awaited<ReturnType<typeof getCurrentMaintenancePeriod>>
 }) {
   const [bill, recentPayments] = await Promise.all([
-    computeBillForFlat(supabase, apartment, flat, month),
+    computeBillForFlat(supabase, apartment, flat, month, { maintenanceMonth }),
     getAllPaymentsForFlat(supabase, apartment.id, flat.id),
   ])
   const lastPayment = recentPayments[0]

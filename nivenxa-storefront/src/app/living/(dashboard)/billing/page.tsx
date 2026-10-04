@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { requireMembership } from '@/lib/living/auth'
 import { maintenanceGrandTotal } from '@/lib/living/billing'
 import { formatCurrency, formatMonthLabel, monthKeyFor } from '@/lib/living/format'
-import { computeBillForFlat, getBillableFlats, getCurrentMaintenancePeriod, getFlats, getWaterSupplyCost } from '@/lib/living/queries'
+import { computeBillForFlat, getBillableFlats, getCurrentMaintenancePeriod, getFlats, getRelevantWaterMonth, getWaterSupplyCost } from '@/lib/living/queries'
 import theme from '../../LivingTheme.module.scss'
 import homeStyles from '../Home.module.scss'
 import styles from './BillingOverview.module.scss'
@@ -15,13 +15,9 @@ import styles from './BillingOverview.module.scss'
  */
 export default async function LivingBillingOverviewPage() {
   const { supabase, apartment } = await requireMembership(['admin', 'treasurer'])
-  const month = monthKeyFor(new Date())
-
-  const [currentPeriod, flats, waterSupplyCost] = await Promise.all([
-    getCurrentMaintenancePeriod(supabase, apartment.id),
-    getFlats(supabase, apartment.id),
-    getWaterSupplyCost(supabase, apartment.id, month),
-  ])
+  const [currentPeriod, flats] = await Promise.all([getCurrentMaintenancePeriod(supabase, apartment.id), getFlats(supabase, apartment.id)])
+  const month = getRelevantWaterMonth(currentPeriod, monthKeyFor(new Date()))
+  const waterSupplyCost = await getWaterSupplyCost(supabase, apartment.id, month)
   const billableFlats = getBillableFlats(flats)
   const bills = await Promise.all(
     billableFlats.map((flat) => computeBillForFlat(supabase, apartment, flat, month, { allFlats: flats, maintenanceMonth: currentPeriod }))

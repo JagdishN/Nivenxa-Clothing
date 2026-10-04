@@ -71,10 +71,10 @@ export function getBillableFlats(flats: Flat[]): Flat[] {
 
 /**
  * Summed metered water charge across every excluded_from_billing flat
- * (shared/common meters) for the month — what the Maintenance page's
- * "Common Water Bill" line item auto-fills from. Null means "no such flat
- * exists," so callers know to leave that line item as ordinary manual
- * input rather than syncing it to (a misleading) zero.
+ * (shared/common meters) for the month — shown on the Water page's own
+ * "Common area water charge" card, AND what Maintenance's "Common Water
+ * Bill" line item auto-fills from (see getCommonWaterChargeForPeriod).
+ * Null means no such flat exists.
  */
 export async function getCommonWaterCharge(supabase: SupabaseClient, apartment: Apartment, month: string): Promise<number | null> {
   const flats = await getFlats(supabase, apartment.id)
@@ -86,6 +86,71 @@ export async function getCommonWaterCharge(supabase: SupabaseClient, apartment: 
     total += charge.amount
   }
   return total
+}
+
+/**
+ * The right Common Water Bill figure for a given maintenance period,
+ * computed from the shared meter's reading for whichever month is actually
+ * relevant to THAT period — not blindly "today." A period still genuinely
+ * ongoing (its own period_end hasn't passed yet) uses today's calendar
+ * month, same as every other still-accruing water figure. A period whose
+ * range has already ended — which is the NORMAL case, most periods are only
+ * reviewed once the month they cover is over, not a sign of neglect — uses
+ * the latest reading that falls within the period's own [month, period_end]
+ * range instead, so backfilling a past month's bill correctly pulls that
+ * month's reading rather than whatever "today" happens to be. Null means no
+ * common meter exists, or none has a reading anywhere in this period's own
+ * range — callers leave the line item as ordinary manual input rather than
+ * syncing it to a misleading 0.
+ */
+export async function getCommonWaterChargeForPeriod(supabase: SupabaseClient, apartment: Apartment, period: MaintenanceMonth): Promise<number | null> {
+  const flats = await getFlats(supabase, apartment.id)
+  const commonFlats = flats.filter((f) => f.excluded_from_billing)
+  if (commonFlats.length === 0) return null
+
+  const today = new Date().toISOString().slice(0, 10)
+  if (period.period_end >= today) {
+    return getCommonWaterCharge(supabase, apartment, monthKeyFor(new Date()))
+  }
+
+  let total = 0
+  let anyFound = false
+  for (const flat of commonFlats) {
+    const { data } = await supabase
+      .from('living_water_readings')
+      .select('month')
+      .eq('flat_id', flat.id)
+      .gte('month', period.month)
+      .lte('month', period.period_end)
+      .order('month', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (!data) continue
+    anyFound = true
+    const charge = await getMeteredWaterCharge(supabase, apartment, flat, data.month as string)
+    total += charge.amount
+  }
+  return anyFound ? total : null
+}
+
+/**
+ * The right calendar month to use when computing a flat's own bill against
+ * `period` (via computeBillForFlat/computeBillAgainstPeriod) — the same
+ * logic as getCommonWaterChargeForPeriod's own month choice, generalized.
+ * A period still genuinely ongoing (its own period_end hasn't passed yet)
+ * uses today's calendar month, since its water charge is still accruing. A
+ * period whose range has already ended — the normal case, most periods are
+ * reviewed only once the month they cover is over, not a sign of neglect —
+ * uses the period's own start month instead. Without this, any page that
+ * blindly passed monthKeyFor(new Date()) as the water month would silently
+ * show every flat's water charge as 0 the moment "today" moved past the
+ * current period's own end date with no new cycle started — confirmed to
+ * have broken the Bills page and Maintenance's own Ledger tab this way.
+ */
+export function getRelevantWaterMonth(period: MaintenanceMonth | null, todayMonth: string): string {
+  if (!period) return todayMonth
+  const today = new Date().toISOString().slice(0, 10)
+  return period.period_end >= today ? todayMonth : period.month
 }
 
 /** One specific period, by its own start date — used when the Admin is editing a period they already know the identity of. */
@@ -134,6 +199,17 @@ export async function getReadingHistory(supabase: SupabaseClient, flatId: string
     .order('month', { ascending: false })
     .limit(limit)
   return data ?? []
+}
+
+/**
+ * Every distinct month any flat has a reading for, newest first — powers the
+ * Water page's month picker so an Admin can browse past months' readings,
+ * not just the current one (there was previously no way to see a past
+ * month's readings at all outside the database directly).
+ */
+export async function getReadingMonths(supabase: SupabaseClient, apartmentId: string): Promise<string[]> {
+  const { data } = await supabase.from('living_water_readings').select('month').eq('apartment_id', apartmentId).order('month', { ascending: false })
+  return [...new Set((data ?? []).map((r) => r.month as string))]
 }
 
 /** Sum of every flat's own metered consumption (current - previous) for `month` — every flat with a real reading, not just billable ones (a merged child-meter and the shared/common meter both draw from the same supply). The denominator side of the true-up: see getIncomingGap. */
@@ -768,14 +844,29 @@ export async function getFlatLedgerHistory(supabase: SupabaseClient, apartment: 
   const todayMonth = monthKeyFor(new Date())
   const waterMonthFor = (period: MaintenanceMonth) => (currentPeriod && period.id === currentPeriod.id ? todayMonth : period.month)
 
-  const firstBill = await computeBillAgainstPeriod(supabase, apartment, flat, periods[0], waterMonthFor(periods[0]))
-  const openingBalance = round2(firstBill.previous_due)
+  // Each period's bill + payments are independent of every other period — fetch them
+  // all in parallel (this used to be a `for (const period of periods) { await ... }`
+  // sequential waterfall, 24 round-trip groups awaited one after another for a flat
+  // with two years of history). Only the balance walk below (pure in-memory arithmetic,
+  // no awaits) actually needs to happen in period order, so it runs after, over the
+  // already-resolved data. This also removes a duplicate fetch of periods[0]'s bill —
+  // it used to be computed once here as `firstBill` and again inside the loop below.
+  const periodData = await Promise.all(
+    periods.map(async (period) => {
+      const bill = await computeBillAgainstPeriod(supabase, apartment, flat, period, waterMonthFor(period))
+      // Excludes method 'advance' — that row's effect is already fully captured by the
+      // 'bill' transaction below (periodCharge, from total_due, which already nets
+      // advance_payment); listing it again here would subtract it from balance twice.
+      const payments = (await getPaymentsForFlat(supabase, period.id, flat.id)).filter((p) => p.method !== 'advance')
+      return { period, bill, payments }
+    })
+  )
 
+  const openingBalance = round2(periodData[0].bill.previous_due)
   const transactions: LedgerTransaction[] = [{ kind: 'opening', date: periods[0].month, amount: openingBalance, balance: openingBalance }]
   let balance = openingBalance
 
-  for (const period of periods) {
-    const bill = await computeBillAgainstPeriod(supabase, apartment, flat, period, waterMonthFor(period))
+  for (const { period, bill, payments } of periodData) {
     const periodCharge = round2(bill.total_due - bill.previous_due)
     if (Math.abs(periodCharge) > 0.005) {
       balance = round2(balance + periodCharge)
@@ -789,10 +880,6 @@ export async function getFlatLedgerHistory(supabase: SupabaseClient, apartment: 
       })
     }
 
-    // Excludes method 'advance' — that row's effect is already fully captured by the
-    // 'bill' transaction above (periodCharge, from total_due, which already nets
-    // advance_payment); listing it again here would subtract it from balance twice.
-    const payments = (await getPaymentsForFlat(supabase, period.id, flat.id)).filter((p) => p.method !== 'advance')
     const paymentsOldestFirst = [...payments].sort((a, b) => a.payment_date.localeCompare(b.payment_date))
     for (const payment of paymentsOldestFirst) {
       balance = round2(balance - payment.amount)
@@ -1307,6 +1394,55 @@ export async function getPublishedStatements(supabase: SupabaseClient, apartment
     .eq('apartment_id', apartmentId)
     .order('published_at', { ascending: false })
   return (data as unknown as PublishedStatementWithPeriod[]) ?? []
+}
+
+/**
+ * Whether `maintenanceMonthId`'s books are permanently closed — a Financial
+ * Statement has been published for it (living_financial_statements, via the
+ * Statements page). Once true, nothing about that period's bill is editable
+ * by anyone, Admin included: line items, water readings/adjustments feeding
+ * it, and ledger entries (advance/late fee/previous due/transfers) all stay
+ * exactly as they were the moment the statement was published. New Payments
+ * are the one exception — a resident paying late after the close is normal,
+ * not a correction, so that keeps working. Every mutating action on
+ * Maintenance/Water should check this before writing.
+ */
+export async function isPeriodFinancialStatementLocked(supabase: SupabaseClient, apartmentId: string, maintenanceMonthId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from('living_financial_statements')
+    .select('id')
+    .eq('apartment_id', apartmentId)
+    .eq('maintenance_month_id', maintenanceMonthId)
+    .maybeSingle()
+  return !!data
+}
+
+/**
+ * Same lock as isPeriodFinancialStatementLocked, but keyed by a calendar
+ * month (e.g. a water reading's own `month`) instead of a maintenance_month_id
+ * — a maintenance period can span more than one calendar month (see the
+ * schema comment on living_maintenance_months), so a reading's month has to
+ * be matched against whichever period's [month, period_end] range contains
+ * it, not assumed to equal the period's own `month` column.
+ */
+export async function isCalendarMonthFinancialStatementLocked(supabase: SupabaseClient, apartmentId: string, month: string): Promise<boolean> {
+  const { data: periods } = await supabase
+    .from('living_maintenance_months')
+    .select('id')
+    .eq('apartment_id', apartmentId)
+    .lte('month', month)
+    .gte('period_end', month)
+  if (!periods || periods.length === 0) return false
+
+  const { count } = await supabase
+    .from('living_financial_statements')
+    .select('id', { count: 'exact', head: true })
+    .eq('apartment_id', apartmentId)
+    .in(
+      'maintenance_month_id',
+      periods.map((p) => p.id)
+    )
+  return (count ?? 0) > 0
 }
 
 export interface ComputedStatement {

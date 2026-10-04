@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
-import type { SupabaseClient } from '@supabase/supabase-js'
+import { cache } from 'react'
+import type { SupabaseClient, User } from '@supabase/supabase-js'
 import { createLivingServerClient } from './supabaseServer'
 import type { Apartment, LivingRole, Membership } from './types'
 
@@ -22,9 +23,49 @@ export async function getLivingSession(): Promise<LivingSession | null> {
 export interface LivingContext {
   supabase: SupabaseClient
   userId: string
+  email: string | null
   membership: Membership
   apartment: Apartment
 }
+
+interface RawMembershipContext {
+  supabase: SupabaseClient
+  user: User | null
+  membership: Membership | null
+  apartment: Apartment | null
+}
+
+/**
+ * The actual auth.getUser() + living_memberships + living_apartments fetch,
+ * with no `allowedRoles` parameter — every (app) page called requireMembership()
+ * directly (often more than once per file, across the page component and its
+ * Server Actions), each redoing this same auth.getUser() round-trip plus two
+ * table reads, on top of the (dashboard) layout doing it again itself. React's
+ * `cache()` dedupes repeat calls within one request only when the arguments
+ * match exactly, so keeping `allowedRoles` out of this inner function (and
+ * applying the role check afterward, in requireMembership/getLivingMembership
+ * below) means every caller in a given request — regardless of which roles
+ * it restricts to — shares the same one real fetch. This is the same pattern
+ * already used for getEffectiveSlabConfig and friends in queries.ts.
+ */
+const loadMembershipContext = cache(async (): Promise<RawMembershipContext> => {
+  const supabase = await createLivingServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { supabase, user: null, membership: null, apartment: null }
+
+  const { data: membership } = await supabase.from('living_memberships').select('*').eq('user_id', user.id).maybeSingle<Membership>()
+  if (!membership) return { supabase, user, membership: null, apartment: null }
+
+  const { data: apartment } = await supabase
+    .from('living_apartments')
+    .select('*')
+    .eq('id', membership.apartment_id)
+    .single<Apartment>()
+
+  return { supabase, user, membership, apartment: apartment ?? null }
+})
 
 /**
  * Guard for every page under (app): no session -> /living/login; a session
@@ -35,25 +76,13 @@ export interface LivingContext {
  * (app) page calls it instead of re-deriving the check.
  */
 export async function requireMembership(allowedRoles?: LivingRole[]): Promise<LivingContext> {
-  const supabase = await createLivingServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { supabase, user, membership, apartment } = await loadMembershipContext()
   if (!user) redirect('/living/login')
-
-  const { data: membership } = await supabase.from('living_memberships').select('*').eq('user_id', user.id).maybeSingle<Membership>()
   if (!membership) redirect('/living/signup')
-
   if (allowedRoles && !allowedRoles.includes(membership.role)) redirect('/living/home')
-
-  const { data: apartment } = await supabase
-    .from('living_apartments')
-    .select('*')
-    .eq('id', membership.apartment_id)
-    .single<Apartment>()
   if (!apartment) redirect('/living/login')
 
-  return { supabase, userId: user.id, membership, apartment }
+  return { supabase, userId: user.id, email: user.email ?? null, membership, apartment }
 }
 
 /**
@@ -64,18 +93,11 @@ export async function requireMembership(allowedRoles?: LivingRole[]): Promise<Li
  * aren't rendering a page.
  */
 export async function getLivingMembership(allowedRoles?: LivingRole[]): Promise<LivingContext | null> {
-  const supabase = await createLivingServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { supabase, user, membership, apartment } = await loadMembershipContext()
   if (!user) return null
-
-  const { data: membership } = await supabase.from('living_memberships').select('*').eq('user_id', user.id).maybeSingle<Membership>()
   if (!membership) return null
   if (allowedRoles && !allowedRoles.includes(membership.role)) return null
-
-  const { data: apartment } = await supabase.from('living_apartments').select('*').eq('id', membership.apartment_id).single<Apartment>()
   if (!apartment) return null
 
-  return { supabase, userId: user.id, membership, apartment }
+  return { supabase, userId: user.id, email: user.email ?? null, membership, apartment }
 }

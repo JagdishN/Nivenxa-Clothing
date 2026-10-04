@@ -4,7 +4,7 @@ import { requireMembership } from '@/lib/living/auth'
 import { formatReceiptNumber } from '@/lib/living/billing'
 import { setLivingError, setLivingNotice } from '@/lib/living/flash'
 import { formatCurrency, formatPaymentMethod, formatPaymentStatus, monthKeyFor } from '@/lib/living/format'
-import { computeBillForFlat, getBillableFlats, getCurrentMaintenancePeriod, getFlats, getPaymentsForPeriod } from '@/lib/living/queries'
+import { computeBillForFlat, getBillableFlats, getCurrentMaintenancePeriod, getFlats, getPaymentsForPeriod, getRelevantWaterMonth } from '@/lib/living/queries'
 import type { PaymentMethod, PaymentStatus } from '@/lib/living/types'
 import ConfirmSubmitButton from '../ConfirmSubmitButton'
 import MaterialIcon from '../../MaterialIcon'
@@ -109,8 +109,8 @@ async function deletePaymentAction(id: string) {
 
 export default async function LivingPaymentsPage() {
   const { supabase, apartment } = await requireMembership(['admin', 'treasurer'])
-  const month = monthKeyFor(new Date())
   const current = await getCurrentMaintenancePeriod(supabase, apartment.id)
+  const month = getRelevantWaterMonth(current, monthKeyFor(new Date()))
   const allFlats = await getFlats(supabase, apartment.id)
   const flats = getBillableFlats(allFlats)
 

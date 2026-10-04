@@ -10,6 +10,23 @@ import homeStyles from '../Home.module.scss'
 async function publishStatementAction(periodId: string) {
   'use server'
   const { supabase, apartment, userId } = await requireMembership(['admin', 'treasurer'])
+
+  // One-way door: once a statement exists for this period, it's permanently
+  // closed — line items, water readings, and ledger entries for it stop
+  // being editable by anyone, admin included (see isPeriodFinancialStatementLocked
+  // in queries.ts). Publishing used to be a "republish any time the numbers
+  // change" action; that's exactly what this guard now prevents.
+  const { data: existing } = await supabase
+    .from('living_financial_statements')
+    .select('id')
+    .eq('apartment_id', apartment.id)
+    .eq('maintenance_month_id', periodId)
+    .maybeSingle()
+  if (existing) {
+    await setLivingError('This period has already been published and is permanently locked — start a new billing cycle for any further changes.')
+    redirect('/living/statements')
+  }
+
   const statements = await computeFinancialStatements(supabase, apartment)
   const match = statements.find((s) => s.period.id === periodId)
   if (!match) {
@@ -17,25 +34,22 @@ async function publishStatementAction(periodId: string) {
     redirect('/living/statements')
   }
 
-  const { error } = await supabase.from('living_financial_statements').upsert(
-    {
-      apartment_id: apartment.id,
-      maintenance_month_id: periodId,
-      opening_balance: match.openingBalance,
-      collections: match.collections,
-      expenses: match.expenses,
-      closing_balance: match.closingBalance,
-      outstanding_dues: match.outstandingDues,
-      published_by: userId,
-      published_at: new Date().toISOString(),
-    },
-    { onConflict: 'maintenance_month_id' }
-  )
+  const { error } = await supabase.from('living_financial_statements').insert({
+    apartment_id: apartment.id,
+    maintenance_month_id: periodId,
+    opening_balance: match.openingBalance,
+    collections: match.collections,
+    expenses: match.expenses,
+    closing_balance: match.closingBalance,
+    outstanding_dues: match.outstandingDues,
+    published_by: userId,
+    published_at: new Date().toISOString(),
+  })
   if (error) {
     await setLivingError(error.message)
     redirect('/living/statements')
   }
-  await setLivingNotice('Published — residents can now view this statement.')
+  await setLivingNotice('Published — residents can now view this statement. This period is now permanently locked.')
   redirect('/living/statements')
 }
 
@@ -87,8 +101,9 @@ export default async function LivingStatementsPage() {
         Financial Statements
       </h1>
       <p className={theme.muted} style={{ marginBottom: '1.5rem' }}>
-        Computed live from Payments/Expenses/Bills for every published billing period. Publish a period to make it visible to
-        residents under Community — republish any time the numbers change.
+        Computed live from Payments/Expenses/Bills for every published billing period. Publishing makes it visible to residents under
+        Community — and permanently locks that period&rsquo;s line items, water readings, and ledger entries for everyone, admin included.
+        This can&rsquo;t be undone or republished; start a new billing cycle for any further changes.
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -105,17 +120,19 @@ export default async function LivingStatementsPage() {
               outstandingDues={s.outstandingDues}
               footer={
                 existing ? (
-                  <span className={theme.pillOk}>Published {new Date(existing.published_at).toLocaleDateString('en-IN')}</span>
+                  <span className={theme.pillOk}>Published {new Date(existing.published_at).toLocaleDateString('en-IN')} — locked</span>
                 ) : (
                   <span className={theme.pillBrass}>Not published</span>
                 )
               }
               action={
-                <form action={publishStatementAction.bind(null, s.period.id)}>
-                  <button type="submit" className={theme.buttonGhost}>
-                    {existing ? 'Republish' : 'Publish'}
-                  </button>
-                </form>
+                existing ? undefined : (
+                  <form action={publishStatementAction.bind(null, s.period.id)}>
+                    <button type="submit" className={theme.buttonGhost}>
+                      Publish
+                    </button>
+                  </form>
+                )
               }
             />
           )

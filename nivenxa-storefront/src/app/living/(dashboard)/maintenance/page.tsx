@@ -1,22 +1,25 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { requireMembership } from '@/lib/living/auth'
 import { setLivingError, setLivingNotice } from '@/lib/living/flash'
-import { formatCurrency, formatPeriodLabel, monthKeyFor } from '@/lib/living/format'
+import { formatCurrency, formatMonthLabel, formatPeriodLabel, monthKeyFor } from '@/lib/living/format'
 import { maintenanceGrandTotal, round2, splitMaintenance } from '@/lib/living/billing'
-import { computeBillForFlat, getAdvanceCarryForwardSuggestion, getAdvanceTransfers, getBillableFlats, getCarryForwardExpenses, getCommonWaterCharge, getCurrentMaintenancePeriod, getFlatLedger, getFlats, getPreviousDueSuggestion, syncAdvanceApplicationPayment } from '@/lib/living/queries'
-import type { AdvanceTransfer, MaintenanceLineItem, MaintenanceMonth } from '@/lib/living/types'
+import { computeBillForFlat, getAdvanceCarryForwardSuggestion, getAdvanceTransfers, getBillableFlats, getCarryForwardExpenses, getCommonWaterChargeForPeriod, getCurrentMaintenancePeriod, getFlatLedger, getFlats, getPreviousDueSuggestion, getRelevantWaterMonth, getWaterReading, isPeriodFinancialStatementLocked, syncAdvanceApplicationPayment } from '@/lib/living/queries'
+import type { Apartment, AdvanceTransfer, MaintenanceLineItem, MaintenanceMonth } from '@/lib/living/types'
 import ConfirmSubmitButton from '../ConfirmSubmitButton'
 import MaterialIcon from '../../MaterialIcon'
 import theme from '../../LivingTheme.module.scss'
 import homeStyles from '../Home.module.scss'
 import Tabs from '../Tabs'
 import EditPeriodForm from './EditPeriodForm'
+import PublishButton from './PublishButton'
+import StartPeriodForm from './StartPeriodForm'
 
-// "Common Water Bill" (the municipal utility bill) and "Majeera water
-// pipeline repairing" (a repair line item) are real maintenance expenses,
-// distinct from the tanker/Majeera-supply cost that now lives on the Water
-// page — kept here.
+// "Common Water Bill" (the shared/common meter's own charge) and "Majeera
+// water pipeline repairing" (a one-off repair line item) are real
+// maintenance expenses, distinct from the tanker/Majeera-supply cost that
+// lives on the Water page only.
 const TEMPLATE_DESCRIPTIONS = [
   'Watchman Salary',
   'Electricity Bill',
@@ -39,16 +42,31 @@ const COMMON_WATER_BILL_DESCRIPTION = 'Common Water Bill'
 
 /**
  * Overwrites the "Common Water Bill" line item's amount with the shared
- * meter's live computed charge, if there's a flat marked as one — called
- * from every write action so it's always the fresh, computed number rather
- * than whatever the last manual edit left behind (the UI also disables that
- * one input, but this is the actual enforcement).
+ * meter's computed charge for THIS period (see getCommonWaterChargeForPeriod
+ * — period-relevant month, not blindly "today"), if there's a flat marked as
+ * one — called from every write action so it's always the fresh, computed
+ * number rather than whatever the last manual edit left behind (the UI also
+ * disables that one input, but this is the actual enforcement).
  */
 function syncCommonWaterAmount(lineItems: MaintenanceLineItem[], commonWaterCharge: number | null): MaintenanceLineItem[] {
   if (commonWaterCharge === null) return lineItems
   return lineItems.map((item) =>
     item.description.trim().toLowerCase() === COMMON_WATER_BILL_DESCRIPTION.toLowerCase() ? { ...item, amount: commonWaterCharge } : item
   )
+}
+
+/**
+ * Guard called at the top of every action that mutates a maintenance
+ * period's own bill (line items, ledger, advance transfers, dates) —
+ * redirects with an error and never writes if that period's Financial
+ * Statement has already been published. New Payments are the one thing
+ * that intentionally does NOT call this (see isPeriodFinancialStatementLocked).
+ */
+async function assertPeriodNotFinalized(supabase: SupabaseClient, apartment: Apartment, maintenanceMonthId: string) {
+  if (await isPeriodFinancialStatementLocked(supabase, apartment.id, maintenanceMonthId)) {
+    await setLivingError("This period's Financial Statement has been published — it's permanently locked. Start a new billing cycle for further changes.")
+    redirect('/living/maintenance')
+  }
 }
 
 /**
@@ -175,6 +193,7 @@ async function updatePeriodDatesAction(formData: FormData) {
   const { supabase, apartment } = await requireMembership(['admin', 'treasurer'])
   const current = await getCurrentMaintenancePeriod(supabase, apartment.id)
   if (!current) redirect('/living/maintenance')
+  await assertPeriodNotFinalized(supabase, apartment, current.id)
 
   const periodStart = String(formData.get('period_start') ?? '').trim()
   const periodEnd = String(formData.get('period_end') ?? '').trim()
@@ -204,6 +223,7 @@ async function saveAction(formData: FormData) {
   const { supabase, apartment } = await requireMembership(['admin', 'treasurer'])
   const current = await getCurrentMaintenancePeriod(supabase, apartment.id)
   if (!current) redirect('/living/maintenance')
+  await assertPeriodNotFinalized(supabase, apartment, current.id)
 
   let lineItems: MaintenanceLineItem[] = current.line_items.map((item, i) => ({
     description: item.description,
@@ -214,9 +234,25 @@ async function saveAction(formData: FormData) {
     // of reading a form field that no longer exists.
     category: item.category ?? '',
   }))
-  lineItems = syncCommonWaterAmount(lineItems, await getCommonWaterCharge(supabase, apartment, monthKeyFor(new Date())))
 
-  const { error } = await supabase.from('living_maintenance_months').update({ line_items: lineItems }).eq('id', current.id)
+  // Once this period is published (visible to residents), any amount change
+  // on an existing line item requires a comment explaining why — the comment
+  // field already exists on this form, this just makes it mandatory for a
+  // published period instead of optional, per the "admin can still correct
+  // published data, but only with a reason on record" rule.
+  if (current.status === 'published') {
+    for (let i = 0; i < current.line_items.length; i++) {
+      const newAmount = lineItems[i].amount
+      const oldAmount = current.line_items[i].amount
+      if (newAmount !== oldAmount && !(lineItems[i].comment ?? '').trim()) {
+        await setLivingError(`Add a comment explaining the change to "${current.line_items[i].description}" (${formatCurrency(oldAmount)} → ${formatCurrency(newAmount)}).`)
+        redirect('/living/maintenance')
+      }
+    }
+  }
+
+  const syncedLineItems = syncCommonWaterAmount(lineItems, await getCommonWaterChargeForPeriod(supabase, apartment, current))
+  const { error } = await supabase.from('living_maintenance_months').update({ line_items: syncedLineItems }).eq('id', current.id)
   if (error) {
     await setLivingError(error.message)
     redirect('/living/maintenance')
@@ -230,6 +266,7 @@ async function addItemAction(formData: FormData) {
   const { supabase, apartment } = await requireMembership(['admin', 'treasurer'])
   const current = await getCurrentMaintenancePeriod(supabase, apartment.id)
   if (!current) redirect('/living/maintenance')
+  await assertPeriodNotFinalized(supabase, apartment, current.id)
 
   const description = String(formData.get('description') ?? '').trim()
   if (!description) {
@@ -237,8 +274,10 @@ async function addItemAction(formData: FormData) {
     redirect('/living/maintenance')
   }
 
-  let lineItems = [...current.line_items, { description, amount: Number(formData.get('amount') ?? 0) || 0, comment: '', category: '' }]
-  lineItems = syncCommonWaterAmount(lineItems, await getCommonWaterCharge(supabase, apartment, monthKeyFor(new Date())))
+  const lineItems = syncCommonWaterAmount(
+    [...current.line_items, { description, amount: Number(formData.get('amount') ?? 0) || 0, comment: '', category: '' }],
+    await getCommonWaterChargeForPeriod(supabase, apartment, current)
+  )
   const { error } = await supabase.from('living_maintenance_months').update({ line_items: lineItems }).eq('id', current.id)
   if (error) {
     await setLivingError(error.message)
@@ -252,9 +291,12 @@ async function removeItemAction(index: number) {
   const { supabase, apartment } = await requireMembership(['admin', 'treasurer'])
   const current = await getCurrentMaintenancePeriod(supabase, apartment.id)
   if (!current) redirect('/living/maintenance')
+  await assertPeriodNotFinalized(supabase, apartment, current.id)
 
-  let lineItems = current.line_items.filter((_, i) => i !== index)
-  lineItems = syncCommonWaterAmount(lineItems, await getCommonWaterCharge(supabase, apartment, monthKeyFor(new Date())))
+  const lineItems = syncCommonWaterAmount(
+    current.line_items.filter((_, i) => i !== index),
+    await getCommonWaterChargeForPeriod(supabase, apartment, current)
+  )
   const { error } = await supabase.from('living_maintenance_months').update({ line_items: lineItems }).eq('id', current.id)
   if (error) {
     await setLivingError(error.message)
@@ -263,37 +305,51 @@ async function removeItemAction(index: number) {
   redirect('/living/maintenance')
 }
 
-async function saveLedgerAction(formData: FormData) {
+/**
+ * One flat at a time — this used to be a single form submitting ALL billable
+ * flats' advance/late-fee/previous-due together (one bulk upsert per flat,
+ * looped). That meant every Save silently rewrote every OTHER flat's row
+ * back to whatever its input's defaultValue was when the page first loaded
+ * — if that page had been open since before some other change touched the
+ * ledger (another admin's save, a data correction, anything), saving one
+ * flat's edit would quietly stomp every other flat back to stale values.
+ * Scoping the save to a single flat_id removes that entire failure mode:
+ * editing flat 101 can now never touch flat 102's row, stale page or not.
+ */
+async function saveLedgerRowAction(flatId: string, formData: FormData) {
   'use server'
   const { supabase, apartment, userId } = await requireMembership(['admin', 'treasurer'])
   const current = await getCurrentMaintenancePeriod(supabase, apartment.id)
   if (!current) redirect('/living/maintenance')
+  await assertPeriodNotFinalized(supabase, apartment, current.id)
 
-  const flats = getBillableFlats(await getFlats(supabase, apartment.id))
-  for (const flat of flats) {
-    const advancePayment = Number(formData.get(`advance_${flat.id}`) ?? 0) || 0
-    const lateFee = Number(formData.get(`late_fee_${flat.id}`) ?? 0) || 0
-    const previousDue = Number(formData.get(`previous_due_${flat.id}`) ?? 0) || 0
+  const allFlats = await getFlats(supabase, apartment.id)
+  const flat = getBillableFlats(allFlats).find((f) => f.id === flatId)
+  if (!flat) redirect('/living/maintenance')
 
-    const { error } = await supabase.from('living_flat_ledger').upsert(
-      {
-        apartment_id: apartment.id,
-        maintenance_month_id: current.id,
-        flat_id: flat.id,
-        advance_payment: advancePayment,
-        late_fee: lateFee,
-        previous_due: previousDue,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'maintenance_month_id,flat_id' }
-    )
-    if (error) {
-      await setLivingError(`Flat ${flat.flat_no}: ${error.message}`)
-      redirect('/living/maintenance')
-    }
-    await syncAdvanceApplicationPayment(supabase, apartment, flat, current, userId)
+  const advancePayment = Number(formData.get('advance') ?? 0) || 0
+  const lateFee = Number(formData.get('late_fee') ?? 0) || 0
+  const previousDue = Number(formData.get('previous_due') ?? 0) || 0
+
+  const { error } = await supabase.from('living_flat_ledger').upsert(
+    {
+      apartment_id: apartment.id,
+      maintenance_month_id: current.id,
+      flat_id: flat.id,
+      advance_payment: advancePayment,
+      late_fee: lateFee,
+      previous_due: previousDue,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'maintenance_month_id,flat_id' }
+  )
+  if (error) {
+    await setLivingError(`Flat ${flat.flat_no}: ${error.message}`)
+    redirect('/living/maintenance')
   }
-  await setLivingNotice('Advance, late fees & due updated.')
+
+  await syncAdvanceApplicationPayment(supabase, apartment, flat, current, userId)
+  await setLivingNotice(`Flat ${flat.flat_no} updated.`)
   redirect('/living/maintenance')
 }
 
@@ -303,6 +359,7 @@ async function transferAdvanceAction(formData: FormData) {
   const { supabase, apartment, userId } = await requireMembership(['admin', 'treasurer'])
   const current = await getCurrentMaintenancePeriod(supabase, apartment.id)
   if (!current) redirect('/living/maintenance')
+  await assertPeriodNotFinalized(supabase, apartment, current.id)
 
   const fromFlatId = String(formData.get('from_flat_id'))
   const toFlatId = String(formData.get('to_flat_id'))
@@ -392,6 +449,7 @@ async function deleteAdvanceTransferAction(id: string) {
 
   const { data: transfer } = await supabase.from('living_advance_transfers').select('*').eq('id', id).eq('apartment_id', apartment.id).maybeSingle<AdvanceTransfer>()
   if (!transfer) redirect('/living/maintenance')
+  await assertPeriodNotFinalized(supabase, apartment, transfer.maintenance_month_id)
 
   const [fromLedger, toLedger] = await Promise.all([
     getFlatLedger(supabase, transfer.maintenance_month_id, transfer.from_flat_id),
@@ -458,6 +516,27 @@ async function publishAction() {
   const { supabase, apartment, userId } = await requireMembership(['admin', 'treasurer'])
   const current = await getCurrentMaintenancePeriod(supabase, apartment.id)
   if (!current) redirect('/living/maintenance')
+  await assertPeriodNotFinalized(supabase, apartment, current.id)
+
+  // Each billable flat's own water charge (not the removed "Common Water
+  // Bill" line item — that flat's own metered consumption) is part of the
+  // bill residents are about to see the moment this publishes. A flat with
+  // no reading yet, or only a previous reading and no current one, would
+  // publish showing an incomplete/misleading bill — block it instead. Checked
+  // against THIS period's own relevant month (see getRelevantWaterMonth) —
+  // not blindly today, which would wrongly demand an unrelated month's
+  // reading once the period has already ended without a new cycle started.
+  const relevantMonth = getRelevantWaterMonth(current, monthKeyFor(new Date()))
+  const billableFlats = getBillableFlats(await getFlats(supabase, apartment.id))
+  const missingReadings: string[] = []
+  for (const flat of billableFlats) {
+    const reading = await getWaterReading(supabase, flat.id, relevantMonth)
+    if (!reading || reading.previous_reading === null || reading.current_reading === null) missingReadings.push(flat.flat_no)
+  }
+  if (missingReadings.length > 0) {
+    await setLivingError(`Can't publish — water readings are missing or incomplete for: ${missingReadings.join(', ')}. Enter them on the Water page first.`)
+    redirect('/living/maintenance')
+  }
 
   const { error } = await supabase
     .from('living_maintenance_months')
@@ -484,12 +563,27 @@ async function publishAction() {
 export default async function LivingMaintenancePage() {
   const { supabase, apartment } = await requireMembership(['admin', 'treasurer'])
   const thisMonth = monthKeyFor(new Date())
-  const [maintenanceMonth, allFlats, commonWaterCharge] = await Promise.all([
-    getCurrentMaintenancePeriod(supabase, apartment.id),
-    getFlats(supabase, apartment.id),
-    getCommonWaterCharge(supabase, apartment, thisMonth),
-  ])
+  const [maintenanceMonth, allFlats] = await Promise.all([getCurrentMaintenancePeriod(supabase, apartment.id), getFlats(supabase, apartment.id)])
   const flats = getBillableFlats(allFlats)
+  const isFinalized = maintenanceMonth ? await isPeriodFinancialStatementLocked(supabase, apartment.id, maintenanceMonth.id) : false
+
+  // Computed from THIS period's own relevant month (see getCommonWaterChargeForPeriod)
+  // — not blindly "today," which would be wrong for any period reviewed after its own
+  // range already ended (the normal case: you review last month's bill this month).
+  const commonWaterCharge = maintenanceMonth ? await getCommonWaterChargeForPeriod(supabase, apartment, maintenanceMonth) : null
+
+  // Warns before starting a new cycle if the one it's about to supersede
+  // isn't actually finished — not published to Owners yet, or published but
+  // never closed out with a Financial Statement (isFinalized). Null means
+  // "fully finished, no warning needed" — the normal case once an admin
+  // publishes both before moving on.
+  const previousPeriodWarning = !maintenanceMonth
+    ? null
+    : maintenanceMonth.status !== 'published'
+      ? `Your current billing period (${formatPeriodLabel(maintenanceMonth.month, maintenanceMonth.period_end)}) hasn't been published to residents yet. Starting a new cycle now will leave it unpublished. Continue anyway?`
+      : !isFinalized
+        ? `Your current billing period (${formatPeriodLabel(maintenanceMonth.month, maintenanceMonth.period_end)}) hasn't had its Financial Statement published yet (Statements page). Starting a new cycle now will leave its books unclosed. Continue anyway?`
+        : null
 
   const ledgerRows = maintenanceMonth
     ? await Promise.all(
@@ -504,7 +598,7 @@ export default async function LivingMaintenancePage() {
           // would look unpaid again even though the original entered amount
           // already fully covered it). This column exists so that doesn't have
           // to be worked out by hand.
-          bill: await computeBillForFlat(supabase, apartment, flat, thisMonth, { allFlats, maintenanceMonth }),
+          bill: await computeBillForFlat(supabase, apartment, flat, getRelevantWaterMonth(maintenanceMonth, thisMonth), { allFlats, maintenanceMonth }),
         }))
       )
     : []
@@ -536,6 +630,29 @@ export default async function LivingMaintenancePage() {
         </div>
       )}
 
+      {maintenanceMonth && maintenanceMonth.status !== 'published' && !isFinalized && (
+        <div
+          className={theme.card}
+          style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}
+        >
+          <div>
+            <p className={theme.label} style={{ marginBottom: '0.3rem' }}>
+              Ready to publish?
+            </p>
+            <p className={theme.muted}>Still a draft — not visible to residents until you publish it.</p>
+          </div>
+          <PublishButton action={publishAction} />
+        </div>
+      )}
+
+      {maintenanceMonth && isFinalized && (
+        <div className={theme.alertInfo} style={{ marginBottom: '1.5rem' }}>
+          This period&rsquo;s Financial Statement has been published — it&rsquo;s permanently locked. Line items, water readings, and
+          ledger entries for this period can no longer be changed by anyone, Admin included. Start a new billing cycle for any further
+          changes; new Payments can still be recorded against this period.
+        </div>
+      )}
+
       {maintenanceMonth && (
         <Tabs
           tabs={[
@@ -544,8 +661,10 @@ export default async function LivingMaintenancePage() {
               label: 'Line Items',
               content: (
                 <>
-                  {maintenanceMonth.status === 'published' && (
-                    <div className={theme.alertInfo}>Published — owners can see their share. Still editable; any change here reflects immediately.</div>
+                  {maintenanceMonth.status === 'published' && !isFinalized && (
+                    <div className={theme.alertInfo}>
+                      Published — owners can see their share. Still editable, but any amount change now requires a comment explaining why.
+                    </div>
                   )}
 
                   <form action={saveAction}>
@@ -561,8 +680,8 @@ export default async function LivingMaintenancePage() {
                           </thead>
                           <tbody>
                             {maintenanceMonth.line_items.map((item, i) => {
-                              const isCommonWater =
-                                commonWaterCharge !== null && item.description.trim().toLowerCase() === COMMON_WATER_BILL_DESCRIPTION.toLowerCase()
+                              const isCommonWaterItem = item.description.trim().toLowerCase() === COMMON_WATER_BILL_DESCRIPTION.toLowerCase()
+                              const isCommonWaterLive = commonWaterCharge !== null && isCommonWaterItem
                               return (
                                 <tr key={i}>
                                   <td>{item.description}</td>
@@ -572,18 +691,23 @@ export default async function LivingMaintenancePage() {
                                       className={theme.input}
                                       type="number"
                                       step="0.01"
-                                      value={isCommonWater ? (commonWaterCharge as number) : undefined}
-                                      defaultValue={isCommonWater ? undefined : item.amount}
-                                      disabled={isCommonWater}
+                                      value={isCommonWaterLive ? (commonWaterCharge as number) : undefined}
+                                      defaultValue={isCommonWaterLive ? undefined : item.amount}
+                                      disabled={isCommonWaterLive || isFinalized}
                                     />
-                                    {isCommonWater && (
+                                    {isCommonWaterLive && (
                                       <p className={theme.muted} style={{ marginTop: '0.2rem' }}>
                                         Auto-filled from the shared meter&rsquo;s reading.
                                       </p>
                                     )}
+                                    {isCommonWaterItem && commonWaterCharge === null && !isFinalized && (
+                                      <p className={theme.muted} style={{ marginTop: '0.2rem' }}>
+                                        No reading found for this period yet — editable manually until one is entered on the Water page.
+                                      </p>
+                                    )}
                                   </td>
                                   <td>
-                                    <input name={`item_comment_${i}`} className={theme.input} defaultValue={item.comment ?? ''} />
+                                    <input name={`item_comment_${i}`} className={theme.input} defaultValue={item.comment ?? ''} disabled={isFinalized} />
                                   </td>
                                 </tr>
                               )
@@ -591,7 +715,7 @@ export default async function LivingMaintenancePage() {
                           </tbody>
                         </table>
                       </div>
-                      <button type="submit" className={theme.button} style={{ marginTop: '1rem' }}>
+                      <button type="submit" className={theme.button} style={{ marginTop: '1rem' }} disabled={isFinalized}>
                         Save
                       </button>
                     </div>
@@ -602,36 +726,40 @@ export default async function LivingMaintenancePage() {
                     <form action={addItemAction} style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
                       <div className={theme.field} style={{ marginBottom: 0, flex: 2 }}>
                         <label className={theme.label}>Description</label>
-                        <input name="description" className={theme.input} required />
+                        <input name="description" className={theme.input} required disabled={isFinalized} />
                       </div>
                       <div className={theme.field} style={{ marginBottom: 0 }}>
                         <label className={theme.label}>Amount</label>
-                        <input name="amount" type="number" step="0.01" className={theme.input} />
+                        <input name="amount" type="number" step="0.01" className={theme.input} disabled={isFinalized} />
                       </div>
-                      <button type="submit" className={theme.buttonGhost}>
+                      <button type="submit" className={theme.buttonGhost} disabled={isFinalized}>
                         <MaterialIcon name="add" size={16} style={{ marginRight: '0.3rem' }} />
                         Add
                       </button>
                     </form>
 
-                    <h2 className={homeStyles.sectionTitle} style={{ marginTop: '1.25rem' }}>
-                      Remove an item
-                    </h2>
-                    <div className={homeStyles.rowList}>
-                      {maintenanceMonth.line_items.map((item, i) => (
-                        <div key={i} className={homeStyles.row}>
-                          <span>{item.description}</span>
-                          <ConfirmSubmitButton
-                            formAction={removeItemAction.bind(null, i)}
-                            confirmMessage={`Remove "${item.description}" from this period?`}
-                            className={theme.iconButtonDanger}
-                            title="Remove item"
-                          >
-                            <MaterialIcon name="delete" size={18} />
-                          </ConfirmSubmitButton>
+                    {!isFinalized && (
+                      <>
+                        <h2 className={homeStyles.sectionTitle} style={{ marginTop: '1.25rem' }}>
+                          Remove an item
+                        </h2>
+                        <div className={homeStyles.rowList}>
+                          {maintenanceMonth.line_items.map((item, i) => (
+                            <div key={i} className={homeStyles.row}>
+                              <span>{item.description}</span>
+                              <ConfirmSubmitButton
+                                formAction={removeItemAction.bind(null, i)}
+                                confirmMessage={`Remove "${item.description}" from this period?`}
+                                className={theme.iconButtonDanger}
+                                title="Remove item"
+                              >
+                                <MaterialIcon name="delete" size={18} />
+                              </ConfirmSubmitButton>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      </>
+                    )}
                   </div>
 
                   <div className={theme.card}>
@@ -652,13 +780,6 @@ export default async function LivingMaintenancePage() {
                         )}
                       </p>
                     )}
-                    {maintenanceMonth.status !== 'published' && (
-                      <form action={publishAction} style={{ marginTop: '1rem' }}>
-                        <button type="submit" className={theme.button}>
-                          Publish
-                        </button>
-                      </form>
-                    )}
                   </div>
                 </>
               ),
@@ -677,41 +798,55 @@ export default async function LivingMaintenancePage() {
                     what&rsquo;s actually still owed or left over right now, live.
                   </p>
                   <div className={theme.card}>
-                    <form action={saveLedgerAction}>
-                      <div className={theme.tableScroll}>
-                        <table className={theme.table}>
-                          <thead>
-                            <tr>
-                              <th>Flat</th>
-                              <th className={theme.num}>Advance payment</th>
-                              <th className={theme.num}>Late fee</th>
-                              <th className={theme.num}>Previous due</th>
-                              <th className={theme.num}>Remaining</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {ledgerRows.map(({ flat, ledger, bill }) => (
+                    <div className={theme.tableScroll}>
+                      <table className={theme.table}>
+                        <thead>
+                          <tr>
+                            <th>Flat</th>
+                            <th className={theme.num}>Advance payment</th>
+                            <th className={theme.num}>Late fee</th>
+                            <th className={theme.num}>Previous due</th>
+                            <th className={theme.num}>Remaining</th>
+                            <th></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {ledgerRows.map(({ flat, ledger, bill }) => {
+                            const formId = `ledger-row-${flat.id}`
+                            return (
                               <tr key={flat.id}>
                                 <td>{flat.flat_no}</td>
                                 <td>
                                   <input
-                                    name={`advance_${flat.id}`}
+                                    form={formId}
+                                    name="advance"
                                     className={theme.input}
                                     type="number"
                                     step="0.01"
                                     defaultValue={ledger?.advance_payment ?? 0}
+                                    disabled={isFinalized}
                                   />
                                 </td>
                                 <td>
-                                  <input name={`late_fee_${flat.id}`} className={theme.input} type="number" step="0.01" defaultValue={ledger?.late_fee ?? 0} />
+                                  <input
+                                    form={formId}
+                                    name="late_fee"
+                                    className={theme.input}
+                                    type="number"
+                                    step="0.01"
+                                    defaultValue={ledger?.late_fee ?? 0}
+                                    disabled={isFinalized}
+                                  />
                                 </td>
                                 <td>
                                   <input
-                                    name={`previous_due_${flat.id}`}
+                                    form={formId}
+                                    name="previous_due"
                                     className={theme.input}
                                     type="number"
                                     step="0.01"
                                     defaultValue={ledger?.previous_due ?? 0}
+                                    disabled={isFinalized}
                                   />
                                 </td>
                                 <td className={theme.num}>
@@ -727,29 +862,33 @@ export default async function LivingMaintenancePage() {
                                     <span className={theme.pillOk}>Settled ₹0</span>
                                   )}
                                 </td>
-                              </tr>
-                            ))}
-                            {ledgerRows.length === 0 && (
-                              <tr>
-                                <td colSpan={5} className={theme.muted}>
-                                  No billable flats yet.
+                                <td>
+                                  {/* Scoped to this one flat_id — see saveLedgerRowAction's doc comment
+                                      for why this replaced a single whole-table bulk-save form. */}
+                                  <form id={formId} action={saveLedgerRowAction.bind(null, flat.id)}>
+                                    <button type="submit" className={theme.buttonGhost} disabled={isFinalized}>
+                                      Save
+                                    </button>
+                                  </form>
                                 </td>
                               </tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                      {ledgerRows.length > 0 && (
-                        <button type="submit" className={theme.button} style={{ marginTop: '1rem' }}>
-                          Save
-                        </button>
-                      )}
-                    </form>
+                            )
+                          })}
+                          {ledgerRows.length === 0 && (
+                            <tr>
+                              <td colSpan={6} className={theme.muted}>
+                                No billable flats yet.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
 
                   <div className={theme.card} style={{ marginTop: '1.5rem' }}>
                     <h2 className={homeStyles.sectionTitle}>Transfer advance between flats</h2>
-                    {flatsWithAdvance.length === 0 ? (
+                    {isFinalized ? null : flatsWithAdvance.length === 0 ? (
                       <p className={theme.muted}>No flat currently has an advance balance to transfer.</p>
                     ) : (
                       <>
@@ -820,14 +959,16 @@ export default async function LivingMaintenancePage() {
                                 <td>{flatNoById.get(t.to_flat_id) ?? '—'}</td>
                                 <td className={theme.num}>{formatCurrency(t.amount)}</td>
                                 <td>
-                                  <ConfirmSubmitButton
-                                    formAction={deleteAdvanceTransferAction.bind(null, t.id)}
-                                    confirmMessage="Undo this transfer? The amount moves back to the source flat."
-                                    className={theme.iconButtonDanger}
-                                    title="Undo transfer"
-                                  >
-                                    <MaterialIcon name="delete" size={20} />
-                                  </ConfirmSubmitButton>
+                                  {!isFinalized && (
+                                    <ConfirmSubmitButton
+                                      formAction={deleteAdvanceTransferAction.bind(null, t.id)}
+                                      confirmMessage="Undo this transfer? The amount moves back to the source flat."
+                                      className={theme.iconButtonDanger}
+                                      title="Undo transfer"
+                                    >
+                                      <MaterialIcon name="delete" size={20} />
+                                    </ConfirmSubmitButton>
+                                  )}
                                 </td>
                               </tr>
                             ))}
@@ -846,13 +987,15 @@ export default async function LivingMaintenancePage() {
               label: 'Billing Period',
               content: (
                 <>
-                  <div className={theme.card} style={{ marginBottom: '1.5rem' }}>
-                    <h2 className={homeStyles.sectionTitle}>Edit current billing period</h2>
-                    <p className={theme.muted} style={{ marginBottom: '1rem' }}>
-                      Changes the dates on this same period, in place — asks for confirmation first since it may already be published.
-                    </p>
-                    <EditPeriodForm action={updatePeriodDatesAction} defaultStart={maintenanceMonth.month} defaultEnd={maintenanceMonth.period_end} />
-                  </div>
+                  {maintenanceMonth.status !== 'published' && (
+                    <div className={theme.card} style={{ marginBottom: '1.5rem' }}>
+                      <h2 className={homeStyles.sectionTitle}>Edit current billing period</h2>
+                      <p className={theme.muted} style={{ marginBottom: '1rem' }}>
+                        Changes the dates on this same period, in place.
+                      </p>
+                      <EditPeriodForm action={updatePeriodDatesAction} defaultStart={maintenanceMonth.month} defaultEnd={maintenanceMonth.period_end} />
+                    </div>
+                  )}
 
                   <div className={theme.card}>
                     <h2 className={homeStyles.sectionTitle}>Start a new billing period</h2>
@@ -864,23 +1007,12 @@ export default async function LivingMaintenancePage() {
                       tab afterward. Starting one makes it the current period shown here and to Owners; the old one stays in the
                       record, just no longer the active one.
                     </p>
-                    <form action={startPeriodAction} style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-                      <div className={theme.field} style={{ marginBottom: 0 }}>
-                        <label className={theme.label} htmlFor="period_start">
-                          From
-                        </label>
-                        <input id="period_start" name="period_start" type="date" className={theme.input} defaultValue={defaultStart} required />
-                      </div>
-                      <div className={theme.field} style={{ marginBottom: 0 }}>
-                        <label className={theme.label} htmlFor="period_end">
-                          To
-                        </label>
-                        <input id="period_end" name="period_end" type="date" className={theme.input} defaultValue={defaultEnd} required />
-                      </div>
-                      <button type="submit" className={theme.button}>
-                        Start period
-                      </button>
-                    </form>
+                    <StartPeriodForm
+                      action={startPeriodAction}
+                      defaultStart={defaultStart}
+                      defaultEnd={defaultEnd}
+                      warningMessage={previousPeriodWarning}
+                    />
                   </div>
                 </>
               ),

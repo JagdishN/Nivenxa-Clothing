@@ -4,7 +4,7 @@ import { requireMembership } from '@/lib/living/auth'
 import { setLivingError, setLivingNotice } from '@/lib/living/flash'
 import { formatBalanceMeaning, formatCurrency, formatMonthLabel, formatPaymentStatus, formatPeriodLabel, monthKeyFor } from '@/lib/living/format'
 import { riseStreak } from '@/lib/living/billing'
-import { computeBillForFlat, getBillHistoryForFlat, getCurrentMaintenancePeriod, getEffectiveSlabConfig, getFlats, getReadingHistory, getReimbursementBalanceForFlat } from '@/lib/living/queries'
+import { computeBillForFlat, getBillHistoryForFlat, getCurrentMaintenancePeriod, getEffectiveSlabConfig, getFlats, getReadingHistory, getRelevantWaterMonth, getReimbursementBalanceForFlat } from '@/lib/living/queries'
 import type { PaymentStatus } from '@/lib/living/types'
 import theme from '../../LivingTheme.module.scss'
 import homeStyles from '../Home.module.scss'
@@ -71,11 +71,12 @@ export default async function LivingBillPage() {
   const flat = flats.find((f) => f.id === membership.flat_id)
   if (!flat) redirect('/living/home')
 
-  const [bill, history, slab, currentPeriod, billHistory, reimbursementBalance] = await Promise.all([
-    computeBillForFlat(supabase, apartment, flat, month),
+  const currentPeriod = await getCurrentMaintenancePeriod(supabase, apartment.id)
+  const billMonth = getRelevantWaterMonth(currentPeriod, month)
+  const [bill, history, slab, billHistory, reimbursementBalance] = await Promise.all([
+    computeBillForFlat(supabase, apartment, flat, billMonth, { maintenanceMonth: currentPeriod }),
     getReadingHistory(supabase, flat.id, 6),
-    getEffectiveSlabConfig(supabase, apartment.id, month),
-    getCurrentMaintenancePeriod(supabase, apartment.id),
+    getEffectiveSlabConfig(supabase, apartment.id, billMonth),
     getBillHistoryForFlat(supabase, apartment, flat),
     getReimbursementBalanceForFlat(supabase, apartment.id, flat.id),
   ])
@@ -88,7 +89,7 @@ export default async function LivingBillPage() {
       )
     : 0
 
-  const currentReading = history.find((r) => r.month === month)
+  const currentReading = history.find((r) => r.month === billMonth)
 
   return (
     <>
@@ -96,7 +97,7 @@ export default async function LivingBillPage() {
         My Bills
       </h1>
       <p className={theme.muted} style={{ marginBottom: '1.5rem' }}>
-        Flat {flat.flat_no} — current cycle, {formatMonthLabel(month)}. Payments and receipts live under{' '}
+        Flat {flat.flat_no} — current cycle, {formatMonthLabel(billMonth)}. Payments and receipts live under{' '}
         <Link href="/living/my-payments">Payments</Link>.
       </p>
 
