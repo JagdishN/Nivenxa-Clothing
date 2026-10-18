@@ -1,0 +1,11 @@
+-- Final standings per category for a completed tournament (see the High-
+-- priority "add results, winners" finding from the Tournaments/Archive UX
+-- review). One jsonb column, not a normalized results table — a tournament
+-- has at most a handful of categories and this is admin-entered/updated as
+-- one whole block at a time (same freeform-over-structured-editor convention
+-- as top_players/categories/prize_pool elsewhere in this table), not queried
+-- or filtered row-by-row.
+--
+-- Shape: TournamentCategoryResult[] (see src/lib/chess/types.ts) —
+-- [{ "category": "U-14 Open", "totalRounds": 4, "standings": [{ "rank": 1, "name": "...", "points": 4 }, ...] }]
+alter table tournaments add column if not exists results jsonb;

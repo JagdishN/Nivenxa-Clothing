@@ -74,6 +74,22 @@
   margin-inline: auto;
 }
 
+// The logged-in solver's own status — a small badge, not another heading,
+// since it's a quiet personal stat sitting under the page's own subtext.
+.statsLine {
+  display: inline-flex;
+  align-items: center;
+  margin-top: clamp(1rem, 2vw, 1.25rem);
+  padding: 0.5rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(214, 168, 95, 0.35);
+  background: rgba(214, 168, 95, 0.1);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--chess-deep);
+}
+
 // ─── Puzzle theme grid ───────────────────────────────────────────────────────
 .grid {
   position: relative;

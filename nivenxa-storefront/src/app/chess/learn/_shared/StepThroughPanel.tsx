@@ -5,6 +5,8 @@ import { Chess } from 'chess.js'
 import type { Key } from 'chessground/types'
 import Board from '@/components/chess/Board'
 import { computeMoveSquares } from './moveSquares'
+import { useLessonVoice, type VoiceCommand } from './useLessonVoice'
+import VoiceControls, { VoiceStatusLine } from './VoiceControls'
 import styles from './StepThroughPanel.module.scss'
 
 // The board is read-only here — no legal moves to offer, and moves never
@@ -54,6 +56,9 @@ export default function StepThroughPanel({
   onPracticeClick,
   practiceCtaLabel = 'Try it yourself →',
   nextCta,
+  enableVoice = false,
+  initialStep = 0,
+  onStepChange,
 }: {
   example: StepThroughExample
   footer?: React.ReactNode
@@ -63,6 +68,24 @@ export default function StepThroughPanel({
   practiceCtaLabel?: string
   /** When provided (and onPracticeClick isn't), a "Learn X next" link appears once the learner reaches the last move. */
   nextCta?: { href: string; label: string }
+  /**
+   * Opts into the full voice layer (Start gate, autoplay narration, Replay/
+   * Mic, tiered status) — off by default so this component's existing
+   * consumers (Openings, Rules) render exactly as before. Only TacticDetail
+   * passes true today. No hint/Show-Me controls render here either way —
+   * this is pure passive playback, nothing to hint about, same reasoning
+   * Chess Basics uses to hide Hint/Show Me on a plain `demo` step.
+   */
+  enableVoice?: boolean
+  /**
+   * Resumes at this step instead of 0 — lets a caller that remounts this
+   * component per example (different FEN/moves need a remount, not just a
+   * reset) still pick up where that example was left, e.g. after switching
+   * back and forth between an Example 1 / Example 2 tab.
+   */
+  initialStep?: number
+  /** Reports every step change upward, so a caller can remember it per example (see `initialStep`). */
+  onStepChange?: (step: number) => void
 }) {
   const { moves, stepExplanations } = example
 
@@ -81,8 +104,22 @@ export default function StepThroughPanel({
     return { positions: fens, metas: fens.map(parseFenMeta), lastMoves: froms }
   }, [example.fen, moves])
 
-  // 0 = starting position (before any move), up to moves.length.
-  const [step, setStep] = useState(0)
+  // 0 = starting position (before any move), up to moves.length. Seeded
+  // from `initialStep` so a caller that remounts this component per example
+  // (see the prop doc above) can resume rather than restart.
+  const [step, setStep] = useState(initialStep)
+  // Gates the whole panel behind one explicit click when voice is enabled —
+  // that click is the user gesture autoplay needs (see handleStart), and
+  // gives a clear "begin" moment. Irrelevant (never rendered/checked) when
+  // enableVoice is false. Already past step 0 means this example was
+  // already started (and possibly finished) before — don't ask again.
+  const [started, setStarted] = useState(initialStep > 0)
+  const voice = useLessonVoice()
+
+  useEffect(() => {
+    onStepChange?.(step)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deliberately keyed only on step; onStepChange read fresh via closure, same reasoning as this file's other step-keyed effects (avoids re-firing on an unrelated parent re-render that happens to recreate the callback).
+  }, [step])
 
   // Briefly pulses the just-played move's own two squares right after a step
   // change — the "Show, don't just Tell" layer on top of chessground's
@@ -130,6 +167,82 @@ export default function StepThroughPanel({
   const secondMover = firstMover === 'White' ? 'Black' : 'White'
   const nextLabel = atStart ? `Show ${firstMover}'s first move →` : step === 1 ? `Show ${secondMover}'s reply →` : 'Next move →'
 
+  function handlePrevious() {
+    setStep((s) => Math.max(0, s - 1))
+  }
+
+  function handleNext() {
+    setStep((s) => Math.min(moves.length, s + 1))
+  }
+
+  // Exactly what's shown on screen for the current step, flattened into one
+  // string for speech — same source, so narration never says something
+  // different from the visible text (the bug fixed for Chess Basics).
+  function currentSpokenText(): string {
+    const base = (atStart ? example.startDescription : stepExplanations[step - 1]).replace(/\n/g, '. ')
+    const reveal = !atStart && example.stepReveal?.[step - 1] ? ` ${example.stepReveal[step - 1]}` : ''
+    const completion =
+      atEnd && example.completionSummary
+        ? ` ${example.completionLabel ?? "You're done"}. ${example.completionSummary.join('. ')}`
+        : ''
+    return `${base}${reveal}${completion}`
+  }
+
+  useEffect(() => {
+    if (!enableVoice) return
+    voice.cancel()
+    if (started && !voice.muted) voice.speak(currentSpokenText())
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deliberately keyed only on step; enableVoice/started/voice/currentSpokenText read fresh via closure each render, same pattern as BoardLesson.tsx's identical stepIndex effect.
+  }, [step])
+
+  function handleStart() {
+    setStarted(true)
+    if (!voice.muted) voice.speak(currentSpokenText())
+  }
+
+  // No hint/Show-Me concept here (pure passive playback, nothing to narrow
+  // down) — these exist only so a spoken "hint"/"show me" command gets a
+  // graceful, explicit response instead of silently doing nothing.
+  function requestHint() {
+    voice.speak('There\'s no hint here — say or tap Replay to hear this step again.')
+  }
+  function requestShowMe() {
+    voice.speak('This step is already a demonstration — say or tap Replay to see it again.')
+  }
+
+  function handleVoiceCommand(command: VoiceCommand | null) {
+    if (!command) {
+      voice.speak("I didn't catch that. Please try again or use the buttons.")
+      return
+    }
+    switch (command) {
+      case 'repeat':
+        voice.speak(currentSpokenText())
+        break
+      case 'hint':
+      case 'explain':
+        requestHint()
+        break
+      case 'showMe':
+        requestShowMe()
+        break
+      case 'tryAgain':
+        // Nothing to retry on a passive step-through — silently ignored,
+        // same as this command doing nothing on a Chess Basics demo step.
+        break
+      case 'next':
+        if (!atEnd) handleNext()
+        else voice.speak("You're at the end — use the button below to continue.")
+        break
+      case 'pause':
+        voice.pause()
+        break
+      case 'resume':
+        voice.resume()
+        break
+    }
+  }
+
   return (
     <>
       <div className={styles.boardCol}>
@@ -155,19 +268,25 @@ export default function StepThroughPanel({
       </div>
 
       <div className={styles.panelCol}>
+        {enableVoice && !started ? (
+          <>
+            <p className={styles.explanationLabel}>Ready to begin?</p>
+            <div className={styles.stepControls}>
+              <button type="button" className={styles.stepBtn} onClick={handleStart}>
+                Start →
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
         <div className={styles.stepControls}>
-          <button type="button" className={styles.stepBtn} onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={atStart}>
+          <button type="button" className={styles.stepBtn} onClick={handlePrevious} disabled={atStart}>
             ← Previous
           </button>
           <span className={styles.stepIndicator}>
             {atStart ? `Start · ${moves.length} moves` : `Move ${step} of ${moves.length}`}
           </span>
-          <button
-            type="button"
-            className={styles.stepBtn}
-            onClick={() => setStep((s) => Math.min(moves.length, s + 1))}
-            disabled={atEnd}
-          >
+          <button type="button" className={styles.stepBtn} onClick={handleNext} disabled={atEnd}>
             {nextLabel}
           </button>
         </div>
@@ -238,7 +357,30 @@ export default function StepThroughPanel({
           )}
         </div>
 
+        {enableVoice && (
+          <VoiceControls
+            supported={voice.supported}
+            micSupported={voice.micSupported}
+            voiceOn={!voice.muted}
+            rate={voice.rate}
+            listening={voice.listening}
+            showHintControls={false}
+            onToggleVoice={voice.toggleMute}
+            onSetRate={voice.setSpeechRate}
+            onReplay={() => voice.speak(currentSpokenText())}
+            onHint={requestHint}
+            onShowMe={requestShowMe}
+            onMicStart={() => voice.startPushToTalk(handleVoiceCommand)}
+            onMicEnd={voice.stopPushToTalk}
+          />
+        )}
+        {enableVoice && (
+          <VoiceStatusLine status={voice.speaking ? 'speaking' : 'readyToContinue'} />
+        )}
+
         {footer}
+          </>
+        )}
       </div>
     </>
   )

@@ -13,6 +13,10 @@
   max-width: 1400px;
   margin: 0 auto;
   padding: clamp(3rem, 6vw, 4.5rem) clamp(1.5rem, 6vw, 5rem) clamp(1.5rem, 4vw, 2.5rem);
+  // Matches the top /chess/learn catalogue and Basics' own list page, both
+  // already centered — this page was left-aligned by omission, not by a
+  // considered choice.
+  text-align: center;
 }
 
 .breadcrumb {
@@ -48,6 +52,10 @@
   line-height: 1.7;
   color: rgba(31, 27, 58, 0.68);
   max-width: 560px;
+  // Centers the paragraph's own box within the now-centered .hero, not just
+  // the text within that box — a max-width with no auto margins stays
+  // pinned to the left edge regardless of the parent's text-align.
+  margin-inline: auto;
 }
 
 .grid {
@@ -61,14 +69,23 @@
   padding: 0 clamp(1.5rem, 6vw, 5rem) clamp(4rem, 7vw, 6rem);
 }
 
+// Matches Chess Basics and the top /chess/learn catalogue's own card shape
+// (Learn.module.scss's categoryCard/categoryTitle/categoryDesc) — values
+// copied rather than `composes`-d from that file: with Basics, Openings,
+// and Rules all newly composing from the same Learn.module.scss at once,
+// Turbopack's CSS-modules handling hit a real "object not extensible"
+// build failure. Duplicated literals sidestep that entirely; keep these
+// four blocks in sync with Learn.module.scss's categoryCard/categoryNumber/
+// categoryTitle/categoryDesc by hand if that file's values ever change.
 .card {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 1.4rem 1.5rem;
+  gap: 0.4rem;
+  min-height: 150px;
+  padding: 1.1rem 1.3rem;
   text-align: left;
   text-decoration: none;
-  border-radius: 1.15rem;
+  border-radius: 1.25rem;
   border: 1px solid rgba(91, 46, 145, 0.18);
   background: rgba(255, 255, 255, 0.55);
   box-shadow: 0 10px 40px rgba(91, 46, 145, 0.06);
@@ -81,19 +98,62 @@
   }
 }
 
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.cardIcon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.cardNumber {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--chess-gold);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
 .cardTitle {
   font-family: var(--font-serif);
-  font-size: clamp(1.1rem, 1.8vw, 1.3rem);
   font-weight: 400;
   color: var(--chess-deep);
   letter-spacing: -0.01em;
   margin: 0;
+  font-size: clamp(1.1rem, 1.8vw, 1.3rem);
 }
 
 .cardDesc {
   font-family: var(--font-sans);
-  font-size: 0.85rem;
   line-height: 1.6;
   color: rgba(31, 27, 58, 0.62);
   margin: 0;
+  font-size: 0.85rem;
+}
+
+// No completion tracking for Endgames yet — just the CTA, right-aligned on
+// its own (margin-left: auto still works with a single flex child).
+.cardFooter {
+  display: flex;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 0.15rem;
+}
+
+.cardCta {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--chess-purple);
+  margin-left: auto;
+  transition: transform 150ms ease;
+
+  .card:hover & {
+    transform: translateX(2px);
+  }
 }

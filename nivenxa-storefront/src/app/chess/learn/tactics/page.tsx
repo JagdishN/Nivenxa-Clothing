@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { TACTICS, RECOMMENDED_TACTIC_SLUGS, TACTIC_DIFFICULTY_LABEL, TACTIC_DIFFICULTY_EMOJI, getTactic } from '@/lib/chess/tactics/data'
+import { TACTICS } from '@/lib/chess/tactics/data'
 import styles from './TacticsList.module.scss'
 
 const GROUPS: { difficulty: 'start' | 'next' | 'later'; title: string }[] = [
@@ -7,6 +7,47 @@ const GROUPS: { difficulty: 'start' | 'next' | 'later'; title: string }[] = [
   { difficulty: 'next', title: 'Learn Next' },
   { difficulty: 'later', title: 'Learn Later' },
 ]
+
+// One running number across the whole page, matching Chess Basics — built
+// once, at module load, as a plain lookup rather than a mutable counter
+// incremented during render (which this project's react-hooks/immutability
+// lint rule rejects, even for a mutation local to one render pass).
+const CARD_NUMBER: Record<string, number> = (() => {
+  const map: Record<string, number> = {}
+  let n = 0
+  for (const group of GROUPS) {
+    for (const tactic of TACTICS.filter((t) => t.difficulty === group.difficulty)) {
+      n += 1
+      map[tactic.slug] = n
+    }
+  }
+  return map
+})()
+
+// One icon per tactic — visual polish to match Chess Basics' card icons.
+// Each tactic is a genuinely distinct idea, so a per-tactic pick (rather
+// than one shared icon per difficulty group) is the more meaningful choice
+// here, and at 18 entries still a quick, no-new-data-layer addition.
+const TACTIC_ICON: Record<string, string> = {
+  'hanging-pieces': '🎯',
+  checks: '❗',
+  'attack-and-capture': '⚔️',
+  forks: '🔱',
+  pins: '📌',
+  skewers: '🗡️',
+  'double-attack': '💥',
+  'discovered-attack': '🔍',
+  'removing-the-defender': '🪓',
+  deflection: '↪️',
+  'back-rank-mate': '🏰',
+  'double-check': '⚡',
+  'in-between-move': '⏸️',
+  overloading: '📦',
+  clearance: '🧹',
+  decoy: '🎣',
+  interference: '🚧',
+  'trapped-piece': '🕸️',
+}
 
 export default function ChessLearnTacticsPage() {
   return (
@@ -16,24 +57,20 @@ export default function ChessLearnTacticsPage() {
           ← Learn
         </Link>
         <h1 className={styles.heading}>Tactics</h1>
-        <p className={styles.subtext}>Learn how to spot winning moves.</p>
-        <p className={styles.subtext}>Start with the easy ones and learn one step at a time.</p>
+        <p className={styles.subtext}>Learn to spot winning moves, starting with simple ideas.</p>
       </section>
 
+      {/* One recommendation, not a link list on top of the Start Here group
+          that already leads with this same tactic — the list also used to
+          leave out Attack & Capture despite it being a beginner card, which
+          this avoids by just pointing at one proven starting point. */}
       <div className={styles.recommendStrip}>
-        <p className={styles.recommendHeading}>⭐ New to tactics?</p>
-        <p className={styles.recommendSubtext}>Start with one of these:</p>
-        <div className={styles.recommendLinks}>
-          {RECOMMENDED_TACTIC_SLUGS.map((slug) => {
-            const tactic = getTactic(slug)
-            if (!tactic) return null
-            return (
-              <Link key={slug} href={`/chess/learn/tactics/${slug}`} className={styles.recommendLink}>
-                {tactic.name}
-              </Link>
-            )
-          })}
-        </div>
+        <p className={styles.recommendHeading}>
+          New to tactics?{' '}
+          <Link href="/chess/learn/tactics/hanging-pieces" className={styles.recommendLink}>
+            Start with Hanging Pieces
+          </Link>
+        </p>
       </div>
 
       {GROUPS.map((group, groupIndex) => {
@@ -48,11 +85,21 @@ export default function ChessLearnTacticsPage() {
                   href={`/chess/learn/tactics/${tactic.slug}`}
                   className={`${styles.card} ${groupIndex === 0 && tacticIndex === 0 ? styles.cardFirst : ''}`}
                 >
+                  <span className={styles.cardTop}>
+                    <span className={styles.cardIcon} aria-hidden="true">
+                      {TACTIC_ICON[tactic.slug] ?? '♟️'}
+                    </span>
+                    <span className={styles.cardNumber}>{String(CARD_NUMBER[tactic.slug]).padStart(2, '0')}</span>
+                  </span>
                   <h2 className={styles.cardTitle}>{tactic.name}</h2>
                   <p className={styles.cardDesc}>{tactic.summary}</p>
-                  <p className={styles.cardDifficulty}>
-                    {TACTIC_DIFFICULTY_EMOJI[tactic.difficulty]} {TACTIC_DIFFICULTY_LABEL[tactic.difficulty]}
-                  </p>
+                  {/* No per-card difficulty label here — the Start Here /
+                      Learn Next / Learn Later heading above each group
+                      already says this once; repeating it per card was the
+                      same fact twice. */}
+                  <span className={styles.cardFooter}>
+                    <span className={styles.cardCta}>Learn →</span>
+                  </span>
                 </Link>
               ))}
             </div>

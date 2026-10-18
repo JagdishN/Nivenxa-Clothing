@@ -1,7 +1,9 @@
 import { getSupabase } from './supabase'
+import { sortTournamentResults } from './tournamentFormat'
 import type {
   ChessTournament,
   TournamentCategory,
+  TournamentCategoryResult,
   TournamentDisplayType,
   TournamentFormat,
   TournamentGroup,
@@ -42,6 +44,8 @@ export interface TournamentRow {
   verified: boolean
   is_live: boolean
   is_nivenxa_organized: boolean
+  /** Final standings per category — only ever entered once a tournament has actually completed, see TournamentCategoryResult. */
+  results: TournamentCategoryResult[] | null
   created_at: string
   updated_at: string
 }
@@ -135,6 +139,7 @@ function mapRowToChessTournament(row: TournamentRow, lifecycleStatus: 'live' | '
       score: row.verified ? 100 : 0,
       reasons: row.verified ? ['Verified by Nivenxa Chess admin'] : [],
     },
+    results: row.results && row.results.length > 0 ? sortTournamentResults(row.results) : undefined,
   }
 }
 
@@ -212,7 +217,11 @@ export async function getNivenxaArchiveTournaments(): Promise<TournamentGroup[]>
   if (error) console.error('getNivenxaArchiveTournaments: query failed —', error.message)
 
   const completed = ((data ?? []) as TournamentRow[]).map((row) => mapRowToChessTournament(row, 'completed'))
-  return [{ status: 'completed', label: 'Completed', tournaments: completed }]
+  // No label — the Archive page's own h1 already says "Past tournaments,"
+  // and this is the only group it ever renders, so a second group heading
+  // underneath would just repeat it (see TournamentListing, which skips
+  // rendering the <h2> entirely when a group's label is empty).
+  return [{ status: 'completed', label: '', tournaments: completed }]
 }
 
 /** One tournament, for /chess/tournaments/[id] (the "View Details" destination). Only returns verified, Nivenxa-organized rows — same visibility rule as everywhere else public. */

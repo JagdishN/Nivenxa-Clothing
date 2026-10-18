@@ -120,3 +120,42 @@
 .modalSecondary {
   composes: modalSecondary from './PracticePanel.module.scss';
 }
+
+// ─── Judgment steps' option row + the Pawn Promotion piece picker — both
+// reuse BoardLesson's equally-weighted outlined button (Yes/No was already
+// "pick one of several equal options," exactly what a 3-way judgment or a
+// 4-piece promotion choice needs too). ─────────────────────────────────────
+.answerRow {
+  composes: answerRow from './BoardLesson.module.scss';
+}
+
+.answerBtn {
+  composes: answerBtn from './BoardLesson.module.scss';
+}
+
+.answerBtnWrong {
+  composes: answerBtn from './BoardLesson.module.scss';
+  border-color: rgba(136, 32, 32, 0.4);
+  background: rgba(136, 32, 32, 0.08);
+  color: #882020;
+}
+
+.promotionPicker {
+  position: absolute;
+  inset: auto 0 0.75rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.75rem;
+}
+
+.promotionPickerLabel {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--chess-deep);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+}

@@ -66,6 +66,10 @@ export interface TacticExample {
   stepExplanations: string[]
   /** A short "this is called X" aside per move, aligned by index with `moves` — names the technique once it's been shown, not before. */
   stepReveal?: (string | undefined)[]
+  /** Extra square(s) to circle per move, aligned by index with `moves` — e.g. the square a piece newly aims at. */
+  stepHighlights?: (string | string[] | undefined)[]
+  /** [from, to] arrow to draw per move, aligned by index with `moves`. */
+  stepArrows?: ([string, string] | undefined)[]
 }
 
 /** One "find the move" puzzle — a single decision, no scripted follow-up. */
@@ -101,32 +105,80 @@ export interface Tactic {
 
 export const TACTICS: Tactic[] = [
   // ─── Start Here ───────────────────────────────────────────────────────
+  // REVIEW: rebuilt after a detailed walkthrough review. Every FEN/move
+  // below was re-verified via chess.js before being written in — the
+  // trimmed learn sequence (e4 Nc6 Nf3 Nd4) confirmed to leave Black's
+  // knight on d4 with zero legal recaptures after Nxd4; the new contrasting
+  // example (e4 e5 Nf3 Nc6 Bc4 Nd4) confirmed Black CAN recapture via
+  // exd4 there, the genuine "looks the same, isn't safe" counterexample.
   {
     slug: 'hanging-pieces',
     name: 'Hanging Pieces',
     themeTag: 'hangingPiece',
-    description: 'A piece with no defender can simply be captured for free.',
+    description: 'A hanging piece is a piece you can safely capture without losing a piece in return.',
     summary: 'Find pieces that are not protected.',
     difficulty: 'start',
     examples: [
       {
+        // Plays all the way through the capture (verified via chess.js:
+        // Nxd4 is legal and leaves Black with zero recaptures) — split
+        // across its own two real steps (Nd4, then Nxd4) instead of
+        // cramming 4 sentences into one step's explanation, so the capture
+        // is demonstrated, not just claimed, before "Your Turn" hands the
+        // exact same capture back to the learner to play themselves.
         fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
         moves: ['e4', 'Nc6', 'Nf3', 'Nd4', 'Nxd4'],
         stepExplanations: [
           'White moves a pawn to the middle.',
           'Black brings out a knight.',
           'White brings out a knight.',
-          'Black moves the knight forward.\nBut nothing protects it there.',
-          'White captures the knight for free.',
+          "Black's knight has moved here.\nOur knight can capture it.",
+          'After the capture, Black cannot take our knight back.\nWe win a knight — without losing ours.',
         ],
         stepReveal: [undefined, undefined, undefined, undefined, 'This is called a hanging piece.'],
+        stepHighlights: [undefined, undefined, undefined, ['d4'], undefined],
+        stepArrows: [undefined, undefined, undefined, ['f3', 'd4'], undefined],
+      },
+      {
+        // The contrasting case — looks like the same idea, but e5 is
+        // already guarding d4, so capturing here only trades knights.
+        fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+        moves: ['e4', 'e5', 'Nf3', 'Nc6', 'Bc4', 'Nd4'],
+        stepExplanations: [
+          'White moves a pawn to the middle.',
+          'Black does the same.',
+          'White brings out a knight.',
+          'Black brings out a knight too.',
+          'White brings out a bishop.',
+          'Black moves the knight forward again.\nThis time, the pawn on e5 is already guarding d4.',
+        ],
+        stepReveal: [
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          "Capturing here only trades knights — it doesn't win one, because e5 defends d4.",
+        ],
+        stepHighlights: [undefined, undefined, undefined, undefined, undefined, ['d4', 'e5']],
+        stepArrows: [undefined, undefined, undefined, undefined, undefined, ['e5', 'd4']],
       },
     ],
-    completionSummary: ['You can now find pieces that are not protected.'],
-    prompt: 'Can you find the piece with no defender?',
-    wrongText: 'Not quite. Look for a piece that nothing is protecting.',
-    correctText: 'Nothing was protecting it.',
+    completionSummary: ['Before you capture, check whether your piece can be taken back.'],
+    prompt: 'Capture the hanging piece.',
+    // {yourPiece}/{capturedPiece} are filled in per-puzzle from the actual
+    // move (TacticPuzzleSet.tsx) — puzzles 2-4 capture a rook, a bishop,
+    // and a knight respectively, not all a knight, so a single static
+    // string here was wrong on 3 of 4 puzzles.
+    wrongText: "Let's look again. Which black piece can your {yourPiece} capture?",
+    correctText: 'You won a {capturedPiece}! Black cannot capture your {yourPiece} back.',
     puzzles: [
+      // Continues the exact position just demonstrated — "capture the
+      // hanging knight" is the learner's literal next action, not a jump
+      // to an unrelated position. Verified via chess.js: this is the FEN
+      // after e4 Nc6 Nf3 Nd4, and Nxd4 (f3-d4) is legal with no black
+      // recapture available.
+      { fen: 'r1bqkbnr/pppppppp/8/8/3nP3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 3 3', correctFrom: 'f3', correctTo: 'd4' },
       { fen: 'k7/8/r7/8/8/8/8/Q6K w - - 0 1', correctFrom: 'a1', correctTo: 'a6' },
       { fen: '7k/8/8/4b3/8/8/8/4R2K w - - 0 1', correctFrom: 'e1', correctTo: 'e5' },
       { fen: '7k/8/8/8/3n4/8/8/B6K w - - 0 1', correctFrom: 'a1', correctTo: 'd4' },
@@ -616,9 +668,6 @@ export const TACTICS: Tactic[] = [
 export function getTactic(slug: string): Tactic | undefined {
   return TACTICS.find((t) => t.slug === slug)
 }
-
-/** The four tactics recommended for a first-time learner — shown as a strip, not a full category. */
-export const RECOMMENDED_TACTIC_SLUGS = ['hanging-pieces', 'checks', 'forks', 'pins']
 
 /** The tactic that follows `slug` in the learning path — TACTICS is already authored in curriculum order, so this is just the next array entry. */
 export function getNextTacticInPath(slug: string): Tactic | undefined {

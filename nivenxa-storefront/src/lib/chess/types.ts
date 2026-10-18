@@ -58,6 +58,24 @@ export interface TournamentPrizePool {
   verified: boolean
 }
 
+/** One ranked finisher within a single age/skill category's final standings. */
+export interface TournamentStanding {
+  rank: number
+  name: string
+  points: number
+}
+
+/**
+ * A tournament can run several age/skill categories at once (see
+ * ChessTournament.categories, e.g. "U7, U9, U11, U14") — each gets its own
+ * independent final standings and round count, not one shared list.
+ */
+export interface TournamentCategoryResult {
+  category: string
+  totalRounds: number
+  standings: TournamentStanding[]
+}
+
 export interface RawTournament {
   externalId: string
   title: string
@@ -133,6 +151,8 @@ export interface ChessTournament {
     score: number
     reasons: string[]
   }
+  /** Final standings per category, only present once a completed tournament's results are entered — absent (not an empty array) until then, see tournaments.ts's mapRowToChessTournament. */
+  results?: TournamentCategoryResult[]
 }
 
 export interface TournamentGroup {

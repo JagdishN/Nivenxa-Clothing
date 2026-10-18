@@ -1,14 +1,15 @@
 @use '../../../../styles/variables' as v;
 
-// Deliberately NOT composing ChessTheme's `pageBackground` (the heavy
-// multi-radial-gradient purple wash) — a catalogue of plain white cards on
-// top of that wash reads as washed-out rather than crisp. Neutral ground,
-// solid white cards, purple reserved for headings/interactions/the
-// recommended-card accent.
+// Matches every other Learn catalogue now (Basics' own list page composes
+// this same background behind its own white cards without reading as
+// washed-out) — this used to be deliberately plain/neutral specifically for
+// Openings, which just made this one catalogue look inconsistent with the
+// rest of the Learn section rather than reading as a considered choice.
 .page {
+  composes: pageBackground from '../../ChessTheme.module.scss';
   min-height: 100vh;
-  background: var(--chess-white-soft);
   position: relative;
+  overflow: hidden;
 }
 
 .hero {
@@ -20,6 +21,10 @@
   // a recommendation strip and category sections below that should read as
   // close to the heading as possible, not after a long empty gap.
   padding: clamp(2.5rem, 5vw, 3.75rem) clamp(1.5rem, 6vw, 5rem) clamp(0.9rem, 2.5vw, 1.5rem);
+  // Matches the top /chess/learn catalogue and Basics' own list page, both
+  // already centered — this page (and Tactics, which composes its hero
+  // from this one) was left-aligned by omission, not by a considered choice.
+  text-align: center;
 }
 
 .breadcrumb {
@@ -55,6 +60,10 @@
   line-height: 1.7;
   color: rgba(31, 27, 58, 0.68);
   max-width: 560px;
+  // Centers the paragraph's own box within the now-centered .hero, not just
+  // the text within that box — a max-width with no auto margins stays
+  // pinned to the left edge regardless of the parent's text-align.
+  margin-inline: auto;
   margin-bottom: 0.5rem;
 }
 
@@ -93,6 +102,11 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 clamp(1.5rem, 6vw, 5rem) clamp(1.1rem, 2.5vw, 1.6rem);
+  // The strip's own box was already centered (max-width + margin:auto
+  // above), but its text and flex-row children stayed left-aligned within
+  // that box — a plain block/flex child doesn't inherit text-align's
+  // "center the box" effect the way the hero's own direct text did.
+  text-align: center;
 }
 
 .recommendHeading {
@@ -107,6 +121,10 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  // text-align:center on the parent only centers the TEXT within these
+  // links, not the flex row's own children layout — needs its own
+  // justify-content to actually center the row.
+  justify-content: center;
   column-gap: 0.4rem;
   row-gap: 0.3rem;
 }
@@ -145,6 +163,7 @@
 .recommendSecondaryLinks {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.4rem 0.9rem;
 }
 
@@ -209,25 +228,33 @@
   gap: clamp(0.85rem, 2vw, 1.25rem);
 }
 
-// Padding/gap cut ~25% from the original (1.4rem 1.5rem / 0.5rem) — three
-// short lines of content don't need that much air around them.
+// Matches Chess Basics and the top /chess/learn catalogue's own card shape
+// (Learn.module.scss's categoryCard/categoryTitle/categoryDesc) — values
+// copied rather than `composes`-d from that file: with Basics, Endgames,
+// and Rules all newly composing from the same Learn.module.scss at once,
+// Turbopack's CSS-modules handling hit a real "object not extensible"
+// build failure (confirmed by reverting it alone and rebuilding clean).
+// Duplicated literals sidestep that entirely; keep these four blocks in
+// sync with Learn.module.scss's categoryCard/categoryNumber/categoryTitle/
+// categoryDesc by hand if that file's values ever change.
 .card {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  padding: 1.05rem 1.15rem;
+  min-height: 150px;
+  padding: 0.9rem 1.1rem;
   text-align: left;
   text-decoration: none;
-  border-radius: 1rem;
-  border: 1px solid rgba(91, 46, 145, 0.16);
-  background: #fff;
-  box-shadow: 0 6px 22px rgba(91, 46, 145, 0.05);
+  border-radius: 1.25rem;
+  border: 1px solid rgba(91, 46, 145, 0.18);
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 10px 40px rgba(91, 46, 145, 0.06);
   transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
 
   &:hover {
     border-color: var(--chess-purple);
-    box-shadow: 0 14px 40px rgba(91, 46, 145, 0.12);
-    transform: translateY(-2px);
+    box-shadow: 0 18px 56px rgba(91, 46, 145, 0.14);
+    transform: translateY(-3px);
   }
 }
 
@@ -239,21 +266,58 @@
   border-color: rgba(91, 46, 145, 0.22);
 }
 
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.cardIcon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.cardNumber {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--chess-gold);
+  font-variant-numeric: tabular-nums;
+  // 700, not categoryNumber's own 800 — matches the effective weight
+  // Basics' own .cardNumber (which locally overrides it the same way) ends
+  // up rendering at.
+  font-weight: 700;
+  opacity: 0.75;
+}
+
 .cardTitle {
   font-family: var(--font-serif);
-  font-size: clamp(1.05rem, 1.7vw, 1.22rem);
   font-weight: 400;
   color: var(--chess-deep);
   letter-spacing: -0.01em;
   margin: 0;
+  font-size: clamp(1.05rem, 1.7vw, 1.22rem);
 }
 
 .cardDesc {
   font-family: var(--font-sans);
-  font-size: 0.83rem;
   line-height: 1.5;
   color: rgba(31, 27, 58, 0.62);
   margin: 0;
+  font-size: 0.83rem;
+}
+
+// ─── Card footer — difficulty tag (left) + a plain "Learn →" CTA (right),
+// matching Basics' own footer row shape. No completion state here (unlike
+// Basics, nothing tracks progress for Openings yet) — this is the same
+// difficulty fact the card already showed, just repositioned into the
+// shared footer layout instead of its own trailing line. ───────────────────
+.cardFooter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.15rem;
 }
 
 .cardDifficulty {
@@ -261,5 +325,40 @@
   font-size: 0.76rem;
   font-weight: 600;
   color: rgba(31, 27, 58, 0.62);
-  margin: 0.1rem 0 0;
+}
+
+// Some groups (the Italian Game → Caro-Kann → London recommend chain, most
+// visibly) move between White's and Black's openings without ever saying so
+// — this names whose side the card teaches, using the same king icon in
+// each side's own color rather than new copy to learn.
+.cardSide {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.cardSideIcon {
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.cardSideWhite,
+.cardSideBlack {
+  color: rgba(31, 27, 58, 0.62);
+}
+
+.cardCta {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--chess-purple);
+  margin-left: auto;
+  transition: transform 150ms ease;
+
+  .card:hover & {
+    transform: translateX(2px);
+  }
 }

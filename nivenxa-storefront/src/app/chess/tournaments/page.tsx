@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic' // always reflect the latest admin-verifi
 
 export default async function TournamentsPage() {
   const groups = await getPublicTournaments()
+  const hasTournaments = groups.some((group) => group.tournaments.length > 0)
 
   return (
     <main className={styles.page}>
@@ -20,11 +21,11 @@ export default async function TournamentsPage() {
           why someone came here, not this hero. Archive is demoted to a
           small text link below everything (see .pastLink at the bottom). */}
       <section className={styles.hero}>
-        <h1 className={styles.heading}>Chess Tournaments</h1>
+        <h1 className={styles.heading}>NIVENXA Chess Tournaments</h1>
         <p className={styles.subtext}>Upcoming tournaments, prizes and registration details.</p>
       </section>
 
-      <TournamentListing groups={groups} />
+      <TournamentListing groups={groups} archiveHref="/chess/tournaments/archive" />
 
       {/* Gallery only renders when there's at least one real photo — an
           empty "Photos will appear here soon" section advertised missing
@@ -32,11 +33,16 @@ export default async function TournamentsPage() {
           there's something to show. */}
       {galleryPhotos.length > 0 && <GallerySection photos={galleryPhotos} />}
 
-      <div className={styles.pastLinkRow}>
-        <Link href="/chess/tournaments/archive" className={styles.pastLink}>
-          Past Tournaments →
-        </Link>
-      </div>
+      {/* When there's nothing upcoming, TournamentListing's own empty state
+          already surfaces this same link right below its message — this
+          bottom-of-page copy would just repeat it after an empty page. */}
+      {hasTournaments && (
+        <div className={styles.pastLinkRow}>
+          <Link href="/chess/tournaments/archive" className={styles.pastLink}>
+            Past Tournaments →
+          </Link>
+        </div>
+      )}
     </main>
   )
 }

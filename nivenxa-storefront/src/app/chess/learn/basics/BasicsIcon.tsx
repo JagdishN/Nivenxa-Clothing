@@ -13,6 +13,11 @@ const SLUGS = [
   'check',
   'escaping-check',
   'checkmate',
+  'stalemate',
+  'castling',
+  'pawn-promotion',
+  'en-passant',
+  'ways-a-game-can-end',
   'mini-game',
 ] as const
 
@@ -340,6 +345,74 @@ export default function BasicsIcon({ slug, size }: { slug: BasicsIconSlug; size?
             <BlockedSquare angle={0} r={13} size={5.3} />
             <BlockedSquare angle={180} r={13} size={5.3} />
             <BlockedSquare angle={90} r={13} size={5.3} />
+          </>
+        )}
+
+        {/* Same King, same blocked destinations as Checkmate — deliberately
+            missing the incoming attack. That's the one visual difference
+            between the two: a trapped king with no attacker at all. */}
+        {slug === 'stalemate' && (
+          <>
+            <Piece glyph={KING} y={22} size={KING_FAMILY_SIZE} />
+            <BlockedSquare angle={0} r={13} size={5.3} />
+            <BlockedSquare angle={180} r={13} size={5.3} />
+            <BlockedSquare angle={90} r={13} size={5.3} />
+            <BlockedSquare angle={270} r={13} size={5.3} />
+          </>
+        )}
+
+        {/* King and Rook, with a short gold arrow between them standing in
+            for the castling move itself — a different pairing from every
+            other card, which is only ever one piece. */}
+        {slug === 'castling' && (
+          <>
+            <Piece glyph={KING} x={11} y={23} size={16} />
+            <Piece glyph={ROOK} x={23} y={23} size={16} />
+            <g className={styles.moveMarks} strokeWidth="2.4">
+              <line x1="15.5" y1="18" x2="19" y2="18" />
+            </g>
+          </>
+        )}
+
+        {/* The pawn, a short upward arrow, and the queen it becomes — the
+            transformation is the whole point, so both glyphs stay large
+            enough to read on their own, not shrunk to fit side by side. */}
+        {slug === 'pawn-promotion' && (
+          <>
+            <Piece glyph={PAWN} x={10} y={27} size={16} />
+            <Piece glyph={QUEEN} x={22} y={14} size={15} />
+            <g className={styles.moveMarks} strokeWidth="2.4">
+              <Arrow angle={315} from={5} to={11} head={2.6} />
+            </g>
+          </>
+        )}
+
+        {/* Two pawns side by side on the same rank (the en passant setup)
+            with a diagonal capture arrow — the captured pawn drawn fainter,
+            since it's the one about to be taken off the board. */}
+        {slug === 'en-passant' && (
+          <>
+            <Piece glyph={PAWN} x={11} y={23} size={17} />
+            <g opacity="0.45">
+              <Piece glyph={PAWN} x={22} y={23} size={17} />
+            </g>
+            <g className={styles.moveMarks} strokeWidth="2.4">
+              <Arrow angle={30} from={4.5} to={10} head={2.6} />
+            </g>
+          </>
+        )}
+
+        {/* A king beside a small flag — "the game is over," without
+            specifying which of the several ways it ended (deliberately not
+            another King-family attack/blocked variant, since this lesson
+            isn't about any one specific ending). */}
+        {slug === 'ways-a-game-can-end' && (
+          <>
+            <Piece glyph={KING} x={11} y={24} size={16} />
+            <g className={styles.moveMarks} strokeWidth="2.2">
+              <line x1="22" y1="10" x2="22" y2="25" />
+              <path d="M22 10 L28 12.5 L22 15 Z" fill="var(--chess-gold)" stroke="none" />
+            </g>
           </>
         )}
 

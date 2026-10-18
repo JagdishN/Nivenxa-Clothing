@@ -77,7 +77,7 @@
 
 // Same neutral dark tone as the base (non-emphasized) rule above, not the
 // purple accent — this board now has three possible themes, including a
-// purple one (dark squares ~#8c6bb1), where purple TEXT on purple SQUARES
+// purple one (dark squares ~#705080), where purple TEXT on purple SQUARES
 // is exactly the low-contrast pairing this whole coordinate-legibility
 // effort exists to avoid. The neutral tone + white halo combination is
 // theme-agnostic by construction; a specific accent color isn't.
@@ -146,15 +146,15 @@
 // three themes are self-contained and explicit, matching the exact hex
 // values shown in the picker's own preview swatches.
 .board_themeCream :global(cg-board) {
-  background: repeating-conic-gradient(#f0d9b5 0% 25%, #b58863 0% 50%) 0 0 / 25% 25%;
+  background: repeating-conic-gradient(#b58863 0% 25%, #f0d9b5 0% 50%) 0 0 / 25% 25%;
 }
 
 .board_themeGreen :global(cg-board) {
-  background: repeating-conic-gradient(#eeeed2 0% 25%, #769656 0% 50%) 0 0 / 25% 25%;
+  background: repeating-conic-gradient(#487451 0% 25%, #f4f5ee 0% 50%) 0 0 / 25% 25%;
 }
 
 .board_themePurple :global(cg-board) {
-  background: repeating-conic-gradient(#f1e8f7 0% 25%, #8c6bb1 0% 50%) 0 0 / 25% 25%;
+  background: repeating-conic-gradient(#705080 0% 25%, #f5eedc 0% 50%) 0 0 / 25% 25%;
 }
 
 // Chessground's default check highlight is a bright red radial glow — swapped

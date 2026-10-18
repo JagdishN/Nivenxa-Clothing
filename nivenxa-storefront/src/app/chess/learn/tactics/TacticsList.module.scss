@@ -33,16 +33,8 @@
   composes: recommendHeading from '../openings/OpeningsList.module.scss';
 }
 
-.recommendSubtext {
-  composes: recommendSubtext from '../openings/OpeningsList.module.scss';
-}
-
-.recommendLinks {
-  composes: recommendLinks from '../openings/OpeningsList.module.scss';
-}
-
 .recommendLink {
-  composes: recommendLink from '../openings/OpeningsList.module.scss';
+  composes: recommendChainLink from '../openings/OpeningsList.module.scss';
 }
 
 .group {
@@ -61,8 +53,32 @@
   composes: card from '../openings/OpeningsList.module.scss';
 }
 
+.cardTop {
+  composes: cardTop from '../openings/OpeningsList.module.scss';
+}
+
+.cardIcon {
+  composes: cardIcon from '../openings/OpeningsList.module.scss';
+}
+
+.cardNumber {
+  composes: cardNumber from '../openings/OpeningsList.module.scss';
+}
+
+.cardFooter {
+  composes: cardFooter from '../openings/OpeningsList.module.scss';
+}
+
+.cardCta {
+  composes: cardCta from '../openings/OpeningsList.module.scss';
+}
+
+// BUG FIX: composed from a class that doesn't exist in Openings either —
+// it's named .cardRecommended there. The first tactic card was meant to
+// get the same highlighted treatment Openings gives its own first
+// recommended card, but silently got no styling at all.
 .cardFirst {
-  composes: cardFirst from '../openings/OpeningsList.module.scss';
+  composes: cardRecommended from '../openings/OpeningsList.module.scss';
 }
 
 .cardTitle {

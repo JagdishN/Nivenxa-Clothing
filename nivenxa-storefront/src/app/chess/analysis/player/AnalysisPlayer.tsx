@@ -48,7 +48,7 @@ function mergeEntries(prev: QualityMoveEntry[], fresh: QualityMoveEntry[]): Qual
   })
 }
 
-export default function AnalysisPlayer() {
+export default function AnalysisPlayer({ isLoggedIn }: { isLoggedIn: boolean }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const gameId = searchParams.get('gameId')
@@ -58,6 +58,7 @@ export default function AnalysisPlayer() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const localIdRef = useRef<string>(typeof crypto !== 'undefined' ? crypto.randomUUID() : '')
   const startedRef = useRef(false)
+  const autoSavedRef = useRef(false)
 
   useEffect(() => {
     let cancelled = false
@@ -172,6 +173,22 @@ export default function AnalysisPlayer() {
     })
     setSaveStatus(result.error ? 'error' : 'saved')
   }
+
+  // Logged-in users get their Nivenxa Play games saved automatically — no
+  // manual click needed, since this is the one source where "I just played
+  // this on Nivenxa" is unambiguous (unlike a pasted/imported game, which
+  // stays manual-save so an idly-explored PGN doesn't clutter My Games).
+  // Fires once, after the engine pass finishes, so the first save already
+  // carries real analysis/accuracy rather than an empty placeholder — a
+  // reopened saved game (loaded.savedId set) never re-triggers this.
+  useEffect(() => {
+    if (!isLoggedIn || autoSavedRef.current) return
+    if (!loaded || loaded.savedId || loaded.game.source !== 'nivenxa-play') return
+    if (progress < 1) return
+    autoSavedRef.current = true
+    handleSave()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handleSave closes over current game/entries; re-running this on every one of its own re-creations would defeat the "fires once" intent
+  }, [isLoggedIn, loaded, progress])
 
   if (loaded === undefined) return null
   if (!loaded || !game) {

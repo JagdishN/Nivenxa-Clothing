@@ -16,8 +16,8 @@ export default async function TournamentArchivePage() {
 
       <section className={styles.hero}>
         <p className={styles.eyebrow}>NIVENXA CHESS ARCHIVE</p>
-        <h1 className={styles.heading}>Completed Nivenxa tournaments.</h1>
-        <p className={styles.subtext}>A record of every Nivenxa-organized tournament that&rsquo;s already taken place.</p>
+        <h1 className={styles.heading}>Past tournaments</h1>
+        <p className={styles.subtext}>A look back at NIVENXA&rsquo;s past tournaments.</p>
       </section>
 
       <TournamentListing groups={groups} />

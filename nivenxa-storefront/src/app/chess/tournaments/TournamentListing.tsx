@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import type { ChessTournament, TournamentGroup } from '@/lib/chess/types'
-import { formatDateRange } from '@/lib/chess/tournamentFormat'
+import { formatDateRange, roundsVaryAcrossCategories } from '@/lib/chess/tournamentFormat'
 import styles from './Tournaments.module.scss'
 
 /**
@@ -150,17 +150,36 @@ function TournamentCard({ tournament }: { tournament: ChessTournament }) {
         .filter(Boolean)
     : []
 
+  // Same compact, normal-weight treatment as the detail page — date + entry
+  // fee/prize pool/time control/rounds on one wrapping line, venue on its
+  // own line underneath. Each separator is folded into its own item's text
+  // so a wrap can only ever land between complete items.
+  const metaParts: string[] = []
+  if (tournament.entryFee) metaParts.push(`Entry fee: ${tournament.entryFee}`)
+  if (tournament.prizePool) metaParts.push(`Prize pool: ${tournament.prizePool.label}`)
+  if (tournament.timeControl !== 'Unknown') metaParts.push(tournament.timeControl)
+  // See [id]/page.tsx — the single tournament-wide format string can't
+  // speak for a category that ran a different number of rounds, so this
+  // states that plainly rather than pairing a specific round count with a
+  // contradicting caveat.
+  if (tournament.format !== 'Unknown') {
+    metaParts.push(roundsVaryAcrossCategories(tournament.results) ? 'Rounds vary by category' : tournament.format)
+  }
+
+  const isCompleted = tournament.lifecycleStatus === 'completed'
+
   return (
     <article className={styles.card}>
       <div className={styles.cardTop}>
-        <h3 className={styles.cardTitle}>{tournament.title}</h3>
-        {/* Who's running it, not just that someone verified it — "✓
-            Verified organizer" on its own left the actual organizer name
-            unstated, which is the more important fact. */}
-        <p className={styles.cardOrganizer}>
-          {tournament.organizer.verified && <span aria-hidden="true">✓ </span>}
-          Organized by {tournament.organizer.name}
-        </p>
+        {/* Completed sits right beside the title — same place the detail
+            page puts it — so a parent scanning the Archive sees at a
+            glance that this already happened, in the very first thing
+            they read, not partway down the card. */}
+        <div className={styles.detailTitleRow}>
+          <h3 className={styles.cardTitle}>{tournament.title}</h3>
+          {isCompleted && <span className={styles.statusBadge}>Completed</span>}
+        </div>
+        <p className={styles.cardOrganizer}>Organized by {tournament.organizer.name}</p>
       </div>
 
       <div className={styles.cardMetaRow}>
@@ -170,6 +189,16 @@ function TournamentCard({ tournament }: { tournament: ChessTournament }) {
           </span>
           {formatDateRange(tournament)}
         </span>
+        {metaParts.map((part) => (
+          <span key={part} className={styles.cardMetaItem}>
+            <span className={styles.metaDot} aria-hidden="true">
+              /
+            </span>
+            {part}
+          </span>
+        ))}
+      </div>
+      <div className={styles.cardMetaRow}>
         <span className={styles.cardMetaItem}>
           <span className={styles.cardMetaIcon} aria-hidden="true">
             📍
@@ -184,7 +213,11 @@ function TournamentCard({ tournament }: { tournament: ChessTournament }) {
         </span>
       </div>
 
-      {categories.length > 0 && (
+      {/* Age/skill categories — secondary context for choosing between
+          events on this listing. Dropped for a completed tournament: its
+          card already links straight to Results, which says the same
+          thing with actual standings instead of a bare list of names. */}
+      {!isCompleted && categories.length > 0 && (
         <div className={styles.cardCategories}>
           {categories.map((c) => (
             <span key={c} className={styles.categoryPill}>
@@ -194,45 +227,30 @@ function TournamentCard({ tournament }: { tournament: ChessTournament }) {
         </div>
       )}
 
-      <div className={styles.cardStats}>
-        {tournament.entryFee && (
-          <div className={styles.cardStat}>
-            <span className={styles.cardStatValue}>{tournament.entryFee}</span>
-            <span className={styles.cardStatLabel}>Entry Fee</span>
+      {/* Register/Payment QR only make sense while a tournament is still
+          open to enter — a completed or cancelled event (the Archive page)
+          has nothing left to register or pay for. */}
+      {(() => {
+        const isOpenForEntry = tournament.lifecycleStatus === 'live' || tournament.lifecycleStatus === 'upcoming'
+        return (
+          <div className={styles.cardActions}>
+            <Link href={`/chess/tournaments/${tournament.id}`} className={styles.viewDetailsBtn}>
+              {/* "View Results" only once there's something to view — a
+                  completed tournament with no results entered yet still
+                  says "View Details" rather than promising standings that
+                  aren't there. */}
+              {isCompleted && tournament.results && tournament.results.length > 0 ? 'View Results' : 'View Details'}
+            </Link>
+            {isOpenForEntry && <RegisterAction tournament={tournament} />}
+            {isOpenForEntry && <PaymentInfo tournament={tournament} />}
           </div>
-        )}
-        {tournament.prizePool && (
-          <div className={styles.cardStat}>
-            <span className={styles.cardStatValue}>{tournament.prizePool.label}</span>
-            <span className={styles.cardStatLabel}>Prize Pool</span>
-          </div>
-        )}
-        {tournament.timeControl !== 'Unknown' && (
-          <div className={styles.cardStat}>
-            <span className={styles.cardStatValue}>{tournament.timeControl}</span>
-            <span className={styles.cardStatLabel}>Time Control</span>
-          </div>
-        )}
-        {tournament.format !== 'Unknown' && (
-          <div className={styles.cardStat}>
-            <span className={styles.cardStatValue}>{tournament.format}</span>
-            <span className={styles.cardStatLabel}>Format</span>
-          </div>
-        )}
-      </div>
-
-      <div className={styles.cardActions}>
-        <Link href={`/chess/tournaments/${tournament.id}`} className={styles.viewDetailsBtn}>
-          View Details
-        </Link>
-        <RegisterAction tournament={tournament} />
-        <PaymentInfo tournament={tournament} />
-      </div>
+        )
+      })()}
     </article>
   )
 }
 
-export default function TournamentListing({ groups }: { groups: TournamentGroup[] }) {
+export default function TournamentListing({ groups, archiveHref }: { groups: TournamentGroup[]; archiveHref?: string }) {
   // An empty group (e.g. "Live Now" with nothing live right now) is dropped
   // entirely rather than rendered with its own "nothing here" copy — a
   // parent scanning the page should land straight on real tournaments, not
@@ -242,8 +260,19 @@ export default function TournamentListing({ groups }: { groups: TournamentGroup[
   if (!visibleGroups.length) {
     return (
       <section className={styles.emptyState}>
-        <h2 className={styles.groupTitle}>No tournaments ready yet</h2>
-        <p className={styles.emptyText}>The calendar only shows events that pass Nivenxa Chess validation.</p>
+        <h2 className={styles.groupTitle}>No upcoming tournaments announced</h2>
+        <p className={styles.emptyText}>Our next tournament will appear here. Explore our past events below.</p>
+        {/* archiveHref is only passed on the main listing page (pointing at
+            the Archive) — the Archive page itself renders this same empty
+            state when it has nothing, and a "see past events" link there
+            would point right back at the page already open. */}
+        {archiveHref && (
+          <div className={styles.emptyStateCta}>
+            <Link href={archiveHref} className={styles.archiveLink}>
+              Past Tournaments →
+            </Link>
+          </div>
+        )}
       </section>
     )
   }
@@ -251,10 +280,16 @@ export default function TournamentListing({ groups }: { groups: TournamentGroup[
   return (
     <div className={styles.groups}>
       {visibleGroups.map((group) => (
-        <section key={group.status} className={styles.group} aria-labelledby={`${group.status}-heading`}>
-          <h2 id={`${group.status}-heading`} className={styles.groupTitle}>
-            {group.label}
-          </h2>
+        <section key={group.status} className={styles.group} aria-labelledby={group.label ? `${group.status}-heading` : undefined}>
+          {/* The Archive page's own h1 already says "Past tournaments" — a
+              second "Completed" heading directly beneath it for the one and
+              only group on that page was pure repetition (see
+              getNivenxaArchiveTournaments, which now passes an empty label). */}
+          {group.label && (
+            <h2 id={`${group.status}-heading`} className={styles.groupTitle}>
+              {group.label}
+            </h2>
+          )}
 
           <div className={styles.cardGrid}>
             {group.tournaments.map((tournament) => (

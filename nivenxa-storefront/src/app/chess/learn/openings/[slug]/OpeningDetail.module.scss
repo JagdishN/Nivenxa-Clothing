@@ -1,13 +1,15 @@
-// Deliberately NOT composing ChessTheme's `pageBackground` (the heavy
-// multi-radial-gradient purple wash) — this page is one board + one panel,
-// and needs a quiet, mostly neutral ground so those two things carry the
-// visual weight instead of competing with a busy backdrop. Purple stays,
-// just reserved for accents (buttons, active states, the board's own frame).
+// Matches every other Learn section now (Basics, Endgames, Rules, Tactics'
+// own detail page, and the top /chess/learn catalogue all already compose
+// this same background) — this used to be a deliberately plain, neutral
+// white specifically for Openings, reasoned as "a board+panel page needs a
+// quiet ground." That reasoning didn't actually hold up: Basics' own lesson
+// pages are also board+panel and use this background anyway, so the
+// difference just read as an inconsistency between sections rather than a
+// considered exception.
 .page {
+  composes: pageBackground from '../../../ChessTheme.module.scss';
   min-height: 100vh;
-  // --chess-white-soft (not --chess-ice, which is a noticeably lavender-tinted
-  // off-white) — as close to a clean neutral as the existing palette gets.
-  background: var(--chess-white-soft);
+  position: relative;
 }
 
 .hero {

@@ -8,7 +8,11 @@
   flex: 0 0 auto;
   // ~8% larger than the panel's original 460px — the board is the primary
   // learning object here and deserves slightly more visual weight.
-  width: min(90vw, 500px);
+  // --learn-workspace-h (set by TacticDetail.tsx, measuring the real space
+  // below this element) caps it to whatever actually fits on screen — the
+  // 500px fallback is exactly the old unconditional value, so any page that
+  // never sets the var (Openings, Rules) renders pixel-identical to before.
+  width: min(90vw, var(--learn-workspace-h, 500px), 500px);
 }
 
 .boardWrap {
@@ -23,6 +27,12 @@
   flex: 1 1 340px;
   min-width: 0;
   max-width: 480px;
+  // Unset (none) by default — identical to before for any page that never
+  // sets --learn-workspace-h. Where it IS set (Tactics), this stops a long
+  // panel from pushing the page past the viewport on its own, the same way
+  // the board itself is now capped above.
+  max-height: var(--learn-workspace-h, none);
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
@@ -34,6 +44,7 @@
   @include v.max-lg {
     width: min(92vw, 460px);
     max-width: none;
+    max-height: none;
   }
 }
 

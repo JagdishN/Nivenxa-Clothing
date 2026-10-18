@@ -5,6 +5,7 @@
 // inline per-function directive doesn't survive once a file is also pulled
 // into the client bundle.
 import { getSupabaseAdmin } from './supabase'
+import { getChessSession } from './chessAuth'
 import { gameNeedsVerification } from './analysisTypes'
 import type { GameSource, NormalizedGame, NormalizedMove } from './analysisTypes'
 import type { QualityMoveEntry } from './types'
@@ -86,9 +87,10 @@ export interface SaveAnalysisGameInput {
   accuracyBlack?: number
 }
 
-/** Upserts on (owner_id, local_id) — calling this again for the same reconstruction (Verify, then Game Summary) updates the same row rather than duplicating it. */
+/** Upserts on (owner_id, local_id) — calling this again for the same reconstruction (Verify, then Game Summary) updates the same row rather than duplicating it. Also attaches the logged-in user's id when a session exists (from the server, never a client-supplied value), so the game shows up in that account's My Games regardless of which browser saved it. */
 export async function saveAnalysisGame(input: SaveAnalysisGameInput): Promise<{ id?: string; error?: string }> {
   if (!input.ownerId) return { error: 'Missing owner id' }
+  const session = await getChessSession()
 
   const supabase = getSupabaseAdmin()
   const { data, error } = await supabase
@@ -96,6 +98,7 @@ export async function saveAnalysisGame(input: SaveAnalysisGameInput): Promise<{ 
     .upsert(
       {
         owner_id: input.ownerId,
+        user_id: session?.userId ?? null,
         local_id: input.localId,
         source: input.game.source,
         white: input.game.metadata.white ?? null,
@@ -122,16 +125,19 @@ export async function saveAnalysisGame(input: SaveAnalysisGameInput): Promise<{ 
   return { id: data.id }
 }
 
+/** Logged in: scoped to the account (session.userId), across any browser. Guest: falls back to the browser-local ownerId, same as before auth existed. */
 export async function listMyGames(ownerId: string): Promise<AnalysisGameSummary[]> {
-  if (!ownerId) return []
+  const session = await getChessSession()
+  if (!session && !ownerId) return []
 
   const supabase = getSupabaseAdmin()
-  const { data, error } = await supabase
+  let query = supabase
     .from('analysis_games')
     .select('id, source, white, black, event, played_on, result, move_count, accuracy_white, accuracy_black, analysis, created_at')
-    .eq('owner_id', ownerId)
     .order('created_at', { ascending: false })
+  query = session ? query.eq('user_id', session.userId) : query.eq('owner_id', ownerId)
 
+  const { data, error } = await query
   if (error) {
     console.error('listMyGames: select failed —', error.message)
     return []
@@ -143,11 +149,15 @@ export async function loadAnalysisGame(
   ownerId: string,
   id: string
 ): Promise<{ game: NormalizedGame; analysis: QualityMoveEntry[] | null } | null> {
-  if (!ownerId || !id) return null
+  if (!id) return null
+  const session = await getChessSession()
+  if (!session && !ownerId) return null
 
   const supabase = getSupabaseAdmin()
-  const { data, error } = await supabase.from('analysis_games').select('*').eq('owner_id', ownerId).eq('id', id).maybeSingle()
+  let query = supabase.from('analysis_games').select('*').eq('id', id)
+  query = session ? query.eq('user_id', session.userId) : query.eq('owner_id', ownerId)
 
+  const { data, error } = await query.maybeSingle()
   if (error || !data) {
     if (error) console.error('loadAnalysisGame: select failed —', error.message)
     return null
@@ -157,11 +167,15 @@ export async function loadAnalysisGame(
 }
 
 export async function deleteAnalysisGame(ownerId: string, id: string): Promise<{ error?: string }> {
-  if (!ownerId || !id) return { error: 'Missing owner id or game id' }
+  if (!id) return { error: 'Missing game id' }
+  const session = await getChessSession()
+  if (!session && !ownerId) return { error: 'Missing owner id' }
 
   const supabase = getSupabaseAdmin()
-  const { error } = await supabase.from('analysis_games').delete().eq('owner_id', ownerId).eq('id', id)
+  let query = supabase.from('analysis_games').delete().eq('id', id)
+  query = session ? query.eq('user_id', session.userId) : query.eq('owner_id', ownerId)
 
+  const { error } = await query
   if (error) {
     console.error('deleteAnalysisGame: delete failed —', error.message)
     return { error: 'Failed to delete game' }
@@ -183,11 +197,18 @@ export async function savePracticePosition(input: {
   sourceGameId?: string
 }): Promise<{ id?: string; error?: string }> {
   if (!input.ownerId) return { error: 'Missing owner id' }
+  const session = await getChessSession()
 
   const supabase = getSupabaseAdmin()
   const { data, error } = await supabase
     .from('analysis_practice_positions')
-    .insert({ owner_id: input.ownerId, fen: input.fen, note: input.note ?? null, source_game_id: input.sourceGameId ?? null })
+    .insert({
+      owner_id: input.ownerId,
+      user_id: session?.userId ?? null,
+      fen: input.fen,
+      note: input.note ?? null,
+      source_game_id: input.sourceGameId ?? null,
+    })
     .select('id')
     .single()
 
@@ -198,16 +219,16 @@ export async function savePracticePosition(input: {
   return { id: data.id }
 }
 
+/** Logged in: scoped to the account, across any browser. Guest: falls back to the browser-local ownerId. */
 export async function listMyPuzzles(ownerId: string): Promise<PracticePosition[]> {
-  if (!ownerId) return []
+  const session = await getChessSession()
+  if (!session && !ownerId) return []
 
   const supabase = getSupabaseAdmin()
-  const { data, error } = await supabase
-    .from('analysis_practice_positions')
-    .select('id, fen, note, created_at')
-    .eq('owner_id', ownerId)
-    .order('created_at', { ascending: false })
+  let query = supabase.from('analysis_practice_positions').select('id, fen, note, created_at').order('created_at', { ascending: false })
+  query = session ? query.eq('user_id', session.userId) : query.eq('owner_id', ownerId)
 
+  const { data, error } = await query
   if (error) {
     console.error('listMyPuzzles: select failed —', error.message)
     return []
@@ -221,11 +242,15 @@ export async function listMyPuzzles(ownerId: string): Promise<PracticePosition[]
 }
 
 export async function deletePracticePosition(ownerId: string, id: string): Promise<{ error?: string }> {
-  if (!ownerId || !id) return { error: 'Missing owner id or position id' }
+  if (!id) return { error: 'Missing position id' }
+  const session = await getChessSession()
+  if (!session && !ownerId) return { error: 'Missing owner id' }
 
   const supabase = getSupabaseAdmin()
-  const { error } = await supabase.from('analysis_practice_positions').delete().eq('owner_id', ownerId).eq('id', id)
+  let query = supabase.from('analysis_practice_positions').delete().eq('id', id)
+  query = session ? query.eq('user_id', session.userId) : query.eq('owner_id', ownerId)
 
+  const { error } = await query
   if (error) {
     console.error('deletePracticePosition: delete failed —', error.message)
     return { error: 'Failed to delete position' }
