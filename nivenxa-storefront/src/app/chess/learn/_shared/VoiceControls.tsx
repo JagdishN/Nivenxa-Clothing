@@ -31,9 +31,11 @@ export default function VoiceControls({
   rate,
   listening,
   showHintControls,
+  autoplay,
   onToggleVoice,
   onSetRate,
   onReplay,
+  onWatchAgain,
   onHint,
   onShowMe,
   onMicStart,
@@ -45,9 +47,13 @@ export default function VoiceControls({
   rate: SpeechRate
   listening: boolean
   showHintControls: boolean
+  /** StepThroughPanel's autoplay loop only — omitted by every other caller (TacticPuzzleSet, and anything with nothing to auto-advance through). */
+  autoplay?: { playing: boolean; onToggle: () => void }
   onToggleVoice: () => void
   onSetRate: (rate: SpeechRate) => void
   onReplay: () => void
+  /** Restarts the whole demonstration from the top (re-teaching the concept, then the moves) — StepThroughPanel's "Watch example again," omitted elsewhere. */
+  onWatchAgain?: () => void
   onHint: () => void
   onShowMe: () => void
   onMicStart: () => void
@@ -94,9 +100,19 @@ export default function VoiceControls({
       <div className={styles.divider} aria-hidden="true" />
 
       <div className={styles.group} aria-label="Lesson help">
+        {autoplay && (
+          <button type="button" className={styles.voiceBtn} onClick={autoplay.onToggle}>
+            {autoplay.playing ? '⏸ Pause' : '▶ Play'}
+          </button>
+        )}
         <button type="button" className={styles.voiceBtn} onClick={onReplay}>
           🔁 Replay
         </button>
+        {onWatchAgain && (
+          <button type="button" className={styles.voiceBtn} onClick={onWatchAgain}>
+            ↺ Watch example again
+          </button>
+        )}
         {showHintControls && (
           <>
             <button type="button" className={styles.voiceBtn} onClick={onHint}>

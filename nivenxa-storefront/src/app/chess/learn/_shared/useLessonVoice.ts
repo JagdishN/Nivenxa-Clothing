@@ -32,6 +32,14 @@ const COMMAND_PATTERNS: [VoiceCommand, RegExp][] = [
   ['next', /next/],
 ]
 
+// Roughly 200 words/minute, with a floor so even a short "This is check."
+// still gets a moment — used to pace autoplay (StepThroughPanel.tsx) when
+// voice is muted/unsupported and there's no real utterance to wait out.
+export function estimateReadingMs(text: string): number {
+  const words = text.trim().split(/\s+/).filter(Boolean).length
+  return Math.max(1200, Math.round((words / 200) * 60000))
+}
+
 export function parseVoiceCommand(transcript: string): VoiceCommand | null {
   const text = transcript.toLowerCase()
   for (const [command, pattern] of COMMAND_PATTERNS) {
@@ -107,9 +115,20 @@ export function useLessonVoice() {
   // speech when changing lessons or replaying" by construction, since every
   // path to new speech (Replay, Hint, Show Me, the step-entry auto-speak, a
   // spoken command) goes through this one function.
+  //
+  // `onEnd`, when passed, fires once this utterance finishes — lets a caller
+  // (StepThroughPanel.tsx's autoplay) chain "wait for narration, then pause
+  // N seconds" without polling `speaking`. When voice is muted/unsupported
+  // (or `text` is empty) there's no utterance to wait on, so `onEnd` instead
+  // fires after `estimateReadingMs(text)` — "preserve enough reading time
+  // when sound is off" as a property of this hook, not every caller's own
+  // problem to solve.
   const speak = useCallback(
-    (text: string) => {
-      if (!supported || muted || !text) return
+    (text: string, onEnd?: () => void) => {
+      if (!supported || muted || !text) {
+        if (onEnd) setTimeout(onEnd, estimateReadingMs(text))
+        return
+      }
       window.speechSynthesis.cancel()
       // Visible step copy uses a lightweight **bold** convention (see
       // BoardLesson.tsx/PieceLesson.tsx's renderEmphasis) — now that
@@ -118,8 +137,14 @@ export function useLessonVoice() {
       const utterance = new SpeechSynthesisUtterance(text.replace(/\*\*/g, ''))
       utterance.rate = RATE_VALUES[rate]
       utterance.onstart = () => setSpeaking(true)
-      utterance.onend = () => setSpeaking(false)
-      utterance.onerror = () => setSpeaking(false)
+      utterance.onend = () => {
+        setSpeaking(false)
+        onEnd?.()
+      }
+      utterance.onerror = () => {
+        setSpeaking(false)
+        onEnd?.()
+      }
       window.speechSynthesis.speak(utterance)
     },
     [supported, muted, rate]

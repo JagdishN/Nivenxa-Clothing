@@ -51,7 +51,7 @@ export const ENDGAMES: Endgame[] = [
   {
     slug: 'basic-checkmates',
     name: 'Basic Checkmates',
-    description: 'The two simplest forced checkmates — king and queen versus king, and king and rook versus king — every player needs to know cold.',
+    description: 'Learn to checkmate with a king and queen, or a king and rook.',
     examples: [
       {
         label: 'King and Queen vs King',

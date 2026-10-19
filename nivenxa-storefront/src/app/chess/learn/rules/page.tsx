@@ -15,14 +15,16 @@ export default function ChessLearnRulesPage() {
     <main className={styles.page}>
       <section className={styles.hero}>
         <Link href="/chess/learn" className={styles.breadcrumb}>
-          ← Learn
+          ← Back to Learn
         </Link>
         <h1 className={styles.heading}>Rules</h1>
-        <p className={styles.subtext}>A simplified guide to how chess is actually played and arbitrated, including the clock.</p>
+        <p className={styles.subtext}>Learn special moves, draw rules and how to use a chess clock.</p>
       </section>
 
-      <div className={styles.group}>
-        <p className={styles.groupHeading}>Rules</p>
+      {/* No groupHeading here — it used to say "Rules", repeating the <h1>
+          above. .groupFirst supplies the header-to-cards gap that heading's
+          own margin used to provide. */}
+      <div className={`${styles.group} ${styles.groupFirst}`}>
         <div className={styles.grid}>
           {illustrated.map((rule, i) => (
             <Link key={rule.slug} href={`/chess/learn/rules/${rule.slug}`} className={styles.card}>

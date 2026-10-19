@@ -58,6 +58,8 @@ export const TACTIC_DIFFICULTY_EMOJI: Record<TacticDifficulty, string> = {
 }
 
 export interface TacticExample {
+  /** Shown on the Example tab (e.g. "Bishop check") when a tactic has more than one example — falls back to "Example N" when omitted. */
+  label?: string
   /** Starting FEN for this example. */
   fen: string
   /** SAN moves, in order, matching the string form chess.js's `.move()` accepts directly. */
@@ -70,6 +72,10 @@ export interface TacticExample {
   stepHighlights?: (string | string[] | undefined)[]
   /** [from, to] arrow to draw per move, aligned by index with `moves`. */
   stepArrows?: ([string, string] | undefined)[]
+  /** Overrides the generic "Watch how this works, one move at a time." at step 0 — for teaching what a position already shows (e.g. a pin already on the board) before the first move plays. */
+  startDescription?: string
+  /** Square(s) to circle at step 0 — alongside `startDescription`, before any move has been played. */
+  startHighlights?: string[]
 }
 
 /** One "find the move" puzzle — a single decision, no scripted follow-up. */
@@ -77,6 +83,17 @@ export interface TacticPuzzle {
   fen: string
   correctFrom: string
   correctTo: string
+  /** Shown instead of the tactic-wide `prompt` when a puzzle's own goal differs from the others — e.g. Attack & Capture mixing capture puzzles with attack-only ones. */
+  objective?: string
+  /** Accepts any legal move satisfying this property, not just `correctFrom`/`correctTo` exactly — see TacticPuzzleConfig in TacticPuzzleSet.tsx. */
+  acceptAnyMoveThat?:
+    | 'givesCheck'
+    | 'createsFork'
+    | 'skewers'
+    | 'createsDoubleAttack'
+    | 'capturesHangingPiece'
+    | 'deliversCheckmate'
+    | 'givesDoubleCheck'
 }
 
 export interface Tactic {
@@ -127,12 +144,18 @@ export const TACTICS: Tactic[] = [
         // is demonstrated, not just claimed, before "Your Turn" hands the
         // exact same capture back to the learner to play themselves.
         fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+        // Text-only, deliberately no `startHighlights` — this example opens
+        // from the standard starting position, where nothing is hanging yet
+        // (that's the point: the position earns its hanging piece a few
+        // moves in). There's nothing on-topic to circle before move one.
+        startDescription:
+          "A hanging piece is one that can be captured for free — nothing defends it.\nMany different captures can win a hanging piece, not just one exact square. Here's one way it happens:",
         moves: ['e4', 'Nc6', 'Nf3', 'Nd4', 'Nxd4'],
         stepExplanations: [
           'White moves a pawn to the middle.',
           'Black brings out a knight.',
           'White brings out a knight.',
-          "Black's knight has moved here.\nOur knight can capture it.",
+          "Black's knight has moved to d4.\nOur knight can capture it.",
           'After the capture, Black cannot take our knight back.\nWe win a knight — without losing ours.',
         ],
         stepReveal: [undefined, undefined, undefined, undefined, 'This is called a hanging piece.'],
@@ -158,7 +181,7 @@ export const TACTICS: Tactic[] = [
           undefined,
           undefined,
           undefined,
-          "Capturing here only trades knights — it doesn't win one, because e5 defends d4.",
+          "Capturing on d4 only trades knights — it doesn't win one, because e5 defends d4.",
         ],
         stepHighlights: [undefined, undefined, undefined, undefined, undefined, ['d4', 'e5']],
         stepArrows: [undefined, undefined, undefined, undefined, undefined, ['e5', 'd4']],
@@ -172,152 +195,318 @@ export const TACTICS: Tactic[] = [
     // string here was wrong on 3 of 4 puzzles.
     wrongText: "Let's look again. Which black piece can your {yourPiece} capture?",
     correctText: 'You won a {capturedPiece}! Black cannot capture your {yourPiece} back.',
+    // REVIEW: "capture the hanging piece" means any safe capture, not just
+    // this one square — `acceptAnyMoveThat: 'capturesHangingPiece'`
+    // (TacticPuzzleSet.tsx) checks that the move is a capture AND nothing
+    // can recapture on that square, rather than requiring this exact move.
+    // Verified via chess.js: each of these 4 positions has exactly one
+    // capturable piece anyway, so behavior is unchanged in practice — the
+    // check is now for the right reason.
     puzzles: [
       // Continues the exact position just demonstrated — "capture the
       // hanging knight" is the learner's literal next action, not a jump
       // to an unrelated position. Verified via chess.js: this is the FEN
       // after e4 Nc6 Nf3 Nd4, and Nxd4 (f3-d4) is legal with no black
       // recapture available.
-      { fen: 'r1bqkbnr/pppppppp/8/8/3nP3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 3 3', correctFrom: 'f3', correctTo: 'd4' },
-      { fen: 'k7/8/r7/8/8/8/8/Q6K w - - 0 1', correctFrom: 'a1', correctTo: 'a6' },
-      { fen: '7k/8/8/4b3/8/8/8/4R2K w - - 0 1', correctFrom: 'e1', correctTo: 'e5' },
-      { fen: '7k/8/8/8/3n4/8/8/B6K w - - 0 1', correctFrom: 'a1', correctTo: 'd4' },
+      {
+        fen: 'r1bqkbnr/pppppppp/8/8/3nP3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 3 3',
+        correctFrom: 'f3',
+        correctTo: 'd4',
+        acceptAnyMoveThat: 'capturesHangingPiece',
+      },
+      { fen: 'k7/8/r7/8/8/8/8/Q6K w - - 0 1', correctFrom: 'a1', correctTo: 'a6', acceptAnyMoveThat: 'capturesHangingPiece' },
+      { fen: '7k/8/8/4b3/8/8/8/4R2K w - - 0 1', correctFrom: 'e1', correctTo: 'e5', acceptAnyMoveThat: 'capturesHangingPiece' },
+      { fen: '7k/8/8/8/3n4/8/8/B6K w - - 0 1', correctFrom: 'a1', correctTo: 'd4', acceptAnyMoveThat: 'capturesHangingPiece' },
     ],
   },
+  // REVIEW: puzzles 2 and 3 used to ask the learner to move a rook/bishop
+  // straight onto the black king's own square — chess.js's move generator
+  // doesn't special-case "never target the enemy king", so against a
+  // starting FEN where the king was already (illegally) sitting in that
+  // piece's line of attack, it accepted the move AND reported it as a
+  // capture (`captured: 'k'`) — confirmed via chess.js before this fix, and
+  // a real, release-blocking bug: kings are never captured in legal chess.
+  // Every FEN/move below is freshly verified: the starting position never
+  // has Black already in check, and the "correct" move always lands on an
+  // empty square that attacks the king, never the king's own square.
   {
     slug: 'checks',
     name: 'Checks',
     themeTag: 'check',
-    description: 'A move that attacks the king is called check — the king must answer right away.',
+    description: 'Check means the king is under attack. The player must make it safe.',
     summary: 'Find moves that attack the king.',
     difficulty: 'start',
     examples: [
       {
+        label: 'Rook check',
         fen: '3k4/8/8/8/8/8/8/R3K3 w - - 0 1',
+        startDescription:
+          "Check means the king is under attack.\nThe player whose king is attacked must make it safe right away.\nMany different pieces can give check — here's one way to do it:",
+        startHighlights: ['a1', 'd8'],
         moves: ['Ra8+', 'Kd7'],
-        stepExplanations: ['White moves the rook to attack the king.', 'Black must move the king to safety.'],
+        stepExplanations: [
+          "Watch our rook move to a8.\nNow it attacks the black king. That's check!\nWe do not capture the king — Black must make it safe.",
+          'Black moves the king to safety. That\'s one way to answer check — sometimes a piece can block the attack or capture the checking piece instead.',
+        ],
         stepReveal: ['This is called check.', undefined],
       },
+      {
+        label: 'Bishop check',
+        fen: '7k/8/8/8/8/8/8/2B4K w - - 0 1',
+        moves: ['Bb2+'],
+        stepExplanations: ["Watch our bishop move to b2.\nNow it attacks the black king along the diagonal. That's check!"],
+        stepReveal: ['A bishop gives check along a diagonal line.'],
+      },
+      {
+        label: 'Knight check',
+        fen: '8/8/4k3/8/8/5N2/8/7K w - - 0 1',
+        moves: ['Ng5+'],
+        stepExplanations: ["Watch our knight jump to g5.\nNow it attacks the black king. That's check!"],
+        stepReveal: ["A knight can give check with its L-shaped jump — even without a straight line to the king."],
+      },
     ],
-    completionSummary: ['You can now find moves that attack the king.'],
+    completionSummary: [
+      'You can now find moves that attack the king.',
+      'A check never captures the king — the other player must make it safe, by moving it, blocking the attack, or capturing the checking piece.',
+    ],
     prompt: 'Can you find a move that gives check?',
     wrongText: 'Not quite. Look for a move that attacks the king.',
-    correctText: 'That move attacks the king.',
+    // {attackDescription} names the actual geometry (row/column/diagonal,
+    // or "from {square}" for a knight) so this reads differently for each
+    // of the 3 puzzles below, instead of one generic "attacks the king".
+    correctText: 'Check! Your {yourPiece} attacks the king {attackDescription}.',
+    // REVIEW: any legal move that gives check is a correct answer to
+    // "find a move that gives check" — not just the one piece demonstrated.
+    // `acceptAnyMoveThat: 'givesCheck'` (TacticPuzzleSet.tsx) checks the
+    // actual property instead of one fixed square; `correctFrom`/
+    // `correctTo` still serve as the Hint/Show Me-demonstrated move.
     puzzles: [
-      { fen: '3k4/8/8/8/8/8/8/R3K3 w - - 0 1', correctFrom: 'a1', correctTo: 'a8' },
-      { fen: '4k3/8/8/8/8/8/8/4R2K w - - 0 1', correctFrom: 'e1', correctTo: 'e8' },
-      { fen: '7k/8/8/8/8/8/8/B6K w - - 0 1', correctFrom: 'a1', correctTo: 'h8' },
+      { fen: '3k4/8/8/8/8/8/8/R3K3 w - - 0 1', correctFrom: 'a1', correctTo: 'a8', acceptAnyMoveThat: 'givesCheck' },
+      { fen: '7k/8/8/8/8/8/8/2B4K w - - 0 1', correctFrom: 'c1', correctTo: 'b2', acceptAnyMoveThat: 'givesCheck' },
+      { fen: '8/8/4k3/8/8/5N2/8/7K w - - 0 1', correctFrom: 'f3', correctTo: 'g5', acceptAnyMoveThat: 'givesCheck' },
     ],
   },
+  // REVIEW: this tactic's prompt ("attack or capture") and summary promised
+  // two distinct ideas, but every example and puzzle was a capture — a
+  // learner had no way to tell the two apart, or even know attacking
+  // without capturing was a legitimate answer. Rebuilt with a dedicated
+  // non-capturing "Attack" example and an attack-only puzzle alongside the
+  // original captures, each verified via chess.js (not a check, not an
+  // accidental capture, nothing blocking the line).
   {
     slug: 'attack-and-capture',
     name: 'Attack & Capture',
     themeTag: 'attackCapture',
-    description: 'Sometimes the tactic is simply spotting a piece you can attack or capture right now.',
+    description: 'An attack threatens a piece. A capture takes that piece off the board.',
     summary: 'Find a piece you can attack or take.',
     difficulty: 'start',
     examples: [
       {
+        // REVIEW: this used to open with "An attack threatens a piece" —
+        // the tactic-wide contrast, already stated once in `description`
+        // above the board — before ever mentioning capture. Right after a
+        // bug where the Attack tab's own content leaked onto this tab, that
+        // reads as a relapse even though it technically wasn't one. Kept
+        // strictly to what THIS example demonstrates; the attack/capture
+        // contrast still comes through from the two tabs sitting side by
+        // side, not from repeating it inside each one's own intro.
+        label: 'Capture',
         fen: '4k3/8/8/3r4/8/8/8/4K2Q w - - 0 1',
+        startDescription: 'A capture takes an enemy piece off the board completely.\nWatch our queen capture the rook.',
+        startHighlights: ['h1', 'd5'],
         moves: ['Qxd5'],
-        stepExplanations: ["White's queen can reach the rook.\nWhite simply takes it."],
+        stepExplanations: ["White's queen can reach the rook.\nA capture takes it off the board completely."],
+      },
+      {
+        // REVIEW: this example used to have no `startDescription` at all —
+        // falling through to TacticDetail.tsx's generic "Watch how this
+        // works, one move at a time." for both the on-screen text AND the
+        // spoken intro. That was fine for Checks' 2nd/3rd examples (which
+        // just repeat an already-explained idea with a different piece),
+        // but wrong here: "Attack" is a genuinely different concept from
+        // "Capture" that was never otherwise introduced on this tab.
+        label: 'Attack',
+        fen: '7k/8/8/3n4/8/8/8/R3K3 w - - 0 1',
+        startDescription: "An attack threatens a piece without capturing it yet.\nWatch our rook move to attack the knight — without taking it.",
+        startHighlights: ['a1', 'd5'],
+        moves: ['Ra5'],
+        stepExplanations: ["White's rook moves to a5.\nIt now threatens the knight on d5 — but hasn't taken it yet. That's an attack, not a capture."],
       },
     ],
     completionSummary: ['You can now find pieces you can attack or take.'],
     prompt: 'Can you find a piece you can attack or take?',
     wrongText: 'Not quite. Look for an enemy piece you can reach.',
-    correctText: 'You found a piece you could reach.',
+    // {captureOrAttack}/{targetPiece}/{targetSquare} resolve correctly for
+    // both kinds of puzzle below — see TacticPuzzleSet.tsx's `attackTarget`.
+    correctText: 'Your {yourPiece} {captureOrAttack} the {targetPiece} on {targetSquare}.',
     puzzles: [
-      { fen: '4k3/8/8/3r4/8/8/8/4K2Q w - - 0 1', correctFrom: 'h1', correctTo: 'd5' },
-      { fen: '4k3/8/2n5/8/8/8/8/2R1K3 w - - 0 1', correctFrom: 'c1', correctTo: 'c6' },
-      { fen: '4k3/8/8/4b3/8/8/8/B3K3 w - - 0 1', correctFrom: 'a1', correctTo: 'e5' },
+      { fen: '4k3/8/8/3r4/8/8/8/4K2Q w - - 0 1', correctFrom: 'h1', correctTo: 'd5', objective: 'Capture the black rook.' },
+      { fen: '4k3/8/2n5/8/8/8/8/2R1K3 w - - 0 1', correctFrom: 'c1', correctTo: 'c6', objective: 'Capture the black knight.' },
+      { fen: '4k3/8/8/4b3/8/8/8/B3K3 w - - 0 1', correctFrom: 'a1', correctTo: 'e5', objective: 'Capture the black bishop.' },
+      {
+        fen: '7k/8/8/3n4/8/8/8/R3K3 w - - 0 1',
+        correctFrom: 'a1',
+        correctTo: 'a5',
+        objective: 'Move your rook so it attacks the knight. Do not capture it yet.',
+      },
     ],
   },
   {
     slug: 'forks',
     name: 'Forks',
     themeTag: 'fork',
-    description: 'One piece attacking two targets at once is called a fork — the defender can only save one.',
+    // REVIEW: dropped "the defender can only save one" from the general
+    // definition — a fork doesn't always force a win (the defender may
+    // have another resource); the forced-win framing now lives only in
+    // this specific example's own stepReveal, where it's actually true.
+    description: 'A fork happens when one piece attacks two or more pieces at once.',
     summary: 'Attack two pieces at the same time.',
     difficulty: 'start',
     examples: [
       {
         fen: '2r3k1/8/8/5N2/8/8/8/4K3 w - - 0 1',
+        startDescription:
+          "A fork happens when one piece attacks two or more pieces at once.\nMany different moves can create a fork — here's one way to do it:\nWatch our knight jump in and attack both the king and the rook.",
+        startHighlights: ['f5', 'g8', 'c8'],
         moves: ['Ne7+', 'Kf8', 'Nxc8'],
         stepExplanations: [
           "White's knight jumps forward.\nIt attacks the king and the rook at the same time.",
-          'Black must move the king out of check.',
-          'White captures the rook.',
+          'Check comes first, so Black must move the king — there is no other option here.',
+          'With the king gone, nothing defends the rook anymore. White captures it for free.',
         ],
-        stepReveal: [undefined, undefined, 'This is called a fork.'],
+        stepReveal: [undefined, undefined, 'This is called a fork — here, the check left the rook with no defender.'],
       },
     ],
     completionSummary: ['You can now find forks.'],
-    prompt: 'Can you find the fork?',
+    prompt: 'Can you find a move that creates a fork?',
     wrongText: 'Not quite. Look for a move that attacks two pieces.',
-    correctText: 'Your knight attacks two pieces.',
+    // {yourPiece} rather than a hardcoded "knight" — any legal fork is
+    // accepted now (see `acceptAnyMoveThat` below), so the feedback has to
+    // name whichever piece actually did it.
+    correctText: 'Your {yourPiece} attacks two pieces.',
+    // REVIEW: "create a fork" has many right answers, not just the one
+    // demonstrated square — `acceptAnyMoveThat: 'createsFork'` checks
+    // whether the moved piece now attacks 2+ enemy pieces, rather than
+    // requiring this exact move.
     puzzles: [
-      { fen: '2r3k1/8/8/5N2/8/8/8/4K3 w - - 0 1', correctFrom: 'f5', correctTo: 'e7' },
-      { fen: '4r1k1/3N4/8/8/8/8/8/7K w - - 0 1', correctFrom: 'd7', correctTo: 'f6' },
-      { fen: '5r1k/8/8/4N3/8/8/8/4K3 w - - 0 1', correctFrom: 'e5', correctTo: 'g6' },
+      { fen: '2r3k1/8/8/5N2/8/8/8/4K3 w - - 0 1', correctFrom: 'f5', correctTo: 'e7', acceptAnyMoveThat: 'createsFork' },
+      { fen: '4r1k1/3N4/8/8/8/8/8/7K w - - 0 1', correctFrom: 'd7', correctTo: 'f6', acceptAnyMoveThat: 'createsFork' },
+      { fen: '5r1k/8/8/4N3/8/8/8/4K3 w - - 0 1', correctFrom: 'e5', correctTo: 'g6', acceptAnyMoveThat: 'createsFork' },
     ],
   },
+  // REVIEW: the demonstration used to open by immediately playing Rxf7 —
+  // showing the pin being USED without ever teaching what CREATES one. The
+  // starting position already has the pin on the board (bishop a2, knight
+  // f7, king g8, all on one diagonal), so the rebuilt version teaches that
+  // first, at step 0, before any move plays (see `startDescription`/
+  // `startHighlights` below) — a brief "what if it moved away" aside is
+  // described in words rather than animated as a real move, since
+  // chess.js's move sequence here is a real, played game, not a place to
+  // insert a hypothetical, reversible preview move.
+  // The success feedback used to say "The pinned piece could not take
+  // back" — wrong: the pinned piece is the one just captured; it's the
+  // KING that can't recapture. `{protectingPiece}` (TacticPuzzleSet.tsx)
+  // names whichever piece actually defends the capture square for each
+  // puzzle below (verified via chess.js: a1→g7 defended by a1 itself... see
+  // the bishop/rook squares confirmed for each puzzle's own FEN).
   {
     slug: 'pins',
     name: 'Pins',
     themeTag: 'pin',
-    description: 'A piece that cannot move without exposing the king behind it is pinned — and effectively frozen.',
-    summary: 'A piece cannot move because something important is behind it.',
+    description: 'Sometimes a piece must stay in the way to protect its king. That piece is pinned.',
+    summary: 'Attack a piece that is protecting something behind it.',
     difficulty: 'start',
     examples: [
       {
         fen: '6k1/5n2/8/8/8/8/B7/5R1K w - - 0 1',
+        startDescription:
+          "Our bishop attacks along this diagonal.\nThe knight is blocking that attack.\nIf the knight moved away, its king would be in check right there.\nThe knight must stay in the way. This is called a pin.\nSometimes more than one piece can safely capture a pinned piece — here's one way to do it:",
+        startHighlights: ['a2', 'f7', 'g8'],
         moves: ['Rxf7'],
-        stepExplanations: [
-          "White captures the knight.\nBlack cannot take back with the king — that would walk into the bishop's line, right into check.",
-        ],
-        stepReveal: ['This is called a pin.'],
+        stepExplanations: ['Our rook captures the knight on f7.\nThe king cannot capture our rook, because the bishop protects it.'],
       },
     ],
     completionSummary: ['You can now find pins.'],
-    prompt: 'Can you find the pin?',
+    prompt: 'Capture the pinned {capturedPiece}.',
     wrongText: 'Not quite. Look for a piece that cannot move away.',
-    correctText: 'The pinned piece could not take back.',
+    correctText: 'You captured the pinned {capturedPiece}! The king cannot take your {yourPiece}, because your {protectingPiece} protects it.',
+    // REVIEW: each of these 3 positions actually has TWO pieces that can
+    // safely capture the pinned piece (the pinning piece itself, and
+    // whichever other piece also reaches that square) — confirmed via
+    // chess.js: e.g. puzzle 1's knight on g7 can be taken by either the rook
+    // (g-file) or the bishop (the pinning diagonal), and either way the king
+    // still can't recapture, because the OTHER one then protects the
+    // square. Exact-match was silently rejecting that second real solution.
+    // `acceptAnyMoveThat: 'capturesHangingPiece'` (the same check Hanging
+    // Pieces uses: a capture that can't be recaptured) is exactly the pin's
+    // own protective mechanism, so it's reused as-is here.
     puzzles: [
-      { fen: '7k/6n1/8/8/8/8/8/BK4R1 w - - 0 1', correctFrom: 'g1', correctTo: 'g7' },
-      { fen: 'k7/1n6/8/8/8/8/8/1R4KB w - - 0 1', correctFrom: 'b1', correctTo: 'b7' },
-      { fen: '4k3/8/8/4n3/8/2B5/8/4R1K1 w - - 0 1', correctFrom: 'c3', correctTo: 'e5' },
+      { fen: '7k/6n1/8/8/8/8/8/BK4R1 w - - 0 1', correctFrom: 'g1', correctTo: 'g7', acceptAnyMoveThat: 'capturesHangingPiece' },
+      { fen: 'k7/1n6/8/8/8/8/8/1R4KB w - - 0 1', correctFrom: 'b1', correctTo: 'b7', acceptAnyMoveThat: 'capturesHangingPiece' },
+      { fen: '4k3/8/8/4n3/8/2B5/8/4R1K1 w - - 0 1', correctFrom: 'c3', correctTo: 'e5', acceptAnyMoveThat: 'capturesHangingPiece' },
     ],
   },
 
   // ─── Learn Next ───────────────────────────────────────────────────────
+  // REVIEW: the original example already was king-in-front/rook-behind,
+  // not the queen-in-front case the review describes — it just never
+  // explained WHY the king has to move, or paused on both targets before
+  // showing the reply. Keeps the same (already-correct) position, gains
+  // the 4-beat script. The queen-in-front case becomes a genuine second
+  // example, explicitly NOT described as forced (a queen, unlike a king in
+  // check, has no legal obligation to move — it's just usually the better
+  // choice) — new FEN verified via chess.js: not already in check either
+  // way, and the queen's retreat square is actually safe from the bishop.
   {
     slug: 'skewers',
     name: 'Skewers',
     themeTag: 'skewer',
-    description: 'The mirror image of a pin — the more valuable piece is in front and must move, exposing the piece behind it.',
+    description:
+      'A pin: the front piece shields something behind it and cannot safely move. A skewer: the front piece is itself attacked, and moving it exposes the piece behind.',
     summary: 'Attack one piece and win the piece behind it.',
     difficulty: 'next',
     examples: [
       {
+        label: 'King in front',
         fen: '7r/8/8/4k3/8/8/3B4/6K1 w - - 0 1',
+        startDescription: 'A skewer attacks a piece that must move, winning what was hidden behind it.',
+        startHighlights: ['d2', 'e5', 'h8'],
         moves: ['Bc3+', 'Ke6', 'Bxh8'],
         stepExplanations: [
-          "White's bishop lines up with the king.\nThe rook is on the same line, right behind it.",
-          'Black must move the king out of check.',
-          'White captures the rook.',
+          'Our bishop gives check.',
+          'The king must move to safety — unlike the queen in the next example, it has no choice here.',
+          'Now the bishop can capture the rook behind it.',
         ],
         stepReveal: [undefined, undefined, 'This is called a skewer.'],
+        stepHighlights: [['c3', 'e5'], undefined, ['h8']],
+      },
+      {
+        label: 'Queen in front',
+        fen: 'k6r/8/5q2/8/8/8/1B6/2K5 b - - 0 1',
+        startDescription:
+          "Our bishop already attacks the queen — and the rook is right behind it on the same line.\nA queen isn't forced to move the way a king in check is.\nBut moving it to safety is usually best, since it's worth far more than what's behind it.",
+        startHighlights: ['b2', 'f6', 'h8'],
+        moves: ['Qa6', 'Bxh8'],
+        stepExplanations: [
+          "Black chooses to move the queen to safety — it's not required, but losing a queen would cost far more than the rook behind it.",
+          'With the queen gone, the bishop wins the rook.',
+        ],
+        stepReveal: [undefined, 'This is the same idea as a skewer, from the choice it creates rather than a forced one.'],
       },
     ],
     completionSummary: ['You can now find skewers.'],
-    prompt: "Can you find the check that also threatens what's behind the king?",
+    prompt: 'Find a check that also wins the piece behind the king.',
     wrongText: 'Not quite. Look for a check — then see what is lined up right behind the king.',
-    correctText: 'The king had to move out of check — and now what was behind it is open to capture.',
+    correctText: 'Check! Your {yourPiece} attacks the king {attackDescription} — and now you can win the {behindPiece} behind it.',
+    // REVIEW: "win the piece behind it with a check" has more than one
+    // right answer in general — `acceptAnyMoveThat: 'skewers'` checks for
+    // a genuine check-plus-piece-lined-up-behind, not just this one square.
+    // A legal check that doesn't skewer gets its own encouraging message
+    // (see TacticPuzzleSet.tsx) rather than being treated as simply wrong.
     puzzles: [
-      { fen: '4b3/6p1/2k5/1p1p1pP1/1P1P1P2/5K2/8/3N4 b - - 2 33', correctFrom: 'e8', correctTo: 'h5' },
-      { fen: '8/8/8/8/3r4/7k/6R1/6K1 b - - 0 64', correctFrom: 'd4', correctTo: 'd1' },
-      { fen: '8/8/3k4/3p4/3Kp2p/6bP/6P1/R7 b - - 1 59', correctFrom: 'g3', correctTo: 'e5' },
+      { fen: '4b3/6p1/2k5/1p1p1pP1/1P1P1P2/5K2/8/3N4 b - - 2 33', correctFrom: 'e8', correctTo: 'h5', acceptAnyMoveThat: 'skewers' },
+      { fen: '8/8/8/8/3r4/7k/6R1/6K1 b - - 0 64', correctFrom: 'd4', correctTo: 'd1', acceptAnyMoveThat: 'skewers' },
+      { fen: '8/8/3k4/3p4/3Kp2p/6bP/6P1/R7 b - - 1 59', correctFrom: 'g3', correctTo: 'e5', acceptAnyMoveThat: 'skewers' },
     ],
   },
   {
@@ -330,6 +519,9 @@ export const TACTICS: Tactic[] = [
     examples: [
       {
         fen: '4k3/5b2/8/r7/8/8/8/3QK3 w - - 0 1',
+        startDescription:
+          "A double attack is one move that threatens two different pieces at once — the defender can only save one.\nMany different moves can create a double attack — here's one way to do it:",
+        startHighlights: ['d1', 'a5', 'f7'],
         moves: ['Qd5', 'Ra6', 'Qxf7+'],
         stepExplanations: [
           "White's queen moves to attack two pieces at once.\nBlack cannot save both.",
@@ -348,11 +540,19 @@ export const TACTICS: Tactic[] = [
     // discipline that caught real design mistakes in the first 5 tactics.
     prompt: 'Can you find the move that attacks two pieces at once?',
     wrongText: 'Not quite. Look for one move that threatens two different pieces.',
-    correctText: 'That move attacked two pieces — Black can only save one.',
+    // {yourPiece} rather than a fixed description — any legal double attack
+    // is accepted now (see `acceptAnyMoveThat` below), so the feedback has
+    // to name whichever piece actually did it.
+    correctText: 'Your {yourPiece} attacks two pieces — Black can only save one.',
+    // REVIEW: "attack two pieces at once" has more than one right answer in
+    // general, and this is literally the same mechanism Forks already
+    // checks — `acceptAnyMoveThat: 'createsDoubleAttack'`
+    // (TacticPuzzleSet.tsx) reuses that exact check (the moved piece now
+    // attacks 2+ enemy pieces) rather than requiring this exact square.
     puzzles: [
-      { fen: '4k3/8/8/2n3r1/8/8/8/3QK3 w - - 0 1', correctFrom: 'd1', correctTo: 'd5' },
-      { fen: '4k3/2r5/8/8/8/2n5/7B/4K3 w - - 0 1', correctFrom: 'h2', correctTo: 'e5' },
-      { fen: '4k3/8/8/5r2/8/2n5/8/5RK1 w - - 0 1', correctFrom: 'f1', correctTo: 'f3' },
+      { fen: '4k3/8/8/2n3r1/8/8/8/3QK3 w - - 0 1', correctFrom: 'd1', correctTo: 'd5', acceptAnyMoveThat: 'createsDoubleAttack' },
+      { fen: '4k3/2r5/8/8/8/2n5/7B/4K3 w - - 0 1', correctFrom: 'h2', correctTo: 'e5', acceptAnyMoveThat: 'createsDoubleAttack' },
+      { fen: '4k3/8/8/5r2/8/2n5/8/5RK1 w - - 0 1', correctFrom: 'f1', correctTo: 'f3', acceptAnyMoveThat: 'createsDoubleAttack' },
     ],
   },
   {
@@ -365,6 +565,9 @@ export const TACTICS: Tactic[] = [
     examples: [
       {
         fen: '3qk3/8/8/4N3/8/8/8/4R1K1 w - - 0 1',
+        startDescription:
+          "Moving one piece out of the way can uncover an attack from a piece standing behind it.\nOur knight is blocking the rook's own line to the black king.",
+        startHighlights: ['e1', 'e5', 'e8'],
         moves: ['Nc6+', 'Kf8', 'Nxd8'],
         stepExplanations: [
           "White's knight jumps away.\nThis opens up the rook's attack on the king, and the knight itself now attacks the queen too.",
@@ -394,6 +597,8 @@ export const TACTICS: Tactic[] = [
     examples: [
       {
         fen: '4k3/1b6/8/2Nr4/8/8/8/4K3 w - - 0 1',
+        startDescription: 'The bishop on b7 is protecting the rook on d5.\nCapture the bishop, and the rook is left with no defender.',
+        startHighlights: ['b7', 'd5'],
         moves: ['Nxb7'],
         stepExplanations: ['White captures the piece protecting the rook.\nNow the rook has no protection.'],
         stepReveal: ['This is called removing the defender.'],
@@ -419,6 +624,9 @@ export const TACTICS: Tactic[] = [
     examples: [
       {
         fen: '4k3/3q4/8/3r4/8/1N6/8/4K3 w - - 0 1',
+        startDescription:
+          'The queen on d7 is protecting the rook on d5.\nAttack the queen, and it must move away — leaving the rook undefended.',
+        startHighlights: ['d7', 'd5'],
         moves: ['Nc5', 'Qh3'],
         stepExplanations: ['White attacks the queen.\nNow it must move away.', 'Black moves the queen to safety.\nBut now the rook has no protection.'],
         stepReveal: [undefined, 'This is called deflection.'],
@@ -444,6 +652,9 @@ export const TACTICS: Tactic[] = [
     examples: [
       {
         fen: '6k1/5ppp/8/8/8/8/6K1/R7 w - - 0 1',
+        startDescription:
+          "A king trapped behind its own unmoved pawns has nowhere to run from a check along the back row.\nMany different checks can be a back-rank mate — here's one way to do it:",
+        startHighlights: ['g8', 'f7', 'g7', 'h7'],
         moves: ['Ra8#'],
         stepExplanations: [
           "The rook moves all the way down the open file.\nBlack's own pawns block every escape square, so the king has nowhere to go.",
@@ -455,10 +666,23 @@ export const TACTICS: Tactic[] = [
     prompt: 'Can you find the move that checks the king on the back row?',
     wrongText: 'Not quite. Look at the back row — can the king run anywhere?',
     correctText: "The king's own pawns blocked every escape.",
+    // REVIEW: "checkmate on the back row" has more than one right answer in
+    // general — `acceptAnyMoveThat: 'deliversCheckmate'` (TacticPuzzleSet.tsx)
+    // checks `chess.isCheckmate()` directly, rather than requiring this
+    // exact square. This also caught a real bug in puzzle 2: the original
+    // position let Black answer the check by simply capturing the checking
+    // rook with the other rook on b8 — not actually mate at all. Replaced
+    // with a verified clean mate (confirmed via chess.js: starting position
+    // isn't already in check, Rd8 is legal, and it IS checkmate).
     puzzles: [
-      { fen: '5rk1/p1p2ppp/b7/6b1/4N3/2Pr4/PP3PPP/R1BQ2K1 b - - 0 17', correctFrom: 'd3', correctTo: 'd1' },
-      { fen: '1r4k1/5ppp/8/8/3R4/8/pr4PP/K2R4 w - - 0 36', correctFrom: 'd4', correctTo: 'd8' },
-      { fen: 'r2q2k1/p1p2ppp/2p5/4Q3/1p2B1b1/8/PPP2PPP/R1B3K1 b - - 0 17', correctFrom: 'd8', correctTo: 'd1' },
+      { fen: '5rk1/p1p2ppp/b7/6b1/4N3/2Pr4/PP3PPP/R1BQ2K1 b - - 0 17', correctFrom: 'd3', correctTo: 'd1', acceptAnyMoveThat: 'deliversCheckmate' },
+      { fen: '6k1/5ppp/8/8/3R4/8/8/K7 w - - 0 1', correctFrom: 'd4', correctTo: 'd8', acceptAnyMoveThat: 'deliversCheckmate' },
+      {
+        fen: 'r2q2k1/p1p2ppp/2p5/4Q3/1p2B1b1/8/PPP2PPP/R1B3K1 b - - 0 17',
+        correctFrom: 'd8',
+        correctTo: 'd1',
+        acceptAnyMoveThat: 'deliversCheckmate',
+      },
     ],
   },
 
@@ -473,6 +697,9 @@ export const TACTICS: Tactic[] = [
     examples: [
       {
         fen: '4k3/3N4/2B5/8/8/8/8/4K3 w - - 0 1',
+        startDescription:
+          "One move can check the king with two pieces at once — our knight is blocking the bishop's own line to the black king.\nMany different moves can create a double check — here's one way to do it:",
+        startHighlights: ['d7', 'c6', 'e8'],
         moves: ['Nf6+'],
         stepExplanations: [
           "White moves the knight.\nThis uncovers a check from the bishop, and the knight itself checks too — two checks from one move.",
@@ -484,10 +711,20 @@ export const TACTICS: Tactic[] = [
     prompt: 'Can you find the move that checks the king with two pieces at once?',
     wrongText: 'Not quite. Look for a move that uncovers a second check.',
     correctText: 'Two pieces checked the king at the same time — it had to move.',
+    // REVIEW: "check with two pieces at once" has more than one right
+    // answer in general — `acceptAnyMoveThat: 'givesDoubleCheck'`
+    // (TacticPuzzleSet.tsx) checks that the king has 2+ attackers after the
+    // move, rather than requiring this exact square. This also caught a
+    // real bug in the original puzzle 1: that position's "correct" move
+    // only gave a single check, not a double check — no legal move there
+    // creates one at all (confirmed by searching every legal move via
+    // chess.js). Replaced with a verified clean double check: moving the
+    // knight both checks the king itself and uncovers the bishop's check
+    // along the same diagonal.
     puzzles: [
-      { fen: '1k1r3r/pP4p1/1nq1pp2/3n3p/2pP1P2/Q1P5/6PP/R4RK1 w - - 0 31', correctFrom: 'a3', correctTo: 'a7' },
-      { fen: '2r5/5kpp/3p4/p3pNb1/Pp2P3/1P1P1QPP/3q1P2/6K1 w - - 0 30', correctFrom: 'f5', correctTo: 'd6' },
-      { fen: '5rk1/pp5p/6P1/3pN2r/3Ppq2/1PP3Q1/P6P/2R1K3 w - - 0 37', correctFrom: 'g6', correctTo: 'h7' },
+      { fen: '7k/8/8/4N3/8/8/8/B6K w - - 0 1', correctFrom: 'e5', correctTo: 'g6', acceptAnyMoveThat: 'givesDoubleCheck' },
+      { fen: '2r5/5kpp/3p4/p3pNb1/Pp2P3/1P1P1QPP/3q1P2/6K1 w - - 0 30', correctFrom: 'f5', correctTo: 'd6', acceptAnyMoveThat: 'givesDoubleCheck' },
+      { fen: '5rk1/pp5p/6P1/3pN2r/3Ppq2/1PP3Q1/P6P/2R1K3 w - - 0 37', correctFrom: 'g6', correctTo: 'h7', acceptAnyMoveThat: 'givesDoubleCheck' },
     ],
   },
   {
@@ -500,6 +737,9 @@ export const TACTICS: Tactic[] = [
     examples: [
       {
         fen: '4k3/8/8/3p4/4N3/8/8/3RK3 w - - 0 1',
+        startDescription:
+          "Sometimes the move everyone expects isn't the strongest one to play right away.\nBefore capturing the pawn, look for a stronger move first — often a check.",
+        startHighlights: ['e4', 'd5', 'e8'],
         moves: ['Nf6+', 'Kd8', 'Rxd5'],
         stepExplanations: [
           'White could capture the pawn right away.\nInstead, White plays a check first.',
@@ -529,6 +769,9 @@ export const TACTICS: Tactic[] = [
     examples: [
       {
         fen: '4k3/8/1r3b2/3n4/7B/8/8/1R2K3 w - - 0 1',
+        startDescription:
+          'One knight here is already protecting two pieces at once.\nIt can only really do one job when both are needed.',
+        startHighlights: ['d5', 'b6', 'f6'],
         moves: ['Rxb6', 'Nxb6', 'Bxf6'],
         stepExplanations: [
           'White captures the rook.\nOnly the knight can take it back.',
@@ -561,6 +804,8 @@ export const TACTICS: Tactic[] = [
     examples: [
       {
         fen: '3Nk3/8/2q5/Q7/8/8/8/4K3 w - - 0 1',
+        startDescription: 'The knight is standing on the exact square the queen needs to reach.\nMove it out of the way, and that square opens up.',
+        startHighlights: ['d8', 'a5', 'e8'],
         moves: ['Nxc6', 'Kf8', 'Qd8+'],
         stepExplanations: [
           "White's knight captures the queen.\nThis also clears the square it was standing on.",
@@ -590,6 +835,9 @@ export const TACTICS: Tactic[] = [
     examples: [
       {
         fen: '4k3/8/8/8/8/8/4Q3/R5K1 w - - 0 1',
+        startDescription:
+          'A decoy lures an enemy piece onto a bad square — even by giving up material to do it.\nWatch White sacrifice the queen to pull the king somewhere it can be attacked again.',
+        startHighlights: ['e2', 'e8', 'a1'],
         moves: ['Qe7+', 'Kxe7', 'Ra7+'],
         stepExplanations: [
           'White gives up the queen with check.\nThe king has no other safe square, so it must capture.',
@@ -619,6 +867,8 @@ export const TACTICS: Tactic[] = [
     examples: [
       {
         fen: '3qk3/8/8/1N6/3r1B2/8/8/3RK3 w - - 0 1',
+        startDescription: 'The queen on d8 is protecting the rook on d4 along this file.\nPut a piece between them, and the connection breaks.',
+        startHighlights: ['d8', 'd4'],
         moves: ['Nd6+', 'Kf8', 'Rxd4'],
         stepExplanations: [
           "White's knight jumps into the middle, giving check.\nIt also stands between the queen and the rook.",
@@ -648,6 +898,9 @@ export const TACTICS: Tactic[] = [
     examples: [
       {
         fen: 'n3k3/8/N7/8/3B4/8/8/4K2Q w - - 0 1',
+        startDescription:
+          "A piece with nowhere safe to go can simply be attacked and captured.\nHere, the black knight's only two escape squares are both covered.",
+        startHighlights: ['a8', 'b6', 'c7'],
         moves: ['Qxa8'],
         stepExplanations: ['The knight has nowhere safe to go — both of its escape squares are covered.\nWhite simply captures it.'],
         stepReveal: ['This is called a trapped piece.'],

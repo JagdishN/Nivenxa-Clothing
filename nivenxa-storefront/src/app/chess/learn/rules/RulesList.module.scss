@@ -12,7 +12,9 @@
   z-index: 1;
   max-width: 1400px;
   margin: 0 auto;
-  padding: clamp(3rem, 6vw, 4.5rem) clamp(1.5rem, 6vw, 5rem) clamp(1.5rem, 4vw, 2.5rem);
+  // Matches Chess Basics' own hero padding exactly — the shared reference
+  // every Learn list page now converges on.
+  padding: clamp(0.7rem, 1.5vw, 1rem) clamp(1.5rem, 6vw, 5rem) clamp(0.6rem, 1.2vw, 0.8rem);
   // Matches the top /chess/learn catalogue and Basics' own list page, both
   // already centered — this page was left-aligned by omission, not a
   // considered choice.
@@ -28,7 +30,7 @@
   font-weight: 600;
   color: rgba(31, 27, 58, 0.5);
   text-decoration: none;
-  margin-bottom: clamp(0.9rem, 2vw, 1.2rem);
+  margin-bottom: clamp(0.4rem, 0.8vw, 0.55rem);
   transition: color 0.2s ease;
 
   &:hover {
@@ -43,7 +45,7 @@
   line-height: 1.15;
   color: var(--chess-deep);
   letter-spacing: -0.02em;
-  margin-bottom: clamp(0.75rem, 2vw, 1rem);
+  margin-bottom: 0.3rem;
 }
 
 .subtext {
@@ -71,6 +73,16 @@
   &:last-child {
     padding-bottom: clamp(4rem, 7vw, 6rem);
   }
+}
+
+// The first group no longer renders its own heading (it repeated the page's
+// own <h1>Rules</h1> — see rules/page.tsx), so it needs its own header-to-
+// cards gap here instead of relying on .groupHeading's margin-top, which
+// only the second group ("Clock & Etiquette") still uses. Matches Basics'
+// own grid padding-top rather than collapsing to zero or inheriting the
+// looser inter-group spacing below.
+.groupFirst {
+  padding-top: clamp(0.75rem, 1.5vw, 1rem);
 }
 
 .groupHeading {

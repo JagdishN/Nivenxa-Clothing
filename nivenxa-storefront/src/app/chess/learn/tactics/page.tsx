@@ -54,7 +54,7 @@ export default function ChessLearnTacticsPage() {
     <main className={styles.page}>
       <section className={styles.hero}>
         <Link href="/chess/learn" className={styles.breadcrumb}>
-          ← Learn
+          ← Back to Learn
         </Link>
         <h1 className={styles.heading}>Tactics</h1>
         <p className={styles.subtext}>Learn to spot winning moves, starting with simple ideas.</p>

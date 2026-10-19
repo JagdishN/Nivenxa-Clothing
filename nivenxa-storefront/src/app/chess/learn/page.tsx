@@ -40,19 +40,16 @@ export default function ChessLearnPage() {
       <section className={styles.hero}>
         <p className={styles.eyebrow}>NIVENXA CHESS</p>
         <h1 className={styles.heading}>Learn</h1>
-        <p className={styles.subtext}>
-          Bite-sized lessons that explain the ideas behind the moves — openings, tactics, endgame technique, and the rules themselves.
-        </p>
+        <p className={styles.subtext}>Learn chess with short lessons, clear examples and moves you can try.</p>
       </section>
 
       <div className={styles.recommendStrip}>
-        <p className={styles.recommendHeading}>⭐ New to chess?</p>
-        <p className={styles.recommendSubtext}>Start with Chess Basics. Learn how the pieces move, then start playing.</p>
-        <div className={styles.recommendLinks}>
+        <p className={styles.recommendHeading}>
+          New to chess?{' '}
           <Link href="/chess/learn/basics" className={styles.recommendLink}>
-            Chess Basics
+            Start Chess Basics →
           </Link>
-        </div>
+        </p>
       </div>
 
       <div className={styles.grid}>

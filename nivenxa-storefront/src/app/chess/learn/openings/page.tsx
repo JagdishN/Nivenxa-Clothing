@@ -34,14 +34,10 @@ export default function ChessLearnOpeningsPage() {
     <main className={styles.page}>
       <section className={styles.hero}>
         <Link href="/chess/learn" className={styles.breadcrumb}>
-          ← Learn
+          ← Back to Learn
         </Link>
         <h1 className={styles.heading}>Openings</h1>
         <p className={styles.subtext}>Learn how to start a chess game and why your first moves matter.</p>
-        <p className={styles.difficultyKey}>
-          Difficulty: {DIFFICULTY_EMOJI.start} {DIFFICULTY_LABEL.start} · {DIFFICULTY_EMOJI.next} {DIFFICULTY_LABEL.next} ·{' '}
-          {DIFFICULTY_EMOJI.later} {DIFFICULTY_LABEL.later}
-        </p>
       </section>
 
       {/* One recommendation, not a two-tier chain of links on top of the
@@ -56,6 +52,14 @@ export default function ChessLearnOpeningsPage() {
           </Link>
         </p>
       </div>
+
+      {/* Moved out of the hero (was the 4th stacked layer before the cards) —
+          sits right above the groups instead, close to the per-card
+          difficulty badges it's actually explaining. */}
+      <p className={styles.difficultyKey}>
+        Difficulty: {DIFFICULTY_EMOJI.start} {DIFFICULTY_LABEL.start} · {DIFFICULTY_EMOJI.next} {DIFFICULTY_LABEL.next} ·{' '}
+        {DIFFICULTY_EMOJI.later} {DIFFICULTY_LABEL.later}
+      </p>
 
       {OPENING_CATEGORIES.map((category) => (
         <div key={category.slug} className={styles.group}>

@@ -27,12 +27,11 @@
   flex: 1 1 340px;
   min-width: 0;
   max-width: 480px;
-  // Unset (none) by default — identical to before for any page that never
-  // sets --learn-workspace-h. Where it IS set (Tactics), this stops a long
-  // panel from pushing the page past the viewport on its own, the same way
-  // the board itself is now capped above.
-  max-height: var(--learn-workspace-h, none);
-  overflow-y: auto;
+  // No height cap/internal scroll here on purpose — a panel taller than the
+  // board (voice controls, a longer explanation, the completion block) just
+  // lets the page itself run a little past the board, rather than trapping
+  // that content in its own cramped scrollbar. Only the board's own size is
+  // capped to the measured workspace height (see .boardCol above).
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
@@ -44,7 +43,6 @@
   @include v.max-lg {
     width: min(92vw, 460px);
     max-width: none;
-    max-height: none;
   }
 }
 
@@ -86,6 +84,28 @@
   font-size: 0.78rem;
   font-weight: 600;
   color: rgba(31, 27, 58, 0.5);
+}
+
+// Tactics only (enableVoice): autoplay (Pause/Replay, in VoiceControls) is
+// the primary way to move through a demonstration now — manual Previous/
+// Next are still here as a full override, just no longer visually
+// competing with it for attention.
+.stepControlsSecondary {
+  opacity: 0.75;
+}
+
+.stepBtnSecondary {
+  composes: stepBtn;
+  font-size: 0.72rem;
+  padding: 0.4rem 0.8rem;
+  border-color: rgba(31, 27, 58, 0.15);
+  background: none;
+  color: rgba(31, 27, 58, 0.55);
+
+  &:hover:not(:disabled) {
+    background: rgba(31, 27, 58, 0.05);
+    border-color: rgba(31, 27, 58, 0.3);
+  }
 }
 
 // ─── Move list ───────────────────────────────────────────────────────────────
@@ -134,6 +154,18 @@
 
   &:hover {
     background: rgba(91, 46, 145, 0.06);
+  }
+}
+
+// Tactics only (enableVoice) — a move not yet reached shows a neutral
+// placeholder instead of its SAN, so the solution isn't visible before the
+// demonstration actually gets there.
+.moveCellHidden {
+  color: rgba(31, 27, 58, 0.3);
+  cursor: default;
+
+  &:hover {
+    background: none;
   }
 }
 

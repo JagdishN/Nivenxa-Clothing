@@ -14,10 +14,10 @@ export default function ChessLearnEndgamesPage() {
     <main className={styles.page}>
       <section className={styles.hero}>
         <Link href="/chess/learn" className={styles.breadcrumb}>
-          ← Learn
+          ← Back to Learn
         </Link>
         <h1 className={styles.heading}>Endgames</h1>
-        <p className={styles.subtext}>Core endgame technique — the ideas that turn a small edge into a full point.</p>
+        <p className={styles.subtext}>Learn what to do when only a few pieces are left.</p>
       </section>
 
       <div className={styles.grid}>

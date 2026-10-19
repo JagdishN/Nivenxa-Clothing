@@ -17,10 +17,10 @@
   z-index: 1;
   max-width: 1400px;
   margin: 0 auto;
-  // Bottom padding cut ~40% from the other Learn list pages — this page has
-  // a recommendation strip and category sections below that should read as
-  // close to the heading as possible, not after a long empty gap.
-  padding: clamp(2.5rem, 5vw, 3.75rem) clamp(1.5rem, 6vw, 5rem) clamp(0.9rem, 2.5vw, 1.5rem);
+  // Matches Chess Basics' own hero padding exactly — the shared reference
+  // every Learn list page now converges on, rather than each page's own
+  // independently-tuned (and much looser) top/bottom values.
+  padding: clamp(0.7rem, 1.5vw, 1rem) clamp(1.5rem, 6vw, 5rem) clamp(0.45rem, 1.2vw, 0.75rem);
   // Matches the top /chess/learn catalogue and Basics' own list page, both
   // already centered — this page (and Tactics, which composes its hero
   // from this one) was left-aligned by omission, not by a considered choice.
@@ -36,7 +36,7 @@
   font-weight: 600;
   color: rgba(31, 27, 58, 0.5);
   text-decoration: none;
-  margin-bottom: clamp(0.6rem, 1.5vw, 0.9rem);
+  margin-bottom: clamp(0.4rem, 0.8vw, 0.55rem);
   transition: color 0.2s ease;
 
   &:hover {
@@ -51,7 +51,7 @@
   line-height: 1.15;
   color: var(--chess-deep);
   letter-spacing: -0.02em;
-  margin-bottom: clamp(0.75rem, 2vw, 1rem);
+  margin-bottom: 0.3rem;
 }
 
 .subtext {
@@ -64,15 +64,24 @@
   // the text within that box — a max-width with no auto margins stays
   // pinned to the left edge regardless of the parent's text-align.
   margin-inline: auto;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.3rem;
 }
 
-// Names the three dots once, near the top, so 🟠 "Learn later" doesn't read
-// as "this opening is bad" — it's a progression, not a quality judgement.
+// Moved out of .hero (was the last of 4 stacked header layers before the
+// cards) — now rendered as its own compact strip directly above the
+// category groups, right where the badge it explains actually shows up on
+// each card. Names the three dots once, so 🟠 "Learn later" doesn't read as
+// "this opening is bad" — it's a progression, not a quality judgement.
 .difficultyKey {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto clamp(0.75rem, 1.5vw, 1rem);
+  padding: 0 clamp(1.5rem, 6vw, 5rem);
   font-family: var(--font-sans);
   font-size: 0.78rem;
   color: rgba(31, 27, 58, 0.5);
+  text-align: center;
 }
 
 // ─── Category groups ──────────────────────────────────────────────────────
@@ -85,7 +94,7 @@
   z-index: 1;
   max-width: 1200px;
   margin: 0 auto;
-  padding: clamp(0.9rem, 2vw, 1.25rem) clamp(1.5rem, 6vw, 5rem) 0;
+  padding: clamp(0.6rem, 1.3vw, 0.85rem) clamp(1.5rem, 6vw, 5rem) 0;
 
   &:last-child {
     padding-bottom: clamp(4rem, 7vw, 6rem);
@@ -101,7 +110,7 @@
   z-index: 1;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 clamp(1.5rem, 6vw, 5rem) clamp(1.1rem, 2.5vw, 1.6rem);
+  padding: 0 clamp(1.5rem, 6vw, 5rem) clamp(0.6rem, 1.5vw, 0.9rem);
   // The strip's own box was already centered (max-width + margin:auto
   // above), but its text and flex-row children stayed left-aligned within
   // that box — a plain block/flex child doesn't inherit text-align's

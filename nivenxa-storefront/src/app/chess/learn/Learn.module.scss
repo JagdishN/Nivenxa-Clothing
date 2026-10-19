@@ -12,7 +12,11 @@
   z-index: 1;
   max-width: 1400px;
   margin: 0 auto;
-  padding: clamp(3rem, 6vw, 4.5rem) clamp(1.5rem, 6vw, 5rem) clamp(1.5rem, 4vw, 2.5rem);
+  // Tightened to roughly Basics' own rhythm — this page has no breadcrumb
+  // to anchor against (it's the top of the section) and an eyebrow line
+  // Basics doesn't have, so it keeps a touch more top padding than Basics'
+  // exact value rather than matching it 1:1.
+  padding: clamp(1.25rem, 2.5vw, 1.75rem) clamp(1.5rem, 6vw, 5rem) clamp(0.9rem, 2vw, 1.25rem);
   text-align: center;
 }
 
@@ -23,7 +27,7 @@
   letter-spacing: 0.38em;
   text-transform: uppercase;
   color: var(--chess-purple);
-  margin-bottom: clamp(0.75rem, 2vw, 1rem);
+  margin-bottom: clamp(0.5rem, 1vw, 0.7rem);
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
@@ -45,7 +49,7 @@
   line-height: 1.15;
   color: var(--chess-deep);
   letter-spacing: -0.02em;
-  margin-bottom: clamp(0.75rem, 2vw, 1rem);
+  margin-bottom: 0.4rem;
 }
 
 .subtext {
@@ -59,7 +63,11 @@
 
 // ─── "New to chess?" recommendation strip ───────────────────────────────────
 // Composes Openings/Tactics' recommend-strip styling for visual consistency,
-// even though there's only one link here (the flex row still centers fine).
+// matching their one-line "heading + inline link" pattern exactly (no
+// separate subtext paragraph or links wrapper — those composed from classes
+// that don't actually exist in OpeningsList.module.scss, i.e. `undefined`
+// in the rendered className, so this page's CTA has been silently near-
+// unstyled; fixed here rather than carried forward).
 .recommendStrip {
   composes: recommendStrip from './openings/OpeningsList.module.scss';
   text-align: center;
@@ -69,17 +77,8 @@
   composes: recommendHeading from './openings/OpeningsList.module.scss';
 }
 
-.recommendSubtext {
-  composes: recommendSubtext from './openings/OpeningsList.module.scss';
-}
-
-.recommendLinks {
-  composes: recommendLinks from './openings/OpeningsList.module.scss';
-  justify-content: center;
-}
-
 .recommendLink {
-  composes: recommendLink from './openings/OpeningsList.module.scss';
+  composes: recommendChainLink from './openings/OpeningsList.module.scss';
 }
 
 // ─── Category grid ───────────────────────────────────────────────────────────
