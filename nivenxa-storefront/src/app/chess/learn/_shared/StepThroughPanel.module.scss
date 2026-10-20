@@ -86,6 +86,19 @@
   color: rgba(31, 27, 58, 0.5);
 }
 
+// Matches TacticPuzzleSet.module.scss's own .puzzleIndicator styling — same
+// small-caps label treatment, shown here too since whose move it is matters
+// just as much while watching a demonstration as while practising one.
+.turnIndicator {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(31, 27, 58, 0.5);
+  margin: 0;
+}
+
 // Tactics only (enableVoice): autoplay (Pause/Replay, in VoiceControls) is
 // the primary way to move through a demonstration now — manual Previous/
 // Next are still here as a full override, just no longer visually

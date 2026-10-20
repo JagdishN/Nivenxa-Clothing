@@ -103,3 +103,26 @@
     align-items: center;
   }
 }
+
+// ─── Practice CTA — shown once at least one example is done, below the
+// StepThroughPanel's own footer slot ──────────────────────────────────────
+.practiceLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  padding: 0.75rem 1rem;
+  border-radius: 0.9rem;
+  color: var(--chess-white-soft);
+  composes: ctaButtonGradient from '../../../ChessTheme.module.scss';
+  transition: opacity 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    opacity: 0.92;
+    transform: translateY(-1px);
+  }
+}

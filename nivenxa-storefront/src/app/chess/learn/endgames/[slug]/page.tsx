@@ -11,5 +11,9 @@ export default async function ChessLearnEndgameDetailPage({ params }: { params: 
   const endgame = getEndgame(slug)
   if (!endgame) notFound()
 
-  return <EndgameDetail endgame={endgame} />
+  // key={endgame.slug} forces a full remount on every endgame switch — same
+  // fix applied to the Tactics detail route this session, pre-empted here
+  // before EndgameDetail grows the same per-instance state (mode,
+  // stepByExample) that made the bug observable there.
+  return <EndgameDetail key={endgame.slug} endgame={endgame} />
 }

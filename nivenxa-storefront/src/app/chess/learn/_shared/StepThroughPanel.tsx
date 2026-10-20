@@ -451,6 +451,13 @@ export default function StepThroughPanel({
       </div>
 
       <div className={styles.panelCol}>
+        {/* Whose move it is at the CURRENT step, not just the starting
+            position — several lessons (opposition, pawn races, catching the
+            pawn) hinge entirely on whose turn it is, and several of their
+            own positions start with Black to move, which was otherwise
+            never stated anywhere on screen. Shown in every stage (gate,
+            intro, and the normal step view) since it's never not relevant. */}
+        <p className={styles.turnIndicator}>{metas[step].turn === 'w' ? 'White' : 'Black'} to move</p>
         {enableVoice && !started ? (
           <>
             <p className={styles.explanationLabel}>Ready to begin?</p>

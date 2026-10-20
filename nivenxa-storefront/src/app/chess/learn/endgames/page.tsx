@@ -2,11 +2,18 @@ import Link from 'next/link'
 import { ENDGAMES } from '@/lib/chess/endgames/data'
 import styles from './EndgamesList.module.scss'
 
-// One icon per endgame — only 3 entries, quick to pick individually.
+// One icon per endgame, matching Tactics' own per-lesson icon pattern.
 const ENDGAME_ICON: Record<string, string> = {
-  'king-and-pawn-vs-king': '♟️',
-  'basic-checkmates': '👑',
-  'king-activity': '🚶',
+  'use-your-king': '🚶',
+  'checkmate-with-a-queen': '👑',
+  'checkmate-with-a-rook': '🏰',
+  'help-your-pawn-become-a-queen': '♟️',
+  'the-pawn-race': '🏁',
+  'can-the-king-catch-the-pawn': '🏃',
+  'create-a-passed-pawn': '🔓',
+  'stop-a-passed-pawn': '🚧',
+  'avoid-stalemate': '⚠️',
+  'rook-behind-the-pawn': '🗼',
 }
 
 export default function ChessLearnEndgamesPage() {
