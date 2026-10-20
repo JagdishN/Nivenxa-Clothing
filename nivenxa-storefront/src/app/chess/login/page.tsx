@@ -1,8 +1,14 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getChessSession, safeChessRedirect } from '@/lib/chess/chessAuth'
 import ChessOtpForm from '../_auth/ChessOtpForm'
 import styles from '../_auth/ChessAuthForm.module.scss'
+
+// Disallow would block crawling but still let the bare URL sit in results
+// with no content — noindex is the right instrument for an auth form.
+// follow: true since the page still links onward (back to the main site).
+export const metadata: Metadata = { robots: { index: false, follow: true } }
 
 export default async function ChessLoginPage({ searchParams }: { searchParams: Promise<{ redirect?: string }> }) {
   const { redirect: redirectParam } = await searchParams

@@ -11,34 +11,16 @@ import {
   type FeedbackItem,
   type FeedbackStatus,
 } from '@/lib/feedback/types'
-import { ADMIN_FEEDBACK_COOKIE, hashAdminPassword, isAdminAuthenticated, requireAdminAuth } from './_auth'
-import styles from './AdminFeedback.module.scss'
+import { ADMIN_FEEDBACK_COOKIE, requireAdminAuth } from '../_auth'
+import styles from '../AdminFeedback.module.scss'
 
 const STATUSES: FeedbackStatus[] = ['new', 'reviewed', 'planned', 'in_progress', 'completed', 'wont_do']
-
-async function authenticate(formData: FormData) {
-  'use server'
-  const password = String(formData.get('password') ?? '')
-  const expected = process.env.ADMIN_FEEDBACK_PASSWORD
-  if (!expected) redirect('/admin/feedback?error=' + encodeURIComponent('ADMIN_FEEDBACK_PASSWORD is not set on the server.'))
-  if (password !== expected) redirect('/admin/feedback?error=' + encodeURIComponent('Incorrect password.'))
-
-  const cookieStore = await cookies()
-  cookieStore.set(ADMIN_FEEDBACK_COOKIE, hashAdminPassword(expected), {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/admin/feedback',
-    maxAge: 60 * 60 * 8, // 8 hours
-  })
-  redirect('/admin/feedback')
-}
 
 async function logout() {
   'use server'
   const cookieStore = await cookies()
   cookieStore.delete(ADMIN_FEEDBACK_COOKIE)
-  redirect('/admin/feedback')
+  redirect('/admin/feedback/login')
 }
 
 async function updateStatusAction(formData: FormData) {
@@ -61,26 +43,9 @@ export default async function AdminFeedbackPage({
   searchParams: Promise<{ error?: string; app?: string; category?: string }>
 }) {
   const params = await searchParams
-  const cookieStore = await cookies()
-  const authed = isAdminAuthenticated(cookieStore.get(ADMIN_FEEDBACK_COOKIE)?.value)
 
-  if (!authed) {
-    return (
-      <main className={styles.page}>
-        <div className={styles.loginCard}>
-          <h1 className={styles.heading}>Admin — Feedback</h1>
-          {params.error && <p className={styles.error}>{params.error}</p>}
-          <form action={authenticate} className={styles.loginForm}>
-            <input type="password" name="password" placeholder="Password" required className={styles.input} />
-            <button type="submit" className={styles.primaryBtn}>
-              Sign in
-            </button>
-          </form>
-        </div>
-      </main>
-    )
-  }
-
+  // Auth is enforced once, above, by (protected)/layout.tsx — reaching this
+  // component at all already means the cookie checked out.
   const supabase = getSupabaseAdmin()
   const { data, error } = await supabase.from('feedback_items').select('*').order('created_at', { ascending: false }).limit(500)
   if (error) console.error('AdminFeedbackPage: failed to load feedback —', error.message)

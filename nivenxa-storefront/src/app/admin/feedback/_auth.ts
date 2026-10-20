@@ -28,5 +28,5 @@ export function isAdminAuthenticated(cookieValue: string | undefined): boolean {
 /** Call at the top of any admin server action — redirects away if the cookie doesn't check out. */
 export async function requireAdminAuth() {
   const cookieStore = await cookies()
-  if (!isAdminAuthenticated(cookieStore.get(ADMIN_FEEDBACK_COOKIE)?.value)) redirect('/admin/feedback')
+  if (!isAdminAuthenticated(cookieStore.get(ADMIN_FEEDBACK_COOKIE)?.value)) redirect('/admin/feedback/login')
 }

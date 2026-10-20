@@ -1,4 +1,4 @@
-import { getThemeSummaries } from '@/lib/chess/puzzles'
+import { getThemeSummaries, isDifficultyLevel } from '@/lib/chess/puzzles'
 import { getChessSession } from '@/lib/chess/chessAuth'
 import { getMyPuzzleStats } from '@/lib/chess/puzzleActions'
 import PuzzleCatalogueGrid from './PuzzleCatalogueGrid'
@@ -6,8 +6,9 @@ import styles from './Puzzles.module.scss'
 
 export const dynamic = 'force-dynamic' // reflect newly-imported puzzles without a rebuild
 
-export default async function ChessPuzzlesPage() {
-  const [themes, session] = await Promise.all([getThemeSummaries(), getChessSession()])
+export default async function ChessPuzzlesPage({ searchParams }: { searchParams: Promise<{ level?: string }> }) {
+  const [{ level: levelParam }, themes, session] = await Promise.all([searchParams, getThemeSummaries(), getChessSession()])
+  const level = isDifficultyLevel(levelParam) ? levelParam : 'all'
   const stats = session ? await getMyPuzzleStats() : null
 
   return (
@@ -31,7 +32,7 @@ export default async function ChessPuzzlesPage() {
           <p>No puzzles are available yet.</p>
         </div>
       ) : (
-        <PuzzleCatalogueGrid themes={themes} />
+        <PuzzleCatalogueGrid themes={themes} level={level} />
       )}
     </main>
   )

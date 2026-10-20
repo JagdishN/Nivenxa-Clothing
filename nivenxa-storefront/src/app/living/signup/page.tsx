@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { setLivingError, setLivingNotice } from '@/lib/living/flash'
@@ -5,6 +6,9 @@ import { createLivingServerClient } from '@/lib/living/supabaseServer'
 import OtpForm from '../_auth/OtpForm'
 import theme from '../LivingTheme.module.scss'
 import styles from '../_auth/AuthForm.module.scss'
+
+// See living/login/page.tsx — same reasoning.
+export const metadata: Metadata = { robots: { index: false, follow: true } }
 
 async function createApartment(formData: FormData) {
   'use server'

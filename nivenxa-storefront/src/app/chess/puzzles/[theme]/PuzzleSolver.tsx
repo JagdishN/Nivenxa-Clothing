@@ -7,7 +7,7 @@ import Board from '@/components/chess/Board'
 import { useChessGame } from '@/lib/chess/useChessGame'
 import { applyRawMove } from '../../learn/_shared/moveTrainerLogic'
 import { PIECE_NAME, attackedPiecesFrom } from '../../learn/_shared/moveSquares'
-import type { PuzzleRow } from '@/lib/chess/puzzles'
+import type { DifficultyLevel, PuzzleRow } from '@/lib/chess/puzzles'
 import { logPuzzleAttempt } from '@/lib/chess/puzzleActions'
 import styles from './PuzzleSolver.module.scss'
 
@@ -100,9 +100,22 @@ const THEME_SINGULAR: Record<string, string> = {
  * `applyRawMove` non-committing-preview trick PieceLesson/BoardLesson use)
  * and then reverted — never actually applied to the real chess.js position.
  */
-export default function PuzzleSolver({ puzzles, themeLabel, theme }: { puzzles: PuzzleRow[]; themeLabel: string; theme: string }) {
+export default function PuzzleSolver({
+  puzzles,
+  themeLabel,
+  theme,
+  level,
+}: {
+  puzzles: PuzzleRow[]
+  themeLabel: string
+  theme: string
+  level: DifficultyLevel
+}) {
   const [puzzleIndex, setPuzzleIndex] = useState(0)
   const puzzle = puzzles[puzzleIndex]
+  // Carries the active filter back to the catalogue — leaving a filtered
+  // view via "All puzzles"/"Back to Puzzles" shouldn't silently drop it.
+  const puzzlesHref = level === 'all' ? '/chess/puzzles' : `/chess/puzzles?level=${level}`
 
   const parsedMoves = useMemo(() => puzzle.moves.trim().split(/\s+/).map(parseUci), [puzzle])
   const setupMove = parsedMoves[0]
@@ -110,7 +123,22 @@ export default function PuzzleSolver({ puzzles, themeLabel, theme }: { puzzles: 
   // The FEN's own side-to-move plays the setup move; the solver is the other side.
   const playerColor: 'w' | 'b' = puzzle.fen.split(' ')[1] === 'w' ? 'b' : 'w'
 
-  const { fen, turn, dests, isCheck, isCheckmate, makeMove, reset, undo } = useChessGame(puzzle.fen)
+  // Apply the setup move synchronously during render (not in an effect) so
+  // the very first render — SSR and the first client paint alike — already
+  // reflects the position the player actually faces: their move, not the
+  // opponent's. Doing this in an effect instead meant `useChessGame` started
+  // from the raw puzzle FEN (whose side-to-move is the opponent, not the
+  // player), so `turn !== playerColor` until the mount effect committed —
+  // the server-rendered HTML, and a brief moment of the real page, said
+  // "Nivenxa is replying…" before the player had made any move at all.
+  const startingFen = useMemo(() => {
+    if (!setupMove) return puzzle.fen
+    const setup = new Chess(puzzle.fen)
+    setup.move({ from: setupMove.from, to: setupMove.to, promotion: setupMove.promotion ?? 'q' })
+    return setup.fen()
+  }, [puzzle, setupMove])
+
+  const { fen, turn, dests, isCheck, isCheckmate, makeMove, reset, undo } = useChessGame(startingFen)
 
   const [solutionIndex, setSolutionIndex] = useState(0)
   const [attemptState, setAttemptState] = useState<'idle' | 'correct' | 'wrong' | 'demonstrating'>('idle')
@@ -132,8 +160,9 @@ export default function PuzzleSolver({ puzzles, themeLabel, theme }: { puzzles: 
   function resetPuzzleAttempt() {
     if (revertTimer.current) clearTimeout(revertTimer.current)
     if (advanceTimer.current) clearTimeout(advanceTimer.current)
+    // `reset()` reloads to `startingFen`, which already has the setup move
+    // baked in — no separate makeMove call needed here anymore.
     reset()
-    if (setupMove) makeMove(setupMove.from, setupMove.to, setupMove.promotion ?? 'q')
     setSolutionIndex(0)
     setAttemptState('idle')
     setWrongFlashFen(null)
@@ -144,7 +173,7 @@ export default function PuzzleSolver({ puzzles, themeLabel, theme }: { puzzles: 
     startedAtRef.current = Date.now()
   }
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on puzzleIndex only; resetPuzzleAttempt/reset/makeMove/setupMove all change together with it
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on puzzleIndex only; resetPuzzleAttempt/reset/startingFen all change together with it
   useEffect(() => {
     resetPuzzleAttempt()
   }, [puzzleIndex])
@@ -328,7 +357,7 @@ export default function PuzzleSolver({ puzzles, themeLabel, theme }: { puzzles: 
       </div>
 
       <div className={styles.panelCol}>
-        <Link href="/chess/puzzles" className={styles.backLink}>
+        <Link href={puzzlesHref} className={styles.backLink}>
           ← All puzzles
         </Link>
 
@@ -387,7 +416,7 @@ export default function PuzzleSolver({ puzzles, themeLabel, theme }: { puzzles: 
             ← Previous
           </button>
           {isLastPuzzle && solved ? (
-            <Link href="/chess/puzzles" className={styles.actionBtn}>
+            <Link href={puzzlesHref} className={styles.actionBtn}>
               Back to Puzzles
             </Link>
           ) : (

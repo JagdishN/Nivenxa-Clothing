@@ -4,35 +4,17 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { getSupabaseAdmin } from '@/lib/chess/supabase'
 import type { TournamentRow } from '@/lib/chess/tournaments'
-import { ADMIN_TOURNAMENTS_COOKIE, hashAdminPassword, isAdminAuthenticated, requireAdminAuth } from './_auth'
-import { uploadPaymentQr } from './_qrUpload'
-import styles from './AdminTournaments.module.scss'
+import { ADMIN_TOURNAMENTS_COOKIE, requireAdminAuth } from '../_auth'
+import { uploadPaymentQr } from '../_qrUpload'
+import styles from '../AdminTournaments.module.scss'
 
 // See _auth.ts for the shared-password-gate caveats — same gate, same limits.
-
-async function authenticate(formData: FormData) {
-  'use server'
-  const password = String(formData.get('password') ?? '')
-  const expected = process.env.ADMIN_TOURNAMENTS_PASSWORD
-  if (!expected) redirect('/admin/tournaments?error=' + encodeURIComponent('ADMIN_TOURNAMENTS_PASSWORD is not set on the server.'))
-  if (password !== expected) redirect('/admin/tournaments?error=' + encodeURIComponent('Incorrect password.'))
-
-  const cookieStore = await cookies()
-  cookieStore.set(ADMIN_TOURNAMENTS_COOKIE, hashAdminPassword(expected), {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/admin/tournaments',
-    maxAge: 60 * 60 * 8, // 8 hours
-  })
-  redirect('/admin/tournaments')
-}
 
 async function logout() {
   'use server'
   const cookieStore = await cookies()
   cookieStore.delete(ADMIN_TOURNAMENTS_COOKIE)
-  redirect('/admin/tournaments')
+  redirect('/admin/tournaments/login')
 }
 
 const REQUIRED_FIELDS = ['name', 'country', 'start_date', 'location_name', 'time_control', 'format', 'organizer_name'] as const
@@ -115,26 +97,9 @@ export default async function AdminTournamentsPage({
   searchParams: Promise<{ error?: string }>
 }) {
   const params = await searchParams
-  const cookieStore = await cookies()
-  const authed = isAdminAuthenticated(cookieStore.get(ADMIN_TOURNAMENTS_COOKIE)?.value)
 
-  if (!authed) {
-    return (
-      <main className={styles.page}>
-        <div className={styles.loginCard}>
-          <h1 className={styles.heading}>Admin — Tournaments</h1>
-          {params.error && <p className={styles.error}>{params.error}</p>}
-          <form action={authenticate} className={styles.loginForm}>
-            <input type="password" name="password" placeholder="Password" required className={styles.input} />
-            <button type="submit" className={styles.primaryBtn}>
-              Sign in
-            </button>
-          </form>
-        </div>
-      </main>
-    )
-  }
-
+  // Auth is enforced once, above, by (protected)/layout.tsx — reaching this
+  // component at all already means the cookie checked out.
   const supabase = getSupabaseAdmin()
   const { data, error } = await supabase.from('tournaments').select('*').order('created_at', { ascending: false })
   if (error) console.error('AdminTournamentsPage: failed to load tournaments —', error.message)

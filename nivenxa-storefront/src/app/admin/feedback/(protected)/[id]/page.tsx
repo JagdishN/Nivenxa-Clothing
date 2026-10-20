@@ -1,5 +1,4 @@
-import { cookies } from 'next/headers'
-import { redirect, notFound } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import Link from 'next/link'
 import { getSupabaseAdmin } from '@/lib/chess/supabase'
@@ -12,8 +11,8 @@ import {
   type FeedbackPriority,
   type FeedbackStatus,
 } from '@/lib/feedback/types'
-import { ADMIN_FEEDBACK_COOKIE, isAdminAuthenticated, requireAdminAuth } from '../_auth'
-import styles from '../AdminFeedback.module.scss'
+import { requireAdminAuth } from '../../_auth'
+import styles from '../../AdminFeedback.module.scss'
 
 const STATUSES: FeedbackStatus[] = ['new', 'reviewed', 'planned', 'in_progress', 'completed', 'wont_do']
 const PRIORITIES: FeedbackPriority[] = ['low', 'medium', 'high', 'critical']
@@ -49,10 +48,8 @@ async function updateTriageAction(formData: FormData) {
 
 export default async function AdminFeedbackDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const cookieStore = await cookies()
-  const authed = isAdminAuthenticated(cookieStore.get(ADMIN_FEEDBACK_COOKIE)?.value)
-  if (!authed) redirect('/admin/feedback')
 
+  // Auth is enforced once, above, by (protected)/layout.tsx.
   const supabase = getSupabaseAdmin()
   const { data, error } = await supabase.from('feedback_items').select('*').eq('id', id).maybeSingle()
   if (error) console.error('AdminFeedbackDetailPage: failed to load item —', error.message)

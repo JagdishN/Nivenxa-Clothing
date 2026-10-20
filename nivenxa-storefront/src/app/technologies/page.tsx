@@ -1,13 +1,15 @@
-import type { Metadata } from 'next'
 import Link from 'next/link'
+import { seoMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
-  title: 'NIVENXA Technologies — Senior engineers, small teams, systems built to last',
-  description: 'We design and build business software, AI-enabled systems and digital products — without layers of account management or junior-heavy delivery teams.',
-}
+export const metadata = seoMetadata({
+  title: 'NIVENXA Technologies — Senior engineers, small teams',
+  description:
+    'We design and build business software, AI-enabled systems and digital products — without layers of account management or junior-heavy delivery teams.',
+  path: '/technologies',
+})
 
-const PHONE_DISPLAY = '+91 7416996664'
-const PHONE_TEL = 'tel:+917416996664'
+const PHONE_DISPLAY = '+91 7416996665'
+const PHONE_TEL = 'tel:+917416996665' 
 // wa.me's `text` param pre-fills the message so a click opens straight into
 // a started conversation instead of a blank chat.
 const PHONE_WA = `https://wa.me/917416996665?text=${encodeURIComponent("Hi NIVENXA, I'd like to talk about a project.")}`

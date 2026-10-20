@@ -1,12 +1,11 @@
 import Link from 'next/link'
-import { cookies } from 'next/headers'
 import { redirect, notFound } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { getSupabaseAdmin } from '@/lib/chess/supabase'
 import type { TournamentRow } from '@/lib/chess/tournaments'
-import { ADMIN_TOURNAMENTS_COOKIE, isAdminAuthenticated, requireAdminAuth } from '../../_auth'
-import { uploadPaymentQr } from '../../_qrUpload'
-import styles from '../../AdminTournaments.module.scss'
+import { requireAdminAuth } from '../../../_auth'
+import { uploadPaymentQr } from '../../../_qrUpload'
+import styles from '../../../AdminTournaments.module.scss'
 
 async function updateTournament(id: string, formData: FormData) {
   'use server'
@@ -74,9 +73,8 @@ export default async function EditTournamentPage({
 }) {
   const { id } = await params
   const { error: errorParam } = await searchParams
-  const cookieStore = await cookies()
-  if (!isAdminAuthenticated(cookieStore.get(ADMIN_TOURNAMENTS_COOKIE)?.value)) redirect('/admin/tournaments')
 
+  // Auth is enforced once, above, by (protected)/layout.tsx.
   const supabase = getSupabaseAdmin()
   const { data, error } = await supabase.from('tournaments').select('*').eq('id', id).maybeSingle()
   if (error) console.error('EditTournamentPage: failed to load tournament —', error.message)

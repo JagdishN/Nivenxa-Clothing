@@ -1,6 +1,11 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import SelfAnalysisBoard from './SelfAnalysisBoard'
 import styles from './SelfAnalysis.module.scss'
+
+// Session-specific content, not generic enough to index — see
+// chess/analysis/import/page.tsx for the full reasoning.
+export const metadata: Metadata = { robots: { index: false, follow: true } }
 
 export default function ChessAnalysisSelfAnalysisPage() {
   return (

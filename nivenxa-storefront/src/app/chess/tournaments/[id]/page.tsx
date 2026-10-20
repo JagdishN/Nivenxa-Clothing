@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getTournamentById } from '@/lib/chess/tournaments'
@@ -8,6 +9,16 @@ import TournamentResults from './TournamentResults'
 import styles from '../Tournaments.module.scss'
 
 export const dynamic = 'force-dynamic'
+
+// Results pages publish participants' full names, including a U7 category —
+// noindex keeps them out of search while staying reachable by direct link.
+// No shared layout exists under /chess/tournaments (checked: there's no
+// layout.tsx at that level or under [id]/), so this sits on this route's own
+// page.tsx with no risk of leaking onto /chess/tournaments,
+// /chess/tournaments/archive or /chess/tournaments/gallery — all three are
+// in the sitemap and must stay indexable. follow: true so links out to the
+// gallery still pass through.
+export const metadata: Metadata = { robots: { index: false, follow: true } }
 
 export default async function TournamentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params

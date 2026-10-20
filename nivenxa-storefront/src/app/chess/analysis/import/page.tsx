@@ -1,6 +1,13 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import ImportGameForm from './ImportGameForm'
 import styles from './Import.module.scss'
+
+// A workflow step reached only from the /chess/analysis picker, not a
+// standalone landing page — noindex, not Disallow (which would still let
+// the bare URL sit in results with no content). follow: true, it still
+// links onward.
+export const metadata: Metadata = { robots: { index: false, follow: true } }
 
 export default function ChessAnalysisImportPage() {
   return (
