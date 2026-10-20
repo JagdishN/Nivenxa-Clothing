@@ -1,7 +1,12 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import MyGamesList from './MyGamesList'
 import type { AnalysisGameFilter } from './MyGamesList'
 import styles from './MyGames.module.scss'
+
+// Session-specific content, not generic enough to index — see
+// chess/analysis/import/page.tsx for the full reasoning.
+export const metadata: Metadata = { robots: { index: false, follow: true } }
 
 const VALID_FILTERS: AnalysisGameFilter[] = ['all', 'analyzed', 'not-analyzed']
 

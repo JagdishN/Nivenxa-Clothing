@@ -1,8 +1,14 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getLivingSession } from '@/lib/living/auth'
 import OtpForm from '../_auth/OtpForm'
 import styles from '../_auth/AuthForm.module.scss'
+
+// Disallow would block crawling but still let the bare URL sit in results
+// with no content — noindex is the right instrument for an auth form.
+// follow: true since the page still links onward (back to /living).
+export const metadata: Metadata = { robots: { index: false, follow: true } }
 
 export default async function LivingLoginPage() {
   const session = await getLivingSession()

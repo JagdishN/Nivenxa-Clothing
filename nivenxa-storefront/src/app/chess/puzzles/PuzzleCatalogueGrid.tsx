@@ -1,7 +1,5 @@
-'use client'
-import { useState } from 'react'
 import Link from 'next/link'
-import { THEME_LABELS, type ThemeSummary } from '@/lib/chess/puzzles'
+import { THEME_LABELS, RATING_BANDS, isBandAvailable, type DifficultyLevel, type ThemeSummary } from '@/lib/chess/puzzles'
 import styles from './Puzzles.module.scss'
 
 // Reuses the same icons already picked for the matching Tactics (same
@@ -30,35 +28,31 @@ const THEME_ICON: Record<string, string> = {
   trappedPiece: '🕸️',
 }
 
-type Difficulty = 'all' | 'beginner' | 'intermediate' | 'advanced'
+const LEVELS: DifficultyLevel[] = ['all', 'beginner', 'intermediate', 'advanced']
 
-// Standard, rough rating buckets — a theme's wide min/max range (e.g.
-// 399-3233) said nothing about whether it was safe to start with; this at
-// least narrows the choice before the numbers matter at all.
-const BUCKETS: { key: Difficulty; label: string; min: number; max: number }[] = [
-  { key: 'all', label: 'All', min: -Infinity, max: Infinity },
-  { key: 'beginner', label: 'Beginner', min: 0, max: 1199 },
-  { key: 'intermediate', label: 'Intermediate', min: 1200, max: 1799 },
-  { key: 'advanced', label: 'Advanced', min: 1800, max: Infinity },
-]
+function levelHref(theme: string | null, level: DifficultyLevel): string {
+  const base = theme ? `/chess/puzzles/${theme}` : '/chess/puzzles'
+  return level === 'all' ? base : `${base}?level=${level}`
+}
 
-export default function PuzzleCatalogueGrid({ themes }: { themes: ThemeSummary[] }) {
-  const [difficulty, setDifficulty] = useState<Difficulty>('all')
-  const bucket = BUCKETS.find((b) => b.key === difficulty)!
-  const filtered = difficulty === 'all' ? themes : themes.filter((t) => t.minRating <= bucket.max && t.maxRating >= bucket.min)
+export default function PuzzleCatalogueGrid({ themes, level }: { themes: ThemeSummary[]; level: DifficultyLevel }) {
+  // A theme only shows under a given level when that band actually clears
+  // the floor for it — the filter's whole point is to stop pointing
+  // learners at a "Beginner" link that turns out to hold two puzzles.
+  const filtered = level === 'all' ? themes : themes.filter((t) => isBandAvailable(t.bands, level))
 
   return (
     <>
       <div className={styles.difficultyFilter} role="group" aria-label="Filter by difficulty">
-        {BUCKETS.map((b) => (
-          <button
-            key={b.key}
-            type="button"
-            className={`${styles.difficultyBtn} ${difficulty === b.key ? styles.difficultyBtnActive : ''}`}
-            onClick={() => setDifficulty(b.key)}
+        {LEVELS.map((l) => (
+          <Link
+            key={l}
+            href={levelHref(null, l)}
+            className={`${styles.difficultyBtn} ${level === l ? styles.difficultyBtnActive : ''}`}
+            aria-current={level === l ? 'true' : undefined}
           >
-            {b.label}
-          </button>
+            {l === 'all' ? 'All' : RATING_BANDS[l].label}
+          </Link>
         ))}
       </div>
 
@@ -68,23 +62,32 @@ export default function PuzzleCatalogueGrid({ themes }: { themes: ThemeSummary[]
         </div>
       ) : (
         <div className={styles.grid}>
-          {filtered.map((t) => (
-            <Link key={t.theme} href={`/chess/puzzles/${t.theme}`} className={styles.tile}>
-              <span className={styles.tileIcon} aria-hidden="true">
-                {THEME_ICON[t.theme] ?? '♟️'}
-              </span>
-              <h2 className={styles.tileTier}>{THEME_LABELS[t.theme] ?? t.theme}</h2>
-              <p className={styles.tileCount}>
-                {t.count} puzzle{t.count === 1 ? '' : 's'}
-              </p>
-              <span className={styles.tileFooter}>
-                <span className={styles.tileRange}>
-                  Rating {t.minRating}–{t.maxRating}
+          {filtered.map((t) => {
+            // With a level active, the card's count/range describes that
+            // band specifically — the whole-theme range (e.g. 399-3233) is
+            // exactly what makes a 36-puzzle spread look alarming.
+            const band = level === 'all' ? null : t.bands[level]
+            const count = band ? band.count : t.count
+            const minRating = band ? band.minRating : t.minRating
+            const maxRating = band ? band.maxRating : t.maxRating
+            return (
+              <Link key={t.theme} href={levelHref(t.theme, level)} className={styles.tile}>
+                <span className={styles.tileIcon} aria-hidden="true">
+                  {THEME_ICON[t.theme] ?? '♟️'}
                 </span>
-                <span className={styles.tileCta}>Solve →</span>
-              </span>
-            </Link>
-          ))}
+                <h2 className={styles.tileTier}>{THEME_LABELS[t.theme] ?? t.theme}</h2>
+                <p className={styles.tileCount}>
+                  {count} puzzle{count === 1 ? '' : 's'}
+                </p>
+                <span className={styles.tileFooter}>
+                  <span className={styles.tileRange}>
+                    Rating {minRating}–{maxRating}
+                  </span>
+                  <span className={styles.tileCta}>Solve →</span>
+                </span>
+              </Link>
+            )
+          })}
         </div>
       )}
     </>

@@ -1,8 +1,12 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getChessSession, safeChessRedirect } from '@/lib/chess/chessAuth'
 import ChessOtpForm from '../_auth/ChessOtpForm'
 import styles from '../_auth/ChessAuthForm.module.scss'
+
+// See chess/login/page.tsx — same reasoning.
+export const metadata: Metadata = { robots: { index: false, follow: true } }
 
 export default async function ChessSignupPage({ searchParams }: { searchParams: Promise<{ redirect?: string }> }) {
   const { redirect: redirectParam } = await searchParams

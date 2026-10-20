@@ -1,11 +1,13 @@
-import type { Metadata } from 'next'
 import Link from 'next/link'
+import { seoMetadata } from '@/lib/seo'
 import styles from './page.module.scss'
 
-export const metadata: Metadata = {
+export const metadata = seoMetadata({
   title: 'NIVENXA — Independent ventures. Built with intention.',
-  description: 'NIVENXA Studio and NIVENXA Technologies. Premium Indian comfortwear and digital products built with precision.',
-}
+  description:
+    'NIVENXA Studio and NIVENXA Technologies — premium Indian comfortwear and software built with intention, from Hyderabad, India.',
+  path: '/',
+})
 
 export default function RootPage() {
   return (
