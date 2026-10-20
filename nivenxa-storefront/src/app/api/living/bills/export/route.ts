@@ -3,7 +3,7 @@ import ExcelJS from 'exceljs'
 import { getLivingMembership } from '@/lib/living/auth'
 import { formatPaymentMethod, formatPaymentStatus, formatPeriodLabel, monthKeyFor } from '@/lib/living/format'
 import { maintenanceGrandTotal } from '@/lib/living/billing'
-import { computeBillForFlat, getBillableFlats, getCurrentMaintenancePeriod, getFlats, getPaymentsForPeriod, getWaterReading } from '@/lib/living/queries'
+import { computeBillForFlat, getBillableFlats, getCurrentMaintenancePeriod, getFlats, getPaymentsForPeriod, getRelevantWaterMonth, getWaterReading } from '@/lib/living/queries'
 
 const CURRENCY_FORMAT = '#,##0.00'
 
@@ -21,11 +21,14 @@ export async function GET() {
   const membership = await getLivingMembership(['admin', 'treasurer'])
   if (!membership) return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
   const { supabase, apartment } = membership
-  const month = monthKeyFor(new Date())
-
   const allFlats = await getFlats(supabase, apartment.id)
   const billableFlats = getBillableFlats(allFlats)
   const maintenancePeriod = await getCurrentMaintenancePeriod(supabase, apartment.id)
+  // Not blindly "today" — see getRelevantWaterMonth's own doc comment. Without
+  // this, every flat's Water column (and the whole Water Meters sheet) would
+  // silently come back empty whenever the current period has already ended
+  // and no new one's been started yet, same bug already found on 7 other pages.
+  const month = getRelevantWaterMonth(maintenancePeriod, monthKeyFor(new Date()))
 
   const workbook = new ExcelJS.Workbook()
   workbook.creator = 'Nivenxa Living'
@@ -50,8 +53,14 @@ export async function GET() {
   styleHeader(billsSheet.getRow(1))
 
   const totals = { maintenance: 0, water: 0, periodTotal: 0, lateFee: 0, previousDue: 0, advance: 0, total: 0, paid: 0, balance: 0 }
-  for (const flat of billableFlats) {
-    const bill = await computeBillForFlat(supabase, apartment, flat, month)
+  // Was a sequential for-loop — one full bill computation (several sub-queries
+  // each) awaited one flat at a time. For ~26 flats that's the same kind of
+  // slow-enough-to-not-finish problem already fixed on the Maintenance page's
+  // Ledger save — parallelized the same way, then write rows in flat order
+  // afterward so the sheet's row order doesn't depend on resolution order.
+  const bills = await Promise.all(billableFlats.map((flat) => computeBillForFlat(supabase, apartment, flat, month, { allFlats, maintenanceMonth: maintenancePeriod })))
+  billableFlats.forEach((flat, i) => {
+    const bill = bills[i]
     billsSheet.addRow({
       flat_no: flat.flat_no,
       owner: flat.owner_name ?? '',
@@ -75,7 +84,7 @@ export async function GET() {
     totals.total += bill.total_due
     totals.paid += bill.amount_paid
     totals.balance += bill.balance_remaining
-  }
+  })
   const totalRow = billsSheet.addRow({
     flat_no: 'Total',
     owner: '',
@@ -128,8 +137,9 @@ export async function GET() {
   ]
   styleHeader(waterSheet.getRow(1))
 
-  for (const flat of allFlats) {
-    const reading = await getWaterReading(supabase, flat.id, month)
+  const readings = await Promise.all(allFlats.map((flat) => getWaterReading(supabase, flat.id, month)))
+  allFlats.forEach((flat, i) => {
+    const reading = readings[i]
     const consumption =
       reading?.current_reading !== null && reading?.previous_reading !== null && reading
         ? reading.current_reading! - reading.previous_reading!
@@ -142,7 +152,7 @@ export async function GET() {
       flagged: reading?.flagged ? 'Yes' : '',
       note: reading?.flagged_note || reading?.owner_note || '',
     })
-  }
+  })
 
   // ─── Payments ───────────────────────────────────────────────────────
   const paymentsSheet = workbook.addWorksheet('Payments')

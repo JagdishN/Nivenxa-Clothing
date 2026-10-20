@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { requireMembership } from '@/lib/living/auth'
 import { round2 } from '@/lib/living/billing'
 import { formatBalanceMeaning, formatCurrency, formatMonthLabel, monthKeyFor } from '@/lib/living/format'
-import { computeBillForFlat, getApartmentReimbursementsDue, getBillableFlats, getCurrentMaintenancePeriod, getFlats } from '@/lib/living/queries'
+import { computeBillForFlat, getApartmentReimbursementsDue, getBillableFlats, getCurrentMaintenancePeriod, getFlats, getRelevantWaterMonth } from '@/lib/living/queries'
 import MaterialIcon from '../../../MaterialIcon'
 import theme from '../../../LivingTheme.module.scss'
 import homeStyles from '../../Home.module.scss'
@@ -26,8 +26,8 @@ export default async function LivingLedgersPage({ searchParams }: { searchParams
   const q = (qParam ?? '').trim().toLowerCase()
 
   const { supabase, apartment } = await requireMembership(['admin', 'treasurer'])
-  const month = monthKeyFor(new Date())
   const [allFlats, maintenanceMonth] = await Promise.all([getFlats(supabase, apartment.id), getCurrentMaintenancePeriod(supabase, apartment.id)])
+  const month = getRelevantWaterMonth(maintenanceMonth, monthKeyFor(new Date()))
   const flats = getBillableFlats(allFlats)
   const reimbursementsDue = await getApartmentReimbursementsDue(supabase, apartment.id, allFlats)
   const reimbursementByFlat = new Map(reimbursementsDue.byFlat.map((r) => [r.flat.id, r.remaining]))

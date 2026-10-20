@@ -6,6 +6,9 @@ import { createChessBrowserClient } from '@/lib/chess/chessSupabaseBrowser'
 import FeedbackModal from '@/components/feedback/FeedbackModal'
 import styles from './ChessNav.module.scss'
 
+const FEEDBACK_TOOLTIP_SEEN_KEY = 'chess-feedback-tooltip-seen'
+const FEEDBACK_TOOLTIP_DELAY_MS = 30000
+
 const LINKS = [
   { href: '/chess', label: 'Home' },
   { href: '/chess/play', label: 'Play' },
@@ -27,6 +30,7 @@ export default function ChessNav() {
   const [email, setEmail] = useState<string | null | undefined>(undefined) // undefined = not checked yet
   const [userId, setUserId] = useState<string | null>(null)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const [showFeedbackTooltip, setShowFeedbackTooltip] = useState(false)
 
   useEffect(() => {
     const supabase = createChessBrowserClient()
@@ -42,6 +46,35 @@ export default function ChessNav() {
     })
     return () => subscription.unsubscribe()
   }, [])
+
+  // One-time "Help us improve" nudge toward the feedback button — shown
+  // once per visitor (a localStorage flag, set the moment it's shown, not
+  // only on explicit dismissal, so it never reappears on a later visit
+  // either) after ~30s of being on the site, never repeated or re-animated
+  // after that first appearance.
+  useEffect(() => {
+    let alreadySeen = false
+    try {
+      alreadySeen = localStorage.getItem(FEEDBACK_TOOLTIP_SEEN_KEY) === '1'
+    } catch {
+      // Private-mode/blocked storage — treat as not-yet-seen for this visit.
+    }
+    if (alreadySeen) return
+    const timer = setTimeout(() => {
+      setShowFeedbackTooltip(true)
+      try {
+        localStorage.setItem(FEEDBACK_TOOLTIP_SEEN_KEY, '1')
+      } catch {
+        // Private-mode/blocked storage — it'll just show again next visit.
+      }
+    }, FEEDBACK_TOOLTIP_DELAY_MS)
+    return () => clearTimeout(timer)
+  }, [])
+
+  function openFeedback() {
+    setShowFeedbackTooltip(false)
+    setFeedbackOpen(true)
+  }
 
   async function handleLogOut() {
     const supabase = createChessBrowserClient()
@@ -70,9 +103,24 @@ export default function ChessNav() {
         })}
       </nav>
       <div className={styles.authArea}>
-        <button type="button" className={styles.feedbackLink} onClick={() => setFeedbackOpen(true)}>
-          Feedback
-        </button>
+        <div className={styles.feedbackWrap}>
+          <button type="button" className={styles.feedbackButton} onClick={openFeedback}>
+            💬 Share feedback
+          </button>
+          {showFeedbackTooltip && (
+            <div className={styles.feedbackTooltip} role="status">
+              <span>Help us improve — tell us what you think.</span>
+              <button
+                type="button"
+                className={styles.feedbackTooltipClose}
+                aria-label="Dismiss"
+                onClick={() => setShowFeedbackTooltip(false)}
+              >
+                ×
+              </button>
+            </div>
+          )}
+        </div>
         {email === undefined ? null : email ? (
           <>
             <span className={styles.authEmail}>{email}</span>

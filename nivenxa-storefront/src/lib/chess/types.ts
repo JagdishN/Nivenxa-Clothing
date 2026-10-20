@@ -58,6 +58,24 @@ export interface TournamentPrizePool {
   verified: boolean
 }
 
+/** One ranked finisher within a single age/skill category's final standings. */
+export interface TournamentStanding {
+  rank: number
+  name: string
+  points: number
+}
+
+/**
+ * A tournament can run several age/skill categories at once (see
+ * ChessTournament.categories, e.g. "U7, U9, U11, U14") — each gets its own
+ * independent final standings and round count, not one shared list.
+ */
+export interface TournamentCategoryResult {
+  category: string
+  totalRounds: number
+  standings: TournamentStanding[]
+}
+
 export interface RawTournament {
   externalId: string
   title: string
@@ -114,21 +132,27 @@ export interface ChessTournament {
   format: TournamentFormat
   topPlayers: TournamentPlayerPreview[]
   prizePool?: TournamentPrizePool
+  /** Freeform, e.g. "₹650" — shown as primary info on the tournament card. */
+  entryFee?: string
+  /** Freeform comma-separated age/skill categories, e.g. "U7, U9, U11, U14". */
+  categories?: string
   organizer: {
     name: string
     verified: boolean
     /** International format, e.g. "+91XXXXXXXXXX" — powers the wa.me Register fallback. */
     whatsapp?: string
   }
-  /** Organizer's own payment QR, shown purely informationally — Nivenxa never processes this payment. */
+  /** Organizer's own payment QR/note, shown purely informationally — Nivenxa never processes this payment. `note` (prize breakdown, payment instructions) is real content on its own and shouldn't require a QR image to exist to show — a tournament can have a note with no QR uploaded yet. */
   payment?: {
-    qrUrl: string
+    qrUrl?: string
     note?: string
   }
   trust: {
     score: number
     reasons: string[]
   }
+  /** Final standings per category, only present once a completed tournament's results are entered — absent (not an empty array) until then, see tournaments.ts's mapRowToChessTournament. */
+  results?: TournamentCategoryResult[]
 }
 
 export interface TournamentGroup {

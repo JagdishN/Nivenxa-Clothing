@@ -1,5 +1,11 @@
+// BUG FIX: this composed from a `.layout` class that doesn't actually exist
+// in BasicsDetail.module.scss (it only defines `.workspace`) — with no
+// styles applied at all, the board+panel row rendered with no flex layout,
+// gap, or centering, which is why this page looked out of step with the
+// rest of the site. TacticDetail.module.scss's `.layout` is the real,
+// already-verified board+panel row (flex, centered, max-lg stacking).
 .layout {
-  composes: layout from '../../learn/basics/[slug]/BasicsDetail.module.scss';
+  composes: layout from '../../learn/tactics/[slug]/TacticDetail.module.scss';
 }
 
 .boardCol {
@@ -14,8 +20,34 @@
   composes: panelCol from '../../learn/_shared/StepThroughPanel.module.scss';
 }
 
+// A locally-placed way back, mid-puzzle — the page-level "← Puzzles"
+// breadcrumb above this panel still exists, but this is reachable without
+// scrolling back up to it.
+.backLink {
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(31, 27, 58, 0.5);
+  text-decoration: none;
+  margin-bottom: 0.6rem;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--chess-purple);
+  }
+}
+
 .stageIndicator {
   composes: puzzleIndicator from '../../learn/_shared/TacticPuzzleSet.module.scss';
+}
+
+// The permanent, always-visible "White to move" — kept separate from (and
+// more prominent than) the longer colorIndicator sentence below, which now
+// only shows on the first puzzle of a set.
+.turnLabel {
+  composes: puzzleIndicator from '../../learn/_shared/TacticPuzzleSet.module.scss';
+  opacity: 0.9;
 }
 
 .colorIndicator {

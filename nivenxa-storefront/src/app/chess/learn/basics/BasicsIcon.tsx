@@ -13,6 +13,11 @@ const SLUGS = [
   'check',
   'escaping-check',
   'checkmate',
+  'stalemate',
+  'castling',
+  'pawn-promotion',
+  'en-passant',
+  'ways-a-game-can-end',
   'mini-game',
 ] as const
 
@@ -285,28 +290,28 @@ export default function BasicsIcon({ slug, size }: { slug: BasicsIconSlug; size?
           </>
         )}
 
-        {/* Rebuilt on the user's own ♚ ───→ □ reference. Two changes from
-            the previous pass: (1) moved the escape route to the up-right
-            diagonal (angle 315) instead of straight right — that axis has
-            much more clear canvas between the King's own footprint and the
-            viewBox edge, room a purely horizontal route didn't have, which
-            is what let the arrow and square previously end up touching/
-            overlapping the King with no real gap. (2) the destination is
-            now an OUTLINED square (stroke only, no fill) rather than a
-            filled gold block — a filled block read as "attached to the
-            King"; an outline reads as an open/available square the King
-            moves to, matching the □ in the user's own sketch. The faint
-            background attack stays on the opposite (up-left, angle 225)
-            diagonal from Check/Checkmate, so threat and escape read as two
-            clearly separate directions rather than crowding one side. */}
+        {/* Rebuilt on the user's own ♚ ───→ □ reference, moved to the
+            up-right diagonal (angle 315) — the one direction with enough
+            clear canvas between the King and the viewBox edge for a real
+            gap-shaft-square sequence — with an OUTLINED (not filled)
+            destination square, matching the □ in their sketch. Locked
+            per the user's own "after that, lock it": the arrow now
+            reaches into the square's centre rather than stopping at its
+            near edge (`to` 15.5 -> 17.3, past the near edge at r≈16.0 and
+            almost to the square's own centre at r=18.2) so the arrowhead
+            visibly lands inside it instead of just touching it — square
+            size deliberately left alone. The faint background attack
+            stays on the opposite (up-left, angle 225) diagonal from
+            Check/Checkmate, so threat and escape read as two clearly
+            separate directions rather than crowding one side. */}
         {slug === 'escaping-check' && (
           <>
             <Piece glyph={KING} y={22} size={KING_FAMILY_SIZE} />
             <g className={styles.moveMarksFaint} strokeWidth="1.6">
               <Arrow angle={225} from={14} to={11} head={2} />
             </g>
-            <g className={styles.moveMarks} strokeWidth="3.2">
-              <Arrow angle={315} from={12} to={15.5} head={3.8} />
+            <g className={styles.moveMarks} strokeWidth="3.3">
+              <Arrow angle={315} from={12} to={17.3} head={4.1} />
             </g>
             <rect
               x={polar(315, 18.2).x - 2.2}
@@ -343,6 +348,74 @@ export default function BasicsIcon({ slug, size }: { slug: BasicsIconSlug; size?
           </>
         )}
 
+        {/* Same King, same blocked destinations as Checkmate — deliberately
+            missing the incoming attack. That's the one visual difference
+            between the two: a trapped king with no attacker at all. */}
+        {slug === 'stalemate' && (
+          <>
+            <Piece glyph={KING} y={22} size={KING_FAMILY_SIZE} />
+            <BlockedSquare angle={0} r={13} size={5.3} />
+            <BlockedSquare angle={180} r={13} size={5.3} />
+            <BlockedSquare angle={90} r={13} size={5.3} />
+            <BlockedSquare angle={270} r={13} size={5.3} />
+          </>
+        )}
+
+        {/* King and Rook, with a short gold arrow between them standing in
+            for the castling move itself — a different pairing from every
+            other card, which is only ever one piece. */}
+        {slug === 'castling' && (
+          <>
+            <Piece glyph={KING} x={11} y={23} size={16} />
+            <Piece glyph={ROOK} x={23} y={23} size={16} />
+            <g className={styles.moveMarks} strokeWidth="2.4">
+              <line x1="15.5" y1="18" x2="19" y2="18" />
+            </g>
+          </>
+        )}
+
+        {/* The pawn, a short upward arrow, and the queen it becomes — the
+            transformation is the whole point, so both glyphs stay large
+            enough to read on their own, not shrunk to fit side by side. */}
+        {slug === 'pawn-promotion' && (
+          <>
+            <Piece glyph={PAWN} x={10} y={27} size={16} />
+            <Piece glyph={QUEEN} x={22} y={14} size={15} />
+            <g className={styles.moveMarks} strokeWidth="2.4">
+              <Arrow angle={315} from={5} to={11} head={2.6} />
+            </g>
+          </>
+        )}
+
+        {/* Two pawns side by side on the same rank (the en passant setup)
+            with a diagonal capture arrow — the captured pawn drawn fainter,
+            since it's the one about to be taken off the board. */}
+        {slug === 'en-passant' && (
+          <>
+            <Piece glyph={PAWN} x={11} y={23} size={17} />
+            <g opacity="0.45">
+              <Piece glyph={PAWN} x={22} y={23} size={17} />
+            </g>
+            <g className={styles.moveMarks} strokeWidth="2.4">
+              <Arrow angle={30} from={4.5} to={10} head={2.6} />
+            </g>
+          </>
+        )}
+
+        {/* A king beside a small flag — "the game is over," without
+            specifying which of the several ways it ended (deliberately not
+            another King-family attack/blocked variant, since this lesson
+            isn't about any one specific ending). */}
+        {slug === 'ways-a-game-can-end' && (
+          <>
+            <Piece glyph={KING} x={11} y={24} size={16} />
+            <g className={styles.moveMarks} strokeWidth="2.2">
+              <line x1="22" y1="10" x2="22" y2="25" />
+              <path d="M22 10 L28 12.5 L22 15 Z" fill="var(--chess-gold)" stroke="none" />
+            </g>
+          </>
+        )}
+
         {/* A real 4x4 checkerboard — every cell drawn, alternating fill —
             with no separate bordered/rounded rect framing it, on the
             user's explicit note that a bounding frame around the
@@ -356,7 +429,17 @@ export default function BasicsIcon({ slug, size }: { slug: BasicsIconSlug; size?
             than Queen/King/Checkmate next to it, and the purple cells'
             opacity nearly doubled (0.16 -> 0.3) because at the old value
             they read as almost invisible against a white card — "purple
-            checkerboard" was barely legible as purple at all. */}
+            checkerboard" was barely legible as purple at all. One more
+            size pass after that: the board margin trimmed to the physical
+            minimum this shared 32x32 canvas allows (1.5 -> 0.4 each side,
+            board 29.2 -> 31.4 — this is now essentially at the ceiling;
+            further growth would start clipping the icon's own edge, the
+            same overflow bug fixed on Escaping Check), the pawn enlarged
+            further on top of that for its own visual weight (23.5 -> 26),
+            and the play triangle both extended and given a heavier stroke
+            (1 -> 1.3) for more presence. Concept confirmed final by the
+            user — do not redesign this icon again, only the physical
+            canvas ceiling above should ever limit further size asks. */}
         {slug === 'mini-game' && (
           <>
             <g stroke="none">
@@ -364,18 +447,18 @@ export default function BasicsIcon({ slug, size }: { slug: BasicsIconSlug; size?
                 Array.from({ length: 4 }).map((_, col) => (
                   <rect
                     key={`${row}-${col}`}
-                    x={1.5 + col * 7.3}
-                    y={1.5 + row * 7.3}
-                    width="7.3"
-                    height="7.3"
+                    x={0.4 + col * 7.85}
+                    y={0.4 + row * 7.85}
+                    width="7.85"
+                    height="7.85"
                     fill={(row + col) % 2 === 0 ? 'var(--chess-purple)' : 'var(--chess-lavender-bg)'}
                     opacity={(row + col) % 2 === 0 ? 0.3 : 0.6}
                   />
                 ))
               )}
             </g>
-            <Piece glyph={PAWN} x={15.4} y={22.6} size={23.5} />
-            <path d="M22.5 21v10.6l9.2-5.3z" fill="var(--chess-gold)" stroke="var(--chess-gold)" strokeWidth="1" strokeLinejoin="round" />
+            <Piece glyph={PAWN} x={15.35} y={23.1} size={26} />
+            <path d="M23 20.5v11.1l8.3-5.55z" fill="var(--chess-gold)" stroke="var(--chess-gold)" strokeWidth="1.3" strokeLinejoin="round" />
           </>
         )}
       </svg>

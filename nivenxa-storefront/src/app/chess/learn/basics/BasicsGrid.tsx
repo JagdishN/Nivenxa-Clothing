@@ -40,7 +40,7 @@ export default function BasicsGrid({ lessons }: { lessons: BasicsLesson[] }) {
 
   return (
     <>
-      {/* Only rendered once localStorage has been read — an initial "0 of 13"
+      {/* Only rendered once localStorage has been read — an initial "0 of 18"
           flash before the real count loads would read as a regression, not
           progress, so it's better left out entirely for that first frame.
           One line + one bar, folded directly under the hero subtext, not a

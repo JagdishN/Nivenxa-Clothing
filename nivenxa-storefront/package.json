@@ -14,7 +14,9 @@
     "import-puzzles": "tsx scripts/import-puzzles.ts",
     "apply-schema": "tsx scripts/apply-schema.ts",
     "apply-living-schema": "tsx scripts/apply-schema.ts supabase/living_schema.sql",
-    "seed-living-demo": "tsx scripts/seed-living-demo.ts"
+    "seed-living-demo": "tsx scripts/seed-living-demo.ts",
+    "add-tournament": "tsx scripts/add-nivenxa-tournament.ts",
+    "upload-tournament-qr": "tsx scripts/upload-tournament-qr.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",
@@ -44,6 +46,7 @@
     "gh-pages": "^6.3.0",
     "pg": "^8.23.0",
     "sass": "^1.99.0",
+    "sharp": "^0.35.5",
     "supabase": "^2.116.0",
     "tailwindcss": "^4",
     "tsx": "^4.20.0",

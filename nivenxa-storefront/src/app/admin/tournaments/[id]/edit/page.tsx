@@ -42,6 +42,8 @@ async function updateTournament(id: string, formData: FormData) {
     format: String(formData.get('format')).trim(),
     top_players: formData.get('top_players') ? String(formData.get('top_players')).trim() : null,
     prize_pool: formData.get('prize_pool') ? String(formData.get('prize_pool')).trim() : null,
+    entry_fee: formData.get('entry_fee') ? String(formData.get('entry_fee')).trim() : null,
+    categories: formData.get('categories') ? String(formData.get('categories')).trim() : null,
     organizer_name: String(formData.get('organizer_name')).trim(),
     organizer_verified: formData.get('organizer_verified') === 'on',
     register_url: formData.get('register_url') ? String(formData.get('register_url')).trim() : null,
@@ -148,6 +150,14 @@ export default async function EditTournamentPage({
           <label className={styles.field}>
             Prize pool
             <input type="text" name="prize_pool" defaultValue={t.prize_pool ?? ''} className={styles.input} />
+          </label>
+          <label className={styles.field}>
+            Entry fee
+            <input type="text" name="entry_fee" placeholder="₹650" defaultValue={t.entry_fee ?? ''} className={styles.input} />
+          </label>
+          <label className={styles.field}>
+            Categories (comma-separated)
+            <input type="text" name="categories" placeholder="U7, U9, U11, U14" defaultValue={t.categories ?? ''} className={styles.input} />
           </label>
           <label className={styles.field}>
             Organizer name *

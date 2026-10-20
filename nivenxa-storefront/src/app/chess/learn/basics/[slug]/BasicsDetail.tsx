@@ -78,6 +78,7 @@ export default function BasicsDetail({ lesson }: { lesson: BasicsLesson }) {
               lessonName: lesson.name,
               completionHeadline: lesson.completionHeadline,
               completionSummary: lesson.completionSummary,
+              completionSpokenText: lesson.completionSpokenText,
             }}
             nextCta={nextCta}
             slug={lesson.slug}

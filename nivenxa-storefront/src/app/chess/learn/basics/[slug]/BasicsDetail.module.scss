@@ -33,18 +33,47 @@
   // Tighter than Openings' hero, and tighter still now that the lesson-level
   // description line is gone (the teaching panel owns explanation now, not
   // this hero) — the board+panel workspace should be visible almost
-  // immediately, not after an intro block's worth of vertical space.
+  // immediately, not after an intro block's worth of vertical space. Top
+  // padding trimmed too (Openings' own clamp(1.25rem,3vw,1.75rem) left
+  // ~20-28px of pure air above "← Chess Basics" that this page has no use
+  // for) — together with the breadcrumb's own tightened margin below, this
+  // moves the actual lesson content ~20-25px higher on the screen, which
+  // also means the dynamic workspace-height measurement in BasicsDetail.tsx
+  // gets that much more room for the board+panel, not just a smaller gap.
+  padding-top: clamp(0.5rem, 1vw, 0.75rem);
   padding-bottom: clamp(0.4rem, 0.8vw, 0.6rem);
 }
 
+// Strengthened from Openings' own quiet, easy-to-miss version (0.78rem,
+// weight 600, muted gray) — on feedback that this "currently has very
+// little visual value" as the top of a title hierarchy that's otherwise
+// just the bare heading. Still a real back-link, not a plain label.
 .breadcrumb {
   composes: breadcrumb from '../../openings/[slug]/OpeningDetail.module.scss';
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--chess-purple);
+  margin-bottom: 0.5rem;
+
+  a {
+    color: rgba(91, 46, 145, 0.75);
+  }
 }
 
 .heading {
   composes: heading from '../../openings/[slug]/OpeningDetail.module.scss';
   margin-bottom: 0;
 }
+
+// A one-line subtitle under the heading was tried and removed again in the
+// same session (brought back on a hierarchy complaint, then dropped right
+// after on the reasoning that "The Chessboard" alone is enough and a
+// summary sentence before the lesson has even started reads as unnecessary
+// — the panel should introduce ideas progressively instead). If this comes
+// back a third time, it needs a real per-lesson short subtitle authored for
+// the purpose, not `lesson.description` reused wholesale — that field
+// reads as a summary precisely because it IS one.
 
 // The actual board+panel workspace — see BasicsWorkspace.module.scss (the
 // shared home for this sizing across every Basics lesson engine: BoardLesson,

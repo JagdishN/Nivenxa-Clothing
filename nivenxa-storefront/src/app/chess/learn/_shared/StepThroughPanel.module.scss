@@ -8,7 +8,11 @@
   flex: 0 0 auto;
   // ~8% larger than the panel's original 460px — the board is the primary
   // learning object here and deserves slightly more visual weight.
-  width: min(90vw, 500px);
+  // --learn-workspace-h (set by TacticDetail.tsx, measuring the real space
+  // below this element) caps it to whatever actually fits on screen — the
+  // 500px fallback is exactly the old unconditional value, so any page that
+  // never sets the var (Openings, Rules) renders pixel-identical to before.
+  width: min(90vw, var(--learn-workspace-h, 500px), 500px);
 }
 
 .boardWrap {
@@ -23,6 +27,11 @@
   flex: 1 1 340px;
   min-width: 0;
   max-width: 480px;
+  // No height cap/internal scroll here on purpose — a panel taller than the
+  // board (voice controls, a longer explanation, the completion block) just
+  // lets the page itself run a little past the board, rather than trapping
+  // that content in its own cramped scrollbar. Only the board's own size is
+  // capped to the measured workspace height (see .boardCol above).
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
@@ -77,6 +86,41 @@
   color: rgba(31, 27, 58, 0.5);
 }
 
+// Matches TacticPuzzleSet.module.scss's own .puzzleIndicator styling — same
+// small-caps label treatment, shown here too since whose move it is matters
+// just as much while watching a demonstration as while practising one.
+.turnIndicator {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(31, 27, 58, 0.5);
+  margin: 0;
+}
+
+// Tactics only (enableVoice): autoplay (Pause/Replay, in VoiceControls) is
+// the primary way to move through a demonstration now — manual Previous/
+// Next are still here as a full override, just no longer visually
+// competing with it for attention.
+.stepControlsSecondary {
+  opacity: 0.75;
+}
+
+.stepBtnSecondary {
+  composes: stepBtn;
+  font-size: 0.72rem;
+  padding: 0.4rem 0.8rem;
+  border-color: rgba(31, 27, 58, 0.15);
+  background: none;
+  color: rgba(31, 27, 58, 0.55);
+
+  &:hover:not(:disabled) {
+    background: rgba(31, 27, 58, 0.05);
+    border-color: rgba(31, 27, 58, 0.3);
+  }
+}
+
 // ─── Move list ───────────────────────────────────────────────────────────────
 .moveListLabel {
   font-family: var(--font-sans);
@@ -123,6 +167,18 @@
 
   &:hover {
     background: rgba(91, 46, 145, 0.06);
+  }
+}
+
+// Tactics only (enableVoice) — a move not yet reached shows a neutral
+// placeholder instead of its SAN, so the solution isn't visible before the
+// demonstration actually gets there.
+.moveCellHidden {
+  color: rgba(31, 27, 58, 0.3);
+  cursor: default;
+
+  &:hover {
+    background: none;
   }
 }
 

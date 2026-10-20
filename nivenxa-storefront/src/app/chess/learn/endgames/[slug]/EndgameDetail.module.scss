@@ -12,6 +12,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: clamp(2rem, 5vw, 3.5rem) clamp(1.25rem, 5vw, 3rem) 0;
+  text-align: center;
 }
 
 .breadcrumb {
@@ -47,7 +48,7 @@
   line-height: 1.6;
   color: rgba(31, 27, 58, 0.62);
   max-width: 600px;
-  margin-bottom: 0;
+  margin: 0 auto;
 }
 
 // ─── Example selector (only rendered when an entry has more than one) ───────
@@ -55,6 +56,7 @@
   position: relative;
   z-index: 1;
   display: flex;
+  justify-content: center;
   flex-wrap: wrap;
   gap: 0.5rem;
   max-width: 1200px;
@@ -99,5 +101,28 @@
   @include v.max-lg {
     flex-direction: column;
     align-items: center;
+  }
+}
+
+// ─── Practice CTA — shown once at least one example is done, below the
+// StepThroughPanel's own footer slot ──────────────────────────────────────
+.practiceLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  padding: 0.75rem 1rem;
+  border-radius: 0.9rem;
+  color: var(--chess-white-soft);
+  composes: ctaButtonGradient from '../../../ChessTheme.module.scss';
+  transition: opacity 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    opacity: 0.92;
+    transform: translateY(-1px);
   }
 }

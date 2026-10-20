@@ -12,6 +12,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: clamp(2rem, 5vw, 3.5rem) clamp(1.25rem, 5vw, 3rem) 0;
+  text-align: center;
 }
 
 .breadcrumb {
@@ -47,7 +48,7 @@
   line-height: 1.6;
   color: rgba(31, 27, 58, 0.62);
   max-width: 600px;
-  margin-bottom: 0;
+  margin: 0 auto;
 }
 
 // ─── Example selector (only rendered when an entry has more than one) ───────
@@ -55,6 +56,7 @@
   position: relative;
   z-index: 1;
   display: flex;
+  justify-content: center;
   flex-wrap: wrap;
   gap: 0.5rem;
   max-width: 1200px;

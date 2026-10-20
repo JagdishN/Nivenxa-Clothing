@@ -105,23 +105,106 @@
   }
 }
 
-// Deliberately quieter than the primary nav links and even the auth
-// links — Feedback is reachable from every screen but isn't a destination
-// like Learn/Play, so it shouldn't compete with them for attention.
-.feedbackLink {
+// Positions the one-time tooltip relative to the button itself, without
+// affecting .authArea's own flex layout (the wrap is just a sizing-neutral
+// anchor, same width as the button it contains).
+.feedbackWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+// An outlined pill, not a gradient fill like .authLinkPrimary — visible
+// from every screen (unlike the old near-invisible text link) without
+// competing with Log In/Sign Up for attention, since those still own the
+// only solid-fill treatment in this bar.
+.feedbackButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-family: var(--font-sans);
-  font-size: 0.74rem;
-  font-weight: 500;
-  color: rgba(31, 27, 58, 0.42);
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--chess-purple);
   text-decoration: none;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(91, 46, 145, 0.32);
+  border-radius: 999px;
+  cursor: pointer;
+  padding: 0.45rem 0.9rem;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    background: rgba(91, 46, 145, 0.08);
+    border-color: var(--chess-purple);
+    transform: translateY(-1px);
+  }
+}
+
+// One-time nudge toward the feedback button — a single fade-in on mount
+// (see ChessNav.tsx: shown once per visitor, 30s in) and otherwise
+// perfectly still. No pulse, no repeat, no looping motion — it waits to be
+// dismissed or clicked through, never draws the eye back on its own.
+.feedbackTooltip {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  right: 0;
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  width: max-content;
+  max-width: 260px;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--chess-white-soft);
+  background: var(--chess-deep);
+  border-radius: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  box-shadow: 0 12px 28px rgba(31, 27, 58, 0.22);
+  animation: feedbackTooltipIn 0.3s ease both;
+
+  &::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    right: 1.1rem;
+    border: 6px solid transparent;
+    border-bottom-color: var(--chess-deep);
+  }
+}
+
+@keyframes feedbackTooltipIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.feedbackTooltipClose {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  font-size: 0.95rem;
+  line-height: 1;
+  color: var(--chess-white-soft);
+  opacity: 0.7;
   background: none;
   border: none;
   cursor: pointer;
-  padding: 0.45rem 0.5rem;
-  transition: color 0.2s ease;
+  padding: 0;
+  transition: opacity 0.2s ease;
 
   &:hover {
-    color: rgba(31, 27, 58, 0.68);
+    opacity: 1;
   }
 }
 

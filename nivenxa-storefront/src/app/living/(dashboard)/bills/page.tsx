@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { requireMembership } from '@/lib/living/auth'
 import { formatBalanceMeaning, formatCurrency, formatMonthLabel, formatPaymentStatus, formatPeriodLabel, monthKeyFor } from '@/lib/living/format'
-import { computeBillForFlat, getApartmentReimbursementsDue, getBillableFlats, getCurrentMaintenancePeriod, getFlats } from '@/lib/living/queries'
+import { computeBillForFlat, getApartmentReimbursementsDue, getBillableFlats, getCurrentMaintenancePeriod, getFlats, getRelevantWaterMonth } from '@/lib/living/queries'
 import type { PaymentStatus } from '@/lib/living/types'
 import theme from '../../LivingTheme.module.scss'
 import homeStyles from '../Home.module.scss'
@@ -46,9 +46,9 @@ export default async function LivingBillsPage({ searchParams }: { searchParams: 
   const filter: QuickFilter = validFilters.includes(filterParam as QuickFilter) ? (filterParam as QuickFilter) : 'all'
 
   const { supabase, apartment } = await requireMembership(['admin', 'treasurer'])
-  const month = monthKeyFor(new Date())
   const [allFlats, maintenanceMonth] = await Promise.all([getFlats(supabase, apartment.id), getCurrentMaintenancePeriod(supabase, apartment.id)])
   const flats = getBillableFlats(allFlats)
+  const month = getRelevantWaterMonth(maintenanceMonth, monthKeyFor(new Date()))
 
   const [bills, reimbursementsDue] = await Promise.all([
     Promise.all(flats.map((flat) => computeBillForFlat(supabase, apartment, flat, month, { allFlats, maintenanceMonth }))),

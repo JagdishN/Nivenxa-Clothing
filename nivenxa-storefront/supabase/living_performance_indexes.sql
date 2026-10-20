@@ -1,0 +1,21 @@
+-- Composite index for living_payments' highest-frequency lookup pattern.
+--
+-- getPaymentsForFlat(supabase, maintenanceMonthId, flatId) — called from
+-- inside computeBillAgainstPeriod, which runs once per billable flat on
+-- every page that shows bills (Bills, Billing Overview, Ledgers, Home,
+-- Payments, the Bills .xlsx export, Maintenance's own Ledger tab) — filters
+-- on BOTH maintenance_month_id and flat_id together. The table only ever
+-- had two separate indexes (maintenance_month_id alone, and
+-- (flat_id, payment_date desc) for the Owner's own cross-period payment
+-- history), neither of which directly serves the compound filter this
+-- function actually runs, on every single flat, on every one of those page
+-- loads. living_flat_ledger does NOT need the same treatment — its own
+-- `unique (maintenance_month_id, flat_id)` constraint already backs that
+-- exact query via the index Postgres creates for the constraint itself.
+--
+-- The old single-column living_payments_period_idx becomes redundant once
+-- this exists (a composite index also serves lookups on just its leading
+-- column, maintenance_month_id, via the standard B-tree leftmost-prefix
+-- rule) — dropped rather than left as dead weight on every future write.
+create index if not exists living_payments_period_flat_idx on living_payments (maintenance_month_id, flat_id);
+drop index if exists living_payments_period_idx;

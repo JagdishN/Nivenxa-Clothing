@@ -1,13 +1,15 @@
-// Deliberately NOT composing ChessTheme's `pageBackground` (the heavy
-// multi-radial-gradient purple wash) — this page is one board + one panel,
-// and needs a quiet, mostly neutral ground so those two things carry the
-// visual weight instead of competing with a busy backdrop. Purple stays,
-// just reserved for accents (buttons, active states, the board's own frame).
+// Matches every other Learn section now (Basics, Endgames, Rules, Tactics'
+// own detail page, and the top /chess/learn catalogue all already compose
+// this same background) — this used to be a deliberately plain, neutral
+// white specifically for Openings, reasoned as "a board+panel page needs a
+// quiet ground." That reasoning didn't actually hold up: Basics' own lesson
+// pages are also board+panel and use this background anyway, so the
+// difference just read as an inconsistency between sections rather than a
+// considered exception.
 .page {
+  composes: pageBackground from '../../../ChessTheme.module.scss';
   min-height: 100vh;
-  // --chess-white-soft (not --chess-ice, which is a noticeably lavender-tinted
-  // off-white) — as close to a clean neutral as the existing palette gets.
-  background: var(--chess-white-soft);
+  position: relative;
 }
 
 .hero {
@@ -16,6 +18,7 @@
   max-width: 1080px;
   margin: 0 auto;
   padding: clamp(1.25rem, 3vw, 1.75rem) clamp(1.25rem, 5vw, 3rem) clamp(1rem, 2vw, 1.5rem);
+  text-align: center;
 }
 
 // A real trail (Learn → Openings → this opening) rather than a single "←
@@ -61,7 +64,7 @@
   line-height: 1.5;
   color: rgba(31, 27, 58, 0.6);
   max-width: 600px;
-  margin-bottom: 0.85rem;
+  margin: 0 auto 0.85rem;
 }
 
 // The old tags row + "When to Play It" section, condensed into one line —
@@ -70,6 +73,7 @@
 .metaRow {
   display: flex;
   align-items: center;
+  justify-content: center;
   flex-wrap: wrap;
   gap: 0.55rem;
 }

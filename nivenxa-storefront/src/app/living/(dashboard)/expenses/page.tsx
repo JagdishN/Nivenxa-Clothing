@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { requireMembership } from '@/lib/living/auth'
 import { setLivingError, setLivingNotice } from '@/lib/living/flash'
 import { maintenanceGrandTotal, majeeraCostTotal, round2, tankerCostTotal } from '@/lib/living/billing'
@@ -38,7 +39,7 @@ async function recordExpenseAction(formData: FormData) {
   const current = await getCurrentMaintenancePeriod(supabase, apartment.id)
   if (!current) {
     await setLivingError('Start a billing period on the Maintenance page first.')
-    return
+    redirect('/living/expenses')
   }
 
   const description = String(formData.get('description') ?? '').trim()
@@ -56,27 +57,27 @@ async function recordExpenseAction(formData: FormData) {
 
   if (!description) {
     await setLivingError('Describe what this expense was for.')
-    return
+    redirect('/living/expenses')
   }
   if (!amount || amount <= 0) {
     await setLivingError('Enter an amount greater than zero.')
-    return
+    redirect('/living/expenses')
   }
   if (!expenseDate) {
     await setLivingError('Pick a date.')
-    return
+    redirect('/living/expenses')
   }
   if (!PAYMENT_METHODS.includes(method as PaymentMethod)) {
     await setLivingError('Invalid payment method.')
-    return
+    redirect('/living/expenses')
   }
   if (paidBy !== 'association' && paidBy !== 'resident') {
     await setLivingError('Invalid Paid From selection.')
-    return
+    redirect('/living/expenses')
   }
   if (paidBy === 'resident' && !residentFlatId) {
     await setLivingError('Choose which flat funded this expense.')
-    return
+    redirect('/living/expenses')
   }
 
   // Who funded the expense (paid_by) and whether it's recovered from residents (carry-forward)
@@ -89,7 +90,7 @@ async function recordExpenseAction(formData: FormData) {
       const months = Math.floor(Number(formData.get('split_months') ?? 0))
       if (!months || months < 2) {
         await setLivingError('Enter how many billing cycles to spread this expense across.')
-        return
+        redirect('/living/expenses')
       }
       carryForwardMonths = months
     } else {
@@ -104,7 +105,7 @@ async function recordExpenseAction(formData: FormData) {
     const { error: uploadError } = await supabase.storage.from(RECEIPT_BUCKET).upload(path, receiptFile)
     if (uploadError) {
       await setLivingError(uploadError.message)
-      return
+      redirect('/living/expenses')
     }
     receiptPath = path
   }
@@ -136,9 +137,10 @@ async function recordExpenseAction(formData: FormData) {
   })
   if (error) {
     await setLivingError(error.message)
-    return
+    redirect('/living/expenses')
   }
   await setLivingNotice('Expense recorded.')
+  redirect('/living/expenses')
 }
 
 interface SyncCandidate {
@@ -179,13 +181,13 @@ async function syncMaintenanceWaterExpensesAction() {
   const current = await getCurrentMaintenancePeriod(supabase, apartment.id)
   if (!current) {
     await setLivingError('Start a billing period on the Maintenance page first.')
-    return
+    redirect('/living/expenses')
   }
 
   const rows = await computeSyncCandidates(supabase, apartment, current)
   if (rows.length === 0) {
     await setLivingError('Nothing to sync — everything is already up to date.')
-    return
+    redirect('/living/expenses')
   }
 
   const now = new Date().toISOString()
@@ -208,9 +210,10 @@ async function syncMaintenanceWaterExpensesAction() {
   )
   if (error) {
     await setLivingError(error.message)
-    return
+    redirect('/living/expenses')
   }
   await setLivingNotice(`Synced ${rows.length} item${rows.length === 1 ? '' : 's'} as expenses.`)
+  redirect('/living/expenses')
 }
 
 // Delete/Reverse both live on the expense detail page (/living/expenses/[id]) now, not the Log row
@@ -223,14 +226,15 @@ async function addExpenseCategoryAction(formData: FormData) {
   const name = String(formData.get('name') ?? '').trim()
   if (!name) {
     await setLivingError('Enter a category name.')
-    return
+    redirect('/living/expenses')
   }
   const { error } = await supabase.from('living_expense_categories').insert({ name, apartment_id: apartment.id, created_by: userId })
   if (error) {
     await setLivingError(error.code === '23505' ? 'That category already exists.' : error.message)
-    return
+    redirect('/living/expenses')
   }
   await setLivingNotice('Category added.')
+  redirect('/living/expenses')
 }
 
 async function renameExpenseCategoryAction(id: string, formData: FormData) {
@@ -240,16 +244,16 @@ async function renameExpenseCategoryAction(id: string, formData: FormData) {
   const newName = String(formData.get('new_name') ?? '').trim()
   if (!newName) {
     await setLivingError('Enter a new name.')
-    return
+    redirect('/living/expenses')
   }
   if (newName === oldName) {
     await setLivingNotice('No change.')
-    return
+    redirect('/living/expenses')
   }
   const { error: renameError } = await supabase.from('living_expense_categories').update({ name: newName }).eq('id', id).eq('apartment_id', apartment.id)
   if (renameError) {
     await setLivingError(renameError.code === '23505' ? 'That name is already used.' : renameError.message)
-    return
+    redirect('/living/expenses')
   }
   // Categories are matched by name string, not a foreign key — every existing expense already
   // filed under the old name needs to move with it, or they'd silently fall out of the category.
@@ -257,6 +261,7 @@ async function renameExpenseCategoryAction(id: string, formData: FormData) {
     await supabase.from('living_expenses').update({ category: newName }).eq('apartment_id', apartment.id).eq('category', oldName)
   }
   await setLivingNotice('Category renamed.')
+  redirect('/living/expenses')
 }
 
 async function toggleExpenseCategoryActiveAction(id: string, nextActive: boolean) {
@@ -265,9 +270,10 @@ async function toggleExpenseCategoryActiveAction(id: string, nextActive: boolean
   const { error } = await supabase.from('living_expense_categories').update({ is_active: nextActive }).eq('id', id).eq('apartment_id', apartment.id)
   if (error) {
     await setLivingError(error.message)
-    return
+    redirect('/living/expenses')
   }
   await setLivingNotice(nextActive ? 'Category reactivated.' : 'Category deactivated — hidden from Record Expense, existing expenses keep it.')
+  redirect('/living/expenses')
 }
 
 async function deleteExpenseCategoryAction(id: string, name: string) {
@@ -276,14 +282,15 @@ async function deleteExpenseCategoryAction(id: string, name: string) {
   const usageCount = await countExpensesUsingCategory(supabase, apartment.id, name)
   if (usageCount > 0) {
     await setLivingError(`"${name}" is used by ${usageCount} expense${usageCount === 1 ? '' : 's'} — rename or deactivate it instead of deleting.`)
-    return
+    redirect('/living/expenses')
   }
   const { error } = await supabase.from('living_expense_categories').delete().eq('id', id).eq('apartment_id', apartment.id)
   if (error) {
     await setLivingError(error.message)
-    return
+    redirect('/living/expenses')
   }
   await setLivingNotice('Category removed.')
+  redirect('/living/expenses')
 }
 
 async function settleReimbursementAction(formData: FormData) {
@@ -296,29 +303,29 @@ async function settleReimbursementAction(formData: FormData) {
 
   if (!expenseId) {
     await setLivingError('Choose which expense this settles.')
-    return
+    redirect('/living/expenses')
   }
   if (settlementType !== 'cash' && settlementType !== 'bill_adjustment') {
     await setLivingError('Choose a settlement method.')
-    return
+    redirect('/living/expenses')
   }
   if (!amount || amount <= 0) {
     await setLivingError('Enter an amount greater than zero.')
-    return
+    redirect('/living/expenses')
   }
 
   const detail = await getReimbursementDetailForExpense(supabase, expenseId)
   if (!detail || detail.expense.apartment_id !== apartment.id) {
     await setLivingError('Expense not found.')
-    return
+    redirect('/living/expenses')
   }
   if (!detail.expense.resident_flat_id) {
     await setLivingError('This expense has no resident flat on file.')
-    return
+    redirect('/living/expenses')
   }
   if (amount > detail.remaining + 0.005) {
     await setLivingError(`That's more than the ${formatCurrency(detail.remaining)} still remaining on this expense.`)
-    return
+    redirect('/living/expenses')
   }
 
   const current = await getCurrentMaintenancePeriod(supabase, apartment.id)
@@ -334,9 +341,10 @@ async function settleReimbursementAction(formData: FormData) {
   })
   if (error) {
     await setLivingError(error.message)
-    return
+    redirect('/living/expenses')
   }
   await setLivingNotice(settlementType === 'cash' ? 'Reimbursement recorded.' : "Adjusted against the flat's bill.")
+  redirect('/living/expenses')
 }
 
 function categoryBreakdown(expenses: Expense[]): { category: string; total: number; percent: number }[] {

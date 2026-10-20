@@ -25,16 +25,20 @@
 // change/resize — see BasicsDetail.tsx), never of which step is showing, so
 // both the board and the panel stay pixel-for-pixel identical across all 20
 // steps of a lesson — the content changes, the shell does not.
-$workspace-size: min(90vw, var(--basics-workspace-h, 70vh), 620px);
-// A fixed panel width, not a flex-basis that's free to grow/shrink with its
+$workspace-size: min(90vw, var(--basics-workspace-h, 70vh), 610px);
+// A fixed panel WIDTH, not a flex-basis that's free to grow/shrink with its
 // own content — that content-driven sizing was the actual bug behind the
 // "layout rearranges itself between steps" report (a short prompt like "Can
 // you find e4?" let the panel settle narrower than a longer explanation
 // would). Paired with min-width: 0 below, which overrides the flex item's
 // default content-based min-width floor — without it, a flex item can still
 // grow past an explicit width to fit its own content regardless of
-// flex-grow, which is what let this happen in the first place.
-$panel-width: 380px;
+// flex-grow, which is what let this happen in the first place. Widened
+// (380 -> 440px) and the board's own cap trimmed (620 -> 580px) together,
+// on feedback that the board was visually dominating the lesson (~65-70%
+// board / 30-35% content) — the panel needing to carry more visual weight
+// on its own is exactly why its HEIGHT changed below too.
+$panel-width: 460px;
 
 .workspace {
   position: relative;
@@ -43,7 +47,7 @@ $panel-width: 380px;
   align-items: center;
   justify-content: center;
   gap: 30px;
-  max-width: 1180px;
+  max-width: 1260px;
   margin: 0 auto;
   padding: 0 clamp(1.25rem, 5vw, 3rem) clamp(1rem, 3vw, 2rem);
 
@@ -56,9 +60,18 @@ $panel-width: 380px;
 
 .boardCol {
   flex: 0 0 auto;
+  // Explicit, not relied-on-by-default: this only reliably matched the
+  // panel's own top edge while the board was guaranteed to be the row's
+  // tallest item (true before this round's panel-height change, no longer
+  // guaranteed now that the panel is content-based and can be taller than
+  // the board on some viewport/content combos) — the parent `.workspace`'s
+  // `align-items: center` would then center the board within a row taller
+  // than itself, visibly dropping its top edge below the panel's.
+  align-self: flex-start;
   width: $workspace-size;
 
   @include v.max-lg {
+    align-self: auto;
     width: min(90vw, 560px);
   }
 }
@@ -69,22 +82,36 @@ $panel-width: 380px;
   border-radius: 1.25rem;
   background: rgba(255, 255, 255, 0.7);
   box-shadow: 0 10px 40px rgba(91, 46, 145, 0.07);
-  padding: clamp(0.6rem, 1vw, 0.85rem);
+  // Trimmed from the previous clamp(0.6rem, 1vw, 0.85rem) — on feedback
+  // that the outer card + this padding + the board's own edge read as a
+  // slightly heavy "double container," when the board itself (the primary
+  // learning object) should get as much of this box as reasonably possible.
+  padding: clamp(0.4rem, 0.7vw, 0.6rem);
   // The lesson's board must never resize/reflow on its own — only what's
   // drawn on it (highlights, orientation) may change. Position/size
   // transitions are deliberately NOT added here; the only allowed motion is
   // inside the board (chessground's own piece/shape animations).
 }
 
-// Height pinned to the board's own size (not just a min-height floor) so the
-// panel never grows past it — a step with more text scrolls internally
-// (overflow-y below) instead of pushing the panel taller than the board
-// and reopening the very page-scroll this layout exists to avoid.
+// Content-based height, not pinned to the board's own size — a step with
+// just 2-4 lines of text used to sit in a card stretched almost to the
+// board's full height, which read as "the instructions are unimportant,"
+// not as a lesson. `max-height` (still capped at the board's own size, so a
+// genuinely long step still scrolls internally rather than reopening page
+// scroll) plus a real `min-height` floor (so a very short step doesn't
+// collapse to almost nothing) replaces the old fixed `height`.
+// `align-self: flex-start` matters now in a way it didn't before: the
+// parent `.workspace` centers its row cross-axis, which was a no-op while
+// this always matched the board's exact height — now that it's usually
+// shorter, centering would float it in the middle of the board's height
+// instead of keeping it top-aligned alongside the board.
 .panelCol {
   flex: 0 1 $panel-width;
+  align-self: flex-start;
   min-width: 0;
   width: $panel-width;
-  height: $workspace-size;
+  max-height: $workspace-size;
+  min-height: 320px;
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
@@ -97,6 +124,8 @@ $panel-width: 380px;
   overflow-wrap: break-word;
 
   @include v.max-lg {
+    align-self: auto;
+    max-height: none;
     height: auto;
     width: min(92vw, 480px);
   }

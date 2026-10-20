@@ -24,15 +24,20 @@ $gold-soft: #FFE39A;
   padding-bottom: clamp(4rem, 8vw, 6rem);
 }
 
+// Narrower than the gallery's own 1500px (see .gallerySection/.galleryGrid
+// below, which genuinely benefit from more width for a multi-photo grid) —
+// a single wide tournament card floating inside a 1500px-wide column was
+// the exact "huge unused space" complaint; this keeps the whole hero+cards
+// column to a reading-appropriate width instead of just capping the card.
 .backBar {
-  max-width: 1500px;
+  max-width: 980px;
   margin: 0 auto;
   padding: 1.5rem clamp(1rem, 4vw, 3rem) 0;
 }
 
 .backLink {
   font-family: var(--font-sans);
-  font-size: 0.68rem;
+  font-size: 0.78rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -45,10 +50,14 @@ $gold-soft: #FFE39A;
   }
 }
 
+// Cut again — no eyebrow, no CTA button anymore (View Archive demoted to a
+// small text link at the bottom of the page, see .pastLink), so this is now
+// just a title + one line, sized and spaced to match: "the tournament is
+// why someone came here, not this hero."
 .hero {
-  max-width: 1500px;
+  max-width: 980px;
   margin: 0 auto;
-  padding: clamp(4rem, 8vw, 7rem) clamp(1rem, 4vw, 3rem) clamp(2.5rem, 5vw, 4rem);
+  padding: clamp(1.25rem, 2.5vw, 1.75rem) clamp(1rem, 4vw, 3rem) clamp(0.5rem, 1.5vw, 0.85rem);
 }
 
 .eyebrow,
@@ -59,37 +68,30 @@ $gold-soft: #FFE39A;
   letter-spacing: 0.28em;
   text-transform: uppercase;
   color: $gold;
-  margin: 0 0 1rem;
+  margin: 0 0 0.6rem;
 }
 
 .heading {
   max-width: 850px;
   font-family: var(--font-serif);
-  font-size: clamp(2.6rem, 6vw, 5rem);
+  font-size: clamp(1.5rem, 2.8vw, 2.1rem);
   font-weight: 400;
-  line-height: 1.06;
+  line-height: 1.15;
   color: $deep;
-  letter-spacing: -0.02em;
-  margin: 0 0 1.5rem;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.35rem;
 }
 
 .subtext {
   max-width: 680px;
   font-family: var(--font-sans);
-  font-size: clamp(0.98rem, 1.4vw, 1.12rem);
-  line-height: 1.8;
+  font-size: clamp(0.88rem, 1.05vw, 0.96rem);
+  line-height: 1.5;
   color: rgba($deep, 0.65);
   margin: 0;
 }
 
-.heroActions {
-  display: flex;
-  gap: 1rem;
-  margin-top: 2rem;
-}
-
-.archiveLink,
-.registerLink {
+.archiveLink {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -102,9 +104,6 @@ $gold-soft: #FFE39A;
   text-transform: uppercase;
   text-decoration: none;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.archiveLink {
   padding: 0.85rem 1.35rem;
   color: $purple;
   border: 1px solid rgba($purple, 0.24);
@@ -118,16 +117,21 @@ $gold-soft: #FFE39A;
 
 .groups {
   display: grid;
-  gap: clamp(2.5rem, 5vw, 4rem);
-  max-width: 1500px;
+  gap: clamp(2rem, 4vw, 3rem);
+  max-width: 980px;
   margin: 0 auto;
   padding: 0 clamp(1rem, 4vw, 3rem);
 }
 
 .emptyState {
-  max-width: 1500px;
+  max-width: 980px;
   margin: 0 auto;
-  padding: clamp(2rem, 5vw, 4rem) clamp(1rem, 4vw, 3rem);
+  // Was clamp(2rem, 5vw, 4rem) vertical — on a page with no upcoming
+  // tournaments, this plus .hero's own bottom padding and .gallerySection's
+  // top margin pushed the actual photos well past the first screen.
+  // Tightened so the gallery (the one thing worth scrolling for here) sits
+  // higher up.
+  padding: clamp(0.75rem, 2vw, 1.25rem) clamp(1rem, 4vw, 3rem);
 }
 
 .emptyText {
@@ -137,6 +141,324 @@ $gold-soft: #FFE39A;
   line-height: 1.8;
   color: rgba($deep, 0.62);
   margin: 1rem 0 0;
+}
+
+// The "see past events" CTA when there's nothing upcoming to show — directly
+// below the message itself, not left for a parent to find at the bottom of
+// the whole page past the gallery (see .pastLinkRow, still used when there
+// ARE upcoming tournaments to show beneath).
+.emptyStateCta {
+  margin-top: 1.5rem;
+}
+
+// ─── Gallery — the Tournaments page's own preview slide, plus the full grid
+// on /chess/tournaments/gallery (both share this file for one visual
+// language, not a separate module). Same 980px column as .hero/.groups —
+// this used to run out to 1500px, visibly wider than the tournament content
+// above it, which read as disconnected from the rest of the page. ────────
+.gallerySection {
+  display: grid;
+  gap: 1.25rem;
+  max-width: 980px;
+  margin: clamp(0.75rem, 2vw, 1.25rem) auto 0;
+  padding: 0 clamp(1rem, 4vw, 3rem);
+}
+
+// One row, name on the left and the way to see more on the right — the
+// previous layout stacked an eyebrow label and a heading as two separate
+// flex items pushed to opposite ends, which read as two unrelated pieces of
+// text rather than one section header.
+.galleryHeaderRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+
+  // Centers the "View all" link against the heading's height — only
+  // relevant to this row. The detail page uses the same .gallerySlideViewAll
+  // class as a left-aligned link under the venue line, where align-self
+  // would otherwise center it horizontally in that column flex context.
+  .gallerySlideViewAll {
+    align-self: center;
+  }
+}
+
+// A grid, not a horizontally-scrolling flex row — fixed-width tiles always
+// overflowed the 980px content column (5 × 240px + gaps > the available
+// width), forcing a scrollbar. auto-fit reflows to fewer, wider columns on
+// narrow screens instead of ever needing to scroll — always capped at 5
+// photos (see GallerySection.tsx), so this never needs to handle more.
+.gallerySlide {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 1rem;
+}
+
+.gallerySlideItem {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid rgba($purple, 0.14);
+  box-shadow: 0 10px 30px rgba($purple, 0.08);
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    border-color: rgba($gold, 0.6);
+    box-shadow: 0 14px 36px rgba($purple, 0.18);
+  }
+}
+
+// A CSS background, not an <img> — most browsers offer no "Save Image As"
+// on a right-click of a background image, the first of two deterrent layers
+// (the other being the onContextMenu handler in GallerySection.tsx). See
+// the /api/chess/photos/[photoId] route's own doc comment for what this
+// does and doesn't actually achieve.
+.gallerySlideImage {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: var(--focal-position, center);
+  user-select: none;
+  -webkit-user-drag: none;
+  transition: transform 0.3s ease;
+
+  .gallerySlideItem:hover & {
+    transform: scale(1.08);
+  }
+}
+
+// A plain link sitting after the last photo in the slide, not a separate
+// button below the row — the slide is always capped at 5 photos, so this is
+// the only way to reach the rest.
+.gallerySlideViewAll {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  padding: 0 0.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: $purple;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: $purple-light;
+  }
+}
+
+// One heading per event (see galleryEvents) above its own grid of photos —
+// replaces captioning every individual photo with the same repeated event
+// name, which only ever actually happened on the first tile anyway.
+.galleryEventGroup {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.galleryEventHeading {
+  font-family: var(--font-serif);
+  font-size: clamp(1.1rem, 1.8vw, 1.3rem);
+  font-weight: 500;
+  color: $deep;
+  margin: 0;
+  scroll-margin-top: 1.5rem;
+}
+
+.galleryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.25rem;
+}
+
+.galleryGridItem {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid rgba($purple, 0.14);
+  box-shadow: 0 10px 30px rgba($purple, 0.08);
+  margin: 0;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    border-color: rgba($gold, 0.6);
+    box-shadow: 0 14px 36px rgba($purple, 0.18);
+  }
+}
+
+.galleryGridImage {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: var(--focal-position, center);
+  user-select: none;
+  -webkit-user-drag: none;
+  transition: transform 0.3s ease;
+
+  .galleryGridItem:hover & {
+    transform: scale(1.08);
+  }
+}
+
+.galleryCaption {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 0.6rem 0.8rem;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: $white;
+  background: linear-gradient(0deg, rgba($deep, 0.75), transparent);
+}
+
+// ─── Photo lightbox — opened by clicking any thumbnail, shows the whole,
+// uncropped photo (background-size: contain) with Prev/Next through the
+// same set. See PhotoLightbox.tsx. ──────────────────────────────────────
+.lightboxBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1rem, 4vw, 3rem);
+  background: rgba($deep, 0.92);
+  cursor: zoom-out;
+}
+
+.lightboxImageScroll {
+  width: 100%;
+  height: 100%;
+  max-width: 1100px;
+  overflow: auto;
+  display: flex;
+}
+
+.lightboxImage {
+  width: 100%;
+  height: 100%;
+  flex: 1 0 auto;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  cursor: zoom-in;
+  transition: width 0.2s ease, height 0.2s ease;
+}
+
+// Toggled by clicking the image (or the +/− button) — enlarges it inside
+// its now-scrollable wrapper, so a dense image like the newspaper clipping
+// can actually be read instead of staying capped to "fits the screen."
+.lightboxImageZoomed {
+  width: 200%;
+  height: 200%;
+  min-width: 200%;
+  min-height: 200%;
+  cursor: zoom-out;
+}
+
+.lightboxClose {
+  position: absolute;
+  top: clamp(0.75rem, 2vw, 1.5rem);
+  right: clamp(0.75rem, 2vw, 1.5rem);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  border: 1.5px solid rgba($white, 0.55);
+  background: rgba($white, 0.16);
+  box-shadow: 0 2px 10px rgba($deep, 0.35);
+  color: $white;
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    background: rgba($white, 0.3);
+    border-color: rgba($white, 0.8);
+    transform: scale(1.06);
+  }
+}
+
+.lightboxZoom {
+  position: absolute;
+  top: clamp(0.75rem, 2vw, 1.5rem);
+  left: clamp(0.75rem, 2vw, 1.5rem);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  border: 1.5px solid rgba($white, 0.55);
+  background: rgba($white, 0.16);
+  box-shadow: 0 2px 10px rgba($deep, 0.35);
+  color: $white;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    background: rgba($white, 0.3);
+    border-color: rgba($white, 0.8);
+    transform: scale(1.06);
+  }
+}
+
+.lightboxNav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 999px;
+  border: 1.5px solid rgba($white, 0.55);
+  background: rgba($white, 0.16);
+  box-shadow: 0 2px 10px rgba($deep, 0.35);
+  color: $white;
+  font-size: 1.9rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    background: rgba($white, 0.3);
+    border-color: rgba($white, 0.8);
+    transform: translateY(-50%) scale(1.06);
+  }
+}
+
+.lightboxNavPrev {
+  left: clamp(0.5rem, 3vw, 1.5rem);
+}
+
+.lightboxNavNext {
+  right: clamp(0.5rem, 3vw, 1.5rem);
+}
+
+.lightboxCaption {
+  position: absolute;
+  bottom: clamp(0.75rem, 3vw, 1.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 90%;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  background: rgba($white, 0.1);
+  color: $white;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  text-align: center;
+  cursor: default;
 }
 
 .group {
@@ -169,61 +491,232 @@ $gold-soft: #FFE39A;
   padding-bottom: 1rem;
 }
 
+// No wrapping .groupHeader on the main tournament listing anymore (that
+// class is still used by GallerySection, see above) — just a plain
+// left-aligned heading directly above its cards. Sized down from a huge
+// editorial-magazine heading to something more "functional section label,"
+// on feedback that this page needs that over the more decorative treatment
+// elsewhere on the site.
 .groupTitle {
   font-family: var(--font-serif);
-  font-size: clamp(1.7rem, 3vw, 2.4rem);
-  font-weight: 400;
+  font-size: clamp(1.3rem, 2.2vw, 1.65rem);
+  font-weight: 500;
   color: $deep;
+  margin: 0 0 1rem;
+}
+
+// ─── Tournament cards — replaces the previous 12-column table. Wide
+// (600-750px) and stacked one per row, NOT a multi-column auto-fill grid —
+// auto-fill with a single card left it occupying one narrow column with the
+// rest of a wide row reserved-but-empty beside it, which read as "the
+// tournament looks unimportant." A parent should be able to read who's
+// running it, Date, Venue, Categories, Entry Fee, Prize Pool, Time Control,
+// Format and hit Register without parsing a database row first. ───────────
+.cardGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  max-width: 740px;
+  padding: 1.75rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgba($purple, 0.14);
+  background: rgba($white, 0.86);
+  box-shadow: 0 18px 50px rgba($purple, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 22px 60px rgba($purple, 0.14);
+  }
+}
+
+.cardTop {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.cardTitle {
+  font-family: var(--font-serif);
+  font-size: clamp(1.15rem, 2vw, 1.4rem);
+  font-weight: 600;
+  color: $deep;
+  margin: 0;
+  line-height: 1.25;
+}
+
+// Who's running it — a verification checkmark/badge used to sit here too,
+// dropped per review feedback: every tournament in this collection is
+// already Nivenxa's own, so flagging one organizer as "verified" implied a
+// distinction (verified vs. not) that doesn't actually exist in this
+// NIVENXA-only listing.
+.cardOrganizer {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: $purple;
   margin: 0;
 }
 
-.tableShell {
-  overflow-x: auto;
-  border: 1px solid rgba($purple, 0.12);
-  border-radius: 0.75rem;
-  background: rgba($white, 0.76);
-  box-shadow: 0 18px 60px rgba($purple, 0.09);
-}
-
-.table {
-  width: 100%;
-  min-width: 1320px;
-  border-collapse: collapse;
-  font-family: var(--font-sans);
-
-  th {
-    padding: 1rem 0.85rem;
-    text-align: left;
-    font-size: 0.66rem;
-    line-height: 1.35;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: rgba($deep, 0.55);
-    background: rgba($purple, 0.05);
-    border-bottom: 1px solid rgba($purple, 0.12);
-    white-space: nowrap;
-  }
-
-  td {
-    position: relative;
-    padding: 1rem 0.85rem;
-    font-size: 0.86rem;
-    line-height: 1.5;
-    color: rgba($deep, 0.78);
-    border-bottom: 1px solid rgba($purple, 0.08);
-    vertical-align: middle;
-  }
-
-  tr:last-child td {
-    border-bottom: 0;
-  }
-}
-
-.tournamentLink {
+// A past/completed tournament doesn't say so anywhere on its own detail
+// page otherwise — a parent arriving straight from a shared link has no cue
+// this isn't something they can still register for until they scroll and
+// notice there's no Register button at all.
+.statusBadge {
   display: inline-flex;
-  color: $deep;
+  align-items: center;
+  min-height: 1.4rem;
+  padding: 0 0.55rem;
+  border-radius: 999px;
+  background: rgba($deep, 0.06);
+  border: 1px solid rgba($deep, 0.16);
+  color: rgba($deep, 0.65);
+  font-size: 0.66rem;
   font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cardMetaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 1.1rem;
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: rgba($deep, 0.78);
+}
+
+.cardMetaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+// Separates the compact event-info line's items (date, venue, entry fee,
+// prize pool, time control, rounds) — wraps naturally with the row's own
+// flex-wrap on narrow screens. A middle-dot (·) at this font size read as
+// nearly invisible, so this is "/" at a bumped size and stronger color.
+.metaDot {
+  font-size: 1.1em;
+  color: rgba($deep, 0.55);
+  font-weight: 700;
+}
+
+.cardMetaIcon {
+  font-size: 1.05em;
+}
+
+.cardVenueLink {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgba($purple, 0.3);
+  text-underline-offset: 2px;
+
+  &:hover {
+    color: $purple;
+  }
+}
+
+.cardCategories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.categoryPill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.55rem;
+  padding: 0 0.6rem;
+  border-radius: 999px;
+  background: rgba($purple, 0.08);
+  border: 1px solid rgba($purple, 0.18);
+  color: $purple;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.cardActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding-top: 0.2rem;
+}
+
+// Register stays primary (fills the remaining space, solid gradient fill);
+// View Details is secondary (sized to its own content, outlined) — for
+// someone not ready to register immediately yet, per explicit feedback.
+.registerBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
+  min-height: 3rem;
+  padding: 0 1.35rem;
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  color: $white;
+  background: linear-gradient(135deg, $purple 0%, $purple-light 58%, $gold 145%);
+  box-shadow: 0 8px 24px rgba($purple, 0.22);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba($purple, 0.32);
+  }
+}
+
+.viewDetailsBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-height: 3rem;
+  padding: 0 1.35rem;
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  color: $purple;
+  border: 1px solid rgba($purple, 0.26);
+  background: rgba($white, 0.5);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    border-color: rgba($purple, 0.5);
+    transform: translateY(-2px);
+  }
+}
+
+// Archive, demoted from a prominent hero CTA to a small text link below
+// everything — secondary to upcoming registration, per explicit feedback.
+.pastLinkRow {
+  max-width: 980px;
+  margin: clamp(2rem, 4vw, 3rem) auto 0;
+  padding: 0 clamp(1rem, 4vw, 3rem);
+}
+
+.pastLink {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba($deep, 0.5);
   text-decoration: none;
   transition: color 0.2s ease;
 
@@ -232,167 +725,255 @@ $gold-soft: #FFE39A;
   }
 }
 
-.source,
-.verified,
+// ─── Tournament detail page (/chess/tournaments/[id]) — the "View Details"
+// destination. Reuses .cardMetaRow/.cardCategories/.cardStat* from the card
+// above for visual consistency, adds its own wrapper + a couple of extra
+// sections (full prize/payment text, QR) that don't fit on the card. Same
+// 980px width as .backBar/.hero/.groups (not its own narrower column) so
+// navigating from the listing/archive page to a detail page doesn't visibly
+// shift the content's left edge — and a white card surface, not bare text
+// on the page's own lavender gradient, for the same contrast reason the
+// cards on the listing page already have one.
+.detailWrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: clamp(1.75rem, 3.5vw, 2.5rem) clamp(1.5rem, 4vw, 2.5rem);
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgba($purple, 0.14);
+  background: rgba($white, 0.88);
+  box-shadow: 0 18px 50px rgba($purple, 0.08);
+}
+
+.detailTitleRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.detailTitle {
+  font-family: var(--font-serif);
+  font-size: clamp(1.6rem, 3.2vw, 2.1rem);
+  font-weight: 500;
+  color: $deep;
+  margin: 0;
+  line-height: 1.2;
+}
+
+// Toned down from the title's own weight — "who's running it" is useful
+// context, not a second headline competing with the title above it.
+.detailOrganizer {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba($purple, 0.8);
+  margin: 0 0 0.25rem;
+}
+
+.detailNote {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: rgba($deep, 0.68);
+  margin: 0;
+}
+
+.detailSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding-top: 0.5rem;
+}
+
+.detailSectionTitle {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba($deep, 0.5);
+  margin: 0;
+}
+
+.detailQrImage {
+  width: 100%;
+  max-width: 16rem;
+  aspect-ratio: 1;
+  object-fit: contain;
+  border-radius: 0.75rem;
+  background: $white;
+  padding: 0.75rem;
+  border: 1px solid rgba($purple, 0.14);
+}
+
 .mutedValue {
   display: block;
-  margin-top: 0.28rem;
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   color: rgba($deep, 0.48);
 }
 
-.verified {
-  color: $purple;
-  font-weight: 800;
+// ─── Results — final standings per category on a completed tournament's
+// detail page. Two tab levels (age group, then Open/Girls within it) rather
+// than one flat row of seven pills, which wrapped awkwardly. A plain table
+// with subtle row dividers, not every row given a tinted background — gold
+// is reserved for the top 3 ranks only, so it still reads as emphasis
+// rather than a uniform "coloured strip" treatment on every row. ──────────
+.resultsTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
-.typePill {
+.resultsSubTabs {
+  margin-top: -0.2rem;
+}
+
+.resultsTab {
   display: inline-flex;
   align-items: center;
-  min-height: 1.85rem;
+  min-height: 2.1rem;
+  padding: 0 0.85rem;
   border-radius: 999px;
-  padding: 0 0.72rem;
-  font-size: 0.72rem;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-.typeInternational {
-  color: $gold-deep;
-  background: rgba($gold, 0.22);
-  border: 1px solid rgba($gold, 0.38);
-}
-
-.typeNational {
-  color: $purple;
-  background: rgba($purple, 0.11);
-  border: 1px solid rgba($purple, 0.18);
-}
-
-.typeState {
-  color: $blue-deep;
-  background: rgba($blue, 0.1);
-  border: 1px solid rgba($blue, 0.2);
-}
-
-.typeClub {
-  color: $rose-deep;
-  background: rgba($rose, 0.22);
-  border: 1px solid rgba($rose, 0.34);
-}
-
-.typeAcademy {
-  color: $deep;
-  background: rgba($muted, 0.2);
-  border: 1px solid rgba($muted, 0.36);
-}
-
-// 'Local' — the admin-entered tournaments schema's fourth tournament_type
-// value, alongside International/National/Academy above.
-.typeLocal {
-  color: $rose-deep;
-  background: rgba($gold-soft, 0.28);
-  border: 1px solid rgba($gold, 0.34);
-}
-
-.mapLink {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba($deep, 0.78);
-  text-decoration: none;
-  transition: transform 0.2s ease, opacity 0.2s ease;
-
-  &:hover {
-    color: $purple;
-    transform: translateY(-1px);
-    opacity: 0.84;
-  }
-}
-
-.mapIcon {
-  display: block;
-  width: 3rem;
-  height: 3rem;
-  object-fit: cover;
-  border-radius: 999px;
-}
-
-.playerIcon {
-  display: block;
-  width: 3rem;
-  height: 3rem;
-  object-fit: cover;
-  border-radius: 999px;
-}
-
-.playerPreview {
-  position: relative;
-}
-
-.playerPreviewButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: 0;
-  background: transparent;
+  border: 1px solid rgba($purple, 0.2);
+  background: rgba($white, 0.6);
+  color: rgba($deep, 0.65);
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
 
   &:hover {
-    opacity: 0.86;
-    transform: translateY(-1px);
+    border-color: rgba($purple, 0.4);
+    color: $deep;
   }
 }
 
-.playerPanel {
-  position: absolute;
-  z-index: 4;
-  top: calc(100% + 0.5rem);
-  right: 0;
-  display: grid;
-  gap: 0.75rem;
-  width: min(32rem, calc(100vw - 2rem));
-  padding: 1rem;
-  border-radius: 1.15rem;
-  border: 1px solid rgba($gold, 0.28);
-  background:
-    radial-gradient(circle at top right, rgba($gold, 0.16), transparent 34%),
-    linear-gradient(135deg, rgba($deep, 0.98), rgba($purple, 0.96));
-  box-shadow:
-    0 24px 70px rgba($deep, 0.28),
-    0 0 0 1px rgba($white, 0.08) inset;
+.resultsTabActive {
+  border-color: $purple;
+  background: $purple;
+  color: $white;
+
+  &:hover {
+    border-color: $purple;
+    color: $white;
+  }
 }
 
-.playerPanelTitle {
+// Visually secondary to the age-group row above it — smaller, no pill fill
+// even when active (an underline instead), since this is a sub-choice
+// within whichever age group is already selected, not an equal-weight
+// second set of tabs.
+.resultsSubTab {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.8rem;
+  padding: 0 0.1rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: rgba($deep, 0.55);
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    color: $deep;
+  }
+}
+
+.resultsSubTabActive {
+  border-bottom-color: $purple;
+  color: $purple;
+}
+
+.resultsHeading {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: $deep;
+  margin: 0.2rem 0 0;
+}
+
+// Reserves room for the longest category's standings (see
+// TournamentResults.tsx's maxStandings) so switching to a shorter list
+// doesn't shrink the section and shift the registration/payment content
+// below it.
+.resultsTableWrap {
+  overflow-x: auto;
+}
+
+// Fixed layout so the three columns can be sized deliberately — Rank narrow,
+// Player takes whatever's left, Points a compact right-aligned column.
+// Without this, default table layout left a large empty gap between a short
+// name and the points column instead of giving that space to the name.
+.resultsTable {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+
+  th:first-child,
+  td:first-child {
+    width: 3.75rem;
+  }
+
+  th:last-child,
+  td:last-child {
+    width: 5.5rem;
+  }
+}
+
+.resultsTableHeadCell {
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid rgba($purple, 0.16);
+  text-align: left;
   font-family: var(--font-sans);
   font-size: 0.66rem;
   font-weight: 800;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgba($gold, 0.82);
-  margin: 0 0 0.1rem;
+  color: rgba($deep, 0.5);
 }
 
-.playerCard {
-  display: grid;
-  grid-template-columns: 3.6rem minmax(0, 1fr);
-  align-items: center;
-  gap: 0.9rem;
-  min-height: 4.75rem;
-  padding: 0.6rem 0.85rem;
-  border-radius: 999px;
-  border: 1px solid rgba($gold, 0.35);
-  background:
-    linear-gradient(90deg, rgba($purple, 0.96), rgba($rose, 0.28)),
-    rgba($purple, 0.88);
-  box-shadow:
-    0 12px 28px rgba($purple, 0.24),
-    0 0 0 1px rgba($white, 0.06) inset;
+.resultsTableHeadCellRight {
+  text-align: right;
 }
 
-// ─── Payment QR popover — same reveal-on-click pattern as .playerPreview ──
+.resultsTableRow {
+  &:not(:last-child) {
+    border-bottom: 1px solid rgba($purple, 0.08);
+  }
+}
+
+.resultsTableCell {
+  padding: 0.6rem;
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+  color: $deep;
+}
+
+.resultsTableCellRight {
+  text-align: right;
+  font-weight: 600;
+  color: rgba($deep, 0.65);
+  font-variant-numeric: tabular-nums;
+}
+
+// The one piece of structure that genuinely encodes rank — gold/silver/
+// bronze on just the top 3 ranks, not a tint across every row.
+.resultsRankTop3 {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  color: $gold-deep;
+}
+
+// ─── Payment QR popover — a reveal-on-click button + AnchoredPopover ──────
 .paymentInfo {
   position: relative;
   margin-top: 0.4rem;
@@ -423,10 +1004,9 @@ $gold-soft: #FFE39A;
 }
 
 .paymentPanel {
-  position: absolute;
-  z-index: 4;
-  top: calc(100% + 0.5rem);
-  right: 0;
+  // position/top-or-bottom/right/z-index are all set inline by
+  // AnchoredPopover (fixed, anchored above the button) — this class only
+  // supplies the panel's own look, not its placement.
   display: grid;
   gap: 0.6rem;
   width: min(18rem, calc(100vw - 2rem));
@@ -474,152 +1054,13 @@ $gold-soft: #FFE39A;
   font-style: italic;
 }
 
-.playerAvatar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 3.25rem;
-  height: 3.25rem;
-  border-radius: 999px;
-  border: 2px solid rgba($gold, 0.9);
-  background:
-    radial-gradient(circle at 35% 30%, rgba($white, 0.35), transparent 28%),
-    linear-gradient(135deg, $purple-light, $deep);
-  box-shadow: 0 0 0 3px rgba($purple, 0.5);
-  font-family: var(--font-serif);
-  font-size: 1rem;
-  font-weight: 700;
-  color: $white;
-}
-
-.playerBody {
-  display: grid;
-  gap: 0.35rem;
-  min-width: 0;
-}
-
-.playerTopLine {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: baseline;
-  gap: 0.75rem;
-}
-
-.playerName {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-family: var(--font-serif);
-  font-size: clamp(1.05rem, 2vw, 1.45rem);
-  font-weight: 800;
-  color: $white;
-  text-shadow: 0 2px 0 rgba($deep, 0.45);
-}
-
-.playerRating {
-  font-family: var(--font-serif);
-  font-size: clamp(1rem, 1.8vw, 1.3rem);
-  font-weight: 800;
-  color: $gold-soft;
-  text-shadow: 0 1px 0 rgba($deep, 0.5);
-}
-
-.playerMeta {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  flex-wrap: wrap;
-  font-family: var(--font-sans);
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: rgba($white, 0.76);
-}
-
-.playerTitle {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.45rem;
-  padding: 0 0.48rem;
-  border-radius: 999px;
-  background: rgba($gold, 0.92);
-  color: $deep;
-  font-size: 0.68rem;
-  font-weight: 900;
-}
-
-.registerLink {
-  padding: 0.68rem 0.95rem;
-  color: $white;
-  background: linear-gradient(135deg, $purple 0%, $purple-light 58%, $gold 145%);
-  box-shadow: 0 8px 24px rgba($purple, 0.22);
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba($purple, 0.32);
-  }
-}
-
-@include v.max-lg {
-  .tableShell {
-    overflow: visible;
-    border: 0;
-    background: transparent;
-    box-shadow: none;
-  }
-
-  .table {
-    min-width: 0;
-
-    thead {
-      display: none;
-    }
-
-    tbody,
-    tr,
-    td {
-      display: block;
-      width: 100%;
-    }
-
-    tr {
-      margin-bottom: 1rem;
-      border: 1px solid rgba($purple, 0.12);
-      border-radius: 0.75rem;
-      background: rgba($white, 0.8);
-      box-shadow: 0 12px 38px rgba($purple, 0.08);
-      overflow: hidden;
-    }
-
-    td {
-      display: grid;
-      grid-template-columns: minmax(7rem, 34%) 1fr;
-      gap: 1rem;
-      padding: 0.85rem 1rem;
-
-      &::before {
-        content: attr(data-label);
-        font-size: 0.66rem;
-        font-weight: 800;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: rgba($deep, 0.48);
-      }
-    }
-  }
-
-  .playerPanel {
-    left: 0;
-    right: auto;
-  }
-}
-
 @include v.max-sm {
   .groupHeader {
     display: block;
   }
 
-  .table td {
-    grid-template-columns: 1fr;
-    gap: 0.4rem;
+  .cardActions {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
