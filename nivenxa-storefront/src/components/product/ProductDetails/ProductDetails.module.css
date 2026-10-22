@@ -1,0 +1,134 @@
+/* Contrast note, same finding as the policy pages built earlier this
+   session: --nivenxa-text-muted (#888888) measures ~3:1 against
+   --nivenxa-bg-primary (#F2EDE6) — fails WCAG AA at normal text sizes.
+   #5E5E5E (~5.6:1) is used below instead for the small muted copy here. */
+
+.details {
+  border-top: 1px solid var(--nivenxa-border);
+  margin-top: 24px;
+  padding-top: 8px;
+}
+
+.summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--nivenxa-text-primary);
+  cursor: pointer;
+  list-style: none;
+}
+
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+.chevron {
+  font-size: 16px;
+  color: #5e5e5e;
+  transition: transform 0.2s ease;
+}
+
+.details[open] > .summary .chevron {
+  transform: rotate(180deg);
+}
+
+.body {
+  padding-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Desktop: always open, not collapsible — the summary stops being an
+   interactive disclosure control and the body stays visible regardless of
+   the <details> element's own open/closed state. */
+@media (min-width: 1024px) {
+  .summary {
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .chevron {
+    display: none;
+  }
+
+  .details:not([open]) > .body {
+    display: flex;
+  }
+}
+
+.specList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.specRow {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 12px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.specLabel {
+  font-weight: 600;
+  color: var(--nivenxa-text-primary);
+  font-size: 13px;
+}
+
+.specValue {
+  color: #5e5e5e;
+}
+
+.specLink {
+  color: var(--nivenxa-cta-forest);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.sizeChart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tableScroll {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.th,
+.td {
+  text-align: left;
+  padding: 6px 10px 6px 0;
+  border-bottom: 1px solid var(--nivenxa-border);
+  white-space: nowrap;
+}
+
+.th {
+  font-weight: 600;
+  color: var(--nivenxa-text-primary);
+}
+
+.td {
+  color: #5e5e5e;
+}
+
+.sizeChartEmpty {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  color: #5e5e5e;
+}
