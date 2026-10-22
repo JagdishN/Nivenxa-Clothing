@@ -91,6 +91,16 @@ export function useMoveAnalysis(tier: TierConfig, explanationMode: ExplanationMo
       let data: ExplainMoveResponseBody | ExplainEnginePurposeResponseBody
 
       if (entry.kind === 'quality') {
+        // Only used server-side at 'rich'/'brief' depth (beginner/next-level),
+        // where the route builds a minimal prompt from fen/recentMovesSan/move/
+        // level alone, dropping classification/eval/bestMove/tone entirely —
+        // see src/lib/chess/aiExplainMove.ts. Harmless to always include here.
+        const recentMovesSan = entriesRef.current
+          .filter((e) => e.ply < entry.ply)
+          .sort((a, b) => a.ply - b.ply)
+          .slice(-5)
+          .map((e) => e.san)
+
         const body: ExplainMoveRequestBody = {
           fen: entry.fenBefore,
           move: entry.san,
@@ -103,6 +113,7 @@ export function useMoveAnalysis(tier: TierConfig, explanationMode: ExplanationMo
           bestMove: revealBestMove && entry.classification !== 'best' ? entry.bestMoveSan : undefined,
           tone,
           depth,
+          recentMovesSan,
         }
         const res = await fetch('/api/chess/explain-move', {
           method: 'POST',

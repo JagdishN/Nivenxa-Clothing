@@ -11,9 +11,22 @@ import styles from './ExplanationBody.module.scss'
  * Shared by Play's live/review feed and the Analysis Player's explanation
  * panel — extracted from play/page.tsx so both render identically.
  */
+// Shown under every rendered explanation, regardless of shape — this
+// component is the single place both AI-explanation endpoints
+// (explain-move, explain-engine-purpose) ultimately render through, so one
+// label here covers both.
+function AiLabel() {
+  return <p className={styles.aiLabel}>Explained by AI · may occasionally be wrong</p>
+}
+
 export default function ExplanationBody({ entry }: { entry: MoveAnalysisEntry }) {
   if (!entry.headline) {
-    return entry.explanation ? <p className={styles.calloutText}>{entry.explanation}</p> : null
+    return entry.explanation ? (
+      <>
+        <p className={styles.calloutText}>{entry.explanation}</p>
+        <AiLabel />
+      </>
+    ) : null
   }
 
   return (
@@ -47,6 +60,7 @@ export default function ExplanationBody({ entry }: { entry: MoveAnalysisEntry })
           <p className={styles.calloutText}>{entry.remember}</p>
         </div>
       )}
+      <AiLabel />
     </>
   )
 }

@@ -67,7 +67,7 @@ export default function ExplanationPanel({
       </p>
 
       {entry.explanationStatus === 'loading' && <p className={styles.panelPlaceholder}>Nivenxa is thinking this through…</p>}
-      {entry.explanationStatus === 'error' && <p className={styles.panelError}>Couldn&apos;t load an explanation for this move.</p>}
+      {entry.explanationStatus === 'error' && <p className={styles.panelError}>Explanation unavailable right now.</p>}
       {entry.explanationStatus === 'loaded' && (
         <>
           {WEAK.has(entry.classification) && entry.bestMoveSan && (

@@ -57,3 +57,13 @@
     color: var(--chess-deep);
   }
 }
+
+// Same muted opacity already used for .calloutSectionLabel against this
+// same near-white panel background — a disclosure line, not a heading, so
+// normal case rather than uppercase.
+.aiLabel {
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  color: rgba(31, 27, 58, 0.45);
+  margin-top: 0.5rem;
+}

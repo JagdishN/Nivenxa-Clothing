@@ -288,6 +288,8 @@ export interface ExplainMoveRequestBody {
   bestMove?: string
   tone?: ExplanationTone
   depth?: ExplanationDepth
+  /** SAN of the last few moves before this one — only used at 'rich'/'brief' depth, where the route builds a minimal, account-data-free prompt from fen/recentMovesSan/move/level alone (see src/lib/chess/aiExplainMove.ts) rather than this whole request body. */
+  recentMovesSan?: string[]
 }
 
 export interface ExplainMoveResponseBody extends StructuredExplanation {

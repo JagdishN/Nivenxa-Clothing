@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import type { ExplainMoveRequestBody, ExplainMoveResponseBody } from '@/lib/chess/types'
+import { getChessSession } from '@/lib/chess/chessAuth'
+import { checkExplainRateLimit } from '@/lib/chess/aiRateLimit'
+import { buildExplainMoveRequest, sanitizeExplanation, stripUrls, type AiExplanationLevel } from '@/lib/chess/aiExplainMove'
 
 // Lazily constructed so a missing ANTHROPIC_API_KEY doesn't crash the route
 // module at build/import time — only the first real request fails, with a
@@ -127,10 +130,40 @@ export async function POST(request: NextRequest) {
   }
 
   if (!process.env.ANTHROPIC_API_KEY) {
-    return NextResponse.json({ error: 'AI explanation service is not configured' }, { status: 503 })
+    return NextResponse.json({ error: 'Explanation unavailable right now' }, { status: 503 })
   }
 
+  // Only signed-in players are rate-limited — a guest has no user_id to key
+  // this on (see aiRateLimit.ts). Checked before spending a model call.
+  const session = await getChessSession()
+  if (session) {
+    const allowed = await checkExplainRateLimit(session.userId)
+    if (!allowed) {
+      return NextResponse.json({ error: "You've reached the explanation limit for now — try again in a bit." }, { status: 429 })
+    }
+  }
+
+  const depth = body.depth ?? 'plain'
+  // 'rich' (beginner) and 'brief' (next-level/intermediate) are the "AI move
+  // explanations" the Privacy Policy describes: a minimal, account-data-free
+  // request (fen/recentMovesSan/move/level only — see aiExplainMove.ts),
+  // under a dedicated system prompt, with a hard per-level word cap enforced
+  // after the model responds. 'plain'/'minimal' (Expert/Master's quick
+  // pulse-check) keep today's eval-aware prompt unchanged, with only a URL
+  // strip added — rebuilding those wasn't asked for and isn't what the
+  // policy's "AI move explanations" section is describing.
+  const isLevelled = depth === 'rich' || depth === 'brief'
+
   try {
+    if (isLevelled) {
+      const level: AiExplanationLevel = depth === 'rich' ? 'beginner' : 'next-level'
+      const recentMovesSan = Array.isArray(body.recentMovesSan) ? body.recentMovesSan.filter((m): m is string => typeof m === 'string') : []
+      const response = await getClient().messages.create(buildExplainMoveRequest({ fen: body.fen, recentMovesSan, move: body.move, level }))
+      const textBlock = response.content.find((block): block is Anthropic.TextBlock => block.type === 'text')
+      const raw = sanitizeExplanation(textBlock?.text.trim() ?? '', level)
+      return NextResponse.json({ explanation: raw } satisfies ExplainMoveResponseBody)
+    }
+
     const response = await getClient().messages.create({
       model: 'claude-opus-5',
       max_tokens: 400,
@@ -140,20 +173,16 @@ export async function POST(request: NextRequest) {
     })
 
     const textBlock = response.content.find((block): block is Anthropic.TextBlock => block.type === 'text')
-    const raw = textBlock?.text.trim() ?? ''
-    const depth = body.depth ?? 'plain'
+    const raw = stripUrls(textBlock?.text.trim() ?? '')
     const result: ExplainMoveResponseBody = depth === 'plain' ? { explanation: raw } : parseStructured(raw)
     return NextResponse.json(result)
-  } catch (err) {
-    if (err instanceof Anthropic.AuthenticationError) {
-      return NextResponse.json({ error: 'AI explanation service is not configured' }, { status: 503 })
-    }
-    if (err instanceof Anthropic.RateLimitError) {
-      return NextResponse.json({ error: 'Rate limited — try again shortly' }, { status: 429 })
-    }
-    if (err instanceof Anthropic.APIError) {
-      return NextResponse.json({ error: err.message }, { status: err.status ?? 500 })
-    }
-    return NextResponse.json({ error: 'Failed to generate explanation' }, { status: 500 })
+  } catch {
+    // One calm, generic message regardless of cause — auth misconfig, rate
+    // limit, timeout or any other API error. The client already renders its
+    // own fixed copy on any failure (never this JSON body directly — see
+    // ExplanationPanel.tsx/play/page.tsx), so the status code is what the
+    // client actually branches on; this text is a server-side-log-adjacent
+    // fallback for anything reading the raw response.
+    return NextResponse.json({ error: 'Explanation unavailable right now' }, { status: 502 })
   }
 }
