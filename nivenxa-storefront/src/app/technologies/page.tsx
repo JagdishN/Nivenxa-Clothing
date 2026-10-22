@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { seoMetadata } from '@/lib/seo'
+import { LEGAL_ENTITY, legalEntityWhatsAppLink } from '@/lib/legalEntity'
+import SiteFooter from '@/components/global/SiteFooter'
 
 export const metadata = seoMetadata({
   title: 'NIVENXA Technologies — Senior engineers, small teams',
@@ -8,11 +10,31 @@ export const metadata = seoMetadata({
   path: '/technologies',
 })
 
-const PHONE_DISPLAY = '+91 7416996665'
-const PHONE_TEL = 'tel:+917416996665' 
+const PHONE_DISPLAY = LEGAL_ENTITY.phone
+const PHONE_TEL = LEGAL_ENTITY.phoneTel
 // wa.me's `text` param pre-fills the message so a click opens straight into
 // a started conversation instead of a blank chat.
-const PHONE_WA = `https://wa.me/917416996665?text=${encodeURIComponent("Hi NIVENXA, I'd like to talk about a project.")}`
+const PHONE_WA = legalEntityWhatsAppLink("Hi NIVENXA, I'd like to talk about a project.")
+
+const TECHNOLOGIES_FOOTER_COLUMNS = [
+  {
+    title: 'Ventures',
+    links: [
+      { label: 'Studio', href: '/studio/en' },
+      { label: 'Chess', href: '/chess' },
+      { label: 'Living', href: '/living' },
+      { label: 'Technologies', href: '/technologies' },
+    ],
+  },
+  {
+    title: 'Legal',
+    links: [
+      { label: 'Privacy Notice', href: '/privacy' },
+      { label: 'Website Terms', href: '/terms' },
+      { label: 'Contact', href: '/contact' },
+    ],
+  },
+]
 
 const WHAT_WE_BUILD = [
   {
@@ -160,6 +182,7 @@ const eyebrow = {
 
 export default function TechnologiesPage() {
   return (
+    <>
     <div style={{
       background: 'var(--nivenxa-bg-primary, #F2EDE6)',
       color: 'var(--nivenxa-text-primary, #1A1A1A)',
@@ -708,7 +731,7 @@ export default function TechnologiesPage() {
 
         <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginBottom: '32px' }}>
           <a
-            href="mailto:info@nivenxa.com"
+            href={`mailto:${LEGAL_ENTITY.email}`}
             style={{
               display: 'inline-block',
               fontSize: '12px',
@@ -763,14 +786,14 @@ export default function TechnologiesPage() {
               Email
             </p>
             <a
-              href="mailto:info@nivenxa.com"
+              href={`mailto:${LEGAL_ENTITY.email}`}
               style={{
                 fontSize: '15px',
                 color: 'rgba(26,26,26,0.75)',
                 textDecoration: 'none',
               }}
             >
-              info@nivenxa.com
+              {LEGAL_ENTITY.email}
             </a>
           </div>
           <div>
@@ -808,5 +831,7 @@ export default function TechnologiesPage() {
       </section>
 
     </div>
+    <SiteFooter columns={TECHNOLOGIES_FOOTER_COLUMNS} />
+    </>
   )
 }

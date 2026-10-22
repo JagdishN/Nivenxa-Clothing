@@ -1,9 +1,8 @@
 export const COLLECTIONS = [
-  { label: "Men's",        href: '/shop/mens-essentials' },
-  { label: "Women's",      href: '/shop/womens'          },
-  { label: 'Youth Studio', href: '/shop/youth-studio'    },
-  { label: 'Unisex',       href: '/shop/unisex'          },
-  { label: 'Shop All',     href: '/shop'                  },
+  { label: 'Shop All', href: '/shop'        },
+  { label: 'Unisex',   href: '/shop/unisex' },
+  { label: 'Women',    href: '/shop/womens' },
+  { label: 'Kids',     href: '/shop/kids'   },
 ] as const
 
 export const SOCIAL = [
@@ -17,4 +16,9 @@ export const STORIES = [
   { label: 'Made in India',  href: '/stories/made-in-india'  },
   { label: 'Campaigns',      href: '/stories/campaigns'      },
   { label: 'The Process',    href: '/stories/the-process'    },
+] as const
+
+export const CUSTOMER_CARE = [
+  { label: 'Returns & Exchanges', href: '/returns' },
+  { label: 'Privacy Policy',      href: '/privacy' },
 ] as const

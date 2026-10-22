@@ -1,5 +1,5 @@
 import { Link } from '@/i18n/routing'
-import { COLLECTIONS, STORIES, SOCIAL } from '@/data/footer'
+import { COLLECTIONS, STORIES, CUSTOMER_CARE, SOCIAL } from '@/data/footer'
 import styles from './Footer.module.scss'
 
 export default function Footer() {
@@ -72,6 +72,18 @@ export default function Footer() {
           </ul>
         </div>
 
+        {/* Col 4 — Customer Care */}
+        <div>
+          <p className={styles.colTitle}>Customer Care</p>
+          <ul className={styles.links}>
+            {CUSTOMER_CARE.map(({ label, href }) => (
+              <li key={label}>
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                <Link href={href as any} className={styles.link}>{label}</Link>
+              </li>
+            ))}
+          </ul>
+        </div>
 
       </div>
 
