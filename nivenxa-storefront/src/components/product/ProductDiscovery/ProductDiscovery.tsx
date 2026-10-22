@@ -6,23 +6,19 @@ import { Link } from '@/i18n/routing'
 import { products } from '@/data/products'
 import { writeNavSource } from '@/lib/navSource'
 import styles from './ProductDiscovery.module.css'
+import { formatPrice } from '@/utils/formatPrice'
 
 // ─── Hero colourway per product (confirmed by product brief) ─────────────────
 // These are the S1 studio-front colourways shown in this section.
-// NOTE: spec says a-line-kurta → "Morning Ivory" but no such colour exists in
-// products.ts; nearest match is slug 'ivory' (label "Ivory"). Mapped accordingly.
 const HERO_SLUG: Record<string, string> = {
-  'over-tee-shirts':       'bone',
+  'sunday-tee':            'bone',
+  'mandarin-collar-tee':   'bone',
   'cargo-pants':           'chalk-stone',
-  'a-line-kurta':          'ivory',
-  'kurta-contrast-pant':   'wild-sage',
-  'women-lounge-sets':     'meadow-sage',
-  'women-sleepwear':       'morning-cream',
-  'women-sleep-set':       'morning-cream',
-  'kids-rest-sleep-set':   'cloud',
-  'kids-summer-sleep-set': 'cloud',
-  'womens-relaxed-shirt':  'bone',
+  'womens-co-ord-set':     'espresso-stone',
   'kids-unisex-tee':       'cloud',
+  'kids-utility-pant':     'dust-sage',
+  'kids-tee-pant-set':     'cloud-tee-dust-sage-pant',
+  'a-line-kurta-set':      'ivory',
 }
 
 // ─── localStorage ─────────────────────────────────────────────────────────────
@@ -55,7 +51,8 @@ function recordView(handle: string): void {
 interface DiscoveryCard {
   handle:     string
   name:       string
-  price:      number
+  price:      string
+  comingSoon: boolean
   currency:   string
   colourSlug: string
   imageSrc:   string
@@ -86,7 +83,8 @@ function buildCard(handle: string): DiscoveryCard | null {
   return {
     handle,
     name:       product.name,
-    price:      product.price,
+    price:      formatPrice(product),
+    comingSoon: !!product.comingSoon,
     currency:   product.currency,
     colourSlug: colour.slug,
     imageSrc:   img.src,
@@ -232,7 +230,7 @@ export default function ProductDiscovery({ currentHandle }: Props) {
             </div>
             <p className={styles.name}>{card.name}</p>
             <p className={styles.price}>
-              {card.currency}{card.price.toLocaleString('en-IN')}
+              {card.comingSoon ? 'Coming soon' : card.price}
             </p>
             <p className={styles.viewLink}>VIEW →</p>
           </Link>

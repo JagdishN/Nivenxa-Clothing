@@ -1,0 +1,96 @@
+.line {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--nivenxa-text-primary);
+  margin-top: 12px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+  max-width: 420px;
+}
+
+.input {
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--nivenxa-border);
+  border-radius: 0;
+  background: transparent;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 16px; /* 16px stops iOS zooming the page on focus */
+  color: var(--nivenxa-text-primary);
+}
+
+.input:focus-visible {
+  outline: 2px solid var(--nivenxa-text-primary);
+  outline-offset: 2px;
+}
+
+.button {
+  height: 48px;
+  border: none;
+  border-radius: 0;
+  background: var(--nivenxa-cta-bg);
+  color: var(--nivenxa-cta-text);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 150ms ease;
+}
+
+.button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* #5E5E5E, not --nivenxa-text-muted (#888, ~3:1) — same AA-contrast fix as the rest of the PDP. */
+.help {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #5e5e5e;
+}
+
+.helpLink {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.error {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  color: var(--nivenxa-text-primary);
+}
+
+.thanks {
+  font-family: Georgia, serif;
+  font-size: 18px;
+  line-height: 1.4;
+  color: var(--nivenxa-text-primary);
+  margin-top: 24px;
+}
+
+.honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

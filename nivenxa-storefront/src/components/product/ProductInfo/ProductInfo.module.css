@@ -70,6 +70,18 @@
   font-weight: 500;
   color: var(--nivenxa-text-primary);
   margin-top: 14px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* #5E5E5E, not --nivenxa-text-muted (#888, ~3:1 against this background) —
+   same AA-contrast fix used throughout the policy pages this session. */
+.priceTaxNote {
+  font-size: 11px;
+  font-weight: 400;
+  color: #5e5e5e;
 }
 
 .trustLine {
@@ -234,4 +246,31 @@
 .modalEmpty {
   font-size: 13px;
   color: var(--nivenxa-text-muted);
+}
+
+/* ── SS2026 additions ── */
+.description {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--nivenxa-text-primary);
+  margin-top: 10px;
+}
+
+.fitLabel {
+  margin-left: 10px;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--nivenxa-text-primary);
+}
+
+.separateToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 12px;
+  color: var(--nivenxa-text-primary);
+  cursor: pointer;
 }

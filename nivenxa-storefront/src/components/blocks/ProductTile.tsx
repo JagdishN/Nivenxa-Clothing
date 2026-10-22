@@ -4,6 +4,7 @@ import type { Product } from '@/types/product'
 import { getPrimaryImage } from '@/utils/getProductImages'
 import { writeNavSource } from '@/lib/navSource'
 import styles from './ProductTile.module.css'
+import { formatPrice } from '@/utils/formatPrice'
 
 interface Props {
   product: Product
@@ -32,6 +33,7 @@ export default function ProductTile({ product }: Props) {
         )}
         <h3 className={styles.name}>{product.name}</h3>
 
+        {!product.comingSoon && (
         <div className={styles.swatches}>
           {availableColours.slice(0, 8).map(c => (
             <span
@@ -45,10 +47,15 @@ export default function ProductTile({ product }: Props) {
             <span className={styles.more}>+{availableColours.length - 8}</span>
           )}
         </div>
+        )}
 
-        <p className={styles.price}>
-          {product.currency}{product.price.toLocaleString('en-IN')}
-        </p>
+        {product.comingSoon ? (
+          <p className={styles.comingSoon}>Coming soon</p>
+        ) : (
+          <p className={styles.price}>
+            {formatPrice(product)}
+          </p>
+        )}
       </div>
     </Link>
   )

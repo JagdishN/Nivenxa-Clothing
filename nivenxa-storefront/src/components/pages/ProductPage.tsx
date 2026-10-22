@@ -17,6 +17,8 @@ import MobileStickyBar from '@/components/product/MobileStickyBar/MobileStickyBa
 import FabricStory from '@/components/editorial/FabricStory/FabricStory'
 import ProductDiscovery from '@/components/product/ProductDiscovery/ProductDiscovery'
 import ImageZoom from '@/components/product/ImageZoom/ImageZoom'
+import NotifyPanel from '@/components/product/NotifyPanel/NotifyPanel'
+import { isPurchasable } from '@/utils/formatPrice'
 
 import styles from './ProductPage.module.css'
 
@@ -65,6 +67,9 @@ export default function ProductPage() {
   const router = useRouter()
   const { addToCart } = useCart()
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
+  // Set products only: one size picker by default, optional separate tee / pant sizes.
+  const [pantSize, setPantSize] = useState<string | null>(null)
+  const [separateSizes, setSeparateSizes] = useState(false)
   const [swatchExpanded, setSwatchExpandedState] = useState(_swatchExpanded)
   const [zoomOpen, setZoomOpen] = useState(false)
   const [zoomStartIndex, setZoomStartIndex] = useState(0)
@@ -77,14 +82,20 @@ export default function ProductPage() {
   if (loading) return <ProductSkeleton />
   if (error || !product || !activeColour) return <ProductError />
 
+  // Cart size: the plain size, or "Tee 6Y · Pant 8Y" when a set's pieces are sized separately.
+  const sizeLabel = product.set && separateSizes
+    ? (selectedSize && pantSize ? `Tee ${selectedSize} · Pant ${pantSize}` : null)
+    : selectedSize
+
   const handleColourChange = (colour: ProductColour) => {
     setSelectedSize(null)
+    setPantSize(null)
     router.replace(`/shop/${product.handle}/${colour.slug}`)
   }
 
   const handleAddToBag = () => {
-    if (!selectedSize || !activeColour.available) return
-    addToCart(product.id, `${activeColour.slug}-${selectedSize}`, 1)
+    if (!sizeLabel || !activeColour.available || !isPurchasable(product)) return
+    addToCart(product.id, `${activeColour.slug}-${sizeLabel}`, 1)
   }
 
   // Called when zoom overlay closes — applies any colour the user browsed to
@@ -101,7 +112,9 @@ export default function ProductPage() {
   }
 
   const isCtaDisabled =
-    !selectedSize ||
+    !isPurchasable(product) ||
+    !sizeLabel ||
+    (separateSizes && !pantSize) ||
     !activeColour.available ||
     !product.sizes.find(s => s.label === selectedSize)?.available
 
@@ -110,6 +123,9 @@ export default function ProductPage() {
 
   // Index of the primary image in the sorted gallery order (almost always 0)
   const heroZoomIndex = galleryImages.findIndex(img => img.id === primaryImage.id)
+
+  const hasEditorial =
+    product.fabricPillars.length > 0 || product.specs.length > 0 || product.fitBars.length > 0 || product.accordions.length > 0
 
   return (
     <div className={styles.page}>
@@ -127,6 +143,9 @@ export default function ProductPage() {
 
         {/* Col 1 — sticky info panel */}
         <div className={styles.productInfoWrapper}>
+          {product.comingSoon ? (
+            <NotifyPanel product={product} />
+          ) : (
           <ProductInfo
             product={product}
             activeColour={activeColour}
@@ -136,7 +155,13 @@ export default function ProductPage() {
             onAddToBag={handleAddToBag}
             swatchExpanded={swatchExpanded}
             onSwatchExpandedChange={setSwatchExpanded}
+            sizeLabel={sizeLabel}
+            pantSize={pantSize}
+            onPantSizeChange={setPantSize}
+            separateSizes={separateSizes}
+            onSeparateSizesChange={setSeparateSizes}
           />
+          )}
         </div>
 
         {/* Col 2 — sticky hero image */}
@@ -178,9 +203,11 @@ export default function ProductPage() {
       </section>
 
       {/* SECTION 2 — EDITORIAL */}
-      <section className={styles.editorialSection}>
-        <FabricStory product={product} />
-      </section>
+      {hasEditorial && (
+        <section className={styles.editorialSection}>
+          <FabricStory product={product} />
+        </section>
+      )}
 
       {/* SECTION 3 — SMART DISCOVERY */}
       <section className={styles.carouselSection}>
@@ -200,14 +227,15 @@ export default function ProductPage() {
       />
 
       {/* ── Mobile sticky CTA bar ── */}
-      <MobileStickyBar
-        activeColour={activeColour}
-        selectedSize={selectedSize}
-        onAddToBag={handleAddToBag}
-        currency={product.currency}
-        price={product.price}
-        isDisabled={isCtaDisabled}
-      />
+      {!product.comingSoon && (
+        <MobileStickyBar
+          activeColour={activeColour}
+          selectedSize={sizeLabel}
+          onAddToBag={handleAddToBag}
+          isDisabled={isCtaDisabled}
+          priceMissing={product.price == null}
+        />
+      )}
 
     </div>
   )

@@ -16,7 +16,9 @@
     "apply-living-schema": "tsx scripts/apply-schema.ts supabase/living_schema.sql",
     "seed-living-demo": "tsx scripts/seed-living-demo.ts",
     "add-tournament": "tsx scripts/add-nivenxa-tournament.ts",
-    "upload-tournament-qr": "tsx scripts/upload-tournament-qr.ts"
+    "upload-tournament-qr": "tsx scripts/upload-tournament-qr.ts",
+    "apply-studio-notify-schema": "tsx scripts/apply-schema.ts supabase/migrations/20261022090300_studio_launch_notifications.sql",
+    "purge-launch-notifications": "tsx scripts/purge-launch-notifications.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",
