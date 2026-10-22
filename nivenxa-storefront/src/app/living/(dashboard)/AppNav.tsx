@@ -274,6 +274,12 @@ export default function AppNav({
           {menuOpen && (
             <div className={styles.accountMenu}>
               <span className={styles.roleTag}>{role}</span>
+              <Link href="/living/terms" className={styles.signOut} onClick={() => setMenuOpen(false)}>
+                Terms
+              </Link>
+              <Link href="/living/privacy" className={styles.signOut} onClick={() => setMenuOpen(false)}>
+                Privacy
+              </Link>
               <button
                 type="button"
                 className={styles.signOut}

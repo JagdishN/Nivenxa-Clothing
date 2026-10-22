@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { cache } from 'react'
 import type { SupabaseClient, User } from '@supabase/supabase-js'
 import { createLivingServerClient } from './supabaseServer'
+import { LIVING_CONSENT_POLICY_VERSION } from './consentVersion'
 import type { Apartment, LivingRole, Membership } from './types'
 
 export interface LivingSession {
@@ -79,6 +80,17 @@ export async function requireMembership(allowedRoles?: LivingRole[]): Promise<Li
   const { supabase, user, membership, apartment } = await loadMembershipContext()
   if (!user) redirect('/living/login')
   if (!membership) redirect('/living/signup')
+  // One-time Terms/Privacy consent — every (dashboard) page calls this
+  // function, so this is the single place that catches every existing
+  // membership (consent_at is null until this shipped) on its next
+  // sign-in, as well as an Owner who just joined via a code (the Create
+  // Apartment form collects consent itself, at signup — see
+  // living/signup/page.tsx — so an Admin who just went through it already
+  // has consent_at set and never hits this). Also catches a STALE version —
+  // membership.consent_policy_version from before Terms of Use existed —
+  // so bumping LIVING_CONSENT_POLICY_VERSION makes every existing member
+  // see the consent step once more, exactly like a brand-new membership.
+  if (!membership.consent_at || membership.consent_policy_version !== LIVING_CONSENT_POLICY_VERSION) redirect('/living/consent')
   if (allowedRoles && !allowedRoles.includes(membership.role)) redirect('/living/home')
   if (!apartment) redirect('/living/login')
 

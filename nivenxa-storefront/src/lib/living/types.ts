@@ -46,6 +46,9 @@ export interface Membership {
   role: LivingRole
   flat_id: string | null
   created_at: string
+  /** Null until the user has agreed to the Privacy Policy once — see requireMembership()'s one-time consent redirect. */
+  consent_at: string | null
+  consent_policy_version: string | null
 }
 
 export interface FlatClaim {
