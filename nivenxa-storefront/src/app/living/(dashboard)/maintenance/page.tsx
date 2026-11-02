@@ -5,7 +5,7 @@ import { requireMembership } from '@/lib/living/auth'
 import { setLivingError, setLivingNotice } from '@/lib/living/flash'
 import { formatCurrency, formatMonthLabel, formatPeriodLabel, monthKeyFor } from '@/lib/living/format'
 import { maintenanceGrandTotal, round2, splitMaintenance } from '@/lib/living/billing'
-import { computeBillForFlat, getAdvanceCarryForwardSuggestion, getAdvanceTransfers, getBillableFlats, getCarryForwardExpenses, getCommonWaterChargeForPeriod, getCurrentMaintenancePeriod, getFlatLedger, getFlats, getPreviousDueSuggestion, getRelevantWaterMonth, getWaterReading, isPeriodFinancialStatementLocked, syncAdvanceApplicationPayment } from '@/lib/living/queries'
+import { computeBillForFlat, seedCarryForwardForPeriod, getAdvanceTransfers, getBillableFlats, getCarryForwardExpenses, getCommonWaterChargeForPeriod, getCurrentMaintenancePeriod, getFlatLedger, getFlats, getRelevantWaterMonth, getWaterReading, isPeriodFinancialStatementLocked, syncAdvanceApplicationPayment } from '@/lib/living/queries'
 import type { Apartment, AdvanceTransfer, MaintenanceLineItem, MaintenanceMonth } from '@/lib/living/types'
 import ConfirmSubmitButton from '../ConfirmSubmitButton'
 import MaterialIcon from '../../MaterialIcon'
@@ -160,23 +160,11 @@ async function startPeriodAction(formData: FormData) {
   }
 
   if (priorPeriod) {
-    const flats = getBillableFlats(await getFlats(supabase, apartment.id))
-    for (const flat of flats) {
-      const previousDue = await getPreviousDueSuggestion(supabase, apartment, flat, priorPeriod)
-      const advanceCarryForward = await getAdvanceCarryForwardSuggestion(supabase, apartment, flat, priorPeriod)
-      if (previousDue > 0 || advanceCarryForward > 0) {
-        await supabase.from('living_flat_ledger').upsert(
-          {
-            apartment_id: apartment.id,
-            maintenance_month_id: inserted.id,
-            flat_id: flat.id,
-            previous_due: previousDue,
-            advance_payment: advanceCarryForward,
-          },
-          { onConflict: 'maintenance_month_id,flat_id' }
-        )
-        if (advanceCarryForward > 0) await syncAdvanceApplicationPayment(supabase, apartment, flat, inserted as MaintenanceMonth, userId)
-      }
+    const { failedFlats } = await seedCarryForwardForPeriod(supabase, apartment, inserted as MaintenanceMonth, priorPeriod, userId)
+    if (failedFlats.length > 0) {
+      await setLivingError(
+        `The new period was started, but advance / previous-due could not be carried forward for flat${failedFlats.length > 1 ? 's' : ''} ${failedFlats.join(', ')}. Check the Ledger tab before publishing.`
+      )
     }
   }
   redirect('/living/maintenance')

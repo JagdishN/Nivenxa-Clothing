@@ -153,6 +153,18 @@ export function getRelevantWaterMonth(period: MaintenanceMonth | null, todayMont
   return period.period_end >= today ? todayMonth : period.month
 }
 
+/**
+ * The calendar-month key the Water page reads and writes (readings, supply
+ * costs, tanker counts) — the BILLING PERIOD's month, not blindly today's.
+ * Readings are normally taken just after a period ends (e.g. on 2 Nov for the
+ * October period), so keying them to today's month filed them under the wrong
+ * period. Same rule every bill page uses: see getRelevantWaterMonth.
+ */
+export async function getBillingWaterMonth(supabase: SupabaseClient, apartmentId: string): Promise<string> {
+  const period = await getCurrentMaintenancePeriod(supabase, apartmentId)
+  return getRelevantWaterMonth(period, monthKeyFor(new Date()))
+}
+
 /** One specific period, by its own start date — used when the Admin is editing a period they already know the identity of. */
 export async function getMaintenanceMonth(supabase: SupabaseClient, apartmentId: string, month: string): Promise<MaintenanceMonth | null> {
   const { data } = await supabase
@@ -248,7 +260,13 @@ export const getIncomingGap = cache(async (supabase: SupabaseClient, apartmentId
   const priorIncoming = await getIncomingGap(supabase, apartmentId, priorMonth)
   const priorRate = combinedWaterRatePer1000L(priorPurchaseCost, priorLiters, priorIncoming) ?? 0
   const priorConsumption = await getTotalConsumptionForMonth(supabase, apartmentId, priorMonth)
-  const newGap = round2(priorIncoming + (priorConsumption / 1000) * priorRate - priorPurchaseCost)
+  // Shortfall = what the month cost (plus anything carried into it) minus what its rate actually
+  // recovered from metered consumption. Positive = UNDER-recovered, so next month's rate rises to
+  // make it up; negative = over-recovered, so it falls — the meaning documented on
+  // combinedWaterRatePer1000L and shown on the Water page. This used to be computed the other
+  // way round (recovered − cost), so a month that over-billed pushed its surplus onto the NEXT
+  // month's rate instead of deducting it (Oct 2026: a ₹18k surplus inflated the rate to ₹82.78).
+  const newGap = round2(priorIncoming + priorPurchaseCost - (priorConsumption / 1000) * priorRate)
 
   await supabase.from('living_water_supply_costs').update({ carried_gap: newGap }).eq('id', priorCost.id)
   return newGap
@@ -351,7 +369,12 @@ async function getOrComputeWaterCharge(
 
   const computed = await computeWaterChargeForMonth(supabase, apartmentId, consumptionLiters, month)
   const isPastMonth = month < monthKeyFor(new Date())
-  if (isPastMonth) {
+  // A rate of 0 means the month's Supply Costs / tanker rates haven't been
+  // entered yet (getCombinedWaterRate returns 0 when either is missing) — not
+  // a real ₹0 rate. Freezing that into a permanent snapshot would keep every
+  // flat at ₹0 even after the inputs are entered, so skip the cache write and
+  // keep recomputing until there is a real rate.
+  if (isPastMonth && computed.ratePer1000L > 0) {
     // Admin/treasurer-only write (RLS) — an Owner's session silently no-ops here and just
     // uses `computed` for this one request; self-heals next time an admin/treasurer session
     // touches this flat+month (Bills, Water, Billing Overview all do, constantly).
@@ -543,10 +566,10 @@ async function computeBillAgainstPeriod(
     getMeteredWaterCharge(supabase, apartment, flat, month),
   ])
   const billableFlats = getBillableFlats(allFlats)
-  const [ledger, payments, reimbursementCreditThisPeriod] = await Promise.all([
+  const [ledger, payments, billAdjustments] = await Promise.all([
     maintenanceMonth ? getFlatLedger(supabase, maintenanceMonth.id, flat.id) : Promise.resolve(null),
     maintenanceMonth ? getPaymentsForFlat(supabase, maintenanceMonth.id, flat.id) : Promise.resolve([]),
-    maintenanceMonth ? getBillAdjustmentCreditForPeriod(supabase, maintenanceMonth.id, flat.id) : Promise.resolve(0),
+    maintenanceMonth ? getBillAdjustmentSettlementsForPeriod(supabase, maintenanceMonth.id, flat.id) : Promise.resolve([]),
   ])
   const advancePayment = ledger?.advance_payment ?? 0
   const lateFee = ledger?.late_fee ?? 0
@@ -581,6 +604,39 @@ async function computeBillAgainstPeriod(
       waterIsFallback = true
       waterFallbackReason = [waterFallbackReason, `Flat ${child.flat_no} (merged): ${childCharge.fallbackReason}`].filter(Boolean).join(' ')
     }
+  }
+
+  // Reimbursement credit applied to this bill. A plain 'bill_adjustment' settlement is a fixed
+  // amount. One marked AUTO_NET_MARKER tracks the bill instead: it is recomputed from the bill as
+  // it stands now (so a maintenance, water, ledger or late-fee change can never leave the flat
+  // showing a due while the association still owes it money), capped at what the association
+  // still owes that flat for the expense, and the stored settlement is brought into line.
+  const fixedCredit = round2(billAdjustments.filter((r) => !isAutoNet(r)).reduce((sum, r) => sum + r.amount, 0))
+  const autoRows = billAdjustments.filter(isAutoNet)
+  let reimbursementCreditThisPeriod = round2(billAdjustments.reduce((sum, r) => sum + r.amount, 0))
+  if (autoRows.length > 0 && maintenanceMonth) {
+    let stillDue = round2(maintenanceShare + meteredCharge + lateFee + previousDue - advancePayment - fixedCredit)
+    let autoCredit = 0
+    let locked: boolean | null = null // looked up lazily — only if a stored amount actually needs changing
+    for (const row of autoRows) {
+      const detail = await getReimbursementDetailForExpense(supabase, row.expense_id)
+      const available = detail ? round2(detail.remaining + row.amount) : row.amount
+      let target = round2(Math.min(Math.max(stillDue, 0), available))
+      const stored = Math.max(target, 0.01) // settlement amounts must be > 0
+      if (Math.abs(stored - row.amount) > 0.005) {
+        if (locked === null) locked = await isPeriodFinancialStatementLocked(supabase, apartment.id, maintenanceMonth.id)
+        if (locked) {
+          target = row.amount // a locked period is frozen — keep what was recorded
+        } else {
+          // Admin/treasurer-only write (RLS); an Owner's session silently no-ops and just uses the
+          // recomputed figure for that one request, same lazy self-heal as the water snapshots.
+          await supabase.from('living_reimbursement_settlements').update({ amount: stored }).eq('id', row.id)
+        }
+      }
+      autoCredit = round2(autoCredit + target)
+      stillDue = round2(stillDue - target)
+    }
+    reimbursementCreditThisPeriod = round2(fixedCredit + autoCredit)
   }
 
   const totalDue = round2(maintenanceShare + meteredCharge + lateFee + previousDue - advancePayment - reimbursementCreditThisPeriod)
@@ -731,6 +787,68 @@ export async function syncAdvanceApplicationPayment(
   }
 }
 
+/**
+ * Seeds a NEW period's per-flat ledger from the period before it: each flat's
+ * previous_due and carried-forward advance (see the two *Suggestion
+ * functions above). Used by startPeriodAction.
+ *
+ * Hardened after a real incident (Oct 2026): the original inline loop ran
+ * flat-by-flat with no error handling, was interrupted partway (flat 303 of
+ * 26 — no error, no retry) and left ten flats, three of them holding
+ * ₹27k-₹30k advances, with no carry-forward at all. Now:
+ *  - it only fills flats that have NO ledger row yet, so it is safe to re-run
+ *    and never overwrites an Admin's own entry;
+ *  - one flat failing is recorded and reported instead of silently ending the
+ *    whole seeding;
+ *  - flats are processed in small parallel batches, so it finishes in a
+ *    fraction of the time (a shorter window to be interrupted in).
+ */
+export async function seedCarryForwardForPeriod(
+  supabase: SupabaseClient,
+  apartment: Apartment,
+  newPeriod: MaintenanceMonth,
+  priorPeriod: MaintenanceMonth,
+  recordedBy: string
+): Promise<{ seeded: number; failedFlats: string[] }> {
+  const flats = getBillableFlats(await getFlats(supabase, apartment.id))
+  const { data: existing } = await supabase.from('living_flat_ledger').select('flat_id').eq('maintenance_month_id', newPeriod.id)
+  const alreadySeeded = new Set(((existing as { flat_id: string }[]) ?? []).map((r) => r.flat_id))
+  const todo = flats.filter((f) => !alreadySeeded.has(f.id))
+
+  let seeded = 0
+  const failedFlats: string[] = []
+  const BATCH = 6
+  for (let i = 0; i < todo.length; i += BATCH) {
+    await Promise.all(
+      todo.slice(i, i + BATCH).map(async (flat) => {
+        try {
+          const previousDue = await getPreviousDueSuggestion(supabase, apartment, flat, priorPeriod)
+          const advanceCarryForward = await getAdvanceCarryForwardSuggestion(supabase, apartment, flat, priorPeriod)
+          if (previousDue > 0 || advanceCarryForward > 0) {
+            const { error } = await supabase.from('living_flat_ledger').upsert(
+              {
+                apartment_id: apartment.id,
+                maintenance_month_id: newPeriod.id,
+                flat_id: flat.id,
+                previous_due: previousDue,
+                advance_payment: advanceCarryForward,
+              },
+              { onConflict: 'maintenance_month_id,flat_id' }
+            )
+            if (error) throw new Error(error.message)
+            if (advanceCarryForward > 0) await syncAdvanceApplicationPayment(supabase, apartment, flat, newPeriod, recordedBy)
+            seeded++
+          }
+        } catch (err) {
+          console.error(`seedCarryForwardForPeriod: flat ${flat.flat_no} failed —`, err)
+          failedFlats.push(flat.flat_no)
+        }
+      })
+    )
+  }
+  return { seeded, failedFlats }
+}
+
 /** Every advance transfer logged for a specific period, newest first — see transferAdvanceAction in maintenance/page.tsx. */
 export async function getAdvanceTransfers(supabase: SupabaseClient, maintenanceMonthId: string): Promise<AdvanceTransfer[]> {
   const { data } = await supabase
@@ -752,15 +870,34 @@ export async function getPaymentsForFlat(supabase: SupabaseClient, maintenanceMo
   return data ?? []
 }
 
-/** Sum of this flat's 'bill_adjustment' reimbursement settlements against one period — the reimbursement_credit term in computeBillAgainstPeriod. 'cash' settlements never reduce a bill, so they're excluded here (see getCashReimbursementSettlementsForPeriod for where those show up instead). */
-async function getBillAdjustmentCreditForPeriod(supabase: SupabaseClient, maintenanceMonthId: string, flatId: string): Promise<number> {
+/**
+ * Marks a 'bill_adjustment' settlement (via its note) as one that follows the flat's bill instead
+ * of being a fixed amount — see computeBillAgainstPeriod. A note prefix rather than a new column
+ * so this needs no schema change.
+ */
+export const AUTO_NET_MARKER = '[auto-net]'
+
+interface BillAdjustmentRow {
+  id: string
+  expense_id: string
+  amount: number
+  note: string | null
+}
+
+function isAutoNet(row: BillAdjustmentRow): boolean {
+  return (row.note ?? '').trim().startsWith(AUTO_NET_MARKER)
+}
+
+/** This flat's 'bill_adjustment' reimbursement settlements against one period — the source of the reimbursement_credit term in computeBillAgainstPeriod. 'cash' settlements never reduce a bill, so they're excluded here (see getCashReimbursementSettlementsForPeriod for where those show up instead). */
+async function getBillAdjustmentSettlementsForPeriod(supabase: SupabaseClient, maintenanceMonthId: string, flatId: string): Promise<BillAdjustmentRow[]> {
   const { data } = await supabase
     .from('living_reimbursement_settlements')
-    .select('amount')
+    .select('id, expense_id, amount, note')
     .eq('maintenance_month_id', maintenanceMonthId)
     .eq('flat_id', flatId)
     .eq('settlement_type', 'bill_adjustment')
-  return ((data as { amount: number }[]) ?? []).reduce((sum, row) => sum + row.amount, 0)
+    .order('created_at', { ascending: true })
+  return (data as BillAdjustmentRow[]) ?? []
 }
 
 /** Sum of every 'cash' reimbursement settlement stamped against one period, apartment-wide — real association cash leaving, subtracted in computeFinancialStatements' closing-balance walk alongside expensesTotal. 'bill_adjustment' settlements never move cash, so they're excluded here (see getBillAdjustmentCreditForPeriod for where those show up instead). */

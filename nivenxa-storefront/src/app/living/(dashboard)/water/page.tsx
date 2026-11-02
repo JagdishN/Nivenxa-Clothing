@@ -2,9 +2,10 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { requireMembership } from '@/lib/living/auth'
 import { setLivingError, setLivingNotice } from '@/lib/living/flash'
-import { daysInMonth, formatCurrency, formatMonthLabel, monthKeyFor } from '@/lib/living/format'
+import { daysInMonth, formatCurrency, formatMonthLabel } from '@/lib/living/format'
 import { tankerAndMajeeraLiters, waterSupplyCostTotal } from '@/lib/living/billing'
 import {
+  getBillingWaterMonth,
   getCombinedWaterRate,
   getCommonWaterCharge,
   getEffectiveSlabConfig,
@@ -31,7 +32,7 @@ import UploadReadingsForm from './UploadReadingsForm'
 async function ensureReadingsAction() {
   'use server'
   const { supabase, apartment } = await requireMembership(['admin'])
-  const month = monthKeyFor(new Date())
+  const month = await getBillingWaterMonth(supabase, apartment.id)
   if (await isCalendarMonthFinancialStatementLocked(supabase, apartment.id, month)) {
     await setLivingError(FINALIZED_MESSAGE)
     redirect('/living/water')
@@ -67,7 +68,7 @@ async function ensureReadingsAction() {
 async function applyExtractedReadingsAction(entries: { flatId: string; current: number }[]): Promise<{ error?: string }> {
   'use server'
   const { supabase, apartment } = await requireMembership(['admin'])
-  const month = monthKeyFor(new Date())
+  const month = await getBillingWaterMonth(supabase, apartment.id)
   if (await isCalendarMonthFinancialStatementLocked(supabase, apartment.id, month)) {
     return { error: FINALIZED_MESSAGE }
   }
@@ -99,7 +100,7 @@ async function applyExtractedReadingsAction(entries: { flatId: string; current: 
 async function saveReadingsAction(formData: FormData) {
   'use server'
   const { supabase, apartment } = await requireMembership(['admin'])
-  const month = monthKeyFor(new Date())
+  const month = await getBillingWaterMonth(supabase, apartment.id)
   if (await isCalendarMonthFinancialStatementLocked(supabase, apartment.id, month)) {
     await setLivingError(FINALIZED_MESSAGE)
     redirect('/living/water')
@@ -137,7 +138,7 @@ async function saveReadingsAction(formData: FormData) {
 async function saveWaterSupplyCostAction(formData: FormData) {
   'use server'
   const { supabase, apartment } = await requireMembership(['admin'])
-  const month = monthKeyFor(new Date())
+  const month = await getBillingWaterMonth(supabase, apartment.id)
   if (await isCalendarMonthFinancialStatementLocked(supabase, apartment.id, month)) {
     await setLivingError(FINALIZED_MESSAGE)
     redirect('/living/water')
@@ -198,7 +199,7 @@ async function adjustWaterChargeAction(formData: FormData) {
 
 export default async function LivingWaterPage({ searchParams }: { searchParams: Promise<{ month?: string }> }) {
   const { supabase, apartment } = await requireMembership(['admin'])
-  const month = monthKeyFor(new Date())
+  const month = await getBillingWaterMonth(supabase, apartment.id)
   const resolvedSearchParams = await searchParams
   // Which month the Readings tab is showing — defaults to the current month,
   // but an Admin can browse any past month that has at least one reading on

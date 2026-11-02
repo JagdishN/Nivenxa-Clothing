@@ -17,7 +17,9 @@ import {
   getOutstandingReimbursementExpenses,
   getReimbursementDetailForExpense,
   getWaterSupplyCost,
+  isPeriodFinancialStatementLocked,
   sumExpenses,
+  AUTO_NET_MARKER,
 } from '@/lib/living/queries'
 import type { Apartment, Expense, ExpensePaidBy, ExpenseSource, PaymentMethod } from '@/lib/living/types'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -84,7 +86,17 @@ async function recordExpenseAction(formData: FormData) {
   // are independent decisions — a resident can fund an expense AND the association can still bill
   // the whole apartment for it, exactly like an association-funded one. Reimbursing the resident
   // for what they personally spent is a separate transaction, settled on the Reimbursements tab.
+  // Billing target — independent of the expense's own date, so current- and future-month expenses
+  // can be tracked here and billed in whichever cycle is chosen:
+  //   this_cycle  → whole amount goes into the CURRENT period's maintenance now
+  //   next_cycle  → whole amount goes into the next period when it starts (the old behaviour)
+  //   spread      → amount ÷ N per cycle for N cycles, starting this cycle or next (spread_start)
+  // `carryForwardRemaining` counts the cycles still to be applied when a new period starts, so a
+  // portion applied to the current period right now is already taken off it.
   let carryForwardMonths: number | null = null
+  let carryForwardRemaining: number | null = null
+  let applyNowAmount = 0 // what to add to the current period's line items immediately
+  let applyNowNote = ''
   if (addToBilling) {
     if (billingMethod === 'spread') {
       const months = Math.floor(Number(formData.get('split_months') ?? 0))
@@ -93,8 +105,25 @@ async function recordExpenseAction(formData: FormData) {
         redirect('/living/expenses')
       }
       carryForwardMonths = months
+      if (String(formData.get('spread_start') ?? 'next_cycle') === 'this_cycle') {
+        carryForwardRemaining = months - 1
+        applyNowAmount = round2(amount / months)
+        applyNowNote = `${description} ₹${amount.toLocaleString('en-IN')} spread over ${months} billing cycles — 1 of ${months} (₹${applyNowAmount.toLocaleString('en-IN')}).`
+      } else {
+        carryForwardRemaining = months
+      }
+    } else if (billingMethod === 'this_cycle') {
+      carryForwardMonths = 1
+      carryForwardRemaining = null // already applied below — nothing left for a later period to pick up
+      applyNowAmount = round2(amount)
+      applyNowNote = `${description} ₹${amount.toLocaleString('en-IN')} added to this billing cycle.`
     } else {
       carryForwardMonths = 1
+      carryForwardRemaining = 1
+    }
+    if (applyNowAmount > 0 && (await isPeriodFinancialStatementLocked(supabase, apartment.id, current.id))) {
+      await setLivingError("This billing period's Financial Statement has been published — it's permanently locked. Choose \"Next billing cycle\" instead.")
+      redirect('/living/expenses')
     }
   }
 
@@ -113,7 +142,7 @@ async function recordExpenseAction(formData: FormData) {
   const categories = await getExpenseCategories(supabase, apartment.id)
   const matchedCategory = categories.find((c) => c.name === category)
 
-  const { error } = await supabase.from('living_expenses').insert({
+  const { data: insertedExpense, error } = await supabase.from('living_expenses').insert({
     apartment_id: apartment.id,
     maintenance_month_id: current.id,
     expense_date: expenseDate,
@@ -132,11 +161,36 @@ async function recordExpenseAction(formData: FormData) {
     source: 'manual',
     is_recurring: matchedCategory?.is_recurring ?? null,
     carry_forward_months: carryForwardMonths,
-    carry_forward_remaining: carryForwardMonths,
+    carry_forward_remaining: carryForwardRemaining,
     recorded_by: userId,
-  })
-  if (error) {
-    await setLivingError(error.message)
+  }).select('id').single()
+  if (error || !insertedExpense) {
+    await setLivingError(error?.message ?? 'Could not record the expense.')
+    redirect('/living/expenses')
+  }
+
+  // Bill the first portion in the current cycle right now, the same way startPeriodAction adds a
+  // carried-forward expense to a new period: onto the matching line item, or as a new one.
+  if (applyNowAmount > 0) {
+    const label = (category || description).trim()
+    const lineItems = current.line_items.map((item) => ({ ...item }))
+    const existingItem = lineItems.find((item) => item.description.trim().toLowerCase() === label.toLowerCase())
+    if (existingItem) {
+      existingItem.amount = round2(existingItem.amount + applyNowAmount)
+      existingItem.comment = [existingItem.comment, applyNowNote].filter((s) => s && s.trim()).join(' ')
+    } else {
+      lineItems.push({ description: label, amount: applyNowAmount, comment: applyNowNote, category: '' })
+    }
+    const { error: lineError } = await supabase.from('living_maintenance_months').update({ line_items: lineItems }).eq('id', current.id)
+    if (lineError) {
+      // Don't leave an expense that claims to be billed but isn't.
+      await supabase.from('living_expenses').delete().eq('id', insertedExpense.id)
+      await setLivingError(`Could not add this to the current billing cycle: ${lineError.message}`)
+      redirect('/living/expenses')
+    }
+    await setLivingNotice(
+      `Expense recorded and ${formatCurrency(applyNowAmount)} added to this billing cycle's maintenance${carryForwardRemaining ? ` (${carryForwardRemaining} more cycle${carryForwardRemaining > 1 ? 's' : ''} to come)` : ''}.`
+    )
     redirect('/living/expenses')
   }
   await setLivingNotice('Expense recorded.')
@@ -336,7 +390,8 @@ async function settleReimbursementAction(formData: FormData) {
     settlement_type: settlementType,
     amount,
     maintenance_month_id: current?.id ?? null,
-    note: note || null,
+    // "Keep matched to the bill" — see AUTO_NET_MARKER; only meaningful for a bill adjustment.
+    note: (settlementType === 'bill_adjustment' && formData.get('auto_net') === 'on' ? `${AUTO_NET_MARKER} ${note}`.trim() : note) || null,
     settled_by: userId,
   })
   if (error) {
@@ -752,6 +807,10 @@ export default async function LivingExpensesPage({ searchParams }: { searchParam
                           </label>
                           <input id="settle_amount" name="amount" type="number" step="0.01" min="0.01" className={theme.input} required />
                         </div>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', flexBasis: '100%' }}>
+                          <input type="checkbox" name="auto_net" />
+                          Adjust Against Bill only: keep it matched to this flat&rsquo;s bill automatically, so it updates whenever maintenance or water changes
+                        </label>
                         <div className={theme.field} style={{ marginBottom: 0, flex: 1, minWidth: '10rem' }}>
                           <label className={theme.label} htmlFor="settle_note">
                             Note (optional)

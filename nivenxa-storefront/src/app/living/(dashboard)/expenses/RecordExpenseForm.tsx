@@ -46,7 +46,8 @@ export default function RecordExpenseForm({
   const [residentFlatId, setResidentFlatId] = useState('')
   const [amount, setAmount] = useState('')
   const [addToBilling, setAddToBilling] = useState<'no' | 'yes'>('no')
-  const [billingMethod, setBillingMethod] = useState<'next_cycle' | 'spread'>('next_cycle')
+  const [billingMethod, setBillingMethod] = useState<'this_cycle' | 'next_cycle' | 'spread'>('next_cycle')
+  const [spreadStart, setSpreadStart] = useState<'this_cycle' | 'next_cycle'>('next_cycle')
 
   const selectedFlat = flats.find((f) => f.id === residentFlatId)
   const amountNum = Number(amount)
@@ -199,7 +200,12 @@ export default function RecordExpenseForm({
             {/* Checkboxes, but only one is ever really "on" — checking either one unchecks the
                 other, same single choice as before, just checkbox-styled instead of radio circles. */}
             <input type="hidden" name="billing_method" value={billingMethod} />
+            <input type="hidden" name="spread_start" value={spreadStart} />
             <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.9rem' }}>
+                <input type="checkbox" checked={billingMethod === 'this_cycle'} onChange={() => setBillingMethod('this_cycle')} />
+                This billing cycle
+              </label>
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.9rem' }}>
                 <input type="checkbox" checked={billingMethod === 'next_cycle'} onChange={() => setBillingMethod('next_cycle')} />
                 Next billing cycle
@@ -220,6 +226,19 @@ export default function RecordExpenseForm({
                 />
               )}
             </div>
+            {billingMethod === 'spread' && (
+              <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center', flexWrap: 'wrap', marginTop: '0.6rem' }}>
+                <span style={{ fontSize: '0.9rem' }}>Starting from:</span>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.9rem' }}>
+                  <input type="checkbox" checked={spreadStart === 'this_cycle'} onChange={() => setSpreadStart('this_cycle')} />
+                  This billing cycle
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.9rem' }}>
+                  <input type="checkbox" checked={spreadStart === 'next_cycle'} onChange={() => setSpreadStart('next_cycle')} />
+                  Next billing cycle
+                </label>
+              </div>
+            )}
           </div>
         )}
       </Section>
