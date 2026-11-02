@@ -1,0 +1,103 @@
+@use '../../../../../styles/variables' as v;
+@use '../../../../../components/policy/policyTokens' as t;
+
+.page {
+  max-width: 56rem; // wider than the single-column policy pages — this is a 2-up card grid
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+  padding-top: v.$space-page-top;
+  padding-bottom: v.$space-page-bot;
+  // No overflow, no fixed height — same scroll-bug avoidance as every other
+  // policy page this session.
+}
+
+// ─── Hero ───────────────────────────────────────────────────────────────────
+.hero {
+  text-align: center;
+  margin-bottom: v.$space-section;
+}
+
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: t.$muted-aa;
+  margin-bottom: 1rem;
+}
+
+.title {
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  margin-bottom: 0.75rem;
+}
+
+.subtitle {
+  font-family: var(--font-sans);
+  font-size: clamp(1rem, 1.6vw, 1.125rem);
+  color: t.$muted-aa;
+  margin-bottom: 0.75rem;
+}
+
+.lastUpdated {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: t.$muted-aa;
+}
+
+// ─── Card grid — stacks to one column under 640px ───────────────────────────
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1.5rem;
+  border: 1px solid var(--nivenxa-border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.cardTitle {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  color: var(--nivenxa-text-primary);
+}
+
+.cardLine {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--nivenxa-text-primary);
+}
+
+.cardMuted {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: t.$muted-aa;
+}
+
+.cardLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cardLink {
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  color: var(--nivenxa-cta-forest);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  width: fit-content;
+}

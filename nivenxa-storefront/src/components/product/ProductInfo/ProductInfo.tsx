@@ -9,6 +9,9 @@ import BackLink from '@/components/global/BackLink/BackLink'
 import ColourSwatch from '../ColourSwatch/ColourSwatch'
 import SizeSelector from '../SizeSelector/SizeSelector'
 import StyledWithBlock from '../StyledWith/StyledWith'
+import ProductDetails, { SizeChartTable } from '../ProductDetails/ProductDetails'
+import SetCrossLinks from '../SetCrossLinks/SetCrossLinks'
+import { formatPrice, isPurchasable } from '@/utils/formatPrice'
 import styles from './ProductInfo.module.css'
 
 interface Props {
@@ -20,6 +23,13 @@ interface Props {
   onAddToBag: () => void
   swatchExpanded: boolean
   onSwatchExpandedChange: (value: boolean) => void
+  /** What goes in the cart as the size: the plain size, or "Tee 6Y · Pant 8Y" for a set with separate sizes. null = not fully chosen yet. */
+  sizeLabel: string | null
+  /** Set products only. */
+  pantSize: string | null
+  onPantSizeChange: (size: string) => void
+  separateSizes: boolean
+  onSeparateSizesChange: (value: boolean) => void
 }
 
 export default function ProductInfo({
@@ -31,6 +41,11 @@ export default function ProductInfo({
   onAddToBag,
   swatchExpanded,
   onSwatchExpandedChange,
+  sizeLabel,
+  pantSize,
+  onPantSizeChange,
+  separateSizes,
+  onSeparateSizesChange,
 }: Props) {
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false)
   const [toastVisible,  setToastVisible]  = useState(false)
@@ -49,19 +64,19 @@ export default function ProductInfo({
   }, [toastVisible])
 
   const handleAddToBag = useCallback(() => {
-    if (!selectedSize) return
+    if (!sizeLabel || !isPurchasable(product)) return
 
     // Add full item data to local cart
     const primaryImage = getPrimaryImage(activeColour.images)
     addItem({
       productHandle: product.handle,
       colourSlug:    activeColour.slug,
-      size:          selectedSize,
+      size:          sizeLabel,
       productTitle:  product.name,
       colourName:    activeColour.label,
       colourHex:     activeColour.hex,
       imageUrl:      primaryImage?.src,
-      price:         `${product.currency}${product.price.toLocaleString('en-IN')}`,
+      price:         formatPrice(product),
     })
 
     // Also call the prop (writes to useLocalCart for Shopify prep)
@@ -69,11 +84,10 @@ export default function ProductInfo({
 
     // Show toast
     setToastMessage('Added to your bag')
-    setToastSub(`${product.name}\n${activeColour.label} · Size ${selectedSize}`)
+    setToastSub(`${product.name}\n${activeColour.label} · Size ${sizeLabel}`)
     setToastVisible(true)
   }, [
-    selectedSize, addItem, onAddToBag,
-    product.handle, product.name, product.currency, product.price,
+    sizeLabel, addItem, onAddToBag, product,
     activeColour.slug, activeColour.label, activeColour.hex, activeColour.images,
   ])
 
@@ -96,16 +110,22 @@ export default function ProductInfo({
     return () => window.removeEventListener('keydown', onKey)
   }, [sizeGuideOpen])
 
-  const sizeGuideAccordion = product.accordions?.find(a => a.title.toLowerCase().includes('size'))
+  const purchasable = isPurchasable(product)
+  const isSet = !!product.set
+  const pantChosen = !separateSizes || !!pantSize
 
   const isDisabled =
-    !selectedSize ||
+    !purchasable ||
+    !sizeLabel ||
+    !pantChosen ||
     !activeColour.available ||
     !product.sizes.find(s => s.label === selectedSize)?.available
 
-  const ctaLabel = !activeColour.available
+  const ctaLabel = !purchasable
+    ? 'MRP PENDING'
+    : !activeColour.available
     ? 'OUT OF STOCK'
-    : !selectedSize
+    : !sizeLabel
     ? 'Choose Your Size'
     : 'ADD TO BAG'
 
@@ -118,10 +138,17 @@ export default function ProductInfo({
       {/* 2. Product title */}
       <h1 className={styles.title}>{product.name}</h1>
 
-      {/* 3. Price */}
+      {/* 3. Price — MRP, inclusive of all taxes (repeated in the Product details block below) */}
       <p className={styles.price}>
-        {product.currency}{product.price.toLocaleString('en-IN')}
+        {formatPrice(product)}
+        <span className={styles.priceTaxNote}>Inclusive of all taxes</span>
       </p>
+
+      {/* 3b. Short description */}
+      {product.description && <p className={styles.description}>{product.description}</p>}
+
+      {/* 3c. Tee / Pant / Set cross-links */}
+      <SetCrossLinks product={product} activeColourSlug={activeColour.slug} />
 
       {/* 4. Trust line */}
       <p className={styles.trustLine}>{product.trustLine}</p>
@@ -138,7 +165,10 @@ export default function ProductInfo({
 
       {/* 6. Size selector */}
       <p className={styles.sectionLabel}>
-        {product.sizeUnit ? product.sizeUnit.toUpperCase() : 'SIZE'}
+        {isSet && separateSizes
+          ? 'TEE SIZE'
+          : product.sizeUnit ? product.sizeUnit.toUpperCase() : 'SIZE'}
+        {product.fitLabel && <span className={styles.fitLabel}>{product.fitLabel}</span>}
       </p>
       <SizeSelector
         sizes={product.sizes}
@@ -146,12 +176,33 @@ export default function ProductInfo({
         sizeUnit={product.sizeUnit}
         onSelect={onSizeChange}
       />
+      {isSet && separateSizes && (
+        <>
+          <p className={styles.sectionLabel}>PANT SIZE</p>
+          <SizeSelector
+            sizes={product.sizes}
+            selectedSize={pantSize}
+            sizeUnit={product.sizeUnit}
+            onSelect={onPantSizeChange}
+          />
+        </>
+      )}
+      {isSet && (
+        <label className={styles.separateToggle}>
+          <input
+            type="checkbox"
+            checked={separateSizes}
+            onChange={e => onSeparateSizesChange(e.target.checked)}
+          />
+          Choose tee and pant sizes separately
+        </label>
+      )}
       <button
         type="button"
         className={styles.sizeGuide}
         onClick={() => setSizeGuideOpen(true)}
       >
-        Size guide →
+        Size chart →
       </button>
 
       {/* 7. Feature bullets */}
@@ -200,6 +251,9 @@ export default function ProductInfo({
         </>
       )}
 
+      {/* 9c. Product details — marketer, country of origin, consumer care, MRP, cm size chart */}
+      <ProductDetails product={product} />
+
       {/* 10. Add-to-bag toast */}
       <Toast
         visible={toastVisible}
@@ -215,7 +269,7 @@ export default function ProductInfo({
           className={styles.modalOverlay}
           role="dialog"
           aria-modal="true"
-          aria-label="Size guide"
+          aria-label="Size chart"
           onClick={() => setSizeGuideOpen(false)}
         >
           <div
@@ -223,23 +277,19 @@ export default function ProductInfo({
             onClick={e => e.stopPropagation()}
           >
             <div className={styles.modalHeader}>
-              <p className={styles.modalTitle}>SIZE GUIDE</p>
+              <p className={styles.modalTitle}>SIZE CHART</p>
               <button
                 ref={closeRef}
                 type="button"
                 className={styles.modalClose}
                 onClick={() => setSizeGuideOpen(false)}
-                aria-label="Close size guide"
+                aria-label="Close size chart"
               >
                 ✕
               </button>
             </div>
             <div className={styles.modalBody}>
-              {sizeGuideAccordion ? (
-                <div dangerouslySetInnerHTML={{ __html: sizeGuideAccordion.content }} />
-              ) : (
-                <p className={styles.modalEmpty}>Size guide not available for this product.</p>
-              )}
+              <SizeChartTable sizeChart={product.sizeChart} />
             </div>
           </div>
         </div>,

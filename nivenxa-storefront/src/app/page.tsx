@@ -1,6 +1,27 @@
 import Link from 'next/link'
 import { seoMetadata } from '@/lib/seo'
+import SiteFooter from '@/components/global/SiteFooter'
 import styles from './page.module.scss'
+
+const PARENT_FOOTER_COLUMNS = [
+  {
+    title: 'Ventures',
+    links: [
+      { label: 'Studio', href: '/studio/en' },
+      { label: 'Chess', href: '/chess' },
+      { label: 'Living', href: '/living' },
+      { label: 'Technologies', href: '/technologies' },
+    ],
+  },
+  {
+    title: 'Legal',
+    links: [
+      { label: 'Privacy Notice', href: '/privacy' },
+      { label: 'Website Terms', href: '/terms' },
+      { label: 'Contact', href: '/contact' },
+    ],
+  },
+]
 
 export const metadata = seoMetadata({
   title: 'NIVENXA — Independent ventures. Built with intention.',
@@ -11,6 +32,7 @@ export const metadata = seoMetadata({
 
 export default function RootPage() {
   return (
+    <>
     <div style={{
       background: 'var(--nivenxa-bg-primary, #F2EDE6)',
       color: 'var(--nivenxa-text-primary, #1A1A1A)',
@@ -185,102 +207,8 @@ export default function RootPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <section style={{
-        padding: 'clamp(38px, 5.5vw, 64px) 40px',
-        maxWidth: '680px',
-        margin: '0 auto',
-        textAlign: 'center',
-      }}>
-        <p style={{
-          fontFamily: 'var(--font-playfair, Georgia, serif)',
-          fontSize: '20px',
-          fontWeight: 400,
-          letterSpacing: '0.06em',
-          textTransform: 'uppercase',
-          margin: '0 0 8px',
-        }}>
-          NIVENXA
-        </p>
-        <p style={{
-          fontSize: '13px',
-          color: 'rgba(26,26,26,0.55)',
-          margin: '0 0 32px',
-        }}>
-          Independent ventures. Built with intention.
-        </p>
-
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '32px',
-          flexWrap: 'wrap',
-          margin: '0 0 32px',
-        }}>
-          <Link
-            href="/studio/en"
-            className={styles.footerLink}
-            style={{
-              fontSize: '12px',
-              fontWeight: 600,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              color: 'rgba(26,26,26,0.55)',
-              textDecoration: 'none',
-            }}
-          >
-            Studio — Explore →
-          </Link>
-          <Link
-            href="/technologies"
-            className={styles.footerLink}
-            style={{
-              fontSize: '12px',
-              fontWeight: 600,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              color: 'rgba(26,26,26,0.55)',
-              textDecoration: 'none',
-            }}
-          >
-            Technologies — Explore →
-          </Link>
-        </div>
-
-        <p style={{
-          fontSize: '11px',
-          fontWeight: 600,
-          letterSpacing: '0.15em',
-          textTransform: 'uppercase',
-          color: 'rgba(26,26,26,0.40)',
-          margin: '0 0 12px',
-        }}>
-          Get in touch
-        </p>
-        <a
-          href="mailto:info@nivenxa.com"
-          style={{
-            display: 'inline-block',
-            color: 'var(--nivenxa-cta-forest, #1C2E1E)',
-            fontSize: '15px',
-            fontWeight: 400,
-            textDecoration: 'none',
-            letterSpacing: '0.01em',
-            margin: '0 0 28px',
-          }}
-        >
-          info@nivenxa.com
-        </a>
-
-        <p style={{
-          fontSize: '11px',
-          color: 'rgba(26,26,26,0.35)',
-          margin: 0,
-        }}>
-          © 2026 NIVENXA · Hyderabad, India
-        </p>
-      </section>
-
     </div>
+    <SiteFooter columns={PARENT_FOOTER_COLUMNS} />
+    </>
   )
 }

@@ -1,9 +1,22 @@
 import { redirect } from 'next/navigation'
 import { getLivingSession } from '@/lib/living/auth'
+import { LEGAL_ENTITY } from '@/lib/legalEntity'
+import SiteFooter from '@/components/global/SiteFooter'
 import AuthDrawerProvider from './AuthDrawerProvider'
 import AuthTrigger from './AuthTrigger'
 import LivingNav from './LivingNav'
 import styles from './Landing.module.scss'
+
+const LIVING_FOOTER_COLUMNS = [
+  {
+    title: 'Nivenxa Living',
+    links: [
+      { label: 'Privacy Policy', href: '/living/privacy' },
+      { label: 'Terms of Use', href: '/living/terms' },
+      { label: 'Contact', href: `mailto:${LEGAL_ENTITY.email}` },
+    ],
+  },
+]
 
 const CORE_FLOW = [
   { label: 'Maintenance calculation' },
@@ -80,6 +93,10 @@ export default async function LivingLandingPage() {
           Create Apartment
         </AuthTrigger>
       </div>
+
+      {/* Public page only — dashboard pages ((dashboard)/layout.tsx) never
+          render this, so it can't collide with AppNav or any in-app bar. */}
+      <SiteFooter columns={LIVING_FOOTER_COLUMNS} />
     </AuthDrawerProvider>
   )
 }

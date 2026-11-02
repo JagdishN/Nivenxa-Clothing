@@ -22,7 +22,7 @@ export interface ProductImage {
   colourSlug: string
   // SHOPIFY TODO: type is derived from altText convention:
   // Format: "{Product Name} — {imageType} — {colourSlug}"
-  // Example: "Heavyweight Pocket Tee — studio-front — raw-oat"
+  // Example: "Sunday Tee — studio-front — bone"
   // Set this in Shopify admin for every product image before going live.
 }
 
@@ -112,14 +112,60 @@ export interface ProductEditorial {
   byImage?: Partial<Record<ImageType, EditorialByImageEntry>>
 }
 
+/** One size's real measurements, in cm — e.g. { size: 'M', measurements: { chest: 58, length: 71 } }. Field names are per-garment (chest/length/shoulder/sleeve for a top, waist/inseam for a bottom, etc.) — intentionally a free-form map rather than a fixed shape, since this codebase's products span tops, bottoms and co-ords with different dimensions to measure. */
+export interface ProductSizeChartRow {
+  size: string
+  measurements: Record<string, number>
+}
+
+export interface ProductSizeChart {
+  unit: 'cm'
+  /** Column labels in display order, e.g. ['Chest', 'Length', 'Shoulder'] — keys into each row's `measurements`, lowercased (chest/length/shoulder). */
+  columns: string[]
+  rows: ProductSizeChartRow[]
+}
+
+/**
+ * A third-party certification the product genuinely holds. Rendered only
+ * when `verified` is true AND `certificateUrl` is present — see
+ * ProductDetails.tsx. Leave `certifications` empty/undefined until a real,
+ * checkable certificate exists.
+ */
+export interface ProductCertification {
+  name: string
+  scope: string
+  certificateUrl?: string
+  verified: boolean
+}
+
+/** One buyable combination of a Tee + Pant set. */
+export interface SetCombo {
+  /** Same as the matching ProductColour.slug on the set product. */
+  colourSlug: string
+  tee: { productId: string; handle: string; colourSlug: string }
+  pant: { productId: string; handle: string; colourSlug: string }
+}
+
+/**
+ * Set products reference their standalone pieces by id so the Returns
+ * policy can price partial-set refunds from the standalone MRPs of the
+ * retained items. Those standalone products must always exist with a price.
+ */
+export interface ProductSet {
+  teeProductId: string
+  pantProductId: string
+  combos: SetCombo[]
+}
+
 export interface Product {
   id: string
   name: string
   category: string
-  handle: string       // URL slug e.g. 'over-tee-shirts'
+  handle: string       // URL slug e.g. 'sunday-tee'
   badge: string | null
   compositionQuote: string
-  price: number
+  /** MRP in rupees, inclusive of all taxes. `null` = not yet confirmed — the UI shows "[MRP]" and add-to-bag stays disabled. */
+  price: number | null
   currency: string
   trustLine: string
   colours: ProductColour[]
@@ -133,12 +179,41 @@ export interface Product {
   care: CareInstruction[]
   accordions: AccordionItem[]
   collectionItems: CollectionItem[]
-  collectionName?: string   // e.g. "Men's Essentials" — shown in breadcrumb
-  collectionSlug?: string   // e.g. "mens-essentials" — used in breadcrumb href
+  collectionName?: string   // e.g. "Unisex" — shown in breadcrumb
+  collectionSlug?: string   // e.g. "unisex" — used in breadcrumb href
   cardDescriptor?: string   // short line shown on collection-grid cards, overrides the fabricPillars-derived line when set
   styledWith?: StyledWith         // optional cross-sell pairing, colour-aware
   editorial?: ProductEditorial    // optional editorial data for zoom overlay panel
+  /** One short descriptive sentence shown under the product name. */
+  description?: string
+  /** True while `description` is draft copy awaiting owner review (shown in the summary only; never rendered). */
+  descriptionIsDraft?: boolean
+  /** Not purchasable: listed with a "Coming soon" label, PDP shows a notify-me form instead of price/sizes/cart. */
+  comingSoon?: boolean
+  /** Shown instead of price/sizes on a coming-soon product page. */
+  comingSoonLine?: string
+  /** e.g. "Unisex fit" — shown next to the size picker with a link to the size chart. */
+  fitLabel?: string
+  /** Set (Tee + Pant) products only. */
+  set?: ProductSet
+  /** Leave empty for every product until a real certificate exists. */
+  certifications?: ProductCertification[]
   archived?: boolean              // true = suppressed from menus/category/discovery, page still reachable directly
+  /** Defaults to "India" when absent — see ProductDetails.tsx. Only set this per-product if it's ever actually different. */
+  countryOfOrigin?: string
+  /**
+   * Real cm measurements for the "Product details" block — optional
+   * because, as of this writing, NO product has this populated: the
+   * existing `accordions` "Size guide" entries (dangerouslySetInnerHTML
+   * tables, see ProductInfo.tsx's sizeGuideAccordion) hold real
+   * measurements for several products already, but in INCHES, in a
+   * differently-shaped HTML table per product — not this field, and not
+   * cm. Converting those is a real, deliberate editorial pass (verifying
+   * units and column meaning per product), not a mechanical one, so it
+   * wasn't done as part of adding this field. See the task summary for
+   * exactly which products already have inch data to migrate.
+   */
+  sizeChart?: ProductSizeChart
 }
 
 /*
@@ -150,13 +225,15 @@ export interface Product {
   No component file needs to change — only the data source.
 
   Shopify metafield mapping (namespace: "nivenxa"):
-    composition_quote → compositionQuote
-    trust_line        → trustLine
-    feature_bullets   → featureBullets  (JSON array)
-    fabric_pillars    → fabricPillars   (JSON array of 3)
-    fit_bars          → fitBars         (JSON array)
-    model_note        → modelNote
-    care_instructions → care            (JSON array)
-    accordions        → accordions      (JSON array)
-    styled_with       → styledWith      (JSON object)
+    composition_quote  → compositionQuote
+    trust_line         → trustLine
+    feature_bullets    → featureBullets  (JSON array)
+    fabric_pillars     → fabricPillars   (JSON array of 3)
+    fit_bars           → fitBars         (JSON array)
+    model_note         → modelNote
+    care_instructions  → care            (JSON array)
+    accordions         → accordions      (JSON array)
+    styled_with        → styledWith      (JSON object)
+    country_of_origin  → countryOfOrigin (plain text, e.g. "India")
+    size_chart         → sizeChart       (JSON object: { unit: "cm", columns: [...], rows: [...] })
 */

@@ -63,11 +63,22 @@ export function formatBalanceMeaning(
   options: { audience?: 'resident' | 'admin'; subjectLabel?: string } = {}
 ): string {
   const { audience = 'admin', subjectLabel = 'resident' } = options
-  if (Math.abs(balance) < 0.005) return 'Bill Status: Paid'
-  if (balance > 0) return `Amount due ${formatCurrency(balance)}`
+  // A reimbursement still owed is shown next to the bill status whenever there is one — a flat
+  // whose bill was netted to ₹0 against a reimbursement must not just read "Paid" and hide the
+  // balance the association still owes it.
+  const owes = reimbursementOwed > 0.005
+    ? ` · ${audience === 'resident' ? 'Association owes you' : `Association owes ${subjectLabel}`} ${formatCurrency(reimbursementOwed)}`
+    : ''
+  if (Math.abs(balance) < 0.005) return `Bill Status: Paid${owes}`
+  if (balance > 0) return `Amount due ${formatCurrency(balance)}${owes}`
   const magnitude = formatCurrency(Math.abs(balance))
+  // A negative balance is the flat's unused advance (the bill is fully covered); a reimbursement
+  // owed is a separate amount on top of it (it is not part of the balance). With both, show one
+  // combined "association owes" total plus the breakdown — e.g. 504: ₹27,125.47 advance +
+  // ₹2,500 reimbursement = ₹29,625.47. With only an advance, it stays "Advance available".
   if (reimbursementOwed > 0.005) {
-    return audience === 'resident' ? `Association owes you ${magnitude}` : `Association owes ${subjectLabel} ${magnitude}`
+    const who = audience === 'resident' ? 'Association owes you' : `Association owes ${subjectLabel}`
+    return `Bill Status: Paid · ${who} ${formatCurrency(Math.abs(balance) + reimbursementOwed)} (${magnitude} advance + ${formatCurrency(reimbursementOwed)} reimbursement)`
   }
   return `Advance available ${magnitude}`
 }

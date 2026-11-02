@@ -28,7 +28,8 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  // ── SHOP — audience-based entry point ──────────────────────────────────────
+  // ── SHOP — Shop all, Unisex, Women, Kids (same order on desktop and mobile) ──
+  // There is no men's-specific category. Kids products appear under Kids only.
   {
     label: 'SHOP',
     href: '/shop',
@@ -39,198 +40,54 @@ export const NAV_ITEMS: NavItem[] = [
     },
     submenu: [
       {
-        label: "Men's",
-        href: '/shop/mens',
-        descriptor: 'Elevated Everyday Essentials',
+        label: 'Shop all',
+        href: '/shop',
+        descriptor: 'The SS2026 range',
         atmosphere: {
-          gradient: 'linear-gradient(150deg, #3A3830 0%, #2E2C26 55%, #222018 100%)',
-          text: "Heavyweight combed cotton\nand utility canvas for the modern wardrobe.",
-          ghost: 'MEN',
-          editorial: [
-            'Oversized tees and utility cargo in heavyweight fabrics.',
-            'Designed for repeat wear and considered daily movement.',
-          ],
-          image: "/images/Men/OversizedTee's/MINERAL%20BROWN/walking_view.webp",
+          gradient: 'linear-gradient(150deg, #EDE8DC 0%, #D5CFC0 45%, #C2BAA8 100%)',
+          text: 'Everyday pieces for the\nconsidered wardrobe.',
+          ghost: 'SHOP',
         },
-        children: [
-          { label: 'Oversized Tee', href: '/shop/mens/oversized-tee' },
-          { label: 'Cargo Pants',   href: '/shop/mens/cargo-pants'   },
-        ],
-      },
-      {
-        label: "Women's",
-        href: '/shop/womens',
-        descriptor: 'Relaxed Indian Comfortwear',
-        atmosphere: {
-          gradient: 'linear-gradient(148deg, #C89080 0%, #A87060 55%, #8A5548 100%)',
-          text: "Relaxed women's forms\nin bio-washed and natural fibres.",
-          ghost: 'WOMEN',
-          editorial: [
-            'Relaxed silhouettes rooted in softness, movement, and quiet structure.',
-            'Designed for contemporary Indian wardrobes where comfort and everyday elegance coexist naturally.',
-          ],
-          image: '/images/Wonmen/A-line%20Kurta/DUSK%20ROSE/front_studio_view.webp',
-        },
-        children: [
-          { label: 'A-line Kurta',          href: '/shop/womens/a-line-kurta'         },
-          { label: 'The Contrast Pant',     href: '/shop/womens/kurta-contrast-pant'  },
-          { label: "Women's Relaxed Shirt", href: '/shop/womens/womens-relaxed-shirt' },
-          { label: 'Sleepwear',             href: '/shop/womens/sleepwear'            },
-        ],
       },
       {
         label: 'Unisex',
         href: '/shop/unisex',
-        descriptor: 'Utility Cargos & Shared Essentials',
+        descriptor: 'Tees & Utility Cargos',
         atmosphere: {
           gradient: 'linear-gradient(145deg, #C8C4B0 0%, #B0AC9A 50%, #9A9888 100%)',
-          text: 'Heavy GSM unisex staples\nfor the considered wardrobe.',
+          text: 'Shared essentials\nfor the considered wardrobe.',
           ghost: 'UNISEX',
           editorial: [
-            'Heavyweight everyday silhouettes built around movement, utility, and repetition.',
-            'Oversized fits, washed textures, and structured fabrics designed to soften naturally over time.',
+            'Everyday silhouettes designed for movement, utility, and repetition.',
           ],
           image: '/images/Unisex/cargos/SANDBEIGE/walking_view.webp',
         },
-        children: [
-          { label: 'Cargo Pants', href: '/shop/unisex/cargo-pants' },
-        ],
       },
       {
-        label: 'Youth Studio',
-        href: '/shop/youth-studio',
+        label: 'Women',
+        href: '/shop/womens',
+        descriptor: 'Relaxed Indian Comfortwear',
+        atmosphere: {
+          gradient: 'linear-gradient(148deg, #C89080 0%, #A87060 55%, #8A5548 100%)',
+          text: "Relaxed women's forms\nfor everyday ease.",
+          ghost: 'WOMEN',
+          editorial: [
+            'Relaxed silhouettes rooted in softness, movement, and quiet structure.',
+          ],
+        },
+      },
+      {
+        label: 'Kids',
+        href: '/shop/kids',
         descriptor: 'Playful Comfort, Designed to Last',
         atmosphere: {
           gradient: 'linear-gradient(148deg, #8EA890 0%, #728C74 50%, #5A7060 100%)',
-          text: 'Premium kids collections\nbuilt to last, made to wear.',
-          ghost: 'YOUTH',
+          text: 'Everyday kids pieces\nbuilt to last, made to wear.',
+          ghost: 'KIDS',
           editorial: [
             'Soft everyday essentials designed for comfort, ease, and playful movement.',
-            'Relaxed forms and breathable fabrics made for daily life and growing individuality.',
           ],
-          image: '/images/Kids/unisex%20sleeper%20wear/Rest%20Set/DUSTY%20SAGE/walking_view.webp',
         },
-        children: [
-          { label: 'Sleepwear',       href: '/shop/youth-studio/kids-sleepwear' },
-          { label: 'Kids Unisex Tee', href: '/shop/youth-studio/kids-unisex-tee' },
-        ],
-      },
-    ],
-  },
-
-  // ── EDITS — mood/story-based entry point ───────────────────────────────────
-  {
-    label: 'EDITS',
-    href: null,
-    atmosphere: {
-      gradient: 'linear-gradient(148deg, #D4CFBA 0%, #BFBA9E 50%, #ACA890 100%)',
-      text: 'Heavyweight bio-washed essentials\ncrafted for elevated everyday wear.',
-      ghost: 'NIVENXA',
-    },
-    submenu: [
-      {
-        label: "The Indian Edit",
-        href: '/edits/womens-edit',
-        descriptor: 'Relaxed Indian Comfortwear',
-        atmosphere: {
-          gradient: 'linear-gradient(140deg, #C87060 0%, #A85848 60%, #8A4538 100%)',
-          text: 'Modern Indo-western forms\nfor elevated everyday ease.',
-          ghost: 'WOMEN',
-          editorial: [
-            'Indo-Western comfortwear designed for contemporary Indian wardrobes.',
-            'Relaxed silhouettes balanced with softness and quiet elegance.',
-          ],
-          image: '/images/Wonmen/A-line%20Kurta/DESERT%20SAND/walking_view.webp',
-        },
-        children: [
-          { label: 'A-line Kurta',      href: '/edits/womens-edit/a-line-kurta'        },
-          { label: 'The Contrast Pant', href: '/edits/womens-edit/kurta-contrast-pant' },
-          { label: 'Sleepwear',         href: '/edits/womens-edit/sleepwear'           },
-        ],
-      },
-      {
-        label: 'The Ease Edit',
-        href: '/edits/ease-edit',
-        descriptor: 'Relaxed cotton jersey shirt',
-        atmosphere: {
-          gradient: 'linear-gradient(150deg, #E5E8DD 0%, #C9CDB8 50%, #AEB39A 100%)',
-          text: 'Relaxed cotton jersey,\nworn through every season.',
-          ghost: 'EASE',
-        },
-        children: [
-          { label: "Women's Relaxed Shirt", href: '/edits/ease-edit/womens-relaxed-shirt' },
-        ],
-      },
-      {
-        label: 'The Everyday Edit',
-        href: '/edits/everyday-edit',
-        descriptor: 'Bio-washed comfortwear for daily wear',
-        atmosphere: {
-          gradient: 'linear-gradient(155deg, #EDE8DC 0%, #D8D0C0 40%, #C8BEA8 100%)',
-          text: 'Bio-washed comfortwear\nbuilt for daily wear and repeat wash.',
-          ghost: 'EVERYDAY',
-          editorial: [
-            'Bio-washed essentials for the unhurried wardrobe.',
-            'Designed for comfort, ease, and the rhythm of daily life.',
-          ],
-          image: "/images/Men/OversizedTee's/CHARCOAL%20EARTH/walking_view.webp",
-        },
-        children: [
-          { label: 'Relaxed Utility',       href: '/edits/everyday-edit/relaxed-utility'       },
-          { label: 'Everyday Silhouettes',  href: '/edits/everyday-edit/everyday-silhouettes'  },
-          { label: 'Bio-Washed Essentials', href: '/edits/everyday-edit/bio-washed-essentials' },
-        ],
-      },
-      {
-        label: 'The Utility Edit',
-        href: '/edits/utility-edit',
-        descriptor: 'Six-pocket bio-washed twill',
-        atmosphere: {
-          gradient: 'linear-gradient(150deg, #4A4840 0%, #3A3730 55%, #2E2C26 100%)',
-          text: 'Six-pocket utility cuts\nin 320 GSM bio-washed twill.',
-          ghost: 'CARGO',
-          editorial: [
-            'Utility-focused silhouettes designed with washed structure, oversized proportions, and heavyweight movement.',
-          ],
-          tags: ['240–340 GSM cottons', 'Bio-washed finishes', 'Built for repetition'],
-          image: '/images/Unisex/cargos/JETBLACK/front_studio_view.webp',
-        },
-        children: [
-          { label: 'Relaxed Utility',    href: '/edits/utility-edit/relaxed-utility'    },
-          { label: 'Urban Movement',     href: '/edits/utility-edit/urban-movement'     },
-          { label: 'Heavyweight Canvas', href: '/edits/utility-edit/heavyweight-canvas' },
-        ],
-      },
-      {
-        label: 'The Dream Edit',
-        href: '/edits/dream-edit',
-        descriptor: 'Soft organic sleepwear',
-        atmosphere: {
-          gradient: 'linear-gradient(148deg, #E2DCD0 0%, #CFC8B6 50%, #B8B098 100%)',
-          text: 'Soft organic sleepwear\nfor every season.',
-          ghost: 'DREAM',
-          image: '/images/Kids/unisex%20sleeper%20wear/Rest%20Set/PALE%20OAT/walking_view.webp',
-        },
-        children: [
-          { label: 'The Rest Sleep Set',   href: '/edits/dream-edit/kids-rest-sleep-set'   },
-          { label: 'The Summer Sleep Set', href: '/edits/dream-edit/kids-summer-sleep-set' },
-          { label: 'Kids Unisex Tee',      href: '/edits/dream-edit/kids-unisex-tee'       },
-        ],
-      },
-      {
-        label: 'The Rest Edit',
-        href: '/edits/rest-edit',
-        descriptor: 'Considered rest. Ultra-soft fabrics.',
-        atmosphere: {
-          gradient: 'linear-gradient(148deg, #EAE6DC 0%, #DEDAD0 50%, #CCC8C0 100%)',
-          text: 'Ultra-soft nightwear\nfor considered rest.',
-          ghost: 'REST',
-          image: '/images/Wonmen/SLEEPWEAR/Short%20Sleeve/MORNING%20CREAM/walking_view.png',
-        },
-        children: [
-          { label: "Women's Sleepwear", href: '/edits/rest-edit/womens-sleepwear' },
-          { label: 'The Rest Set',      href: '/edits/rest-edit/the-rest-set'     },
-        ],
       },
     ],
   },

@@ -1,0 +1,51 @@
+@use '../../styles/variables' as v;
+@use './policyTokens' as t;
+
+// Always 3 columns, even on the narrowest phones — only the type scales
+// down, so nothing ever forces a horizontal scrollbar.
+.statRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: v.$space-section;
+  padding-bottom: v.$space-section;
+  border-bottom: 1px solid var(--nivenxa-border);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+  text-align: center;
+}
+
+.statIcon {
+  color: var(--nivenxa-text-primary);
+  background: t.$sand-tint;
+  border-radius: 50%;
+  padding: 0.6rem;
+  box-sizing: content-box;
+}
+
+.statValue {
+  font-family: var(--font-serif);
+  font-size: clamp(1rem, 3.2vw, 1.375rem);
+  color: var(--nivenxa-text-primary);
+  line-height: 1.2;
+}
+
+.statLabel {
+  font-family: var(--font-sans);
+  font-size: clamp(0.6875rem, 2.2vw, 0.8125rem);
+  color: t.$muted-aa;
+  line-height: 1.4;
+  max-width: 14ch;
+}
+
+@media (max-width: 420px) {
+  .statRow { gap: 0.5rem; }
+  .statIcon { padding: 0.45rem; }
+  .statLabel { max-width: 12ch; }
+}

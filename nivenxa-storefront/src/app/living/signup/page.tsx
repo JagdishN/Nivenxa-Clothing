@@ -3,6 +3,9 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { setLivingError, setLivingNotice } from '@/lib/living/flash'
 import { createLivingServerClient } from '@/lib/living/supabaseServer'
+import { recordLivingConsent } from '@/lib/living/consentActions'
+import { LEGAL_ENTITY } from '@/lib/legalEntity'
+import SiteFooter from '@/components/global/SiteFooter'
 import OtpForm from '../_auth/OtpForm'
 import theme from '../LivingTheme.module.scss'
 import styles from '../_auth/AuthForm.module.scss'
@@ -10,8 +13,24 @@ import styles from '../_auth/AuthForm.module.scss'
 // See living/login/page.tsx — same reasoning.
 export const metadata: Metadata = { robots: { index: false, follow: true } }
 
+const LIVING_FOOTER_COLUMNS = [
+  {
+    title: 'Nivenxa Living',
+    links: [
+      { label: 'Privacy Policy', href: '/living/privacy' },
+      { label: 'Terms of Use', href: '/living/terms' },
+      { label: 'Contact', href: `mailto:${LEGAL_ENTITY.email}` },
+    ],
+  },
+]
+
 async function createApartment(formData: FormData) {
   'use server'
+  if (formData.get('agree_privacy') !== 'on') {
+    await setLivingError('Please agree to the Privacy Policy to create an Apartment.')
+    redirect('/living/signup?tab=create')
+  }
+
   const supabase = await createLivingServerClient()
   const { error } = await supabase.rpc('living_create_apartment', {
     p_name: String(formData.get('name') ?? '').trim(),
@@ -24,6 +43,11 @@ async function createApartment(formData: FormData) {
     await setLivingError(error.message)
     redirect('/living/signup?tab=create')
   }
+  // The membership row living_create_apartment() just inserted now exists,
+  // so this can record consent against it — an Admin who creates an
+  // Apartment never sees the generic one-time notice in requireMembership(),
+  // since consent_at is already set by the time they reach /living/home.
+  await recordLivingConsent()
   redirect('/living/home')
 }
 
@@ -91,31 +115,38 @@ export default async function LivingSignupPage({ searchParams }: { searchParams:
       const flat = (pendingClaim as unknown as { flat: { flat_no: string } | null }).flat
       const apartment = (pendingClaim as unknown as { apartment: { name: string } | null }).apartment
       return (
-        <div className={styles.shell}>
-          <h1 className={styles.title}>Request sent</h1>
-          <p className={styles.subtitle}>
-            {apartment ? `Your request to join ${apartment.name}` : 'Your request'}
-            {flat ? ` as Flat ${flat.flat_no}` : ''} has been sent to the Admin. We&rsquo;ll let you know once it&rsquo;s approved.
-          </p>
-          <p className={styles.hint}>Nothing else to do here for now — you can close this page and check back later.</p>
-        </div>
+        <>
+          <div className={styles.shell}>
+            <h1 className={styles.title}>Request sent</h1>
+            <p className={styles.subtitle}>
+              {apartment ? `Your request to join ${apartment.name}` : 'Your request'}
+              {flat ? ` as Flat ${flat.flat_no}` : ''} has been sent to the Admin. We&rsquo;ll let you know once it&rsquo;s approved.
+            </p>
+            <p className={styles.hint}>Nothing else to do here for now — you can close this page and check back later.</p>
+          </div>
+          <SiteFooter columns={LIVING_FOOTER_COLUMNS} />
+        </>
       )
     }
   }
 
   if (!user) {
     return (
-      <div className={styles.shell}>
-        <h1 className={styles.title}>Create Apartment</h1>
-        <p className={styles.subtitle}>Start with your email — you&rsquo;ll set up or join an Apartment next.</p>
-        <OtpForm mode="signup" />
-      </div>
+      <>
+        <div className={styles.shell}>
+          <h1 className={styles.title}>Create Apartment</h1>
+          <p className={styles.subtitle}>Start with your email — you&rsquo;ll set up or join an Apartment next.</p>
+          <OtpForm mode="signup" />
+        </div>
+        <SiteFooter columns={LIVING_FOOTER_COLUMNS} />
+      </>
     )
   }
 
   const activeTab = tab === 'join' ? 'join' : 'create'
 
   return (
+    <>
     <div className={styles.shell}>
       <h1 className={styles.title}>Set up your account</h1>
       <p className={styles.subtitle}>You&rsquo;re verified — now create a new Apartment, or join one you already know the code for.</p>
@@ -168,6 +199,13 @@ export default async function LivingSignupPage({ searchParams }: { searchParams:
             </div>
             <p className={styles.hint}>You can change this later — it applies from the next month&rsquo;s bill, not past ones.</p>
           </div>
+          <label className={styles.checkboxOption}>
+            <input type="checkbox" name="agree_privacy" required />
+            <span>
+              I agree to the <Link href="/living/terms">Terms of Use</Link> and <Link href="/living/privacy">Privacy Policy</Link>, and
+              confirm I am authorised by my apartment to manage residents&rsquo; information in Nivenxa Living.
+            </span>
+          </label>
           <button type="submit" className={theme.button} style={{ width: '100%' }}>
             Create Apartment
           </button>
@@ -196,5 +234,7 @@ export default async function LivingSignupPage({ searchParams }: { searchParams:
         </form>
       )}
     </div>
+    <SiteFooter columns={LIVING_FOOTER_COLUMNS} />
+    </>
   )
 }

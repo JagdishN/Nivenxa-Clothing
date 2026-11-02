@@ -1167,9 +1167,7 @@ export default function ChessPlayPage() {
                                         <p className={styles.historySummary}>{collapsedSummary(entry)}</p>
                                       ))}
                                     {entry.explanationStatus === 'error' && (
-                                      <span className={styles.calloutError}>
-                                        Couldn&apos;t load explanation for {entry.san}.
-                                      </span>
+                                      <span className={styles.calloutError}>Explanation unavailable right now.</span>
                                     )}
                                   </div>
                                 )
@@ -1292,7 +1290,7 @@ export default function ChessPlayPage() {
                     </div>
                   )}
                   {entry.explanationStatus === 'error' && (
-                    <span className={styles.reviewError}>Couldn&apos;t load explanation.</span>
+                    <span className={styles.reviewError}>Explanation unavailable right now.</span>
                   )}
                 </li>
               ))}

@@ -1,0 +1,56 @@
+@use '../../styles/variables' as v;
+@use './policyTokens' as t;
+
+.help {
+  margin-top: v.$space-section;
+  padding-top: v.$space-section;
+  border-top: 1px solid var(--nivenxa-border);
+  text-align: center;
+}
+
+.helpTitle {
+  font-size: clamp(1.375rem, 3vw, 1.75rem);
+  margin-bottom: 0.5rem;
+}
+
+.helpText {
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  color: t.$muted-aa;
+  margin-bottom: 0.75rem;
+}
+
+.helpEmail {
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  color: var(--nivenxa-cta-forest);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  margin-bottom: 1.75rem;
+}
+
+.helpButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding-block: 1rem;
+  background: var(--nivenxa-text-primary);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border-radius: 6px;
+  transition: opacity v.$transition-base;
+
+  &:hover { opacity: 0.88; }
+
+  &:focus-visible {
+    outline: 2px solid var(--nivenxa-text-primary);
+    outline-offset: 3px;
+  }
+}

@@ -1,0 +1,146 @@
+@use '../../styles/variables' as v;
+
+// Deliberately theme-agnostic — this footer is shared across every NIVENXA
+// app (Chess today, others later), each with its own colour palette, so it
+// carries its own light, neutral backdrop and dark-on-light text rather
+// than any one app's own CSS variables. That keeps it legible regardless of
+// which app's page sits above it, at the cost of not literally matching
+// each app's exact palette — a deliberate minimal/neutral treatment, not
+// an oversight.
+.footer {
+  background: rgba(255, 255, 255, 0.5);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  margin-top: clamp(3rem, 6vw, 5rem);
+  padding-block: clamp(2.5rem, 5vw, 3.5rem) clamp(1.5rem, 3vw, 2rem);
+  padding-inline: var(--gutter);
+}
+
+.inner {
+  max-width: var(--max-width);
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+
+  // auto-fit rather than a fixed count — Chess/Living render 2 .column divs
+  // (their own + NIVENXA), Studio renders 3 ("Customer care", "Legal" +
+  // NIVENXA), and this handles either without two separate layouts.
+  @include v.md {
+    grid-template-columns: minmax(200px, 2fr) repeat(auto-fit, minmax(130px, 1fr));
+    gap: 2.5rem;
+  }
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.social {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.socialLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.52);
+  text-decoration: none;
+  transition: color v.$transition-base;
+
+  svg {
+    flex-shrink: 0;
+    opacity: 0.75;
+    transition: opacity v.$transition-base;
+  }
+
+  &:hover {
+    color: rgba(0, 0, 0, 0.85);
+    svg {
+      opacity: 1;
+    }
+  }
+}
+
+.wordmark {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: rgba(0, 0, 0, 0.78);
+}
+
+.tagline {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: rgba(0, 0, 0, 0.5);
+  max-width: 28ch;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.columnTitle {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.links {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0;
+  margin: 0;
+}
+
+// Shared by the <Link> entries and the one <button data-open-cookie-settings>
+// entry (see SiteFooter.tsx) — the button needs a full chrome reset to read
+// identically to the links around it.
+.link {
+  display: inline;
+  font: inherit;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: rgba(0, 0, 0, 0.62);
+  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: color v.$transition-base;
+
+  &:hover {
+    color: rgba(0, 0, 0, 0.85);
+  }
+}
+
+.bottom {
+  max-width: var(--max-width);
+  margin-inline: auto;
+  margin-top: clamp(1.75rem, 3vw, 2.5rem);
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.copy {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: rgba(0, 0, 0, 0.42);
+}

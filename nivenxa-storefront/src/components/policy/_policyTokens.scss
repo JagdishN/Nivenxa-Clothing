@@ -1,0 +1,17 @@
+// Shared tokens for every policy-page component (PolicyAccordion, PolicyStats,
+// PolicyHelp) and the page shells that use them (e.g. returns/Returns.module.scss,
+// privacy/Privacy.module.scss).
+//
+// Contrast note: --nivenxa-text-muted (#888888) measures ~3.0:1 against
+// --nivenxa-bg-primary (#F2EDE6) — passes WCAG AA for large text (3:1) but
+// fails normal body-size text (4.5:1), which is what every policy page uses
+// for its muted copy (eyebrow, stat labels, item summaries, closing note).
+// #5E5E5E against the same background measures ~5.6:1, comfortably clearing
+// AA at normal sizes.
+$muted-aa: #5e5e5e;
+
+// Sand (#E8C4A0, brand colour) measures only ~1.4:1 against the cream
+// background — too washed out to read as an icon on its own. Used as a soft
+// tint behind each stat icon instead of the icon's own stroke colour, which
+// stays --nivenxa-text-primary for visibility.
+$sand-tint: rgba(232, 196, 160, 0.4);

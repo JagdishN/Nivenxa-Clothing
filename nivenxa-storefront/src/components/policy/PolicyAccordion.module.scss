@@ -1,0 +1,160 @@
+@use '../../styles/variables' as v;
+@use './policyTokens' as t;
+
+.accordion {
+  border-top: 1px solid var(--nivenxa-border);
+}
+
+.item {
+  border-bottom: 1px solid var(--nivenxa-border);
+  scroll-margin-top: v.$space-scroll-margin;
+}
+
+.itemHeadingWrap {
+  // The button is this heading's only content — see PolicyAccordion.tsx.
+  // Reset the inherited h3 styling so it reads as a plain row, not a
+  // second-level title.
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+}
+
+.header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 1.25rem;
+  text-align: left;
+
+  &:focus-visible {
+    outline: 2px solid var(--nivenxa-text-primary);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+}
+
+.headerText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.itemTitle {
+  font-family: var(--font-serif);
+  font-size: clamp(1rem, 2.2vw, 1.1875rem);
+  color: var(--nivenxa-text-primary);
+}
+
+.itemSummary {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: t.$muted-aa;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: t.$muted-aa;
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: transform 0.25s v.$ease-out-expo;
+  }
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+// The grid-rows (0fr → 1fr) technique animates to the panel's true content
+// height — no hardcoded cap, unlike the other accordion in this codebase
+// (InfoAccordions.tsx's max-height: 400px), which these longer policy
+// panels would blow straight through on mobile.
+.panelWrapper {
+  display: grid;
+  grid-template-rows: 0fr;
+  overflow: hidden;
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: grid-template-rows 0.35s v.$ease-out-expo;
+  }
+}
+
+.panelWrapperOpen {
+  grid-template-rows: 1fr;
+}
+
+.panelInner {
+  min-height: 0; // required for the grid-rows clip to work in Firefox/Safari
+  overflow: hidden;
+  padding-bottom: 1.5rem;
+}
+
+.paragraph {
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  color: var(--nivenxa-text-primary);
+  margin-bottom: 0.9rem;
+
+  &:last-child { margin-bottom: 0; }
+}
+
+.subheading {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--nivenxa-text-primary);
+  margin-top: 1.25rem;
+  margin-bottom: 0.6rem;
+
+  &:first-child { margin-top: 0; }
+}
+
+.list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+  padding-left: 0;
+}
+
+.listItem {
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--nivenxa-text-primary);
+  padding-left: 1.1rem;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.65em;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--nivenxa-text-primary);
+  }
+}
+
+// Shared by real <a href> links and the one <button data-open-cookie-settings>
+// case (see applyLinks() in PolicyAccordion.tsx) — the button needs a full
+// chrome reset to read identically to the links around it.
+.inlineLink {
+  display: inline;
+  font: inherit;
+  color: var(--nivenxa-cta-forest);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}

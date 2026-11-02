@@ -28,6 +28,13 @@ interface ReviewRow {
 
 const normalize = (flatNo: string) => flatNo.trim().toLowerCase()
 
+// One calm message for any extraction failure — a failed call, a timeout,
+// or output that didn't parse. Shown instead of the server's own error
+// text (logged to the console instead), so it stays exact regardless of
+// cause. The ReadingsTable on this same page always stays available, so
+// "please enter readings manually" is never a dead end.
+const UNREADABLE_MESSAGE = "Couldn't read this sheet — please enter readings manually."
+
 /**
  * Upload → Claude vision extracts flat_no/reading pairs → this builds a
  * review table (matched against the apartment's real flats, consumption
@@ -71,10 +78,13 @@ export default function UploadReadingsForm({
     try {
       const res = await fetch('/api/living/extract-readings', { method: 'POST', body: formData })
       data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Failed to extract readings')
+      if (!res.ok) throw new Error(data.error ?? 'extract-readings failed')
     } catch (err) {
+      // Logged for debugging; never shown — the admin always sees the one
+      // calm UNREADABLE_MESSAGE below instead, regardless of cause.
+      console.error('extract-readings:', err instanceof Error ? err.message : err)
       setPending(false)
-      setError(err instanceof Error ? err.message : 'Failed to extract readings')
+      setError(UNREADABLE_MESSAGE)
       return
     }
     setPending(false)
@@ -144,6 +154,7 @@ export default function UploadReadingsForm({
         Check each value against the photo — <span className={theme.pillFlag}>low confidence</span> rows are the ones most likely to
         have an error. Nothing saves until you confirm.
       </p>
+      <p className={styles.aiLabel}>Readings extracted by AI · please check before saving</p>
       {error && <div className={theme.alert}>{error}</div>}
       <div className={styles.reviewLayout}>
         {previewUrl && (

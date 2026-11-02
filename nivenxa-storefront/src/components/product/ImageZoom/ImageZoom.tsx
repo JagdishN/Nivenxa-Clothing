@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import type { ProductImage, Product, ProductColour } from '@/types/product'
 import { getGalleryImages } from '@/utils/getProductImages'
 import styles from './ImageZoom.module.css'
+import { formatPrice } from '@/utils/formatPrice'
 
 // ─── Zoom constants ───────────────────────────────────────────────────────────
 const LB_MIN_SCALE         = 1
@@ -451,13 +452,13 @@ export default function ImageZoom({
   if (!isOpen) return null
 
   const currentImage   = displayImages[activeImg] ?? displayImages[0]
-  const formattedPrice = `${product.currency}${product.price.toLocaleString('en-IN')}`
+  const formattedPrice = formatPrice(product)
   const isZoomed       = scale > LB_MIN_SCALE
 
   // ── Per-image editorial — falls back to product-level data ────────────────
   const byImageEntry = product.editorial?.byImage?.[currentImage.type]
   const activeTitle  = byImageEntry ? byImageEntry.headline : product.name
-  const activeBody   = byImageEntry?.body ?? product.editorial?.quote ?? product.compositionQuote
+  const activeBody   = byImageEntry?.body ?? product.editorial?.quote ?? product.description ?? product.compositionQuote
   const activeSpecs  = byImageEntry?.specs ?? product.editorial?.specs
 
   return (

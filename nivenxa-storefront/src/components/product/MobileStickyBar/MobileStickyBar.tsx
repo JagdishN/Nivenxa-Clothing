@@ -6,18 +6,17 @@ interface Props {
   activeColour: ProductColour
   selectedSize: string | null
   onAddToBag: () => void
-  currency: string
-  price: number
   isDisabled: boolean
+  /** True while the product's MRP hasn't been supplied — the bar can't offer a purchase. */
+  priceMissing?: boolean
 }
 
 export default function MobileStickyBar({
   activeColour,
   selectedSize,
   onAddToBag,
-  currency,
-  price,
   isDisabled,
+  priceMissing = false,
 }: Props) {
   return (
     <div className={styles.bar}>
@@ -42,7 +41,9 @@ export default function MobileStickyBar({
         disabled={isDisabled}
         aria-disabled={isDisabled}
       >
-        {!activeColour.available
+        {priceMissing
+          ? 'MRP PENDING'
+          : !activeColour.available
           ? 'OUT OF STOCK'
           : !selectedSize
           ? 'SELECT A SIZE'

@@ -1,5 +1,6 @@
 import type { NextConfig } from 'next'
 import createNextIntlPlugin from 'next-intl/plugin'
+import { STUDIO_REDIRECTS } from './src/lib/studioRedirects'
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
 
@@ -14,6 +15,9 @@ const nextConfig: NextConfig = {
   // Next/step controls — it has no equivalent in production, so disabling it
   // costs nothing there and removes a real overlap in dev.
   devIndicators: false,
+  async redirects() {
+    return STUDIO_REDIRECTS
+  },
   turbopack: {
     resolveAlias: {
       'next-intl/config': './src/i18n/request.ts',

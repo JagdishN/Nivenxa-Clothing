@@ -1,0 +1,122 @@
+@use '../../styles/variables' as v;
+
+// z-index above the mobile sticky add-to-bag bar (MobileStickyBar.module.css,
+// z-index: 100) so this is never hidden behind it, but positioned with its
+// OWN bottom offset (not bottom: 0) specifically so it never covers that
+// bar either — see .banner's mobile rule below. 70px is that bar's measured
+// height (12px+12px padding plus its ~40-44px button/content row); the
+// safe-area addition covers notched devices on top of that.
+$mobile-cta-clearance: 70px;
+
+.banner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 200;
+  background: var(--nivenxa-bg-primary, #f2ede6);
+  border-top: 1px solid var(--nivenxa-border, rgba(0, 0, 0, 0.1));
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+  padding: 1.25rem 1.5rem calc(1.25rem + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  @media (max-width: 1023px) {
+    bottom: calc(#{$mobile-cta-clearance} + env(safe-area-inset-bottom));
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--nivenxa-text-primary, #1a1a1a);
+    outline-offset: -2px;
+  }
+}
+
+.text {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--nivenxa-text-primary, #1a1a1a);
+  max-width: 60ch;
+}
+
+.link {
+  color: var(--nivenxa-cta-forest, #1c2e1e);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+// Three equal-weight buttons, per the brief — none styled as more
+// "primary" than the others (no dark-pattern emphasis toward Accept).
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.btn {
+  flex: 1 1 160px;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.65rem 1rem;
+  border-radius: 6px;
+  border: 1px solid var(--nivenxa-border, rgba(0, 0, 0, 0.15));
+  background: #fff;
+  color: var(--nivenxa-text-primary, #1a1a1a);
+  cursor: pointer;
+  transition: background v.$transition-base;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--nivenxa-text-primary, #1a1a1a);
+    outline-offset: 2px;
+  }
+}
+
+.panelTitle {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  color: var(--nivenxa-text-primary, #1a1a1a);
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 0.6rem;
+  border-top: 1px solid var(--nivenxa-border, rgba(0, 0, 0, 0.08));
+  cursor: pointer;
+
+  input {
+    flex-shrink: 0;
+    width: 1.15rem;
+    height: 1.15rem;
+    accent-color: var(--nivenxa-cta-forest, #1c2e1e);
+  }
+
+  input:disabled {
+    cursor: not-allowed;
+  }
+}
+
+.toggleLabel {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--nivenxa-text-primary, #1a1a1a);
+}
+
+.toggleHint {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: #5e5e5e; // same AA-contrast muted tone as the policy pages' $muted-aa
+  margin-top: 0.15rem;
+}
