@@ -1,15 +1,24 @@
 import { getThemeSummaries, isDifficultyLevel } from '@/lib/chess/puzzles'
-import { getChessSession } from '@/lib/chess/chessAuth'
 import { getMyPuzzleStats } from '@/lib/chess/puzzleActions'
-import PuzzleCatalogueGrid from './PuzzleCatalogueGrid'
-import styles from './Puzzles.module.scss'
+import { seoMetadata } from '@/lib/seo'
+import PuzzleCatalogueGrid from '../PuzzleCatalogueGrid'
+import styles from '../Puzzles.module.scss'
 
 export const dynamic = 'force-dynamic' // reflect newly-imported puzzles without a rebuild
 
+export const metadata = seoMetadata({
+  title: 'Chess Puzzles — NIVENXA Chess',
+  description: 'Practise finding strong moves — forks, pins, mates and more. Choose a topic and a difficulty, and get a hint whenever you need one.',
+  path: '/chess/puzzles',
+})
+
 export default async function ChessPuzzlesPage({ searchParams }: { searchParams: Promise<{ level?: string }> }) {
-  const [{ level: levelParam }, themes, session] = await Promise.all([searchParams, getThemeSummaries(), getChessSession()])
+  // One round of parallel work: the catalogue (a single paged query) and the
+  // solver's own stats (null for a guest, so no session lookup is needed up
+  // front). A failure in either throws to the route's error boundary, which
+  // offers a retry instead of a misleading "no puzzles" page.
+  const [{ level: levelParam }, themes, stats] = await Promise.all([searchParams, getThemeSummaries(), getMyPuzzleStats()])
   const level = isDifficultyLevel(levelParam) ? levelParam : 'all'
-  const stats = session ? await getMyPuzzleStats() : null
 
   return (
     <main className={styles.page}>
@@ -22,7 +31,7 @@ export default async function ChessPuzzlesPage({ searchParams }: { searchParams:
             no user_id to count them against, so there's nothing to show. */}
         {stats && (
           <p className={styles.statsLine}>
-            {stats.solved === 0 ? "You haven't solved any puzzles yet — pick a theme below." : `You've solved ${stats.solved} puzzle${stats.solved === 1 ? '' : 's'} so far.`}
+            {stats.solved === 0 ? "You haven't solved any puzzles yet — pick a topic below." : `You've solved ${stats.solved} puzzle${stats.solved === 1 ? '' : 's'} so far.`}
           </p>
         )}
       </section>

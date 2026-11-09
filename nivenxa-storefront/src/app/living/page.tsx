@@ -1,22 +1,12 @@
 import { redirect } from 'next/navigation'
 import { getLivingSession } from '@/lib/living/auth'
-import { LEGAL_ENTITY } from '@/lib/legalEntity'
-import SiteFooter from '@/components/global/SiteFooter'
+import { safeLivingRedirectPath } from '@/lib/auth/safeRedirect'
+import AppFooter from '@/components/global/AppFooter/AppFooter'
 import AuthDrawerProvider from './AuthDrawerProvider'
 import AuthTrigger from './AuthTrigger'
 import LivingNav from './LivingNav'
 import styles from './Landing.module.scss'
 
-const LIVING_FOOTER_COLUMNS = [
-  {
-    title: 'Nivenxa Living',
-    links: [
-      { label: 'Privacy Policy', href: '/living/privacy' },
-      { label: 'Terms of Use', href: '/living/terms' },
-      { label: 'Contact', href: `mailto:${LEGAL_ENTITY.email}` },
-    ],
-  },
-]
 
 const CORE_FLOW = [
   { label: 'Maintenance calculation' },
@@ -27,12 +17,14 @@ const CORE_FLOW = [
   { label: 'Flat-wise ledger' },
 ]
 
-export default async function LivingLandingPage() {
+export default async function LivingLandingPage({ searchParams }: { searchParams: Promise<{ auth?: string; redirect?: string }> }) {
+  const { auth, redirect: redirectParam } = await searchParams
   const session = await getLivingSession()
-  if (session) redirect('/living/home')
+  // Signed in already: go where they were headed (validated), else the app home.
+  if (session) redirect(safeLivingRedirectPath(redirectParam))
 
   return (
-    <AuthDrawerProvider>
+    <AuthDrawerProvider initialMode={auth === 'login' ? 'login' : null} initialRedirect={safeLivingRedirectPath(redirectParam)}>
       <LivingNav />
 
       <section className={styles.hero}>
@@ -88,15 +80,9 @@ export default async function LivingLandingPage() {
         </p>
       </section>
 
-      <div className={styles.closingCta}>
-        <AuthTrigger mode="signup" className={styles.heroBtnPrimary}>
-          Create Apartment
-        </AuthTrigger>
-      </div>
-
       {/* Public page only — dashboard pages ((dashboard)/layout.tsx) never
           render this, so it can't collide with AppNav or any in-app bar. */}
-      <SiteFooter columns={LIVING_FOOTER_COLUMNS} />
+      <AppFooter app="living" />
     </AuthDrawerProvider>
   )
 }

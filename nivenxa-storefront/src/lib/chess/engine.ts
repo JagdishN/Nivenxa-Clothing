@@ -3,6 +3,8 @@ import type { EngineProvider, EngineMoveConfig } from './engineProvider'
 import type { Persona, StyleWeight } from './personas'
 
 const WORKER_URL = '/stockfish/stockfish-18-lite-single.js'
+// How long the engine gets to answer the UCI handshake before start-up is reported as failed.
+const INIT_TIMEOUT_MS = 20000
 
 function goCommand(options: EngineMoveOptions): string {
   if (options.movetime) return `go movetime ${options.movetime}`
@@ -79,18 +81,24 @@ export class StockfishEngine implements EngineProvider {
       }
       this.worker = worker
 
+      const timeout = setTimeout(() => {
+        worker.removeEventListener('message', onMessage)
+        reject(new Error('The chess engine took too long to start. Please reload the page.'))
+      }, INIT_TIMEOUT_MS)
       const onMessage = (event: MessageEvent) => {
         const line = event.data
         if (typeof line !== 'string') return
         if (line.trim() === 'uciok') {
           worker.postMessage('isready')
         } else if (line.trim() === 'readyok') {
+          clearTimeout(timeout)
           worker.removeEventListener('message', onMessage)
           this.ready = true
           resolve()
         }
       }
       const onError = () => {
+        clearTimeout(timeout)
         reject(new Error('Stockfish worker failed to load (WASM may be unsupported or unreachable)'))
       }
 

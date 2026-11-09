@@ -1587,7 +1587,7 @@
   z-index: 1;
   max-width: 900px;
   margin: 0 auto;
-  padding: 0 clamp(1.25rem, 5vw, 3rem) clamp(4rem, 7vw, 6rem);
+  padding: 0 clamp(1.25rem, 5vw, 3rem) v.$space-page-end;
 }
 
 .reviewInner {

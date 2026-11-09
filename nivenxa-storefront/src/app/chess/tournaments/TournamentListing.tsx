@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import type { ChessTournament, TournamentGroup } from '@/lib/chess/types'
-import { formatDateRange, roundsVaryAcrossCategories } from '@/lib/chess/tournamentFormat'
+import EventKeyInfo, { EventFacts } from './EventKeyInfo'
+import { buildWhatsAppRegisterLink } from './registerLink'
 import styles from './Tournaments.module.scss'
 
 /**
@@ -65,17 +66,6 @@ function AnchoredPopover({
     </div>,
     document.body
   )
-}
-
-/** wa.me requires a bare digit string — strip the leading "+" and any spacing/formatting. */
-function buildWhatsAppRegisterLink(tournament: ChessTournament): string | null {
-  const whatsapp = tournament.organizer.whatsapp
-  if (!whatsapp) return null
-  const digits = whatsapp.replace(/\D/g, '')
-  if (!digits) return null
-
-  const message = `Hi, I'd like to register for ${tournament.title} (${formatDateRange(tournament)}). My name is ___.`
-  return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
 }
 
 export function RegisterAction({ tournament }: { tournament: ChessTournament }) {
@@ -150,22 +140,6 @@ function TournamentCard({ tournament }: { tournament: ChessTournament }) {
         .filter(Boolean)
     : []
 
-  // Same compact, normal-weight treatment as the detail page — date + entry
-  // fee/prize pool/time control/rounds on one wrapping line, venue on its
-  // own line underneath. Each separator is folded into its own item's text
-  // so a wrap can only ever land between complete items.
-  const metaParts: string[] = []
-  if (tournament.entryFee) metaParts.push(`Entry fee: ${tournament.entryFee}`)
-  if (tournament.prizePool) metaParts.push(`Prize pool: ${tournament.prizePool.label}`)
-  if (tournament.timeControl !== 'Unknown') metaParts.push(tournament.timeControl)
-  // See [id]/page.tsx — the single tournament-wide format string can't
-  // speak for a category that ran a different number of rounds, so this
-  // states that plainly rather than pairing a specific round count with a
-  // contradicting caveat.
-  if (tournament.format !== 'Unknown') {
-    metaParts.push(roundsVaryAcrossCategories(tournament.results) ? 'Rounds vary by category' : tournament.format)
-  }
-
   const isCompleted = tournament.lifecycleStatus === 'completed'
 
   return (
@@ -182,36 +156,8 @@ function TournamentCard({ tournament }: { tournament: ChessTournament }) {
         <p className={styles.cardOrganizer}>Organized by {tournament.organizer.name}</p>
       </div>
 
-      <div className={styles.cardMetaRow}>
-        <span className={styles.cardMetaItem}>
-          <span className={styles.cardMetaIcon} aria-hidden="true">
-            📅
-          </span>
-          {formatDateRange(tournament)}
-        </span>
-        {metaParts.map((part) => (
-          <span key={part} className={styles.cardMetaItem}>
-            <span className={styles.metaDot} aria-hidden="true">
-              /
-            </span>
-            {part}
-          </span>
-        ))}
-      </div>
-      <div className={styles.cardMetaRow}>
-        <span className={styles.cardMetaItem}>
-          <span className={styles.cardMetaIcon} aria-hidden="true">
-            📍
-          </span>
-          {tournament.links.mapUrl ? (
-            <a href={tournament.links.mapUrl} target="_blank" rel="noreferrer" className={styles.cardVenueLink}>
-              {tournament.location.label}
-            </a>
-          ) : (
-            tournament.location.label
-          )}
-        </span>
-      </div>
+      <EventKeyInfo tournament={tournament} compact />
+      <EventFacts tournament={tournament} />
 
       {/* Age/skill categories — secondary context for choosing between
           events on this listing. Dropped for a completed tournament: its

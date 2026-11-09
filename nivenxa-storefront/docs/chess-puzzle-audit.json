@@ -1,0 +1,508 @@
+{
+  "total": 258,
+  "issueKinds": {},
+  "issues": [],
+  "mateInOneWithAlternativeMates": {
+    "count": 2,
+    "sample": [
+      {
+        "lichess": "oM7y3",
+        "theme": "mateIn1",
+        "mating": 2
+      },
+      {
+        "lichess": "02NvQ",
+        "theme": "mateIn1",
+        "mating": 3
+      }
+    ]
+  },
+  "themeSummary": [
+    {
+      "theme": "short",
+      "count": 138,
+      "min": 399,
+      "max": 2730,
+      "beginner": 66,
+      "intermediate": 52,
+      "advanced": 20
+    },
+    {
+      "theme": "middlegame",
+      "count": 133,
+      "min": 399,
+      "max": 3322,
+      "beginner": 40,
+      "intermediate": 45,
+      "advanced": 48
+    },
+    {
+      "theme": "endgame",
+      "count": 111,
+      "min": 399,
+      "max": 3233,
+      "beginner": 51,
+      "intermediate": 37,
+      "advanced": 23
+    },
+    {
+      "theme": "crushing",
+      "count": 94,
+      "min": 442,
+      "max": 3322,
+      "beginner": 27,
+      "intermediate": 33,
+      "advanced": 34
+    },
+    {
+      "theme": "mate",
+      "count": 85,
+      "min": 399,
+      "max": 2730,
+      "beginner": 56,
+      "intermediate": 18,
+      "advanced": 11
+    },
+    {
+      "theme": "advantage",
+      "count": 79,
+      "min": 400,
+      "max": 3310,
+      "beginner": 9,
+      "intermediate": 38,
+      "advanced": 32
+    },
+    {
+      "theme": "long",
+      "count": 69,
+      "min": 661,
+      "max": 3256,
+      "beginner": 7,
+      "intermediate": 32,
+      "advanced": 30
+    },
+    {
+      "theme": "mateIn2",
+      "count": 51,
+      "min": 399,
+      "max": 2730,
+      "beginner": 35,
+      "intermediate": 11,
+      "advanced": 5
+    },
+    {
+      "theme": "sacrifice",
+      "count": 40,
+      "min": 399,
+      "max": 3322,
+      "beginner": 7,
+      "intermediate": 13,
+      "advanced": 20
+    },
+    {
+      "theme": "fork",
+      "count": 36,
+      "min": 399,
+      "max": 3233,
+      "beginner": 10,
+      "intermediate": 14,
+      "advanced": 12
+    },
+    {
+      "theme": "pin",
+      "count": 30,
+      "min": 400,
+      "max": 3256,
+      "beginner": 5,
+      "intermediate": 12,
+      "advanced": 13
+    },
+    {
+      "theme": "discoveredAttack",
+      "count": 28,
+      "min": 400,
+      "max": 3219,
+      "beginner": 8,
+      "intermediate": 12,
+      "advanced": 8
+    },
+    {
+      "theme": "veryLong",
+      "count": 28,
+      "min": 1374,
+      "max": 3322,
+      "beginner": 0,
+      "intermediate": 2,
+      "advanced": 26
+    },
+    {
+      "theme": "deflection",
+      "count": 27,
+      "min": 442,
+      "max": 3322,
+      "beginner": 9,
+      "intermediate": 10,
+      "advanced": 8
+    },
+    {
+      "theme": "master",
+      "count": 27,
+      "min": 442,
+      "max": 3227,
+      "beginner": 9,
+      "intermediate": 11,
+      "advanced": 7
+    },
+    {
+      "theme": "hangingPiece",
+      "count": 24,
+      "min": 399,
+      "max": 3133,
+      "beginner": 10,
+      "intermediate": 9,
+      "advanced": 5
+    },
+    {
+      "theme": "backRankMate",
+      "count": 24,
+      "min": 399,
+      "max": 2672,
+      "beginner": 22,
+      "intermediate": 1,
+      "advanced": 1
+    },
+    {
+      "theme": "discoveredCheck",
+      "count": 23,
+      "min": 404,
+      "max": 3219,
+      "beginner": 4,
+      "intermediate": 8,
+      "advanced": 11
+    },
+    {
+      "theme": "kingsideAttack",
+      "count": 23,
+      "min": 728,
+      "max": 2342,
+      "beginner": 8,
+      "intermediate": 8,
+      "advanced": 7
+    },
+    {
+      "theme": "mateIn1",
+      "count": 23,
+      "min": 399,
+      "max": 2397,
+      "beginner": 19,
+      "intermediate": 3,
+      "advanced": 1
+    },
+    {
+      "theme": "oneMove",
+      "count": 23,
+      "min": 399,
+      "max": 2397,
+      "beginner": 19,
+      "intermediate": 3,
+      "advanced": 1
+    },
+    {
+      "theme": "attraction",
+      "count": 23,
+      "min": 401,
+      "max": 3259,
+      "beginner": 2,
+      "intermediate": 12,
+      "advanced": 9
+    },
+    {
+      "theme": "skewer",
+      "count": 20,
+      "min": 444,
+      "max": 3322,
+      "beginner": 8,
+      "intermediate": 7,
+      "advanced": 5
+    },
+    {
+      "theme": "exposedKing",
+      "count": 16,
+      "min": 946,
+      "max": 3233,
+      "beginner": 1,
+      "intermediate": 5,
+      "advanced": 10
+    },
+    {
+      "theme": "intermezzo",
+      "count": 15,
+      "min": 649,
+      "max": 3182,
+      "beginner": 2,
+      "intermediate": 6,
+      "advanced": 7
+    },
+    {
+      "theme": "opening",
+      "count": 14,
+      "min": 1143,
+      "max": 2374,
+      "beginner": 1,
+      "intermediate": 7,
+      "advanced": 6
+    },
+    {
+      "theme": "clearance",
+      "count": 14,
+      "min": 480,
+      "max": 3185,
+      "beginner": 2,
+      "intermediate": 3,
+      "advanced": 9
+    },
+    {
+      "theme": "advancedPawn",
+      "count": 13,
+      "min": 404,
+      "max": 3233,
+      "beginner": 5,
+      "intermediate": 2,
+      "advanced": 6
+    },
+    {
+      "theme": "trappedPiece",
+      "count": 13,
+      "min": 457,
+      "max": 3128,
+      "beginner": 1,
+      "intermediate": 7,
+      "advanced": 5
+    },
+    {
+      "theme": "capturingDefender",
+      "count": 13,
+      "min": 481,
+      "max": 3185,
+      "beginner": 2,
+      "intermediate": 7,
+      "advanced": 4
+    },
+    {
+      "theme": "doubleCheck",
+      "count": 13,
+      "min": 404,
+      "max": 3177,
+      "beginner": 3,
+      "intermediate": 5,
+      "advanced": 5
+    },
+    {
+      "theme": "interference",
+      "count": 12,
+      "min": 526,
+      "max": 3164,
+      "beginner": 2,
+      "intermediate": 5,
+      "advanced": 5
+    },
+    {
+      "theme": "quietMove",
+      "count": 12,
+      "min": 1811,
+      "max": 3310,
+      "beginner": 0,
+      "intermediate": 0,
+      "advanced": 12
+    },
+    {
+      "theme": "mateIn3",
+      "count": 9,
+      "min": 1169,
+      "max": 2013,
+      "beginner": 2,
+      "intermediate": 3,
+      "advanced": 4
+    },
+    {
+      "theme": "rookEndgame",
+      "count": 9,
+      "min": 399,
+      "max": 3128,
+      "beginner": 6,
+      "intermediate": 2,
+      "advanced": 1
+    },
+    {
+      "theme": "promotion",
+      "count": 6,
+      "min": 404,
+      "max": 2672,
+      "beginner": 3,
+      "intermediate": 1,
+      "advanced": 2
+    },
+    {
+      "theme": "defensiveMove",
+      "count": 4,
+      "min": 1481,
+      "max": 3164,
+      "beginner": 0,
+      "intermediate": 1,
+      "advanced": 3
+    },
+    {
+      "theme": "masterVsMaster",
+      "count": 4,
+      "min": 1407,
+      "max": 3128,
+      "beginner": 0,
+      "intermediate": 2,
+      "advanced": 2
+    },
+    {
+      "theme": "operaMate",
+      "count": 3,
+      "min": 480,
+      "max": 1363,
+      "beginner": 2,
+      "intermediate": 1,
+      "advanced": 0
+    },
+    {
+      "theme": "bishopEndgame",
+      "count": 3,
+      "min": 1476,
+      "max": 3182,
+      "beginner": 0,
+      "intermediate": 1,
+      "advanced": 2
+    },
+    {
+      "theme": "knightEndgame",
+      "count": 2,
+      "min": 442,
+      "max": 2126,
+      "beginner": 1,
+      "intermediate": 0,
+      "advanced": 1
+    },
+    {
+      "theme": "pillsburysMate",
+      "count": 2,
+      "min": 399,
+      "max": 987,
+      "beginner": 2,
+      "intermediate": 0,
+      "advanced": 0
+    },
+    {
+      "theme": "mateIn4",
+      "count": 2,
+      "min": 1617,
+      "max": 2672,
+      "beginner": 0,
+      "intermediate": 1,
+      "advanced": 1
+    },
+    {
+      "theme": "queenRookEndgame",
+      "count": 2,
+      "min": 1009,
+      "max": 1163,
+      "beginner": 2,
+      "intermediate": 0,
+      "advanced": 0
+    },
+    {
+      "theme": "queensideAttack",
+      "count": 2,
+      "min": 1026,
+      "max": 2086,
+      "beginner": 1,
+      "intermediate": 0,
+      "advanced": 1
+    },
+    {
+      "theme": "epauletteMate",
+      "count": 2,
+      "min": 1060,
+      "max": 1125,
+      "beginner": 2,
+      "intermediate": 0,
+      "advanced": 0
+    },
+    {
+      "theme": "doubleBishopMate",
+      "count": 1,
+      "min": 941,
+      "max": 941,
+      "beginner": 1,
+      "intermediate": 0,
+      "advanced": 0
+    },
+    {
+      "theme": "castling",
+      "count": 1,
+      "min": 2730,
+      "max": 2730,
+      "beginner": 0,
+      "intermediate": 0,
+      "advanced": 1
+    },
+    {
+      "theme": "attackingF2F7",
+      "count": 1,
+      "min": 963,
+      "max": 963,
+      "beginner": 1,
+      "intermediate": 0,
+      "advanced": 0
+    },
+    {
+      "theme": "enPassant",
+      "count": 1,
+      "min": 3259,
+      "max": 3259,
+      "beginner": 0,
+      "intermediate": 0,
+      "advanced": 1
+    },
+    {
+      "theme": "xRayAttack",
+      "count": 1,
+      "min": 729,
+      "max": 729,
+      "beginner": 1,
+      "intermediate": 0,
+      "advanced": 0
+    },
+    {
+      "theme": "queenEndgame",
+      "count": 1,
+      "min": 1374,
+      "max": 1374,
+      "beginner": 0,
+      "intermediate": 1,
+      "advanced": 0
+    },
+    {
+      "theme": "collinearMove",
+      "count": 1,
+      "min": 1701,
+      "max": 1701,
+      "beginner": 0,
+      "intermediate": 1,
+      "advanced": 0
+    },
+    {
+      "theme": "morphysMate",
+      "count": 1,
+      "min": 1318,
+      "max": 1318,
+      "beginner": 0,
+      "intermediate": 1,
+      "advanced": 0
+    }
+  ]
+}

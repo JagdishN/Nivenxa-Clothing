@@ -12,7 +12,7 @@ export default function LivingNav() {
         <AuthTrigger mode="login" className={styles.link}>
           Login
         </AuthTrigger>
-        <AuthTrigger mode="signup" className={styles.linkPrimary}>
+        <AuthTrigger mode="signup" className={styles.linkQuiet}>
           Create Apartment
         </AuthTrigger>
       </nav>

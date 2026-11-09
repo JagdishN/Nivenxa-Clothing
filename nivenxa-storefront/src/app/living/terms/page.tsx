@@ -3,7 +3,8 @@ import { LIVING_TERMS_OF_USE } from '@/data/livingTermsOfUse'
 import { LEGAL_ENTITY } from '@/lib/legalEntity'
 import PolicyAccordion from '@/components/policy/PolicyAccordion'
 import PolicyHelp from '@/components/policy/PolicyHelp'
-import SiteFooter from '@/components/global/SiteFooter'
+import AppFooter from '@/components/global/AppFooter/AppFooter'
+import PageShell from '@/components/global/PageShell'
 import styles from './LivingTerms.module.scss'
 
 export const metadata = {
@@ -11,20 +12,10 @@ export const metadata = {
   description: 'Clear responsibilities for every apartment — the agreement behind every Nivenxa Living account.',
 }
 
-const LIVING_FOOTER_COLUMNS = [
-  {
-    title: 'Nivenxa Living',
-    links: [
-      { label: 'Privacy Policy', href: '/living/privacy' },
-      { label: 'Terms of Use', href: '/living/terms' },
-      { label: 'Contact', href: `mailto:${LEGAL_ENTITY.email}` },
-    ],
-  },
-]
 
 export default function LivingTermsPage() {
   return (
-    <>
+    <PageShell footer={<AppFooter app="living" />}>
       <div className={styles.page}>
         <div className={styles.hero}>
           <p className={styles.eyebrow}>NIVENXA LIVING / LEGAL</p>
@@ -48,7 +39,6 @@ export default function LivingTermsPage() {
           mailtoHref={`mailto:${LEGAL_ENTITY.email}?subject=Nivenxa%20Living%20terms%20question`}
         />
       </div>
-      <SiteFooter columns={LIVING_FOOTER_COLUMNS} />
-    </>
+    </PageShell>
   )
 }

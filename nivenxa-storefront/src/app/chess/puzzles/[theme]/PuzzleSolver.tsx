@@ -1,48 +1,41 @@
 'use client'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import Link from 'next/link'
 import { Chess } from 'chess.js'
 import type { Key } from 'chessground/types'
 import Board from '@/components/chess/Board'
+import Toast from '@/components/global/Toast/Toast'
 import { useChessGame } from '@/lib/chess/useChessGame'
 import { applyRawMove } from '../../learn/_shared/moveTrainerLogic'
-import { PIECE_NAME, attackedPiecesFrom } from '../../learn/_shared/moveSquares'
 import type { DifficultyLevel, PuzzleRow } from '@/lib/chess/puzzles'
 import { logPuzzleAttempt } from '@/lib/chess/puzzleActions'
+import {
+  buildHints,
+  classifyOutcome,
+  colorName,
+  explainSolution,
+  explainWrongMove,
+  judgeMove,
+  mateLength,
+  objectiveText,
+  topicRelation,
+  parseUci,
+  type PuzzleOutcome,
+  type UciMove,
+} from '@/lib/chess/puzzleLogic'
 import styles from './PuzzleSolver.module.scss'
 
-const REVERT_DELAY = 700
+const REVERT_DELAY = 900
 const CORRECT_DELAY = 500
 const OPPONENT_REPLY_DELAY = 650
-// How long a Show Solution demonstration plays before resetting back to let
-// the learner try it themselves — same idea as TacticPuzzleSet.tsx's own
-// DEMO_DELAY.
-const DEMO_DELAY = 1200
-// Wrong-attempt thresholds: show a plain-language hint first, then (one more
-// wrong try later) actually point at the piece to move — never earlier, so
-// solving without help still counts for something. Also the ceiling a
-// manual Hint request can reach on its own (Show Solution is the step past
-// this, not a 4th hint tier).
-const HINT_TEXT_AFTER_ATTEMPTS = 2
-const HINT_HIGHLIGHT_AFTER_ATTEMPTS = 3
+const PLAYBACK_STEP_DELAY = 800
+const NAV_GUARD_MS = 450
+// Automatic hints after wrong tries: the idea after this many, the piece one try later — never
+// earlier, so solving unaided still counts for something. Show solution is the step past tier 3.
+const HINT_IDEA_AFTER_ATTEMPTS = 2
+const HINT_PIECE_AFTER_ATTEMPTS = 3
 
-interface ParsedMove {
-  from: string
-  to: string
-  promotion?: string
-}
-
-function parseUci(uci: string): ParsedMove {
-  return { from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci.length > 4 ? uci.slice(4, 5) : undefined }
-}
-
-/**
- * Plain-language, beginner-first hints — deliberately avoid chess jargon
- * ("material", "forcing") in favor of describing what to look for on the
- * board. Keyed by the puzzle's own theme slug (see PUZZLE_THEMES in
- * lib/chess/puzzles.ts); the fallback covers any future theme added there
- * before a matching hint is written here.
- */
+/** Supplementary one-line idea per theme, appended to the position-specific hint only for non-mate puzzles. */
 const THEME_HINTS: Record<string, string> = {
   fork: 'Look for one of your pieces that can attack two enemy pieces at the same time.',
   pin: "Look for an enemy piece that can't safely move because a more valuable piece is right behind it.",
@@ -52,85 +45,106 @@ const THEME_HINTS: Record<string, string> = {
   backRankMate: "Your opponent's king is stuck on the back row with no escape squares — look for a check it can't get away from.",
   endgame: 'Look for a way to push a pawn forward or bring your king closer to the action.',
 }
-const DEFAULT_HINT = 'Look at each of your pieces and see what they can attack or defend.'
 
-// The short, named objective shown before any attempt — "Find the best
-// move" alone doesn't say what to look for; this does, per theme.
+/** The short, named objective — "Find the best move" alone doesn't say what to look for. */
 const THEME_OBJECTIVES: Record<string, string> = {
-  fork: 'Find a move that attacks two pieces at once.',
-  pin: "Find a move that stops an enemy piece from safely moving away.",
-  skewer: "Find a check or attack that forces a valuable piece to move, uncovering a weaker one behind it.",
+  fork: 'Find the fork: a move that attacks two pieces at once.',
+  pin: 'Find the pin: a move that stops an enemy piece from safely moving away.',
+  skewer: 'Find the skewer: a check or attack that forces a valuable piece to move, uncovering a weaker one behind it.',
   discoveredAttack: 'Find a move that uncovers an attack from another piece.',
   hangingPiece: "Find the enemy piece that isn't protected.",
   backRankMate: "Find the check the king can't escape.",
   endgame: 'Find the move that helps your pawn or king the most.',
+  doubleCheck: 'Find the double check.',
+  deflection: 'Find the move that pulls a defender away from its job.',
+  sacrifice: 'Find the sacrifice that wins.',
 }
 const DEFAULT_OBJECTIVE = 'Find the best move.'
 
-// Singular, speakable name for "Look for {this}. Find the first move." —
-// THEME_LABELS is plural ("Forks"), which doesn't fit that sentence shape.
-const THEME_SINGULAR: Record<string, string> = {
-  fork: 'a fork',
-  pin: 'a pin',
-  skewer: 'a skewer',
-  discoveredAttack: 'a discovered attack',
-  hangingPiece: 'a hanging piece',
-  backRankMate: 'a back-rank mate',
-  endgame: 'an endgame technique',
-  mateIn1: 'a mate in one',
-  mateIn2: 'a mate in two',
-  doubleCheck: 'a double check',
-  deflection: 'a deflection',
-  sacrifice: 'a sacrifice',
-  capturingDefender: 'a way to remove the defender',
-  intermezzo: 'an in-between move',
-  clearance: 'a clearance move',
-  attraction: 'a decoy',
-  interference: 'an interference',
-  trappedPiece: 'a trapped piece',
+/** The move the solver is looking for now: the stored one while on the stored line, else any mating move from this position. */
+function findExpectedMove(offScript: boolean, stored: UciMove | null, fen: string): UciMove | null {
+  if (!offScript) return stored
+  const g = new Chess(fen)
+  for (const mv of g.moves({ verbose: true })) {
+    const t = new Chess(fen)
+    t.move(mv)
+    if (t.isCheckmate()) return { from: mv.from, to: mv.to, promotion: mv.promotion }
+  }
+  return null
 }
 
-/**
- * Constrained-move puzzle solving: the board itself is NOT restricted to only
- * the correct square (that would spoil which piece to move before the player
- * even tries) — `dests` stays the full set of chess.js-legal moves, exactly
- * like `PieceLesson`'s "your turn" steps. What's constrained is which of
- * those legal moves counts as correct: a match against the puzzle's solution
- * commits and advances; anything else is shown briefly (via the same
- * `applyRawMove` non-committing-preview trick PieceLesson/BoardLesson use)
- * and then reverted — never actually applied to the real chess.js position.
- */
+type AttemptState = 'idle' | 'correct' | 'wrong' | 'playback'
+
+/** Which route the player is on: the page-level wrapper only owns the puzzle index; every attempt's state lives (and resets) in PuzzleBoard. */
 export default function PuzzleSolver({
   puzzles,
   themeLabel,
   theme,
   level,
+  startAtLichessId,
 }: {
   puzzles: PuzzleRow[]
   themeLabel: string
   theme: string
   level: DifficultyLevel
+  /** From My Activity → Retry: open on this puzzle (when it is in this topic/level), otherwise on the first. */
+  startAtLichessId?: string
 }) {
-  const [puzzleIndex, setPuzzleIndex] = useState(0)
+  const [puzzleIndex, setPuzzleIndex] = useState(() => {
+    const at = startAtLichessId ? puzzles.findIndex((p) => p.lichess_puzzle_id === startAtLichessId) : -1
+    return at >= 0 ? at : 0
+  })
   const puzzle = puzzles[puzzleIndex]
-  // Carries the active filter back to the catalogue — leaving a filtered
-  // view via "All puzzles"/"Back to Puzzles" shouldn't silently drop it.
   const puzzlesHref = level === 'all' ? '/chess/puzzles' : `/chess/puzzles?level=${level}`
+
+  // Keyed on the puzzle id: moving to another puzzle unmounts the old board, which clears its timers and
+  // discards every piece of attempt state — no reset effect, no state leaking between puzzles.
+  return (
+    <PuzzleBoard
+      key={puzzle.id}
+      puzzle={puzzle}
+      themeLabel={themeLabel}
+      theme={theme}
+      puzzlesHref={puzzlesHref}
+      index={puzzleIndex}
+      total={puzzles.length}
+      onPrev={() => setPuzzleIndex((i) => Math.max(i - 1, 0))}
+      onNext={() => setPuzzleIndex((i) => Math.min(i + 1, puzzles.length - 1))}
+    />
+  )
+}
+
+function PuzzleBoard({
+  puzzle,
+  themeLabel,
+  theme,
+  puzzlesHref,
+  index,
+  total,
+  onPrev,
+  onNext,
+}: {
+  puzzle: PuzzleRow
+  themeLabel: string
+  theme: string
+  puzzlesHref: string
+  index: number
+  total: number
+  onPrev: () => void
+  onNext: () => void
+}) {
+  const isFirstPuzzle = index === 0
+  const isLastPuzzle = index === total - 1
 
   const parsedMoves = useMemo(() => puzzle.moves.trim().split(/\s+/).map(parseUci), [puzzle])
   const setupMove = parsedMoves[0]
   const solutionMoves = useMemo(() => parsedMoves.slice(1), [parsedMoves])
   // The FEN's own side-to-move plays the setup move; the solver is the other side.
   const playerColor: 'w' | 'b' = puzzle.fen.split(' ')[1] === 'w' ? 'b' : 'w'
+  const mateN = mateLength(puzzle.themes)
 
-  // Apply the setup move synchronously during render (not in an effect) so
-  // the very first render — SSR and the first client paint alike — already
-  // reflects the position the player actually faces: their move, not the
-  // opponent's. Doing this in an effect instead meant `useChessGame` started
-  // from the raw puzzle FEN (whose side-to-move is the opponent, not the
-  // player), so `turn !== playerColor` until the mount effect committed —
-  // the server-rendered HTML, and a brief moment of the real page, said
-  // "Nivenxa is replying…" before the player had made any move at all.
+  // The setup move is applied while rendering so the first paint already shows the position the player
+  // faces (their move), not the opponent's.
   const startingFen = useMemo(() => {
     if (!setupMove) return puzzle.fen
     const setup = new Chess(puzzle.fen)
@@ -138,207 +152,282 @@ export default function PuzzleSolver({
     return setup.fen()
   }, [puzzle, setupMove])
 
-  const { fen, turn, dests, isCheck, isCheckmate, makeMove, reset, undo } = useChessGame(startingFen)
+  const { fen, turn, dests, isCheck, makeMove, reset } = useChessGame(startingFen)
 
   const [solutionIndex, setSolutionIndex] = useState(0)
-  const [attemptState, setAttemptState] = useState<'idle' | 'correct' | 'wrong' | 'demonstrating'>('idle')
+  const [attemptState, setAttemptState] = useState<AttemptState>('idle')
   const [wrongFlashFen, setWrongFlashFen] = useState<string | null>(null)
   const [wrongAttempts, setWrongAttempts] = useState(0)
+  const [wrongNote, setWrongNote] = useState<string | null>(null)
   const [solved, setSolved] = useState(false)
+  const [revealed, setRevealed] = useState(false)
+  // After the result has been recorded (solved / revealed), another go is practice: shown, never saved.
+  const [practice, setPractice] = useState(false)
   const [lastMove, setLastMove] = useState<Key[] | undefined>(undefined)
-  // Set by a manual Hint request — kept separate from the automatic
-  // wrongAttempts-driven tier (never regresses it, see `hintTier` below) so
-  // asking for a hint doesn't erase progress a wrong attempt already made
-  // toward one.
   const [forcedHintTier, setForcedHintTier] = useState<number | null>(null)
-  const startedAtRef = useRef(Date.now())
-  const revertTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // True after a mate-in-two was started with a different (also forced-mate) first move than the stored one.
+  const [offScript, setOffScript] = useState(false)
+  const [playedLine, setPlayedLine] = useState<UciMove[]>([])
+  const [altNote, setAltNote] = useState<string | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
 
-  // Shared by the puzzleIndex-change effect and the manual "Try again"
-  // button — one body, so the two can never drift apart.
-  function resetPuzzleAttempt() {
-    if (revertTimer.current) clearTimeout(revertTimer.current)
-    if (advanceTimer.current) clearTimeout(advanceTimer.current)
-    // `reset()` reloads to `startingFen`, which already has the setup move
-    // baked in — no separate makeMove call needed here anymore.
-    reset()
-    setSolutionIndex(0)
-    setAttemptState('idle')
-    setWrongFlashFen(null)
-    setWrongAttempts(0)
-    setSolved(false)
-    setLastMove(undefined)
-    setForcedHintTier(null)
-    startedAtRef.current = Date.now()
-  }
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on puzzleIndex only; resetPuzzleAttempt/reset/startingFen all change together with it
+  const startedAtRef = useRef(0)
   useEffect(() => {
-    resetPuzzleAttempt()
-  }, [puzzleIndex])
+    startedAtRef.current = Date.now()
+  }, [])
+  // A double click on Skip / Next / Previous would otherwise land its second click on the NEXT puzzle's
+  // button and skip a puzzle the player never saw. Navigation is ignored for a moment after a puzzle appears.
+  const [shownAt] = useState(() => Date.now())
+  const navigationReady = () => Date.now() - shownAt > NAV_GUARD_MS
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([])
+  // A result is recorded once per puzzle visit: repeated clicks, retries and replays can't write a second one.
+  const recordedRef = useRef(false)
 
-  useEffect(
-    () => () => {
-      if (revertTimer.current) clearTimeout(revertTimer.current)
-      if (advanceTimer.current) clearTimeout(advanceTimer.current)
+  const clearTimers = useCallback(() => {
+    timers.current.forEach(clearTimeout)
+    timers.current = []
+  }, [])
+  const later = useCallback((fn: () => void, ms: number) => {
+    timers.current.push(setTimeout(fn, ms))
+  }, [])
+  useEffect(() => clearTimers, [clearTimers])
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(null), 4000)
+    return () => clearTimeout(t)
+  }, [toast])
+
+  const isPlayerTurn = turn === playerColor
+  const mateMovesLeft = mateN === null ? null : mateN - Math.floor(solutionIndex / 2)
+
+  // The move the solver is looking for right now: the stored line while on it, else any mating move.
+  const expectedMove = findExpectedMove(offScript, solutionMoves[solutionIndex] ?? null, fen)
+
+  const record = useCallback(
+    (outcome: PuzzleOutcome, hints: number) => {
+      if (recordedRef.current || practice) return
+      recordedRef.current = true
+      const elapsed = Math.max(1, Math.round((Date.now() - startedAtRef.current) / 1000))
+      logPuzzleAttempt({ puzzleId: puzzle.id, outcome, hintsUsed: hints, wrongAttempts, timeTakenSeconds: elapsed })
+        .then((res) => {
+          if (!res.ok) setToast("We couldn't save your result just now. You can keep going.")
+        })
+        .catch(() => setToast("We couldn't save your result just now. You can keep going."))
     },
-    []
+    [puzzle.id, practice, wrongAttempts]
   )
 
-  function playOpponentReply(index: number) {
-    const mv = solutionMoves[index]
-    if (!mv) return
-    advanceTimer.current = setTimeout(() => {
-      const result = makeMove(mv.from, mv.to, mv.promotion ?? 'q')
-      if (result) setLastMove([mv.from as Key, mv.to as Key])
-      setSolutionIndex(index + 1)
-    }, OPPONENT_REPLY_DELAY)
+  // ── Hints ────────────────────────────────────────────────────────────────
+  const canAct = attemptState === 'idle' && isPlayerTurn && !solved && !revealed
+  const automaticTier = wrongAttempts >= HINT_PIECE_AFTER_ATTEMPTS ? 2 : wrongAttempts >= HINT_IDEA_AFTER_ATTEMPTS ? 1 : 0
+  const hintTier = Math.max(forcedHintTier ?? 0, automaticTier)
+  const hints = expectedMove ? buildHints(fen, expectedMove, puzzle.themes, THEME_HINTS[theme]) : null
+  const hintText = hints && hintTier >= 1 ? (hintTier >= 3 ? hints.move : hintTier === 2 ? hints.piece : hints.idea) : null
+  const highlight: Key[] | undefined = hints && canAct && hintTier >= 2 ? (hintTier >= 3 ? [hints.from as Key, hints.to as Key] : [hints.from as Key]) : undefined
+
+  function requestHint() {
+    if (!canAct) return
+    setForcedHintTier((t) => Math.min(Math.max(t ?? 0, automaticTier) + 1, 3))
+  }
+
+  // ── Moves ────────────────────────────────────────────────────────────────
+  function finishSolve(line: UciMove[]) {
+    setPlayedLine(line)
+    setSolved(true)
+    const outcome = classifyOutcome({ solved: true, hintsUsed: hintTier, solutionViewed: false, skipped: false })
+    if (outcome) record(outcome, hintTier)
   }
 
   function handleMove(from: Key, to: Key) {
-    if (attemptState !== 'idle' || solved || turn !== playerColor) return
-    const expected = solutionMoves[solutionIndex]
+    if (!canAct) return
+    const expected = expectedMove
     if (!expected) return
+    const attempt: UciMove = { from, to }
+    const verdict = judgeMove(fen, expected, attempt, mateMovesLeft)
 
-    if (expected.from === from && expected.to === to) {
-      const result = makeMove(from, to, expected.promotion ?? 'q')
+    if (verdict.kind === 'correct' || verdict.kind === 'alternative') {
+      const played = verdict.kind === 'correct' ? expected : attempt
+      const result = makeMove(from, to, played.promotion ?? 'q')
       if (!result) return
       setLastMove([from, to])
       setAttemptState('correct')
-      advanceTimer.current = setTimeout(() => {
+      setWrongNote(null)
+      const line = [...playedLine, { from, to, promotion: played.promotion }]
+      setPlayedLine(line)
+      const afterGame = new Chess(result.fenAfter)
+      const done = afterGame.isCheckmate() && mateN !== null ? true : !offScript && solutionIndex + 1 >= solutionMoves.length
+      if (verdict.kind === 'alternative') {
+        setAltNote(`${verdict.san} also forces mate — a different route from the one we had in mind, and just as good.`)
+        if (!done) setOffScript(true)
+      }
+      later(() => {
         setAttemptState('idle')
+        if (done) {
+          finishSolve(line)
+          return
+        }
+        if (verdict.kind === 'alternative' || offScript) {
+          // Off the stored line: any legal reply will do, the mate is forced either way.
+          const reply = new Chess(result.fenAfter).moves({ verbose: true })[0]
+          if (!reply) return
+          later(() => {
+            makeMove(reply.from, reply.to, reply.promotion ?? 'q')
+            setLastMove([reply.from as Key, reply.to as Key])
+            setPlayedLine((l) => [...l, { from: reply.from, to: reply.to, promotion: reply.promotion }])
+            setSolutionIndex((i) => i + 2)
+          }, OPPONENT_REPLY_DELAY)
+          return
+        }
         const next = solutionIndex + 1
-        if (next >= solutionMoves.length) {
-          setSolved(true)
-          const elapsed = Math.max(1, Math.round((Date.now() - startedAtRef.current) / 1000))
-          logPuzzleAttempt({ puzzleId: puzzle.id, solved: true, timeTakenSeconds: elapsed })
-        } else {
-          setSolutionIndex(next)
-          playOpponentReply(next)
+        const mv = solutionMoves[next]
+        setSolutionIndex(next)
+        if (mv) {
+          later(() => {
+            makeMove(mv.from, mv.to, mv.promotion ?? 'q')
+            setLastMove([mv.from as Key, mv.to as Key])
+            setPlayedLine((l) => [...l, mv])
+            setSolutionIndex(next + 1)
+          }, OPPONENT_REPLY_DELAY)
         }
       }, CORRECT_DELAY)
       return
     }
 
+    // Legal but not a solution (an illegal move can't be played: the board only offers legal squares).
     setWrongFlashFen(applyRawMove(fen, from, to))
     setAttemptState('wrong')
     setWrongAttempts((n) => n + 1)
-    revertTimer.current = setTimeout(() => {
+    setWrongNote(verdict.kind === 'illegal' ? "That move isn't legal in this position." : explainWrongMove(fen, attempt, mateN !== null))
+    later(() => {
       setWrongFlashFen(null)
       setAttemptState('idle')
     }, REVERT_DELAY)
   }
 
-  function handleNextPuzzle() {
-    setPuzzleIndex((i) => Math.min(i + 1, puzzles.length - 1))
+  // ── Typed move (keyboard / screen-reader alternative to dragging or tapping) ──
+  const [typedMove, setTypedMove] = useState('')
+  const [typedError, setTypedError] = useState<string | null>(null)
+
+  function submitTypedMove(e: FormEvent) {
+    e.preventDefault()
+    if (!canAct) return
+    const text = typedMove.trim()
+    if (!text) return
+    let move: ReturnType<Chess['move']> | null = null
+    try {
+      move = new Chess(fen).move(text)
+    } catch {
+      move = null
+    }
+    if (!move) {
+      setTypedError(`"${text}" isn't a legal move here. Try notation like Nf3, exd5 or O-O.`)
+      return
+    }
+    setTypedError(null)
+    setTypedMove('')
+    handleMove(move.from as Key, move.to as Key)
   }
 
-  function handlePrevPuzzle() {
-    setPuzzleIndex((i) => Math.max(i - 1, 0))
-  }
-
-  const isFirstPuzzle = puzzleIndex === 0
-  const isLastPuzzle = puzzleIndex === puzzles.length - 1
-  const isPlayerTurn = turn === playerColor
-  const boardFen = wrongFlashFen ?? fen
-  const boardDests = attemptState === 'idle' && isPlayerTurn && !solved ? dests : new Map<Key, Key[]>()
-  const viewOnly = attemptState !== 'idle' || !isPlayerTurn || solved
-
-  // Only meaningful while it's genuinely the player's move to make — never
-  // during the correct/wrong flash, a demonstration, or the opponent's reply.
-  const canShowHint = attemptState === 'idle' && isPlayerTurn && !solved
-  const expectedMove = solutionMoves[solutionIndex]
-  // 1: the objective text (same as the automatic behavior always had). 2:
-  // names the piece — new, manual-only (never triggered by wrong attempts
-  // alone, since naming the piece outright is a bigger assist than the
-  // plain-language hint was). 3: today's destination highlight. Math.max,
-  // not a replacement — a manual Hint request never regresses the
-  // automatic wrongAttempts-driven tier.
-  const automaticTier = wrongAttempts >= HINT_HIGHLIGHT_AFTER_ATTEMPTS ? 3 : wrongAttempts >= HINT_TEXT_AFTER_ATTEMPTS ? 1 : 0
-  const hintTier = Math.max(forcedHintTier ?? 0, automaticTier)
-  const showHintText = canShowHint && hintTier >= 1
-  const showPieceHint = canShowHint && hintTier >= 2 && !!expectedMove
-  const showHintHighlight = canShowHint && hintTier >= 3 && !!expectedMove
-  const hintPieceName = expectedMove ? PIECE_NAME[new Chess(fen).get(expectedMove.from as Parameters<Chess['get']>[0])?.type ?? ''] : undefined
-
-  function requestHint() {
-    if (!canShowHint) return
-    setForcedHintTier((t) => Math.min((t ?? automaticTier) + 1, 3))
-  }
-
-  // Plays the expected move for real (so the board shows it exactly as it
-  // would happen), holds it for a beat, then undoes it — never marks the
-  // puzzle solved, and the correct-square highlight (from forcedHintTier)
-  // is still showing once it reverts, so the learner's own retry has that
-  // aid in place. Same pattern as TacticPuzzleSet.tsx's Show Me.
-  function requestShowMe() {
-    if (!canShowHint || !expectedMove) return
-    setForcedHintTier(3)
-    setAttemptState('demonstrating')
-    const result = makeMove(expectedMove.from, expectedMove.to, expectedMove.promotion ?? 'q')
-    if (result) setLastMove([expectedMove.from as Key, expectedMove.to as Key])
-    if (revertTimer.current) clearTimeout(revertTimer.current)
-    revertTimer.current = setTimeout(() => {
-      undo()
+  // ── Playback (Show solution / Replay) ────────────────────────────────────
+  function runPlayback(moves: UciMove[], onDone: () => void) {
+    clearTimers()
+    setAttemptState('playback')
+    moves.forEach((m, i) => {
+      later(() => {
+        makeMove(m.from, m.to, m.promotion ?? 'q')
+        setLastMove([m.from as Key, m.to as Key])
+      }, (i + 1) * PLAYBACK_STEP_DELAY)
+    })
+    later(() => {
       setAttemptState('idle')
-      setLastMove(undefined)
-    }, DEMO_DELAY)
+      onDone()
+    }, (moves.length + 1) * PLAYBACK_STEP_DELAY)
   }
 
-  // A full, on-demand restart of this puzzle — not just the automatic
-  // revert a single wrong move already gets.
-  function requestTryAgain() {
-    resetPuzzleAttempt()
+  function requestShowSolution() {
+    if (!canAct) return
+    // From the current position, finish the line: stored continuation while on it, else the mating move.
+    const remaining: UciMove[] = offScript ? (expectedMove ? [expectedMove] : []) : solutionMoves.slice(solutionIndex)
+    if (remaining.length === 0) return
+    setWrongNote(null)
+    // A viewed solution is never an independent solve.
+    const outcome = classifyOutcome({ solved: false, hintsUsed: hintTier, solutionViewed: true, skipped: false })
+    if (outcome) record(outcome, hintTier)
+    runPlayback(remaining, () => {
+      setPlayedLine((l) => [...l, ...remaining])
+      setRevealed(true)
+    })
   }
 
-  const playerColorLabel = playerColor === 'w' ? 'White' : 'Black'
-  const opponentColorLabel = playerColorLabel === 'White' ? 'Black' : 'White'
-  const isMultiMove = solutionMoves.length > 1
-  const correctButContinues = attemptState === 'correct' && solutionIndex + 1 < solutionMoves.length
+  function replaySolution() {
+    if (attemptState !== 'idle' || !(solved || revealed)) return
+    reset()
+    setLastMove(undefined)
+    const line = playedLine
+    runPlayback(line, () => undefined)
+  }
 
-  // Generated from the actual solution, not a canned sentence — for a fork,
-  // names the attacking piece and both real targets (and, when one of them
-  // is the king, spells out why the other is now winnable). Every other
-  // theme keeps a plain acknowledgement for now; giving them the same
-  // generated treatment is future work, not silently dropped.
-  const solvedExplanation = useMemo(() => {
-    if (!solved || !lastMove) return 'Solved!'
-    if (theme !== 'fork') return `You found it! That's ${THEME_SINGULAR[theme] ?? 'the idea'}.`
-    const attacker = new Chess(fen).get(lastMove[1] as Parameters<Chess['get']>[0])
-    const targets = attackedPiecesFrom(fen, lastMove[1])
-    if (!attacker || targets.length < 2) return 'You found the fork!'
-    const attackerName = PIECE_NAME[attacker.type] ?? 'piece'
-    const [t1, t2] = targets
-    const base = `Your ${attackerName} attacks the ${PIECE_NAME[t1.type] ?? 'piece'} and ${PIECE_NAME[t2.type] ?? 'piece'}.`
-    const kingTarget = targets.find((t) => t.type === 'k')
-    const otherTarget = targets.find((t) => t.type !== 'k')
-    return kingTarget && otherTarget
-      ? `${base} The king must escape, so you can win the ${PIECE_NAME[otherTarget.type] ?? 'piece'}.`
-      : base
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- deliberately keyed on solved/lastMove/theme only; fen is read fresh via closure at the moment solved flips, which is when this needs to run.
-  }, [solved, lastMove, theme])
+  /** Another go from the start. Practice only: the result for this puzzle is already recorded. */
+  function tryAgain() {
+    if (attemptState !== 'idle' && attemptState !== 'wrong') return
+    clearTimers()
+    reset()
+    setSolutionIndex(0)
+    setAttemptState('idle')
+    setWrongFlashFen(null)
+    setWrongAttempts(0)
+    setWrongNote(null)
+    setSolved(false)
+    setRevealed(false)
+    setPractice(true)
+    setLastMove(undefined)
+    setForcedHintTier(null)
+    setOffScript(false)
+    setPlayedLine([])
+    setAltNote(null)
+    startedAtRef.current = Date.now()
+  }
 
-  const solvedHighlightSquares = useMemo((): Key[] | undefined => {
-    if (!solved || !lastMove || theme !== 'fork') return undefined
-    const targets = attackedPiecesFrom(fen, lastMove[1])
-    if (targets.length < 2) return undefined
-    return [lastMove[1], ...targets.map((t) => t.square)] as Key[]
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- same reasoning as solvedExplanation above.
-  }, [solved, lastMove, theme])
+  function skip() {
+    if (!navigationReady()) return
+    clearTimers()
+    if (!solved && !revealed) {
+      const outcome = classifyOutcome({ solved: false, hintsUsed: hintTier, solutionViewed: false, skipped: true })
+      if (outcome) record(outcome, hintTier)
+    }
+    onNext()
+  }
+
+  // ── Explanation (only once the puzzle is over) ───────────────────────────
+  const explanation = useMemo(() => {
+    if (!(solved || revealed) || playedLine.length === 0) return null
+    return explainSolution(startingFen, playedLine, puzzle.themes, themeLabel)
+  }, [solved, revealed, playedLine, startingFen, puzzle.themes, themeLabel])
+
+  // ── Presentation ─────────────────────────────────────────────────────────
+  const opponentColorLabel = colorName(playerColor === 'w' ? 'b' : 'w')
+  const objective = objectiveText(puzzle.themes, theme, playerColor, THEME_OBJECTIVES[theme] ?? DEFAULT_OBJECTIVE)
+  const relation = topicRelation(puzzle.themes, theme, themeLabel)
+  const boardFen = wrongFlashFen ?? fen
+  const interactive = canAct
+  const boardDests = interactive ? dests : new Map<Key, Key[]>()
+  const multiMove = solutionMoves.length > 1
 
   let statusText: string
-  if (solved) statusText = solvedExplanation
-  else if (attemptState === 'demonstrating') statusText = 'Watch the solution…'
-  else if (attemptState === 'correct') statusText = correctButContinues ? `Good move! Now watch ${opponentColorLabel}'s reply.` : 'Got it!'
-  else if (attemptState === 'wrong') statusText = THEME_OBJECTIVES[theme] ? `Not quite. ${THEME_OBJECTIVES[theme]}` : 'Not quite — try again.'
-  else if (!isPlayerTurn) statusText = 'Nivenxa is replying…'
-  else if (isMultiMove && solutionIndex === 0) statusText = `Look for ${THEME_SINGULAR[theme] ?? 'the idea'}. Find the first move.`
-  else if (isMultiMove && solutionIndex > 0) statusText = 'Your turn again. Finish the tactic.'
-  else statusText = THEME_OBJECTIVES[theme] ?? DEFAULT_OBJECTIVE
+  if (solved) statusText = practice ? 'Solved again — nice. (Practice: your saved result is unchanged.)' : 'Solved!'
+  else if (revealed) statusText = 'That was the solution. Try it yourself when you are ready.'
+  else if (attemptState === 'playback') statusText = 'Watch the solution…'
+  else if (attemptState === 'correct') statusText = multiMove && !offScript && solutionIndex + 1 < solutionMoves.length ? `Good move! Now watch ${opponentColorLabel}'s reply.` : 'That works!'
+  else if (attemptState === 'wrong') statusText = 'Not quite — try another move.'
+  else if (!isPlayerTurn) statusText = `${opponentColorLabel} is replying…`
+  else if (multiMove && solutionIndex > 0) statusText = 'Your turn again. Finish the tactic.'
+  else statusText = 'Your move.'
+
+  const over = solved || revealed
+  const showFeedbackNote = wrongNote && attemptState !== 'correct'
 
   return (
-    <div className={styles.layout}>
+    <div className={styles.layout} data-fen={fen} data-attempt={attemptState}>
       <div className={styles.boardCol}>
         <div className={styles.boardWrap}>
           <Board
@@ -346,10 +435,10 @@ export default function PuzzleSolver({
             turnColor={turn === 'w' ? 'white' : 'black'}
             dests={boardDests}
             orientation={playerColor === 'w' ? 'white' : 'black'}
-            viewOnly={viewOnly}
+            viewOnly={!interactive}
             check={isCheck ? (turn === 'w' ? 'white' : 'black') : false}
             lastMove={lastMove}
-            highlightSquares={solved ? solvedHighlightSquares : showHintHighlight ? [expectedMove.from as Key] : undefined}
+            highlightSquares={highlight}
             highlightColor="yellow"
             onMove={handleMove}
           />
@@ -357,80 +446,131 @@ export default function PuzzleSolver({
       </div>
 
       <div className={styles.panelCol}>
-        <Link href={puzzlesHref} className={styles.backLink}>
-          ← All puzzles
-        </Link>
-
         <p className={styles.stageIndicator}>
-          Puzzle {puzzleIndex + 1} of {puzzles.length} · {themeLabel} · Rating {puzzle.rating}
+          Puzzle {index + 1} of {total} · {themeLabel} · Rating {puzzle.rating}
         </p>
-        <p className={styles.turnLabel}>{playerColorLabel} to move</p>
-        {/* The fuller explanation only on the first puzzle of the set — it
-            doesn't need repeating once the learner already knows which side
-            they're playing and why. */}
-        {isFirstPuzzle && (
-          <p className={styles.colorIndicator}>
-            You&rsquo;re playing <strong>{playerColorLabel}</strong> — the board is set up from your side.
-          </p>
-        )}
-
-        <div className={`${styles.promptCard} ${attemptState === 'correct' ? styles.promptCardCorrect : ''}`}>
+        <p className={styles.turnLabel}>{objective}</p>
+        {relation && <p className={styles.relationNote}>{relation}</p>}
+        {/* One live region for every outcome message, next to the board — screen readers hear each change. */}
+        <div className={`${styles.promptCard} ${attemptState === 'correct' || solved ? styles.promptCardCorrect : ''}`} role="status" aria-live="polite" aria-atomic="true">
           <p className={styles.promptText}>{statusText}</p>
-          {showHintText && (
+          {showFeedbackNote && <p className={styles.hintText}>{wrongNote}</p>}
+          {altNote && <p className={styles.hintText}>{altNote}</p>}
+          {hintText && canAct && (
             <p className={styles.hintText}>
-              Hint: {showPieceHint ? `Try using your ${hintPieceName ?? 'piece'}.` : THEME_HINTS[theme] ?? DEFAULT_HINT}
-              {showHintHighlight && " The highlighted square shows the piece to move."}
+              Hint {Math.min(hintTier, 3)} of 3: {hintText}
             </p>
           )}
         </div>
 
+        {over && explanation && (
+          <div className={styles.explain}>
+            <p className={styles.explainTitle}>Why it works</p>
+            {explanation.lines.map((line) => (
+              <p key={line} className={styles.explainLine}>
+                {line}
+              </p>
+            ))}
+            <p className={styles.explainLine}>
+              <strong>Line:</strong> {explanation.line}
+            </p>
+            {explanation.defences.length > 0 && (
+              <details className={styles.defences}>
+                <summary>Every defence, and the mate that follows</summary>
+                <ul>
+                  {explanation.defences.map((d) => (
+                    <li key={d.reply}>
+                      {d.reply} → {d.mate}
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
+          </div>
+        )}
+
         {solved && isLastPuzzle && <p className={styles.doneText}>You&rsquo;ve completed this set!</p>}
 
-        {isCheckmate && !solved && <p className={styles.hintText}>Checkmate — that&rsquo;s the winning line.</p>}
-
-        {/* Hint / Show solution / Try again — the primary help cluster now,
-            not Skip (which used to be the strongest action on an unsolved
-            puzzle). All three stay available throughout; Hint and Show
-            solution are no-ops once the puzzle's solved or mid-reply. */}
-        {!solved && (
+        {/* Help while the puzzle is open. No "Try again" here: a wrong move already snaps back by itself,
+            and restarting only makes sense once the puzzle is over. */}
+        {!over && (
           <div className={styles.actions}>
-            <button type="button" className={styles.actionBtn} onClick={requestHint} disabled={!canShowHint || hintTier >= 3}>
+            <button type="button" className={styles.actionBtn} onClick={requestHint} disabled={!canAct || hintTier >= 3}>
               💡 Hint
             </button>
-            <button type="button" className={styles.actionBtn} onClick={requestShowMe} disabled={!canShowHint}>
+            <button type="button" className={styles.actionBtnGhost} onClick={requestShowSolution} disabled={!canAct}>
               👀 Show solution
-            </button>
-            <button type="button" className={styles.actionBtn} onClick={requestTryAgain}>
-              ↺ Try again
             </button>
           </div>
         )}
 
-        {/* Always available, not just once solved — stuck on a puzzle, skip
-            ahead; want another look at an earlier one, go back. Revisiting a
-            puzzle this way restarts it fresh (no memory of a prior solve).
-            Skip reads as secondary now — Hint/Show solution/Try again above
-            are the stronger, encouraged actions on an unsolved puzzle. */}
+        {over && (
+          <div className={styles.actions}>
+            {isLastPuzzle ? (
+              <Link href={puzzlesHref} className={styles.actionBtn}>
+                Back to Puzzles
+              </Link>
+            ) : (
+              <button type="button" className={styles.actionBtn} onClick={() => navigationReady() && onNext()} disabled={attemptState === 'playback'}>
+                Next puzzle →
+              </button>
+            )}
+            <button type="button" className={styles.actionBtnGhost} onClick={tryAgain} disabled={attemptState === 'playback'}>
+              {revealed ? '↺ Try yourself' : '↺ Try again'}
+            </button>
+            <button type="button" className={styles.actionBtnGhost} onClick={replaySolution} disabled={attemptState === 'playback'}>
+              ▶ Replay
+            </button>
+          </div>
+        )}
+
+        {!over && (
+          <details className={styles.typeMove}>
+            <summary>Type your move instead</summary>
+            <form onSubmit={submitTypedMove} className={styles.typeMoveForm}>
+              <label htmlFor={`typed-move-${puzzle.id}`} className={styles.typeMoveLabel}>
+                Move in standard notation, for example Nf3 or Qxh7#
+              </label>
+              <div className={styles.typeMoveRow}>
+                <input
+                  id={`typed-move-${puzzle.id}`}
+                  className={styles.typeMoveInput}
+                  value={typedMove}
+                  onChange={(e) => {
+                    setTypedMove(e.target.value)
+                    setTypedError(null)
+                  }}
+                  autoComplete="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  disabled={!canAct}
+                />
+                <button type="submit" className={styles.actionBtnGhost} disabled={!canAct || !typedMove.trim()}>
+                  Play
+                </button>
+              </div>
+              {typedError && (
+                <p className={styles.typeMoveError} role="alert">
+                  {typedError}
+                </p>
+              )}
+            </form>
+          </details>
+        )}
+
         <div className={styles.actions}>
-          <button type="button" className={styles.actionBtnGhost} onClick={handlePrevPuzzle} disabled={isFirstPuzzle}>
+          <button type="button" className={styles.actionBtnGhost} onClick={() => { if (!navigationReady()) return; clearTimers(); onPrev() }} disabled={isFirstPuzzle}>
             ← Previous
           </button>
-          {isLastPuzzle && solved ? (
-            <Link href={puzzlesHref} className={styles.actionBtn}>
-              Back to Puzzles
-            </Link>
-          ) : (
-            <button
-              type="button"
-              className={solved ? styles.actionBtn : styles.actionBtnGhost}
-              onClick={handleNextPuzzle}
-              disabled={isLastPuzzle}
-            >
-              {solved ? 'Next puzzle →' : 'Skip →'}
+          {!over && (
+            <button type="button" className={styles.actionBtnGhost} onClick={skip} disabled={isLastPuzzle}>
+              Skip →
             </button>
           )}
         </div>
       </div>
+
+      <Toast visible={!!toast} message={toast ?? ''} onClose={() => setToast(null)} />
     </div>
   )
 }

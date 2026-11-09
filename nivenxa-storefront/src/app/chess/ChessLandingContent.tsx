@@ -2,104 +2,68 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
-import type { ChessTournament } from '@/lib/chess/types'
-import { RegisterAction, PaymentInfo } from './tournaments/TournamentListing'
-import { formatDateRange } from '@/lib/chess/tournamentFormat'
 import styles from './Chess.module.scss'
-
-const fadeUp = (delay = 0) => ({
-  initial: { opacity: 0, y: 24 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1], delay },
-})
 
 const FEATURE_CARDS = [
   {
     icon: 'Coach',
-    title: 'Learn as You Play',
-    desc: 'Get plain-language explanations for every move, so you understand the reasoning — not just the result.',
+    title: 'Learn as you play',
+    desc: 'Plain-language comments on your moves: every move in Teacher mode, only when it matters in Coach mode.',
     iconClassName: 'cardIconPurple',
   },
   {
     icon: 'Puzzle',
-    title: 'Puzzles That Build Skill',
-    desc: 'Work through curated puzzle sets designed to sharpen tactics, one motif at a time.',
+    title: 'Puzzles that build skill',
+    desc: 'Curated sets by topic and difficulty, with hints and an explanation of every solution.',
     iconClassName: 'cardIconGold',
     href: '/chess/puzzles',
   },
   {
     icon: 'Level',
-    title: 'Grows With You',
-    desc: 'An adaptive engine that scales from your first game to your toughest challenge yet.',
+    title: 'Grows with you',
+    desc: 'An adaptive engine, from your first game to a full no-assistance challenge.',
     iconClassName: 'cardIconBlue',
   },
 ]
 
-function NivenxaHighlight({ tournament }: { tournament: ChessTournament }) {
-  return (
-    <motion.section
-      className={styles.nivenxaHighlight}
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-    >
-      <div className={styles.nivenxaHighlightInner}>
-        <p className={styles.nivenxaHighlightEyebrow}>
-          {tournament.lifecycleStatus === 'live' ? 'Live now — hosted by Nivenxa' : 'Coming up — hosted by Nivenxa'}
-        </p>
-        <h2 className={styles.nivenxaHighlightTitle}>{tournament.title}</h2>
-        <p className={styles.nivenxaHighlightMeta}>
-          {formatDateRange(tournament)} · {tournament.location.label}, {tournament.country}
-        </p>
-        <div className={styles.nivenxaHighlightActions}>
-          <RegisterAction tournament={tournament} />
-          <PaymentInfo tournament={tournament} />
-        </div>
-      </div>
-    </motion.section>
-  )
-}
-
-export default function ChessLandingContent({ highlightTournament }: { highlightTournament: ChessTournament | null }) {
+export default function ChessLandingContent({ tournamentSlot }: { tournamentSlot: React.ReactNode }) {
   return (
     <div className={styles.page}>
       <div className={styles.orb1} aria-hidden="true" />
       <div className={styles.orb2} aria-hidden="true" />
 
+      {/* Directly under the nav, above the hero. Streams in on its own: the hero text and actions never wait for it
+          (nor are they hidden by an entrance animation — they used to start at opacity 0 and re-fade on every visit). */}
+      {tournamentSlot}
+
       <section className={styles.hero}>
         <div className={styles.heroContent}>
-          <motion.p className={styles.eyebrow} {...fadeUp(0.1)}>
+          <p className={styles.eyebrow}>
             NIVENXA CHESS
-          </motion.p>
+          </p>
 
-          <motion.h1 className={styles.heading} {...fadeUp(0.25)}>
+          <h1 className={styles.heading}>
             Play smarter.<br />
-            <span className={styles.headingAccent}>Every move explained.</span>
-          </motion.h1>
+            <span className={styles.headingAccent}>Learn why, not just what.</span>
+          </h1>
 
-          <motion.p className={styles.subtext} {...fadeUp(0.4)}>
-            AI-guided coaching that explains the why behind every move — train against an adaptive
-            engine and sharpen your game one position at a time.
-          </motion.p>
+          <p className={styles.subtext}>
+            Train against an adaptive engine that teaches as you play. Beginner mode explains your moves; stronger
+            levels step back until you want the challenge.
+          </p>
 
-          <motion.div className={styles.ctaRow} {...fadeUp(0.55)}>
+          <div className={styles.ctaRow}>
             <Link href="/chess/play" className={styles.registerBtn}>
-              <span className={styles.registerBtnInner}>
-                <span className={styles.btnIcon}>Play</span>
-                Start Playing
-              </span>
+              <span className={styles.registerBtnInner}>Start playing</span>
               <span className={styles.registerBtnGlow} aria-hidden="true" />
             </Link>
-          </motion.div>
+            <Link href="/chess/puzzles" className={styles.secondaryBtn}>
+              Try a puzzle
+            </Link>
+          </div>
         </div>
 
-        <motion.div
-          className={styles.boardWrap}
-          initial={{ opacity: 0, scale: 0.94, y: 30 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
-        >
+        <div className={styles.boardWrap}>
           <div className={styles.boardGlow} aria-hidden="true" />
           <Image
             src="/images/Chess/chess-board.png"
@@ -110,13 +74,11 @@ export default function ChessLandingContent({ highlightTournament }: { highlight
             priority
           />
           <div className={styles.boardReflection} aria-hidden="true" />
-        </motion.div>
+        </div>
       </section>
 
-      {highlightTournament && <NivenxaHighlight tournament={highlightTournament} />}
-
       <section id="learn" className={styles.features}>
-        {FEATURE_CARDS.map((card, i) => {
+        {FEATURE_CARDS.map((card) => {
           const content = (
             <>
               <span className={`${styles.cardIcon} ${styles[card.iconClassName]}`}>{card.icon}</span>
@@ -129,7 +91,6 @@ export default function ChessLandingContent({ highlightTournament }: { highlight
             <motion.div
               key={card.title}
               className={styles.card}
-              {...fadeUp(0.15 * i)}
               whileHover={{ y: -6, transition: { duration: 0.3 } }}
             >
               {card.href ? (
@@ -143,29 +104,6 @@ export default function ChessLandingContent({ highlightTournament }: { highlight
           )
         })}
       </section>
-
-      <motion.section
-        className={styles.ctaBanner}
-        initial={{ opacity: 0, y: 32 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <div className={styles.ctaBannerInner}>
-          <h2 className={styles.ctaBannerTitle}>Ready to make your first move?</h2>
-          <p className={styles.ctaBannerSub}>
-            Jump into a game against the Nivenxa Chess engine — tuned to your level, ready when you are.
-          </p>
-          <Link href="/chess/play" className={styles.registerBtn}>
-            <span className={styles.registerBtnInner}>
-              <span className={styles.btnIcon}>Play</span>
-              Start Playing
-            </span>
-            <span className={styles.registerBtnGlow} aria-hidden="true" />
-          </Link>
-        </div>
-        <div className={styles.ctaBannerOrb} aria-hidden="true" />
-      </motion.section>
     </div>
   )
 }

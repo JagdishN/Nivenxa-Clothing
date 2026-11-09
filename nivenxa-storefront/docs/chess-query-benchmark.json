@@ -1,0 +1,27 @@
+{
+  "conditions": "node v24.18.0, win32, home network to Supabase, 2026-11-09T10:38:45.128Z, 1 warm-up discarded",
+  "catalogueBefore": {
+    "n": 7,
+    "median": 3370,
+    "slowest": 3922,
+    "fastest": 3330
+  },
+  "catalogueAfter": {
+    "n": 7,
+    "median": 190,
+    "slowest": 264,
+    "fastest": 178
+  },
+  "topicBefore": {
+    "n": 7,
+    "median": 385,
+    "slowest": 391,
+    "fastest": 363
+  },
+  "topicAfter": {
+    "n": 7,
+    "median": 187,
+    "slowest": 196,
+    "fastest": 183
+  }
+}

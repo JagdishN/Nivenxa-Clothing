@@ -20,6 +20,7 @@ import { TIME_CONTROLS, TIME_CONTROL_MODE_LIST, type TimeControlMode, type TimeC
 import { accuracyFromEntries, classificationTone, formatClassification } from '@/lib/chess/moveClassification'
 import { buildNormalizedGameFromPlaySession, type PlayResult } from '@/lib/chess/playToAnalysis'
 import { setActiveGame } from '@/lib/chess/analysisSession'
+import { saveFinishedGame } from '@/lib/chess/activityActions'
 import type { ColorChoice, MoveAnalysisEntry, QualityMoveEntry } from '@/lib/chess/types'
 import MovePairsTable from './MovePairsTable'
 import ExpertDashboard from './ExpertDashboard'
@@ -225,6 +226,10 @@ export default function ChessPlayPage() {
   // game (see moreMenuRef's click-outside effect below).
   const [moreMenuOpen, setMoreMenuOpen] = useState(false)
   const moreMenuRef = useRef<HTMLDivElement>(null)
+  // One canonical record per played game (My Activity → My Games): a fresh id per game, saved once when it ends.
+  const gameLocalIdRef = useRef('')
+  const gameStartedAtRef = useRef('')
+  const gameSavePromiseRef = useRef<Promise<string | null> | null>(null)
   // 'pending'/'declined' also drive a transient banner near the board;
   // 'declined' clears itself after a few seconds but declinedUntilPly keeps
   // gating the button so the offer can't just be spammed again immediately.
@@ -320,6 +325,9 @@ export default function ChessPlayPage() {
     setActiveStrength(clampStrength(tier, strength))
     setHumanColor(resolved)
     setOrientation(resolved === 'w' ? 'white' : 'black')
+    gameLocalIdRef.current = crypto.randomUUID()
+    gameStartedAtRef.current = new Date().toISOString()
+    gameSavePromiseRef.current = null
     setSkillSet(false)
     setScreen('playing')
     setReviewOpen(false)
@@ -374,11 +382,13 @@ export default function ChessPlayPage() {
     beginGame(activeTierId, activeColorChoice, mode, presetIndex, activeStrength)
   }
 
-  const handleAnalyzeGame = () => {
+  const handleAnalyzeGame = async () => {
     let result: PlayResult = '1/2-1/2'
     if (outcome === 'player-win') result = humanColor === 'w' ? '1-0' : '0-1'
     else if (outcome === 'engine-win' || outcome === 'player-resigned') result = humanColor === 'w' ? '0-1' : '1-0'
     const game = buildNormalizedGameFromPlaySession(analysisEntries, humanColor, activeTierId, result)
+    const savedId = await gameSavePromiseRef.current?.catch(() => null)
+    if (savedId) game.playedGameId = savedId
     setActiveGame(game, 'analyze')
     router.push('/chess/analysis/player')
   }
@@ -658,6 +668,27 @@ export default function ChessPlayPage() {
   else if (isInsufficientMaterial) drawReasonText = 'Draw — insufficient material'
   else if (isDrawByFiftyMoves) drawReasonText = 'Draw — fifty-move rule'
 
+  // Save the finished game once (signed-in players only — a guest's call is refused by the server and ignored).
+  // Only the final record is written: no per-move or clock writes while the game is in progress.
+  useEffect(() => {
+    if (!showGameComplete || gameSavePromiseRef.current || !gameLocalIdRef.current || analysisEntries.length === 0) return
+    const result = outcome === 'draw' ? '1/2-1/2' : outcome === 'player-win' ? (humanColor === 'w' ? '1-0' : '0-1') : humanColor === 'w' ? '0-1' : '1-0'
+    gameSavePromiseRef.current = saveFinishedGame({
+      localId: gameLocalIdRef.current,
+      status: endReason === 'resigned' ? 'resigned' : 'completed',
+      playerColor: humanColor,
+      opponent: `Nivenxa · ${tierConfig.label}`,
+      tier: activeTierId,
+      timeControl: activePreset?.label ?? null,
+      result,
+      movesSan: [...analysisEntries].sort((a, b) => a.ply - b.ply).map((e) => e.san),
+      startedAt: gameStartedAtRef.current || new Date().toISOString(),
+    })
+      .then((r) => (r.ok ? r.id : null))
+      .catch(() => null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fires once per finished game (guarded by the ref); the values it reads are final at that moment
+  }, [showGameComplete])
+
   const terminationText = endReason === 'resigned' ? 'Resignation' : endReason === 'draw-agreed' ? 'Agreement' : isCheckmate ? 'Checkmate' : 'Draw'
 
   const resultCopy = (() => {
@@ -807,7 +838,7 @@ export default function ChessPlayPage() {
   const resignHint = playerHasMoved ? undefined : "You can resign once you've made a move."
 
   return (
-    <main className={styles.page}>
+    <main className={styles.page} data-full-viewport>
       <section className={styles.layout}>
         {screen === 'setup' ? (
           <div className={styles.setupColumn}>

@@ -42,7 +42,12 @@ $base-cream:    rgb(245, 242, 235);  // off-white cream — surface backgrounds
 
 // ─── Spacing tokens ──────────────────────────────────────────────────────────
 $space-page-top:     clamp(6rem, 10vw, 8rem);    // page padding-top
-$space-page-bot:     clamp(5rem, 10vw, 8rem);    // page padding-bottom
+// The ONE bottom-of-page spacing: the space between a page's last content and the
+// footer (or viewport bottom). Every page wrapper and the footer itself must use
+// this instead of its own bigger value — separate large paddings stacked up to
+// a 200px+ gap above the footer (see docs/chess-footer-gap.md).
+$space-page-end:     clamp(1.5rem, 3vw, 2.5rem);
+$space-page-bot:     $space-page-end;            // page padding-bottom (alias kept for existing pages)
 $space-section:      clamp(4rem, 8vw, 6rem);     // hero margin-bottom / closing margin-top
 $space-divider:      clamp(2.5rem, 5vw, 4rem);   // heroDivider margin-top
 $space-subtitle:     clamp(2rem, 4vw, 3rem);     // subtitle margin-bottom

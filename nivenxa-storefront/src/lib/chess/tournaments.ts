@@ -1,5 +1,5 @@
 import { getSupabase } from './supabase'
-import { sortTournamentResults } from './tournamentFormat'
+import { sortTournamentResults, todayInEventZone } from './tournamentFormat'
 import type {
   ChessTournament,
   TournamentCategory,
@@ -36,6 +36,9 @@ export interface TournamentRow {
   register_url: string | null
   organizer_whatsapp: string | null
   payment_qr_url: string | null
+  /** Optional columns (see migration 20261109100000_tournament_registration_state.sql) — undefined when the columns don't exist yet. */
+  registration_deadline?: string | null
+  is_cancelled?: boolean | null
   /** Internal admin provenance note only — never surfaced on the public page. */
   payment_qr_source: string | null
   payment_note: string | null
@@ -121,6 +124,8 @@ function mapRowToChessTournament(row: TournamentRow, lifecycleStatus: 'live' | '
           .filter((p) => p.name.length > 0)
       : [],
     prizePool: row.prize_pool ? { label: row.prize_pool, verified: row.verified } : undefined,
+    registrationDeadline: row.registration_deadline ?? undefined,
+    cancelled: row.is_cancelled ? true : undefined,
     entryFee: row.entry_fee ?? undefined,
     categories: row.categories ?? undefined,
     organizer: {
@@ -158,7 +163,7 @@ function mapRowToChessTournament(row: TournamentRow, lifecycleStatus: 'live' | '
  */
 export async function getPublicTournaments(): Promise<TournamentGroup[]> {
   const supabase = getSupabase()
-  const todayIso = new Date().toISOString().slice(0, 10)
+  const todayIso = todayInEventZone()
 
   const [liveResult, upcomingResult] = await Promise.all([
     supabase
@@ -204,7 +209,7 @@ export async function getPublicTournaments(): Promise<TournamentGroup[]> {
  */
 export async function getNivenxaArchiveTournaments(): Promise<TournamentGroup[]> {
   const supabase = getSupabase()
-  const todayIso = new Date().toISOString().slice(0, 10)
+  const todayIso = todayInEventZone()
 
   const { data, error } = await supabase
     .from('tournaments')
@@ -232,44 +237,46 @@ export async function getTournamentById(id: string): Promise<ChessTournament | n
   if (!data) return null
 
   const row = data as TournamentRow
-  const todayIso = new Date().toISOString().slice(0, 10)
+  const todayIso = todayInEventZone()
   const lifecycleStatus = row.is_live ? 'live' : row.start_date < todayIso ? 'completed' : 'upcoming'
   return mapRowToChessTournament(row, lifecycleStatus)
 }
 
+export interface HomeTournamentCardData {
+  tournament: ChessTournament
+  /** Other upcoming/live Nivenxa events besides the one shown — drives the "All tournaments" link. */
+  moreCount: number
+}
+
 /**
- * The single Nivenxa-organized tournament to feature on the /chess landing
- * page — a currently-live one takes priority; otherwise the soonest verified
- * upcoming one. Returns null when there's nothing to highlight, in which
- * case the landing page renders no section at all (no empty state).
+ * Pure selection for the home card, so every event state can be tested without a database.
+ * Rules: cancelled events never show; an event whose last day (end date, else start date) is before `today`
+ * (event timezone) has ended and never shows; a live event wins, otherwise the nearest start date.
  */
-export async function getNivenxaHighlightTournament(): Promise<ChessTournament | null> {
+export function selectHomeTournament(rows: TournamentRow[], today: string): HomeTournamentCardData | null {
+  const candidates = rows
+    .filter((row) => !row.is_cancelled)
+    .filter((row) => (row.end_date ?? row.start_date) >= today)
+    .sort((a, b) => Number(b.is_live) - Number(a.is_live) || a.start_date.localeCompare(b.start_date))
+  if (candidates.length === 0) return null
+  const [first, ...rest] = candidates
+  return { tournament: mapRowToChessTournament(first, first.is_live ? 'live' : 'upcoming'), moreCount: rest.length }
+}
+
+/** The one Nivenxa-organized tournament to feature on the /chess home page, plus how many others exist; null when nothing is upcoming (the card is then not rendered at all). */
+export async function getHomeTournamentCard(): Promise<HomeTournamentCardData | null> {
   const supabase = getSupabase()
-  const todayIso = new Date().toISOString().slice(0, 10)
-
-  const liveResult = await supabase
+  const today = todayInEventZone()
+  const { data, error } = await supabase
     .from('tournaments')
     .select('*')
     .eq('verified', true)
     .eq('is_nivenxa_organized', true)
-    .eq('is_live', true)
-    .limit(1)
-    .maybeSingle()
-  if (liveResult.error) console.error('getNivenxaHighlightTournament: live query failed —', liveResult.error.message)
-  if (liveResult.data) return mapRowToChessTournament(liveResult.data as TournamentRow, 'live')
-
-  const upcomingResult = await supabase
-    .from('tournaments')
-    .select('*')
-    .eq('verified', true)
-    .eq('is_nivenxa_organized', true)
-    .eq('is_live', false)
-    .gte('start_date', todayIso)
+    .or(`is_live.eq.true,start_date.gte.${today},end_date.gte.${today}`)
     .order('start_date', { ascending: true })
-    .limit(1)
-    .maybeSingle()
-  if (upcomingResult.error) console.error('getNivenxaHighlightTournament: upcoming query failed —', upcomingResult.error.message)
-  if (upcomingResult.data) return mapRowToChessTournament(upcomingResult.data as TournamentRow, 'upcoming')
-
-  return null
+  if (error) {
+    console.error('getHomeTournamentCard: query failed —', error.message)
+    return null
+  }
+  return selectHomeTournament((data ?? []) as TournamentRow[], today)
 }

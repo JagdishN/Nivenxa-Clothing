@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { seoMetadata } from '@/lib/seo'
 import { LEGAL_ENTITY, legalEntityWhatsAppLink } from '@/lib/legalEntity'
-import SiteFooter from '@/components/global/SiteFooter'
+import AppFooter from '@/components/global/AppFooter/AppFooter'
 
 export const metadata = seoMetadata({
   title: 'NIVENXA Technologies — Senior engineers, small teams',
@@ -15,26 +15,6 @@ const PHONE_TEL = LEGAL_ENTITY.phoneTel
 // wa.me's `text` param pre-fills the message so a click opens straight into
 // a started conversation instead of a blank chat.
 const PHONE_WA = legalEntityWhatsAppLink("Hi NIVENXA, I'd like to talk about a project.")
-
-const TECHNOLOGIES_FOOTER_COLUMNS = [
-  {
-    title: 'Ventures',
-    links: [
-      { label: 'Studio', href: '/studio/en' },
-      { label: 'Chess', href: '/chess' },
-      { label: 'Living', href: '/living' },
-      { label: 'Technologies', href: '/technologies' },
-    ],
-  },
-  {
-    title: 'Legal',
-    links: [
-      { label: 'Privacy Notice', href: '/privacy' },
-      { label: 'Website Terms', href: '/terms' },
-      { label: 'Contact', href: '/contact' },
-    ],
-  },
-]
 
 const WHAT_WE_BUILD = [
   {
@@ -831,7 +811,7 @@ export default function TechnologiesPage() {
       </section>
 
     </div>
-    <SiteFooter columns={TECHNOLOGIES_FOOTER_COLUMNS} />
+    <AppFooter app="technologies" />
     </>
   )
 }

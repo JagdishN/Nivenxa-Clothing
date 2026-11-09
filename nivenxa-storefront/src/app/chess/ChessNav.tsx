@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createChessBrowserClient } from '@/lib/chess/chessSupabaseBrowser'
+import AccountMenu from './AccountMenu'
+import { useChessAuth } from './_auth/ChessAuthProvider'
 import FeedbackModal from '@/components/feedback/FeedbackModal'
 import styles from './ChessNav.module.scss'
 
@@ -21,6 +23,7 @@ const LINKS = [
 export default function ChessNav() {
   const pathname = usePathname()
   const router = useRouter()
+  const auth = useChessAuth()
   // Checked client-side (not passed down from the layout) on purpose — a
   // server-side session prop would force every page under /chess to render
   // dynamically just to paint this one widget. The Supabase browser client
@@ -31,6 +34,7 @@ export default function ChessNav() {
   const [userId, setUserId] = useState<string | null>(null)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [showFeedbackTooltip, setShowFeedbackTooltip] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
 
   useEffect(() => {
     const supabase = createChessBrowserClient()
@@ -53,6 +57,8 @@ export default function ChessNav() {
   // either) after ~30s of being on the site, never repeated or re-animated
   // after that first appearance.
   useEffect(() => {
+    // Never interrupt someone mid-puzzle or mid-game: the nudge waits for a calmer page (and is not marked as seen).
+    if (pathname.startsWith('/chess/puzzles/') || pathname.startsWith('/chess/play')) return
     let alreadySeen = false
     try {
       alreadySeen = localStorage.getItem(FEEDBACK_TOOLTIP_SEEN_KEY) === '1'
@@ -69,7 +75,7 @@ export default function ChessNav() {
       }
     }, FEEDBACK_TOOLTIP_DELAY_MS)
     return () => clearTimeout(timer)
-  }, [])
+  }, [pathname])
 
   function openFeedback() {
     setShowFeedbackTooltip(false)
@@ -77,13 +83,29 @@ export default function ChessNav() {
   }
 
   async function handleLogOut() {
-    const supabase = createChessBrowserClient()
-    await supabase.auth.signOut()
-    router.push('/chess/analysis')
-    router.refresh()
+    if (signingOut) return
+    setSigningOut(true)
+    try {
+      const supabase = createChessBrowserClient()
+      const { error } = await supabase.auth.signOut()
+      if (error) {
+        // The server could not be reached. Only claim success if this browser really has no session any more;
+        // otherwise say plainly that nothing changed.
+        const { data } = await supabase.auth.getSession()
+        if (data.session) {
+          auth.announce({ kind: 'error', text: "We couldn't sign you out. Check your connection and try again." })
+          return
+        }
+      }
+      // Back to the public home page (drawer closed) with a one-time confirmation.
+      router.push('/chess?signed_out=1')
+      router.refresh()
+    } catch {
+      auth.announce({ kind: 'error', text: "We couldn't sign you out. Check your connection and try again." })
+    } finally {
+      setSigningOut(false)
+    }
   }
-
-  const redirectParam = `?redirect=${encodeURIComponent(pathname)}`
 
   return (
     <header className={styles.bar}>
@@ -122,20 +144,15 @@ export default function ChessNav() {
           )}
         </div>
         {email === undefined ? null : email ? (
-          <>
-            <span className={styles.authEmail}>{email}</span>
-            <button type="button" className={styles.authLink} onClick={handleLogOut}>
-              Log Out
-            </button>
-          </>
+          <AccountMenu email={email} onLogOut={handleLogOut} signingOut={signingOut} />
         ) : (
           <>
-            <Link href={`/chess/login${redirectParam}`} className={styles.authLinkPrimary}>
+            <button type="button" className={styles.authLinkPrimary} onClick={() => auth.open('login')}>
               Log In
-            </Link>
-            <Link href={`/chess/signup${redirectParam}`} className={styles.authLink}>
+            </button>
+            <button type="button" className={styles.authLink} onClick={() => auth.open('signup')}>
               Sign Up
-            </Link>
+            </button>
           </>
         )}
       </div>

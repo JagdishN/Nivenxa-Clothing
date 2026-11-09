@@ -46,7 +46,10 @@ export default function GallerySection({ photos }: { photos: GalleryPhoto[] }) {
               aria-label={`Open photo: ${photo.alt}`}
               onClick={() => setOpenIndex(index)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') setOpenIndex(index)
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  setOpenIndex(index)
+                }
               }}
             >
               <div

@@ -132,6 +132,10 @@ export interface ChessTournament {
   format: TournamentFormat
   topPlayers: TournamentPlayerPreview[]
   prizePool?: TournamentPrizePool
+  /** Last day to register (YYYY-MM-DD, event timezone), when the organiser set one. Absent = no deadline recorded. */
+  registrationDeadline?: string
+  /** True when the event has been cancelled. Such an event is never shown as upcoming. */
+  cancelled?: boolean
   /** Freeform, e.g. "₹650" — shown as primary info on the tournament card. */
   entryFee?: string
   /** Freeform comma-separated age/skill categories, e.g. "U7, U9, U11, U14". */

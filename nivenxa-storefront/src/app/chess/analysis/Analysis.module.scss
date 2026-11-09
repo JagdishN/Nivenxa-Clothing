@@ -190,3 +190,23 @@
     background: rgba(91, 46, 145, 0.08);
   }
 }
+
+// The one link from "start an analysis" to the saved ones (which live under My Activity).
+.savedLink {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  margin: 1.1rem 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    color: var(--chess-purple);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}

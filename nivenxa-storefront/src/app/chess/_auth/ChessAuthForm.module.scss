@@ -8,7 +8,7 @@
 .shell {
   max-width: 420px;
   margin: 0 auto;
-  padding: clamp(3.5rem, 8vw, 5rem) 1.5rem 4rem;
+  padding: clamp(3.5rem, 8vw, 5rem) 1.5rem v.$space-page-end;
 }
 
 .eyebrow {
@@ -179,4 +179,51 @@
   &:hover {
     text-decoration: underline;
   }
+}
+
+// A text-style action inside an alert (e.g. "Retry verification").
+.inlineAction {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+// Resend / Change email, side by side (wrapping on a narrow panel).
+.secondaryRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+
+  .switchStep {
+    min-height: 2.5rem;
+    margin-top: 0.4rem;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+  }
+}
+
+// Chess's colours for the shared six-box code entry.
+.otpTheme {
+  --otp-bg: rgba(255, 255, 255, 0.85);
+  --otp-border: rgba(91, 46, 145, 0.28);
+  --otp-accent: var(--chess-purple);
+  --otp-ink: var(--chess-deep);
+  --otp-font: var(--font-sans);
+  --otp-radius: 0.7rem;
+  --otp-error: var(--chess-danger);
 }

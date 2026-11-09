@@ -1,0 +1,37 @@
+// Six-box code entry shared by Chess and Living. Colours/fonts come from --otp-* variables set by each app's theme class.
+.wrap {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.cell {
+  width: 2.5rem;
+  height: 3rem;
+  min-width: 0;
+  background: var(--otp-bg, #fff);
+  border: 1px solid var(--otp-border, #bbb);
+  border-radius: var(--otp-radius, 6px);
+  outline: none;
+  text-align: center;
+  font-family: var(--otp-font, monospace);
+  font-size: 1.3rem;
+  font-weight: 500;
+  color: var(--otp-ink, #111);
+  caret-color: var(--otp-accent, #333);
+  -webkit-appearance: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+
+  &:focus-visible {
+    outline: 2px solid var(--otp-accent, #333);
+    outline-offset: 1px;
+  }
+
+  &:not([value='']) {
+    border-color: var(--otp-accent, #333);
+  }
+
+  &[aria-invalid='true'] {
+    border-color: var(--otp-error, #b3543f);
+  }
+}

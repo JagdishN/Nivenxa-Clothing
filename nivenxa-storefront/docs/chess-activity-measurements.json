@@ -1,0 +1,39 @@
+{
+  "measuredAt": "2026-11-09T14:36:40.315Z",
+  "analysis_games": {
+    "rowsSampled": 0,
+    "withAnalysis": 0,
+    "withAccuracyButNoAnalysis": 0,
+    "movesJsonBytes": null,
+    "analysisJsonBytes": null,
+    "sanTextBytes_ifStoredCompactly": null,
+    "bySource": {}
+  },
+  "analysisListTiming_20rows": {
+    "withPayload_movesAndAnalysis": {
+      "medianMs": 233,
+      "minMs": 226
+    },
+    "summaryOnly": {
+      "medianMs": 242,
+      "minMs": 216
+    }
+  },
+  "puzzle_attempts": {
+    "totalRows": 270,
+    "error": null
+  },
+  "puzzleHistoryJoinWorks": true,
+  "puzzleHistoryTiming_21rows": {
+    "medianMs": 238,
+    "minMs": 224
+  },
+  "puzzle_attempts_outcome_columns_present": true,
+  "chess_games_table_present": true,
+  "chess_games_probe": "ok",
+  "syntheticGame_40plies": {
+    "normalizedMovesJsonBytes_existingShape": 9141,
+    "sanTextBytes_chessGamesShape": 156,
+    "ratio": 58.6
+  }
+}

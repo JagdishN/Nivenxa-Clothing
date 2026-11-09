@@ -257,8 +257,11 @@ export default function Board({
         dests,
         showDests: true,
       },
+      // Tap/click-to-move (select a piece, then its destination) is always on, not just for boards with an
+      // onSquareClick quiz handler — without it a touch player could only drag, and dragging a piece with a
+      // finger on a phone is unreliable. Drag still works alongside it.
       selectable: {
-        enabled: !!onSquareClickRef.current,
+        enabled: true,
       },
       events: {
         move: (orig, dest) => onMoveRef.current(orig, dest),
@@ -292,7 +295,7 @@ export default function Board({
         showDests: true,
       },
       selectable: {
-        enabled: !!onSquareClick,
+        enabled: true,
       },
     })
     apiRef.current?.setShapes([

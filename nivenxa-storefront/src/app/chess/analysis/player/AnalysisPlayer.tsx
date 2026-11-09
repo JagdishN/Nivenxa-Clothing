@@ -10,6 +10,7 @@ import { useAnalysisPlayback } from '@/lib/chess/useAnalysisPlayback'
 import { usePracticePosition } from '@/lib/chess/usePracticePosition'
 import { getActiveGame } from '@/lib/chess/analysisSession'
 import { getOrCreateAnalysisOwnerId } from '@/lib/chess/analysisOwner'
+import { linkAnalysisToPlayedGame } from '@/lib/chess/activityActions'
 import { saveAnalysisGame, loadAnalysisGame } from '@/lib/chess/analysisActions'
 import { accuracyFromEntries } from '@/lib/chess/moveClassification'
 import { sanToUci } from '@/lib/chess/uci'
@@ -172,6 +173,8 @@ export default function AnalysisPlayer({ isLoggedIn }: { isLoggedIn: boolean }) 
       accuracyBlack: accuracyFromEntries(entries.filter((e) => e.color === 'b')),
     })
     setSaveStatus(result.error ? 'error' : 'saved')
+    // A played game's analysis is LINKED to its My Games record rather than saved as a second copy of the game.
+    if (!result.error && result.id && game.playedGameId) void linkAnalysisToPlayedGame(game.playedGameId, result.id)
   }
 
   // Logged-in users get their Nivenxa Play games saved automatically — no

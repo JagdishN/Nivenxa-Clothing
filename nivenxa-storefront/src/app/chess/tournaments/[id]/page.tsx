@@ -2,7 +2,9 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getTournamentById } from '@/lib/chess/tournaments'
-import { formatDateRange, roundsVaryAcrossCategories } from '@/lib/chess/tournamentFormat'
+import { todayInEventZone } from '@/lib/chess/tournamentFormat'
+import { buildCardView } from '@/lib/chess/tournamentCard'
+import EventKeyInfo, { EventFacts } from '../EventKeyInfo'
 import { getPhotosForTournament } from '@/lib/chess/galleryPhotos'
 import { RegisterAction } from '../TournamentListing'
 import TournamentResults from './TournamentResults'
@@ -28,26 +30,15 @@ export default async function TournamentDetailPage({ params }: { params: Promise
   const isCompleted = tournament.lifecycleStatus === 'completed'
   const photos = getPhotosForTournament(tournament.id)
 
-  // One compact, normal-weight line instead of a separate big bold stats
-  // block — "5 Rounds"/"25+10 Rapid" are shown bare (not "Rounds: 5 Rounds"
-  // or "Time Control: 25+10 Rapid"), since the value already says what it
-  // is; only Entry fee/Prize pool get a short prefix since a bare ₹ amount
-  // alone wouldn't say which is which. Each separator is folded into its
-  // OWN item's text (not a sibling node) so a line break can only ever fall
-  // between two complete "· item" units — never leaving a dangling dot
-  // alone at the start or end of a wrapped line.
-  const metaParts: string[] = []
-  if (tournament.entryFee) metaParts.push(`Entry fee: ${tournament.entryFee}`)
-  if (tournament.prizePool) metaParts.push(`Prize pool: ${tournament.prizePool.label}`)
-  metaParts.push(tournament.timeControl)
-  // The tournament-wide format string (e.g. "5 Rounds") can't speak for a
-  // category that actually ran a different number of rounds — see the
-  // U14 Open exception below. Once that's true, state it plainly instead
-  // of pairing a specific number with a caveat that contradicts it; the
-  // exact per-category count is what the Results heading shows instead.
-  if (tournament.format !== 'Unknown') {
-    metaParts.push(roundsVaryAcrossCategories(tournament.results) ? 'Rounds vary by category' : tournament.format)
-  }
+  const isCancelled = tournament.cancelled === true
+  const isOpenForEntry = !isCancelled && (tournament.lifecycleStatus === 'live' || tournament.lifecycleStatus === 'upcoming')
+  const reg = isOpenForEntry ? buildCardView(tournament, todayInEventZone()) : null
+  const categories = tournament.categories
+    ? tournament.categories
+        .split(',')
+        .map((c) => c.trim())
+        .filter(Boolean)
+    : []
 
   return (
     <main className={styles.page}>
@@ -69,43 +60,31 @@ export default async function TournamentDetailPage({ params }: { params: Promise
         <div className={styles.detailTitleRow}>
           <h1 className={styles.detailTitle}>{tournament.title}</h1>
           {isCompleted && <span className={styles.statusBadge}>Completed</span>}
+          {isCancelled && <span className={styles.statusBadge}>Cancelled</span>}
         </div>
         <p className={styles.detailOrganizer}>Organized by {tournament.organizer.name}</p>
 
-        {/* Date + entry fee/prize pool/time control/rounds on one wrapping
-            line; venue gets its own line underneath — mixing venue in with
-            the rest left it sharing a line with whatever came right after
-            it and wrapping unpredictably. */}
-        <div className={styles.cardMetaRow}>
-          <span className={styles.cardMetaItem}>
-            <span className={styles.cardMetaIcon} aria-hidden="true">
-              📅
-            </span>
-            {formatDateRange(tournament)}
-          </span>
-          {metaParts.map((part) => (
-            <span key={part} className={styles.cardMetaItem}>
-              <span className={styles.metaDot} aria-hidden="true">
-                /
+        {/* 2. WHEN and WHERE first, as labelled panels. 3. Registration status + one modest action. 4. The rest. */}
+        <EventKeyInfo tournament={tournament} />
+
+        {reg && (
+          <div className={styles.regRow}>
+            <p className={`${styles.regStatus} ${styles[`regStatus_${reg.registrationTone}`]}`}>{reg.registrationLabel}</p>
+            {reg.canRegister && <RegisterAction tournament={tournament} />}
+          </div>
+        )}
+
+        <EventFacts tournament={tournament} />
+
+        {!isCompleted && categories.length > 0 && (
+          <div className={styles.cardCategories} aria-label="Categories">
+            {categories.map((c) => (
+              <span key={c} className={styles.categoryPill}>
+                {c}
               </span>
-              {part}
-            </span>
-          ))}
-        </div>
-        <div className={styles.cardMetaRow}>
-          <span className={styles.cardMetaItem}>
-            <span className={styles.cardMetaIcon} aria-hidden="true">
-              📍
-            </span>
-            {tournament.links.mapUrl ? (
-              <a href={tournament.links.mapUrl} target="_blank" rel="noreferrer" className={styles.cardVenueLink}>
-                {tournament.location.label}
-              </a>
-            ) : (
-              tournament.location.label
-            )}
-          </span>
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Links to this specific event's photos (grouped under its own
             heading on the full gallery page) — only shown once photos for
@@ -128,7 +107,7 @@ export default async function TournamentDetailPage({ params }: { params: Promise
         {/* Registration and payment are only relevant while a tournament is
             still open to enter — a completed/cancelled event has nothing
             left to register or pay for. */}
-        {(tournament.lifecycleStatus === 'live' || tournament.lifecycleStatus === 'upcoming') && (
+        {isOpenForEntry && (
           <>
             {tournament.payment?.note && (
               <div className={styles.detailSection}>
@@ -148,9 +127,6 @@ export default async function TournamentDetailPage({ params }: { params: Promise
               </div>
             )}
 
-            <div className={styles.cardActions}>
-              <RegisterAction tournament={tournament} />
-            </div>
           </>
         )}
       </section>

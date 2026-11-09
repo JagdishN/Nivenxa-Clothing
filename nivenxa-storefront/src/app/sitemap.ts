@@ -44,7 +44,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Only themes that actually have at least one puzzle right now — pulled
   // from the live data, not the full 18-entry curated PUZZLE_THEMES list,
   // so a theme that's ever emptied out drops out of the sitemap on its own.
-  const themeSummaries = await getThemeSummaries()
+  // A failed load drops the puzzle URLs from this sitemap run rather than failing the whole sitemap.
+  const themeSummaries = await getThemeSummaries().catch(() => [])
 
   const entries: MetadataRoute.Sitemap = STATIC_ROUTES.map((path) => ({
     url: url(path),

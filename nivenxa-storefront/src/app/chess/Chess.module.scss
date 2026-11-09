@@ -15,7 +15,7 @@ $purple-deep: #4B247A;
 
 // ─── Page shell ───────────────────────────────────────────────────────────────
 .page {
-  min-height: 100vh;
+  // No min-height: 100vh — the shared PageShell already fills a short viewport (see components/global/PageShell).
   background:
     radial-gradient(circle at top left,     rgba(91, 46, 145, 0.08),  transparent 30%),
     radial-gradient(circle at bottom right, rgba(214, 168, 95, 0.06), transparent 30%),
@@ -58,14 +58,14 @@ $purple-deep: #4B247A;
   display: flex;
   align-items: center;
   gap: clamp(2rem, 5vw, 5rem);
-  padding: clamp(6rem, 10vw, 9rem) clamp(1.5rem, 6vw, 5rem) clamp(4rem, 7vw, 6rem);
+  padding: clamp(2.5rem, 5vw, 4rem) clamp(1.5rem, 6vw, 5rem) clamp(1.5rem, 3vw, 2.5rem);
   max-width: 1400px;
   margin: 0 auto;
 
   @include v.max-lg {
     flex-direction: column;
     text-align: center;
-    padding-top: clamp(5rem, 9vw, 7rem);
+    padding-top: clamp(1.75rem, 5vw, 2.5rem);
   }
 }
 
@@ -113,7 +113,7 @@ $purple-deep: #4B247A;
   font-weight: 400;
   line-height: 1.12;
   color: $deep;
-  margin-bottom: clamp(1.25rem, 3vw, 1.75rem);
+  margin-bottom: clamp(0.85rem, 2vw, 1.15rem);
   letter-spacing: -0.02em;
 }
 
@@ -126,7 +126,7 @@ $purple-deep: #4B247A;
   font-size: clamp(0.95rem, 1.5vw, 1.08rem);
   line-height: 1.8;
   color: rgba($deep, 0.68);
-  margin-bottom: clamp(2.25rem, 5vw, 3rem);
+  margin-bottom: clamp(1.25rem, 3vw, 1.75rem);
   max-width: 440px;
 
   @include v.max-lg {
@@ -140,7 +140,7 @@ $purple-deep: #4B247A;
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-bottom: clamp(2rem, 4.5vw, 2.75rem);
+  margin-bottom: 0;
   flex-wrap: wrap;
 
   @include v.max-lg {
@@ -213,9 +213,29 @@ $purple-deep: #4B247A;
   pointer-events: none;
 }
 
-.btnIcon {
-  font-size: 1rem;
-  line-height: 1;
+// Secondary action next to the primary: same height/shape, outline instead of fill.
+.secondaryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.875rem 1.6rem;
+  border-radius: 9999px;
+  border: 1.5px solid rgba($purple, 0.35);
+  background: rgba(255, 255, 255, 0.55);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: $purple;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.25s ease, border-color 0.25s ease;
+
+  &:hover {
+    background: rgba($purple, 0.08);
+    border-color: $purple;
+  }
 }
 
 // ─── Board wrapper ─────────────────────────────────────────────────────────────
@@ -272,9 +292,9 @@ $purple-deep: #4B247A;
   z-index: 1;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: clamp(1rem, 2.5vw, 1.5rem);
-  padding: 0 clamp(1.5rem, 6vw, 5rem) clamp(4rem, 7vw, 6rem);
-  max-width: 1400px;
+  gap: clamp(0.85rem, 2vw, 1.25rem);
+  padding: 0 clamp(1.5rem, 6vw, 5rem) v.$space-page-end;
+  max-width: 1200px;
   margin: 0 auto;
 
   @include v.max-lg {
@@ -289,10 +309,10 @@ $purple-deep: #4B247A;
   background: rgba(255, 255, 255, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.35);
   border-radius: 1.25rem;
-  padding: clamp(1.5rem, 3vw, 2rem);
+  padding: clamp(1.1rem, 2.2vw, 1.5rem);
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.6rem;
   box-shadow:
     0 10px 40px rgba(91, 46, 145, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
@@ -349,8 +369,8 @@ $purple-deep: #4B247A;
 .cardDesc {
   font-family: var(--font-sans);
   font-size: clamp(0.85rem, 1.2vw, 0.95rem);
-  line-height: 1.75;
-  color: rgba($deep, 0.6);
+  line-height: 1.6;
+  color: rgba($deep, 0.62);
   margin: 0;
 }
 
@@ -358,111 +378,181 @@ $purple-deep: #4B247A;
 // ─── Nivenxa-organized tournament highlight ─────────────────────────────────
 // Gold-forward (rather than the closing CTA banner's purple-forward gradient)
 // so the two sections read as visually distinct, not duplicates.
-.nivenxaHighlight {
+// ─── Compact upcoming-tournament card (top of the home page, under the nav) ────
+.tCard {
   position: relative;
   z-index: 1;
-  overflow: hidden;
-  margin: 0 clamp(1.5rem, 6vw, 5rem) clamp(2rem, 4vw, 3rem);
-  margin-inline: auto;
-  max-width: 1400px;
-  width: calc(100% - clamp(3rem, 12vw, 10rem));
-  padding: clamp(1.75rem, 4vw, 2.75rem) clamp(1.5rem, 5vw, 3rem);
-  border-radius: 1.75rem;
-  border: 1px solid rgba($gold, 0.45);
-  background: linear-gradient(135deg, $gold 0%, $bronze 55%, $purple-deep 135%);
-  box-shadow: 0 20px 60px rgba($deep, 0.22);
-}
-
-.nivenxaHighlightInner {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-}
-
-.nivenxaHighlightEyebrow {
-  font-family: var(--font-sans);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba($deep, 0.85);
-  margin: 0;
-}
-
-.nivenxaHighlightTitle {
-  font-family: var(--font-serif);
-  font-size: clamp(1.4rem, 3vw, 2.1rem);
-  font-weight: 400;
-  color: $deep;
-  margin: 0;
-}
-
-.nivenxaHighlightMeta {
-  font-family: var(--font-sans);
-  font-size: 0.9rem;
-  color: rgba($deep, 0.75);
-  margin: 0;
-}
-
-.nivenxaHighlightActions {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  justify-content: space-between;
   flex-wrap: wrap;
-  margin-top: 0.75rem;
-}
-
-.ctaBanner {
-  composes: ctaBannerGradient from './ChessTheme.module.scss';
-  position: relative;
-  z-index: 1;
-  overflow: hidden;
-  margin: 0 clamp(1.5rem, 6vw, 5rem) clamp(4rem, 7vw, 6rem);
-  border-radius: 2rem;
-  border: 1px solid rgba($gold, 0.3);
-  box-shadow: 0 16px 64px rgba($deep, 0.3);
-  max-width: 1400px;
-  margin-inline: auto;
+  gap: 0.6rem 1.5rem;
+  max-width: 1200px;
   width: calc(100% - clamp(3rem, 12vw, 10rem));
-  padding: clamp(3rem, 6vw, 5rem) clamp(1.5rem, 5vw, 4rem);
+  margin: clamp(0.75rem, 2vw, 1.25rem) auto 0;
+  padding: 0.7rem clamp(1rem, 2.5vw, 1.5rem);
+  border-radius: 1rem;
+  border: 1px solid rgba($gold, 0.5);
+  border-left-width: 4px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 6px 24px rgba($deep, 0.08);
+
+  @include v.max-lg {
+    width: calc(100% - 3rem);
+  }
 }
 
-.ctaBannerInner {
-  position: relative;
-  z-index: 1;
+.tMain {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  text-align: center;
-  gap: clamp(1rem, 2.5vw, 1.5rem);
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  min-width: 0;
+  flex: 1 1 340px;
 }
 
-.ctaBannerTitle {
-  font-family: var(--font-serif);
-  font-size: clamp(1.8rem, 4vw, 3rem);
-  font-weight: 400;
-  color: $white-soft;
-  letter-spacing: -0.02em;
-  margin: 0;
-}
-
-.ctaBannerSub {
+.tBadge {
+  flex: none;
+  padding: 0.18rem 0.6rem;
+  border-radius: 999px;
+  background: rgba($gold, 0.2);
   font-family: var(--font-sans);
-  font-size: clamp(0.9rem, 1.4vw, 1.05rem);
-  color: rgba($white-soft, 0.65);
-  margin: 0;
-  max-width: 480px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: $bronze;
 }
 
-.ctaBannerOrb {
-  position: absolute;
-  top: -40%;
-  right: -10%;
-  width: 480px;
-  height: 480px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba($gold, 0.12) 0%, transparent 65%);
-  pointer-events: none;
+.tBadgeLive {
+  background: #fde4e1;
+  color: #8a2f1c;
+}
+
+.tTitle {
+  margin: 0;
+  min-width: 0;
+  flex: 1 1 14rem;
+  font-family: var(--font-serif);
+  font-size: clamp(1.02rem, 1.8vw, 1.25rem);
+  font-weight: 400;
+  line-height: 1.25;
+  color: $deep;
+  // A long name wraps to two lines, then ends in an ellipsis; the full name is in the tooltip and on the details page.
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.tMeta {
+  flex-basis: 100%;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  color: rgba($deep, 0.7);
+  min-width: 0;
+}
+
+.tVenue {
+  overflow-wrap: anywhere;
+}
+
+.tSide {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.4rem 1rem;
+  margin-left: auto;
+}
+
+.tReg {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba($deep, 0.75);
+}
+
+// Colour is never the only signal: every state also has its own wording.
+.tReg_open { color: #2f6a3d; }
+.tReg_closing { color: #8c5a2b; }
+.tReg_closed { color: #8a2f1c; }
+.tReg_contact { color: rgba($deep, 0.7); }
+.tReg_live { color: #8a2f1c; }
+
+.tActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem 0.9rem;
+  flex-wrap: wrap;
+}
+
+.tRegister {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0 1.1rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, $purple 0%, #7b4bc4 100%);
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:hover {
+    filter: brightness(1.08);
+  }
+}
+
+.tDetails {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: $purple;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+
+.tMore {
+  flex-basis: 100%;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba($deep, 0.65);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+// Reserves the strip's footprint while the event query streams in (collapses if there is no event).
+.tCardPlaceholder {
+  width: calc(100% - clamp(3rem, 12vw, 10rem));
+  max-width: 1200px;
+  height: 4.4rem;
+  margin: clamp(0.75rem, 2vw, 1.25rem) auto 0;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px dashed rgba($gold, 0.4);
+
+  @include v.max-lg {
+    width: calc(100% - 3rem);
+  }
+}
+
+.tCardPlaceholder + .hero {
+  padding-top: clamp(1.25rem, 3vw, 2rem);
+}
+
+// The hero sits closer to the card than it does to the nav on its own.
+.tCard + .hero {
+  padding-top: clamp(1.25rem, 3vw, 2rem);
 }

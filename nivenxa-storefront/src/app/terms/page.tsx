@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { seoMetadata } from '@/lib/seo'
 import { LEGAL_ENTITY_BUSINESS_BLOCK, LEGAL_ENTITY_GRIEVANCE_LINE } from '@/lib/legalEntity'
 import SiteFooter from '@/components/global/SiteFooter'
+import PageShell from '@/components/global/PageShell'
 import styles from './Terms.module.scss'
 
 export const metadata = seoMetadata({
@@ -32,7 +33,7 @@ const PARENT_FOOTER_COLUMNS = [
 
 export default function ParentTermsPage() {
   return (
-    <>
+    <PageShell footer={<SiteFooter columns={PARENT_FOOTER_COLUMNS} />}>
       <div className={styles.page}>
         <div className={styles.hero}>
           <p className={styles.eyebrow}>NIVENXA / LEGAL</p>
@@ -62,7 +63,6 @@ export default function ParentTermsPage() {
           </div>
         </div>
       </div>
-      <SiteFooter columns={PARENT_FOOTER_COLUMNS} />
-    </>
+    </PageShell>
   )
 }

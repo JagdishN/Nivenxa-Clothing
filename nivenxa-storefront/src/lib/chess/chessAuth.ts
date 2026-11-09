@@ -1,4 +1,5 @@
 import { createChessServerClient } from './chessSupabaseServer'
+import { safeChessRedirectPath } from '@/lib/auth/safeRedirect'
 
 export interface ChessSession {
   userId: string
@@ -21,10 +22,7 @@ export async function getChessSession(): Promise<ChessSession | null> {
   return { userId: user.id, email: user.email ?? null }
 }
 
-const DEFAULT_REDIRECT = '/chess/analysis'
-
 /** Only ever follow a same-site chess path — an unvalidated `?redirect=` query param is an open-redirect vector. */
 export function safeChessRedirect(path: string | undefined): string {
-  if (!path || !path.startsWith('/chess') || path.startsWith('//')) return DEFAULT_REDIRECT
-  return path
+  return safeChessRedirectPath(path)
 }
