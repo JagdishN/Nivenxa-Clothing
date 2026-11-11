@@ -4,7 +4,7 @@ import type { AvatarState } from '@/lib/chess/avatarReaction'
 import styles from './TivviAvatar.module.scss'
 
 // Layered Tivvi (working name). Part classes are the animation hooks; elements marked `detail` are dropped below 64 px.
-// TEST-ONLY ARTWORK: shipped in the client bundle only when NEXT_PUBLIC_CHESS_AVATAR_PROTOTYPE=1. Not approved for deployment.
+// Opponent artwork (approved for deployment).
 
 interface Props {
   state: AvatarState
