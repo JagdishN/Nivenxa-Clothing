@@ -27,6 +27,7 @@ test.use({ viewport: { width: 1280, height: 1100 } })
 
 test('every level and strength can be chosen; colours can be chosen', async ({ page }) => {
   await blockWrites(page)
+  await page.addInitScript(() => { try { localStorage.setItem('nivenxa.chess.test.replyMinMs', '500'); localStorage.setItem('nivenxa.chess.coachIntro.v1', JSON.stringify(['00000000-0000-4000-8000-000000000a01','00000000-0000-4000-8000-000000000a02','00000000-0000-4000-8000-000000000a03'])) } catch {} }) // these suites are not about pace: shorten the level's minimum reply time (test-only hook, needs NEXT_PUBLIC_CHESS_TEST_HOOKS build)
   await page.goto('/chess/play', { waitUntil: 'networkidle' })
   for (const tier of ['Beginner', 'Intermediate', 'Expert', 'Master']) {
     await page.getByRole('button', { name: new RegExp(`^${tier}`) }).click()
@@ -42,6 +43,7 @@ test('every level and strength can be chosen; colours can be chosen', async ({ p
 
 test('Beginner as White: game starts, a tapped move is played, the engine replies', async ({ page }) => {
   await blockWrites(page)
+  await page.addInitScript(() => { try { localStorage.setItem('nivenxa.chess.test.replyMinMs', '500'); localStorage.setItem('nivenxa.chess.coachIntro.v1', JSON.stringify(['00000000-0000-4000-8000-000000000a01','00000000-0000-4000-8000-000000000a02','00000000-0000-4000-8000-000000000a03'])) } catch {} }) // these suites are not about pace: shorten the level's minimum reply time (test-only hook, needs NEXT_PUBLIC_CHESS_TEST_HOOKS build)
   await page.goto('/chess/play', { waitUntil: 'networkidle' })
   await page.getByRole('button', { name: /^Beginner/ }).click()
   await page.getByRole('button', { name: 'White', exact: true }).click()
@@ -57,5 +59,5 @@ test('Beginner as White: game starts, a tapped move is played, the engine replie
   await expect(page.getByText(/1\.e4/).first()).toBeVisible({ timeout: 5000 })
   // The engine answers (black's 1... move appears) and the page stayed responsive while it thought.
   await expect(page.getByText(/1\.\.\.[a-zA-Z]/).first()).toBeVisible({ timeout: 20000 })
-  await expect(page.getByText('Engine thinking…')).toHaveCount(0, { timeout: 20000 })
+  await expect(page.getByText(/(Engine thinking|TIVVI is thinking)…/)).toHaveCount(0, { timeout: 20000 })
 })

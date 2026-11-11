@@ -16,6 +16,36 @@
   aspect-ratio: 1 / 1;
 }
 
+// Holds the board and, optionally, its keyboard layer in one box exactly the board's size.
+.stack {
+  position: relative;
+  flex: 1 1 100%;
+  min-width: 0;
+}
+
+.kbLayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.kbSquare {
+  position: absolute;
+  width: 12.5%;
+  height: 12.5%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  pointer-events: none;
+
+  &:focus-visible {
+    outline: 4px solid #1f1b3a;
+    outline-offset: -4px;
+    box-shadow: inset 0 0 0 7px #ffd45e;
+  }
+}
+
 // Chessground's default rank/file coordinates ship at 9px with only 0.8
 // opacity on inherited (unset) text color — effectively invisible against the
 // brown-theme squares. Overriding at the element level (chessground renders
@@ -157,15 +187,15 @@
   background: repeating-conic-gradient(#705080 0% 25%, #f5eedc 0% 50%) 0 0 / 25% 25%;
 }
 
-// Chessground's default check highlight is a bright red radial glow — swapped
-// for the site's gold accent so a checkmate reads as "the decisive square",
-// not an alarm, consistent with the rest of the celebratory treatment.
+// Check / checkmate: a warm red glow PLUS an inset ring, so the king's square reads clearly without relying on colour alone and
+// without covering the piece (the piece is drawn above the square). The status badge says it in words as well.
 .board :global(square.check) {
   background: radial-gradient(
     ellipse at center,
-    rgba(214, 168, 95, 0.9) 0%,
-    rgba(214, 168, 95, 0.65) 25%,
-    rgba(214, 168, 95, 0) 89%,
-    rgba(214, 168, 95, 0) 100%
+    rgba(214, 64, 44, 0.92) 0%,
+    rgba(214, 64, 44, 0.6) 35%,
+    rgba(214, 64, 44, 0.15) 75%,
+    rgba(214, 64, 44, 0) 100%
   );
+  box-shadow: inset 0 0 0 3px rgba(179, 52, 36, 0.95);
 }

@@ -1,0 +1,116 @@
+// Layered Tivvi avatar. Poses are static CSS (so reduced-motion / animation-off still shows the expression);
+// motion is added only while data-anim="on", as short bursts (transform only; nothing runs between bursts).
+.av {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.head,
+.ear,
+.eyes,
+.eye,
+.brow,
+.lid,
+.scarfEnd {
+  transform-box: view-box;
+  transition: transform 0.18s ease;
+}
+.earL { transform-origin: 340px 440px; }
+.earR { transform-origin: 684px 440px; }
+.head { transform-origin: 512px 780px; }
+.eyeL { transform-origin: 428px 478px; }
+.eyeR { transform-origin: 596px 478px; }
+.browL { transform-origin: 428px 418px; }
+.browR { transform-origin: 596px 418px; }
+.scarfEnd { transform-origin: 600px 868px; }
+
+.lid { transform: translateY(-46px); }
+.m { display: none; }
+.mSmile { display: inline; }
+
+// Animation off, or the small (<64 px) version: poses switch instantly. Even a 0.28 s tween on SVG parts forces a layout every frame (measured), so it is
+// only used when motion is on at full size.
+.av[data-anim='off'] *,
+.av[data-min='true'] * {
+  transition: none !important;
+}
+
+// ---- poses ----
+// Each state differs in at least three of: brows, eyelids, mouth, head tilt (not by colour or by motion alone).
+//   idle      relaxed lids, soft smile, level head
+//   greeting  eyes wide open, brows high, open grin, head tilted left
+//   thinking  narrowed lids, eyes up-right, one brow raised and one lowered, flat mouth, head tilted right
+//   encourage soft lids, gentle brows, warm smile, head tilted left (kind)
+//   concern   wide worried eyes, brows slanting up at the centre, small downturned mouth, head tilted right and dipped
+.av[data-state='idle'] .lid { transform: translateY(-26px); }
+
+.av[data-state='selected'] .mSmile { display: none; }
+.av[data-state='selected'] .mGrin { display: inline; }
+.av[data-state='selected'] .lid { transform: translateY(-46px); }
+.av[data-state='selected'] .brow { transform: translateY(-16px); }
+.av[data-state='selected'] .earL { transform: rotate(-7deg); }
+.av[data-state='selected'] .earR { transform: rotate(7deg); }
+.av[data-state='selected'] .head { transform: rotate(-4deg); }
+
+.av[data-state='thinking'] .mSmile { display: none; }
+.av[data-state='thinking'] .mFlat { display: inline; }
+.av[data-state='thinking'] .lid { transform: translateY(-6px); }
+.av[data-state='thinking'] .eyes { transform: translate(12px, -10px); }
+.av[data-state='thinking'] .browL { transform: translateY(-14px); }
+.av[data-state='thinking'] .browR { transform: translateY(8px) rotate(8deg); }
+.av[data-state='thinking'] .head { transform: rotate(6deg); }
+
+.av[data-state='encourage'] .mSmile { display: none; }
+.av[data-state='encourage'] .mWarm { display: inline; }
+.av[data-state='encourage'] .lid { transform: translateY(-32px); }
+.av[data-state='encourage'] .browL { transform: translateY(-9px) rotate(-8deg); }
+.av[data-state='encourage'] .browR { transform: translateY(-9px) rotate(8deg); }
+.av[data-state='encourage'] .head { transform: rotate(-7deg); }
+
+.av[data-state='concern'] .mSmile { display: none; }
+.av[data-state='concern'] .mConcern { display: inline; }
+.av[data-state='concern'] .lid { transform: translateY(-42px); }
+.av[data-state='concern'] .browL { transform: translateY(-8px) rotate(-20deg); }
+.av[data-state='concern'] .browR { transform: translateY(-8px) rotate(20deg); }
+.av[data-state='concern'] .earL { transform: rotate(8deg); }
+.av[data-state='concern'] .earR { transform: rotate(-8deg); }
+.av[data-state='concern'] .head { transform: rotate(4deg) translateY(6px); }
+
+.av[data-state='ackwin'] .mSmile { display: none; }
+.av[data-state='ackwin'] .mWarm { display: inline; }
+.av[data-state='ackwin'] .lid { transform: translateY(-34px); }
+.av[data-state='ackwin'] .brow { transform: translateY(-11px); }
+.av[data-state='ackwin'] .earL { transform: rotate(-7deg); }
+.av[data-state='ackwin'] .earR { transform: rotate(7deg); }
+.av[data-state='ackwin'] .head { transform: rotate(-2deg); }
+
+.av[data-state='ackdraw'] .lid { transform: translateY(-22px); }
+.av[data-state='ackdraw'] .brow { transform: translateY(2px); }
+.av[data-state='ackdraw'] .head { transform: rotate(2deg); }
+
+// ---- motion (opt-in, bursts) ----
+.av[data-anim='on'] .eye.blinking { animation: blink 0.24s ease-in-out 1; }
+.av[data-anim='on'][data-min='false'] .earL.flicking { animation: flickL 0.9s ease-in-out 1; }
+.av[data-anim='on'][data-min='false'] .earR.flicking { animation: flickR 0.9s ease-in-out 1; }
+.av[data-anim='on'][data-min='false'] .scarfEnd.swaying { animation: sway 2s ease-in-out 1; }
+.av[data-anim='on'][data-min='false'][data-state='selected'] .head { animation: greet 1.3s ease-out 1; }
+.av[data-anim='on'][data-min='false'][data-state='encourage'] .head,
+.av[data-anim='on'][data-min='false'][data-state='ackwin'] .head,
+.av[data-anim='on'][data-min='false'][data-state='ackdraw'] .head { animation: nod 1.3s ease-in-out 1; }
+.av[data-anim='on'][data-min='false'][data-state='concern'] .head { animation: lean 1.2s ease-in-out 1; }
+.av[data-state='encourage'] { --tilt: -7deg; }
+.av[data-state='ackwin'] { --tilt: -2deg; }
+.av[data-state='ackdraw'] { --tilt: 2deg; }
+
+@keyframes blink { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.08); } }
+@keyframes flickL { 0%, 100% { transform: rotate(0); } 35% { transform: rotate(-6deg); } 70% { transform: rotate(2deg); } }
+@keyframes flickR { 0%, 100% { transform: rotate(0); } 35% { transform: rotate(6deg); } 70% { transform: rotate(-2deg); } }
+@keyframes sway { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(4deg); } }
+@keyframes greet { 0%, 100% { transform: rotate(-4deg); } 35% { transform: rotate(-9deg) translateY(-6px); } 70% { transform: rotate(-1deg); } }
+@keyframes nod { 0%, 100% { transform: rotate(var(--tilt, -3deg)) translateY(0); } 40% { transform: rotate(var(--tilt, -3deg)) translateY(8px); } }
+@keyframes lean { 0% { transform: rotate(0) translateY(0); } 100% { transform: rotate(4deg) translateY(6px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .av * { animation: none !important; transition: none !important; }
+}

@@ -1,0 +1,120 @@
+// Same footprint as the opponent row (.wrap in OpponentAvatar.module.scss): 64 px disc (48 px on phones), fixed-height text block.
+.wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  min-height: 64px;
+
+  @media (max-width: 640px) {
+    min-height: 48px;
+  }
+}
+
+.disc {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #3a1550; // painted before the SVG, so nothing flashes or shifts
+  border: 1px solid rgba(91, 46, 145, 0.25);
+
+  @media (max-width: 640px) {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+.mark {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  min-width: 0;
+  gap: 0.1rem;
+}
+
+.name {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  color: var(--chess-deep);
+}
+
+.action {
+  align-self: flex-start;
+  font: inherit;
+  font-size: 0.74rem;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--chess-purple);
+  text-decoration: underline;
+  cursor: pointer;
+  min-height: 1.4rem;
+  text-align: left;
+
+  &:focus-visible {
+    outline: 2px solid var(--chess-purple);
+    outline-offset: 2px;
+  }
+}
+
+.photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+// A brief confirmation, fixed to the viewport: it never sits under the header and never moves the board.
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1.25rem;
+  transform: translateX(-50%);
+  z-index: 1100;
+  padding: 0.6rem 1rem;
+  border-radius: 9999px;
+  background: #1f1b3a;
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  box-shadow: 0 8px 24px rgba(31, 27, 58, 0.3);
+}
+
+.expiry {
+  position: fixed;
+  left: 50%;
+  bottom: 4.2rem;
+  transform: translateX(-50%);
+  z-index: 900; // below an open dialog (1000): it never covers the dialog's own controls
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  max-width: min(34rem, calc(100vw - 2rem));
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.9rem;
+  background: #3a1550;
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  box-shadow: 0 8px 24px rgba(31, 27, 58, 0.3);
+  button {
+    font: inherit;
+    font-weight: 700;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.16);
+    border: 0;
+    border-radius: 9999px;
+    padding: 0.3rem 0.8rem;
+    cursor: pointer;
+  }
+}

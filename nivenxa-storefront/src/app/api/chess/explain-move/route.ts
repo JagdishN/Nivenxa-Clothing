@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { ExplainMoveRequestBody, ExplainMoveResponseBody } from '@/lib/chess/types'
 import { getChessSession } from '@/lib/chess/chessAuth'
 import { checkExplainRateLimit } from '@/lib/chess/aiRateLimit'
+import { buildEvidence, buildMoveFacts, describeDownside, evidenceForPrompt, factsForPrompt, isWeakGrade, resolveExplanation, type Evidence, type MoveFacts } from '@/lib/chess/moveFacts'
 import { buildExplainMoveRequest, sanitizeExplanation, stripUrls, type AiExplanationLevel } from '@/lib/chess/aiExplainMove'
 
 // Lazily constructed so a missing ANTHROPIC_API_KEY doesn't crash the route
@@ -17,14 +18,15 @@ function getClient(): Anthropic {
 const JARGON_RULE =
   'Never use engine jargon such as centipawns, eval, +0.42, positional concession, theoretical line, or inaccuracy — describe the move in plain chess language instead.'
 
-function buildPrompt(body: ExplainMoveRequestBody): string {
+function buildPrompt(body: ExplainMoveRequestBody, facts: MoveFacts | null, evidence: Evidence | null): string {
   const { fen, move, classification, evalBefore, evalAfter, bestMove } = body
   const wantsAlternative = !!bestMove && classification !== 'best'
   const isWeak = classification === 'mistake' || classification === 'blunder' || classification === 'inaccuracy'
   const depth = body.depth ?? 'plain'
 
-  const context = `Position (FEN) before the move: ${fen}
-Move played: ${move}
+  const context = `${facts ? `${factsForPrompt(facts)}${evidence ? `
+${evidenceForPrompt(evidence, facts)}` : ''}` : `Position (FEN) before the move: ${fen}
+Move played: ${move}`}
 Classification: ${classification}
 Evaluation before the move (centipawns, positive favors the mover): ${evalBefore}
 Evaluation after the move (same perspective): ${evalAfter}
@@ -144,6 +146,22 @@ export async function POST(request: NextRequest) {
   }
 
   const depth = body.depth ?? 'plain'
+  // Verified facts: the move must be legal from `fen` and land exactly on `fenAfter`, otherwise nothing is generated for it.
+  const facts = body.fenAfter ? buildMoveFacts({ fenBefore: body.fen, fenAfter: body.fenAfter, san: body.move, ply: body.ply, historySan: body.historySan }) : null
+  if (body.fenAfter && !facts) return NextResponse.json({ error: 'The move does not match the positions given' }, { status: 422 })
+  // The generated text is checked against those facts before it is returned; a text that fails is replaced by a plain factual sentence.
+  // The engine's own grade evidence for this move (the best reply found by the grading search, re-checked for legality here).
+  const evidence = facts ? buildEvidence(facts, { grade: body.classification, replyUci: body.replyUci, pvUci: Array.isArray(body.pvUci) ? body.pvUci.filter((x): x is string => typeof x === 'string').slice(0, 10) : undefined, bestSan: body.bestMove }) : null
+  // A weak grade the engine line cannot explain has nothing checkable to say: no model call is made at all.
+  if (facts && evidence && isWeakGrade(body.classification) && !describeDownside(facts, evidence)) {
+    return NextResponse.json({ explanation: '', source: 'rejected', reason: 'no-verified-downside' } satisfies ExplainMoveResponseBody)
+  }
+  const verify = (result: ExplainMoveResponseBody): ExplainMoveResponseBody => {
+    if (!facts) return result
+    const r = resolveExplanation([result.headline, result.explanation, ...(result.bullets ?? []), result.suggestion, result.notice], facts, evidence)
+    // Anything that fails is NOT replaced here by invented text: the client shows the engine-verified sentence or "Explanation unavailable".
+    return r.kind === 'model' ? { ...result, source: 'model' } : { explanation: '', source: 'rejected', ...(process.env.NODE_ENV !== 'production' || process.env.CHESS_EXPLAIN_DEBUG === '1' ? { reason: r.reason, rawText: [result.headline, result.explanation, ...(result.bullets ?? []), result.suggestion].filter(Boolean).join(' | ') } : {}) }
+  }
   // 'rich' (beginner) and 'brief' (next-level/intermediate) are the "AI move
   // explanations" the Privacy Policy describes: a minimal, account-data-free
   // request (fen/recentMovesSan/move/level only — see aiExplainMove.ts),
@@ -158,10 +176,11 @@ export async function POST(request: NextRequest) {
     if (isLevelled) {
       const level: AiExplanationLevel = depth === 'rich' ? 'beginner' : 'next-level'
       const recentMovesSan = Array.isArray(body.recentMovesSan) ? body.recentMovesSan.filter((m): m is string => typeof m === 'string') : []
-      const response = await getClient().messages.create(buildExplainMoveRequest({ fen: body.fen, recentMovesSan, move: body.move, level }))
+      const response = await getClient().messages.create(buildExplainMoveRequest({ fen: body.fen, recentMovesSan, move: body.move, level, factsText: facts ? `${factsForPrompt(facts)}${evidence ? `
+${evidenceForPrompt(evidence, facts)}` : ''}` : undefined }))
       const textBlock = response.content.find((block): block is Anthropic.TextBlock => block.type === 'text')
       const raw = sanitizeExplanation(textBlock?.text.trim() ?? '', level)
-      return NextResponse.json({ explanation: raw } satisfies ExplainMoveResponseBody)
+      return NextResponse.json(verify({ explanation: raw }))
     }
 
     const response = await getClient().messages.create({
@@ -169,13 +188,13 @@ export async function POST(request: NextRequest) {
       max_tokens: 400,
       thinking: { type: 'adaptive' },
       output_config: { effort: 'low' },
-      messages: [{ role: 'user', content: buildPrompt(body) }],
+      messages: [{ role: 'user', content: buildPrompt(body, facts, evidence) }],
     })
 
     const textBlock = response.content.find((block): block is Anthropic.TextBlock => block.type === 'text')
     const raw = stripUrls(textBlock?.text.trim() ?? '')
     const result: ExplainMoveResponseBody = depth === 'plain' ? { explanation: raw } : parseStructured(raw)
-    return NextResponse.json(result)
+    return NextResponse.json(verify(result))
   } catch {
     // One calm, generic message regardless of cause — auth misconfig, rate
     // limit, timeout or any other API error. The client already renders its

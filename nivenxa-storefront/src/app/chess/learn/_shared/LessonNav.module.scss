@@ -1,0 +1,93 @@
+// Stable Back / Next row — pinned to the bottom of the (scrollable) lesson panel so it is always in view.
+.nav {
+  position: sticky;
+  bottom: -1.4rem;
+  margin: 0 -1.5rem -1.4rem;
+  padding: 0.7rem 1.5rem 1.1rem;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.96) 30%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  z-index: 2;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.help {
+  margin: 0;
+  text-align: right;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: rgba(31, 27, 58, 0.78);
+}
+
+.back,
+.next {
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  font-weight: 700;
+  min-height: 44px;
+  min-width: 6.5rem;
+  padding: 0.55rem 1.2rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: opacity 0.15s ease, box-shadow 0.2s ease;
+
+  &:focus-visible {
+    outline: 3px solid var(--chess-deep, #1f1b3a);
+    outline-offset: 2px;
+  }
+
+  &[aria-disabled='true'] {
+    cursor: not-allowed;
+    opacity: 0.45;
+    box-shadow: none;
+  }
+}
+
+.back {
+  border: 1.5px solid rgba(91, 46, 145, 0.35);
+  background: #fff;
+  color: var(--chess-purple);
+}
+
+.next {
+  margin-left: auto;
+  border: 1.5px solid var(--chess-purple);
+  background: var(--chess-purple);
+  color: #fff;
+
+  &:hover:not([aria-disabled='true']) {
+    box-shadow: 0 8px 24px rgba(91, 46, 145, 0.3);
+  }
+
+  // Not colour alone: an unavailable Next also gets a dashed outline.
+  &[aria-disabled='true'] {
+    background: rgba(91, 46, 145, 0.18);
+    color: var(--chess-purple);
+    border-style: dashed;
+  }
+}
+
+// In-flow variant: sits right under the content of a panel that grows with the page (no overlap, no empty gap).
+.navInline {
+  position: static;
+  margin: 0.25rem 0 0;
+  padding: 0.5rem 0 0;
+  background: none;
+}
+
+// On a short window or at a high zoom level the panel stops scrolling on its own, so the navigation row joins the normal flow too.
+@media (max-height: 700px) {
+  .nav {
+    position: static;
+    margin: 0.25rem 0 0;
+    padding: 0.5rem 0 0;
+    background: none;
+  }
+}

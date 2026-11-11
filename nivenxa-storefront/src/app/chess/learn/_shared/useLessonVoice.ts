@@ -7,6 +7,12 @@ import { useCallback, useEffect, useRef, useState } from 'react'
  * same reason feedbackCopy.ts is shared rather than duplicated per engine.
  * No cloud/paid provider — browser-native speechSynthesis/SpeechRecognition
  * only, per the user's own explicit choice.
+ *
+ * Narration is strictly decorative: nothing in a lesson may wait for it. Every
+ * path that starts speech goes through `speak`, which bumps a generation
+ * counter; a callback from an utterance (or a reading-time timer) that belongs
+ * to an older generation is ignored, so rapid Back/Next, repeated Replay and
+ * leaving the lesson can never produce overlapping speech or a late callback.
  */
 
 export type VoiceCommand = 'repeat' | 'hint' | 'explain' | 'showMe' | 'tryAgain' | 'next' | 'pause' | 'resume'
@@ -40,6 +46,15 @@ export function estimateReadingMs(text: string): number {
   return Math.max(1200, Math.round((words / 200) * 60000))
 }
 
+/** The saved "voice off" preference, readable before the hook's own mount effect has applied it. */
+export function readMutedPreference(): boolean {
+  try {
+    return localStorage.getItem(MUTE_STORAGE_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
 export function parseVoiceCommand(transcript: string): VoiceCommand | null {
   const text = transcript.toLowerCase()
   for (const [command, pattern] of COMMAND_PATTERNS) {
@@ -60,7 +75,7 @@ interface SpeechRecognitionLike extends EventTarget {
   start(): void
   stop(): void
   onresult: ((event: SpeechRecognitionEventLike) => void) | null
-  onerror: (() => void) | null
+  onerror: ((event: { error?: string }) => void) | null
   onend: (() => void) | null
 }
 type SpeechRecognitionConstructor = new () => SpeechRecognitionLike
@@ -78,24 +93,23 @@ export function useLessonVoice() {
   const [muted, setMuted] = useState(false)
   const [rate, setRate] = useState<SpeechRate>('slow')
   const [listening, setListening] = useState(false)
-  // True while an utterance is actually sounding — lets a demo step hold
-  // its Next button until narration for that step has finished, instead of
-  // Next sitting there the whole time speech is still playing.
+  // True while an utterance is actually sounding. Purely informational (a "Speaking…" status): no control may
+  // be hidden, disabled or delayed because of it.
   const [speaking, setSpeaking] = useState(false)
+  // A short, plain-language reason the microphone could not be used (blocked permission, no microphone…), or ''.
+  const [micNotice, setMicNotice] = useState('')
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
+  // Bumped by every speak()/cancel(). An utterance or timer from an older generation is stale and must do nothing.
+  const generation = useRef(0)
+  const readingTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Deliberately an effect, not a lazy useState initializer: these values
   // are only knowable client-side (window/localStorage don't exist during
   // SSR), so starting at `false` and flipping after mount is what keeps the
-  // very first client render matching the server-rendered markup — a lazy
-  // initializer would read the real values on that first render too and
-  // trip a hydration mismatch the instant any browser actually supports
-  // speech. This is the one setState-in-effect in this file that isn't
-  // avoidable by restructuring; see the project's established precedent of
-  // only "fixing" this lint rule where a clean non-effect alternative
-  // genuinely exists.
+  // very first client render matching the server-rendered markup. This is the
+  // one setState-in-effect in this file that isn't avoidable by restructuring.
   useEffect(() => {
-    setSupported(typeof window !== 'undefined' && 'speechSynthesis' in window)
+    setSupported(typeof window !== 'undefined' && 'speechSynthesis' in window && !!window.speechSynthesis)
     setMicSupported(typeof window !== 'undefined' && !!(window.SpeechRecognition || window.webkitSpeechRecognition))
     try {
       setMuted(localStorage.getItem(MUTE_STORAGE_KEY) === '1')
@@ -106,56 +120,68 @@ export function useLessonVoice() {
     }
   }, [])
 
+  /** Stops whatever is sounding AND invalidates every pending callback from earlier speech. */
   const cancel = useCallback(() => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel()
+    generation.current += 1
+    if (readingTimer.current) {
+      clearTimeout(readingTimer.current)
+      readingTimer.current = null
+    }
+    try {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel()
+    } catch {
+      // A browser that throws on cancel() has nothing playing worth stopping.
+    }
     setSpeaking(false)
   }, [])
 
-  // Cancels whatever's mid-utterance first — satisfies "stop previous
-  // speech when changing lessons or replaying" by construction, since every
-  // path to new speech (Replay, Hint, Show Me, the step-entry auto-speak, a
-  // spoken command) goes through this one function.
+  // Cancels whatever's mid-utterance first — every path to new speech (Replay, Hint, Show Me, the step-entry
+  // auto-speak, a spoken command) goes through this one function.
   //
-  // `onEnd`, when passed, fires once this utterance finishes — lets a caller
-  // (StepThroughPanel.tsx's autoplay) chain "wait for narration, then pause
-  // N seconds" without polling `speaking`. When voice is muted/unsupported
-  // (or `text` is empty) there's no utterance to wait on, so `onEnd` instead
-  // fires after `estimateReadingMs(text)` — "preserve enough reading time
-  // when sound is off" as a property of this hook, not every caller's own
-  // problem to solve.
+  // `onEnd`, when passed, fires once this utterance finishes (only if it is still the latest speech). When voice is
+  // muted/unsupported (or `text` is empty), or the browser refuses to speak, `onEnd` fires after a reading-time
+  // estimate instead, so a caller never waits forever on speech that cannot happen.
   const speak = useCallback(
     (text: string, onEnd?: () => void) => {
+      cancel()
+      const mine = generation.current
+      const finish = () => {
+        if (generation.current !== mine) return
+        setSpeaking(false)
+        onEnd?.()
+      }
       if (!supported || muted || !text) {
-        if (onEnd) setTimeout(onEnd, estimateReadingMs(text))
+        if (onEnd) readingTimer.current = setTimeout(finish, estimateReadingMs(text))
         return
       }
-      window.speechSynthesis.cancel()
-      // Visible step copy uses a lightweight **bold** convention (see
-      // BoardLesson.tsx/PieceLesson.tsx's renderEmphasis) — now that
-      // auto-speak reads that same text aloud by default, the literal
-      // asterisks would otherwise be spoken too ("asterisk asterisk...").
-      const utterance = new SpeechSynthesisUtterance(text.replace(/\*\*/g, ''))
-      utterance.rate = RATE_VALUES[rate]
-      utterance.onstart = () => setSpeaking(true)
-      utterance.onend = () => {
-        setSpeaking(false)
-        onEnd?.()
+      try {
+        // Visible step copy uses a lightweight **bold** convention — the literal asterisks must not be spoken.
+        const utterance = new SpeechSynthesisUtterance(text.replace(/\*\*/g, ''))
+        utterance.rate = RATE_VALUES[rate]
+        utterance.onstart = () => {
+          if (generation.current === mine) setSpeaking(true)
+        }
+        utterance.onend = finish
+        utterance.onerror = finish
+        window.speechSynthesis.speak(utterance)
+      } catch {
+        // Speech unavailable or failing: the written lesson is unaffected.
+        if (onEnd) readingTimer.current = setTimeout(finish, estimateReadingMs(text))
       }
-      utterance.onerror = () => {
-        setSpeaking(false)
-        onEnd?.()
-      }
-      window.speechSynthesis.speak(utterance)
     },
-    [supported, muted, rate]
+    [supported, muted, rate, cancel]
   )
 
   const pause = useCallback(() => {
-    if (supported && window.speechSynthesis.speaking) window.speechSynthesis.pause()
+    try {
+      if (supported && window.speechSynthesis.speaking) window.speechSynthesis.pause()
+    } catch {}
   }, [supported])
 
   const resume = useCallback(() => {
-    if (supported && window.speechSynthesis.paused) window.speechSynthesis.resume()
+    try {
+      if (supported && window.speechSynthesis.paused) window.speechSynthesis.resume()
+    } catch {}
   }, [supported])
 
   const toggleMute = useCallback(() => {
@@ -171,39 +197,52 @@ export function useLessonVoice() {
     })
   }, [cancel])
 
-  // Genuine push-to-talk: a recognizer is created and started only while
-  // the Mic control is physically held, never on a timer/auto-start. Guards
-  // against a double-start (e.g. a touch device firing both touch and
-  // synthetic mouse events) via the `listening` check.
+  // Genuine push-to-talk: a recognizer is created and started only while the Mic control is physically held, never
+  // on a timer/auto-start. Guards against a double-start via the `listening` check. A refused permission or a
+  // recognition error never blocks the lesson: it only produces a short notice.
   const startPushToTalk = useCallback(
     (onResult: (command: VoiceCommand | null) => void) => {
       if (!micSupported || listening) return
       const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition
       if (!Ctor) return
-      const recognition = new Ctor()
-      recognition.continuous = false
-      recognition.interimResults = false
-      recognition.lang = 'en-US'
-      recognition.onresult = (event) => {
-        const transcript = event.results[0]?.[0]?.transcript ?? ''
-        onResult(parseVoiceCommand(transcript))
+      setMicNotice('')
+      try {
+        const recognition = new Ctor()
+        recognition.continuous = false
+        recognition.interimResults = false
+        recognition.lang = 'en-US'
+        recognition.onresult = (event) => {
+          const transcript = event.results[0]?.[0]?.transcript ?? ''
+          onResult(parseVoiceCommand(transcript))
+        }
+        recognition.onerror = (event) => {
+          setListening(false)
+          const code = event?.error
+          if (code === 'not-allowed' || code === 'service-not-allowed') setMicNotice('The microphone is blocked. You can allow it in your browser settings, or just use the buttons.')
+          else if (code === 'audio-capture') setMicNotice('No microphone was found. You can use the buttons instead.')
+          else if (code === 'no-speech' || code === 'aborted') setMicNotice('')
+          else setMicNotice('Voice input is not working right now. You can use the buttons instead.')
+        }
+        recognition.onend = () => setListening(false)
+        recognitionRef.current = recognition
+        setListening(true)
+        recognition.start()
+      } catch {
+        setListening(false)
+        setMicNotice('Voice input is not available right now. You can use the buttons instead.')
       }
-      recognition.onerror = () => onResult(null)
-      recognition.onend = () => setListening(false)
-      recognitionRef.current = recognition
-      setListening(true)
-      recognition.start()
     },
     [micSupported, listening]
   )
 
   const stopPushToTalk = useCallback(() => {
-    recognitionRef.current?.stop()
+    try {
+      recognitionRef.current?.stop()
+    } catch {}
     recognitionRef.current = null
   }, [])
 
-  // Takes effect on the next utterance, not the one already playing — no
-  // need to interrupt mid-sentence just because the learner switched pace.
+  // Takes effect on the next utterance, not the one already playing.
   const setSpeechRate = useCallback((next: SpeechRate) => {
     setRate(next)
     try {
@@ -213,7 +252,18 @@ export function useLessonVoice() {
     }
   }, [])
 
-  useEffect(() => () => cancel(), [cancel])
+  // Leaving the lesson (unmount), or the tab being hidden/unloaded, stops speech and drops pending callbacks.
+  useEffect(() => {
+    const stop = () => cancel()
+    window.addEventListener('pagehide', stop)
+    return () => {
+      window.removeEventListener('pagehide', stop)
+      cancel()
+      try {
+        recognitionRef.current?.stop()
+      } catch {}
+    }
+  }, [cancel])
 
   return {
     supported,
@@ -222,6 +272,7 @@ export function useLessonVoice() {
     rate,
     listening,
     speaking,
+    micNotice,
     speak,
     cancel,
     pause,

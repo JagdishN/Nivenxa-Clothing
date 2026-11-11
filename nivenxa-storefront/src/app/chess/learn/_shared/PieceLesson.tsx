@@ -1,13 +1,16 @@
 'use client'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import type { Key } from 'chessground/types'
-import Board from '@/components/chess/Board'
+import Board, { type BoardMarkerKind } from '@/components/chess/Board'
 import { correctSquaresFor, wrongSquarePool, applyRawMove, applyPromotionMove, applyCastlingMove, type MoveFilterMode } from './moveTrainerLogic'
 import { hintTierFor, HINT_TIER_COUNT, classifyWrongAttempt, wrongKindPrefix, DEMONSTRATION_INTRO, demonstrationFallbackText, type WrongKind } from './feedbackCopy'
-import { markLessonCompleted, updateLessonStep } from '@/lib/chess/basicsProgress'
+import { clearStepResults, getResumeStep, loadStepResults, markLessonCompleted, saveStepResult, updateLessonStep } from '@/lib/chess/basicsProgress'
 import { useLessonVoice, type VoiceCommand } from './useLessonVoice'
 import VoiceControls, { VoiceStatusLine } from './VoiceControls'
+import LessonNav from './LessonNav'
+import { ASSIST_LABEL, assistFromTier, describeSummary, isIndependent, mergeResult, summarize, type Assist, type StepResults } from './lessonAssist'
+import { useBoardTheme } from './useBoardTheme'
 import styles from './PieceLesson.module.scss'
 
 type PromotionPiece = 'q' | 'r' | 'b' | 'n'
@@ -19,17 +22,26 @@ const PROMOTION_CHOICES: { value: PromotionPiece; label: string; whiteGlyph: str
 ]
 
 const REVERT_DELAY = 700
-const ADVANCE_DELAY = 1100
 const CELEBRATE_DURATION = 1300
+
+/** A shape-coded square marker (see Board's BoardMarkerKind): dot = can move here, ring = can capture, cross = blocked. */
+export interface PieceMarker {
+  square: string
+  kind: BoardMarkerKind
+}
 
 export interface PieceDemoStep {
   kind: 'demo'
-  /** e.g. "SEE IT MOVE", "JUMPING OVER" — shown as the step's small progress label. */
+  /** e.g. "SEE IT MOVE", "JUMPING OVER" — authoring label. */
   stageLabel: string
   fen: string
   pieceColor: 'w' | 'b'
+  /** Which side is at the bottom of the screen. Defaults to the side of `pieceColor`; a Black-pawn step that should keep the usual White-at-the-bottom view sets 'white'. */
+  orientation?: 'white' | 'black'
   /** Squares to circle, illustrating the movement pattern. */
   highlightSquares?: string[]
+  /** Shape-coded squares: where a piece can move, can capture, or is blocked. */
+  markers?: PieceMarker[]
   /** [from, to] arrow(s) to draw. */
   arrows?: [string, string][]
   /** Explanation lines, shown in order. */
@@ -43,40 +55,37 @@ export interface PieceTryStep {
   fen: string
   pieceSquare: string
   pieceColor: 'w' | 'b'
+  orientation?: 'white' | 'black'
   filterMode: MoveFilterMode
-  /** Narrow the filterMode-derived legal squares down to a specific subset — e.g. only the one-square-forward pawn move on a position where two squares is also legal. */
+  /** Narrow the filterMode-derived legal squares down to a specific subset. */
   onlyTo?: string[]
   prompt: string
   wrongText: string
+  /** Hint tier 2 (a visual cue): says where to look. */
   hintText: string
+  /** Hint tier 1 (a reminder), shown before the visual cue when no wrong move has been made yet. */
+  reminderText?: string
   revealSquaresFrom: 'start' | 'hint'
-  /** What the correct move demonstrated, shown after "✓ That's it! " */
   correctText: string
-  /** Shown instead of correctText when the learner's correct move wasn't the first of several equally-valid correctSquares — "yes, that works too," not a second copy of the primary confirmation. */
   alternateCorrectText?: string
-  /** Tier-1 hint: a vaguer "look over here" cue, shown before the tier-2 exact-destination reveal. Falls back to just the pieceSquare itself if not authored. */
   hintAreaSquares?: string[]
-  /** Tier-3 demonstration line, replacing the generic fallback ("Here's how it's done: move from X to Y."). */
   demonstrationText?: string
-  /** A pawn reaching the back rank must choose a piece before the move counts as done — see PROMOTION_CHOICES and the picker rendered below. Any of Q/R/B/N is accepted as correct; the point is the mandatory choice, not judging which one. */
   requiresPromotionChoice?: boolean
+  /** Squares marked while the learner tries (e.g. a blocked square). */
+  markers?: PieceMarker[]
+  /** A fresh, equivalent attempt offered after a hint or Show me — same skill, different position. */
+  retry?: Partial<Omit<PieceTryStep, 'kind' | 'retry' | 'stageLabel'>>
 }
 
-/**
- * "Recognize this real position" — a question over an arbitrary FEN with
- * N answer options, judged against `correctOptionIndex`. Generalizes
- * yes/no (`options: ['Yes','No']`) to also cover a 3-way judgment like
- * "Checkmate / Stalemate / Neither?". Exists because BoardLesson's own
- * `yesNo` step can't render an arbitrary position at all — it only ever
- * draws a decorative parity-flip checkerboard, not the real board.
- */
+/** "Recognize this real position" — a question over an arbitrary FEN with N answer options. */
 export interface PieceJudgmentStep {
   kind: 'judgment'
   stageLabel: string
   fen: string
   pieceColor: 'w' | 'b'
-  /** Visual aids while the learner considers the question — same fields as a demo step. */
+  orientation?: 'white' | 'black'
   highlightSquares?: string[]
+  markers?: PieceMarker[]
   arrows?: [string, string][]
   prompt: string
   options: string[]
@@ -84,6 +93,7 @@ export interface PieceJudgmentStep {
   correctText: string
   wrongText: string
   hintText: string
+  reminderText?: string
 }
 
 export type PieceLessonStep = PieceDemoStep | PieceTryStep | PieceJudgmentStep
@@ -91,25 +101,17 @@ export type PieceLessonStep = PieceDemoStep | PieceTryStep | PieceJudgmentStep
 export interface PieceLessonExample {
   steps: PieceLessonStep[]
   pieceName: string
-  /** Natural-sounding completion line — e.g. "You learned how pawns move!" The old template ("You learned the {pieceName}!") reads as "You learned the How Pawns Move!" once lesson names became full questions, so this is required in practice, not just cosmetic. */
   completionHeadline: string
+  completionAssistedHeadline?: string
   completionSummary?: string[]
 }
 
 type AttemptState = 'idle' | 'correct' | 'reverting'
 
-// Same title-casing as BoardLesson.tsx — data stores stageLabel in ALL CAPS
-// ('SEE IT MOVE', 'YOUR TURN'); this reads as "See It Move" next to the
-// plain "N of M" counter instead of shouting the same text beside it.
-function titleCase(s: string): string {
-  return s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())
-}
+const MODE_LABEL: Record<PieceLessonStep['kind'], string> = { demo: 'LEARN', try: 'TRY IT', judgment: 'TRY IT' }
 
-// What auto-speak-on-entry says for a step, before any wrong attempt/hint
-// changes the picture — the exact tier-0/idle text the panel already
-// shows, so a lesson with no authored spoken-script fields of its own just
-// speaks its existing visible copy automatically instead of reading
-// differently out loud than on screen.
+const LEGEND: Partial<Record<BoardMarkerKind, string>> = { forward: '● can move here', capture: '◎ can capture here', blocked: '✕ blocked' }
+
 function introTextFor(step: PieceLessonStep): string {
   return step.kind === 'demo' ? step.text.join('. ') : step.prompt
 }
@@ -123,72 +125,78 @@ export default function PieceLesson({
   nextCta?: { href: string; label: string }
   slug: string
 }) {
-  const { steps, pieceName, completionHeadline, completionSummary } = example
+  const { steps, pieceName, completionHeadline, completionAssistedHeadline, completionSummary } = example
   const [stepIndex, setStepIndex] = useState(0)
-  const step = steps[stepIndex]
+  const baseStep = steps[stepIndex]
   const isLast = stepIndex === steps.length - 1
-  // Gates the whole lesson behind one explicit click — that click is the
-  // user gesture auto-narration needs (see handleStart below), and gives a
-  // clear "begin" moment instead of narration starting the instant the page
-  // loads. Never persisted — a fresh page load/navigation is a fresh gate.
   const [started, setStarted] = useState(false)
+  const [resume, setResume] = useState<{ step: number; total: number } | null>(null)
+  const [variant, setVariant] = useState(false)
+  const [results, setResults] = useState<StepResults>({})
+  const [boardTheme] = useBoardTheme()
 
-  const [displayFen, setDisplayFen] = useState(step.fen)
+  // The step actually shown: the base step, or its fresh-attempt variant (a try step with its own position).
+  const step: PieceLessonStep = useMemo(() => (variant && baseStep.kind === 'try' && baseStep.retry ? ({ ...baseStep, ...baseStep.retry } as PieceTryStep) : baseStep), [variant, baseStep])
+
+  const [displayFen, setDisplayFen] = useState(baseStep.fen)
   const [attemptState, setAttemptState] = useState<AttemptState>('idle')
   const [wrongAttempts, setWrongAttempts] = useState(0)
   const [lastMove, setLastMove] = useState<Key[] | undefined>(undefined)
+  const [wrongSquare, setWrongSquare] = useState<Key | null>(null)
   const [allDone, setAllDone] = useState(false)
   const [showModal, setShowModal] = useState(false)
-  // Which flavor of "wrong" the most recent try attempt was — only ever set
-  // for `try` steps (a real chess move was attempted); unused by squareQuiz-
-  // style judgment, which has no legal/illegal-move axis at all.
   const [wrongKind, setWrongKind] = useState<WrongKind | null>(null)
-  // Set the instant a `requiresPromotionChoice` try step's drag lands on a
-  // correct (back-rank) square — holds the move until the learner picks a
-  // piece, rather than resolving 'correct' immediately like every other try.
   const [awaitingPromotion, setAwaitingPromotion] = useState<{ from: Key; to: Key; fen: string } | null>(null)
   const [chosenCorrectSquare, setChosenCorrectSquare] = useState<string | null>(null)
   const [judgmentChoice, setJudgmentChoice] = useState<number | null>(null)
-  // Set by a manual Hint/Show Me request (click or voice command) — see
-  // feedbackCopy.ts's tier system. Kept separate from wrongAttempts-driven
-  // escalation (never regresses it, see `hintTier` below) so asking for a
-  // hint doesn't erase progress a wrong attempt already made toward one.
   const [forcedHintTier, setForcedHintTier] = useState<number | null>(null)
   const revertTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const voice = useLessonVoice()
+  const pendingIntro = useRef(false)
+  useEffect(() => {
+    if (!pendingIntro.current || !voice.supported) return
+    pendingIntro.current = false
+    if (!voice.muted) voice.speak(introTextFor(steps[0]))
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs when speech support becomes known.
+  }, [voice.supported])
+
+  // Only offer to continue when the saved position still fits this lesson (a lesson that was later reworked may have a different length).
+  const canResume = !!resume && resume.step > 1 && resume.step <= steps.length && resume.total === steps.length
+
+  const practiceSteps = useMemo(() => steps.flatMap((s, i) => (s.kind === 'try' || s.kind === 'judgment' ? [i] : [])), [steps])
 
   useEffect(() => {
-    // A timer armed by the PREVIOUS step can still be pending here — clear
-    // both before resetting local state so a stale timeout can't flip
-    // attemptState or call advanceStep again after we've already landed on
-    // a new step (see BoardLesson.tsx's identical fix for the full reasoning).
+    setResults(loadStepResults(slug) as StepResults)
+    setResume(getResumeStep(slug))
+    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('start') === '1') {
+      // Arrived through "Next lesson": begin at once, no second Start click.
+      setStarted(true)
+      pendingIntro.current = true
+    }
+  }, [slug])
+
+  useEffect(() => {
     if (revertTimer.current) clearTimeout(revertTimer.current)
-    if (advanceTimer.current) clearTimeout(advanceTimer.current)
     voice.cancel()
-    setDisplayFen(step.fen)
+    setVariant(false)
+    setDisplayFen(steps[stepIndex].fen)
     setAttemptState('idle')
     setWrongAttempts(0)
     setLastMove(undefined)
+    setWrongSquare(null)
     setWrongKind(null)
     setAwaitingPromotion(null)
     setChosenCorrectSquare(null)
     setJudgmentChoice(null)
     setForcedHintTier(null)
     updateLessonStep(slug, stepIndex + 1, steps.length)
-    // Auto-speak this step's intro once voice is on — but only once the
-    // lesson has actually started: on the very first mount `started` is
-    // still false, so step 0's own narration instead comes from
-    // handleStart's own direct speak() call (inside a real click handler,
-    // the user gesture autoplay needs), not from this effect.
-    if (started && !voice.muted) voice.speak(introTextFor(step))
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `step`/`started`/`voice` deliberately excluded: this must run once per stepIndex change only, reading whichever of those is current at that moment, not re-fire when they change on their own.
+    if (started && !voice.muted) voice.speak(introTextFor(steps[stepIndex]))
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- must run once per stepIndex change only.
   }, [stepIndex, slug, steps.length])
 
   useEffect(
     () => () => {
       if (revertTimer.current) clearTimeout(revertTimer.current)
-      if (advanceTimer.current) clearTimeout(advanceTimer.current)
     },
     []
   )
@@ -202,15 +210,26 @@ export default function PieceLesson({
     return () => clearTimeout(timer)
   }, [allDone])
 
-  // Speaks the completion recap the moment the modal actually shows it —
-  // not earlier, during the celebration animation, when none of this text
-  // is on screen yet. The recap was previously the one reaction in this
-  // file with no spoken form at all.
+  const summary = useMemo(() => summarize(results, practiceSteps), [results, practiceSteps])
+  const helpedAny = summary.withHelp > 0
+  const finalHeadline = helpedAny && completionAssistedHeadline ? completionAssistedHeadline : completionHeadline
+
   useEffect(() => {
-    if (!showModal || voice.muted) return
-    voice.speak([completionHeadline, ...(completionSummary ?? [])].join('. '))
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- deliberately keyed only on showModal; completionHeadline/completionSummary/voice are static per lesson instance.
+    if (!showModal) return
+    voice.speak(helpedAny ? [finalHeadline, describeSummary(summary)].join('. ') : [finalHeadline, ...(completionSummary ?? [])].join('. '))
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deliberately keyed only on showModal.
   }, [showModal])
+
+  const recordResult = useCallback(
+    (assist: Assist) => {
+      setResults((prev) => {
+        const merged = mergeResult(prev[stepIndex], assist)
+        saveStepResult(slug, stepIndex, merged)
+        return { ...prev, [stepIndex]: merged }
+      })
+    },
+    [slug, stepIndex]
+  )
 
   const correctSquares = useMemo(() => {
     if (step.kind !== 'try') return []
@@ -236,39 +255,30 @@ export default function PieceLesson({
     } else setStepIndex((i) => i + 1)
   }
 
-  // Revisiting a previous explanation shouldn't cost restarting the whole
-  // lesson — the existing stepIndex-change effect above already resets
-  // attemptState/wrongAttempts/lastMove/displayFen for whichever step this
-  // lands on.
   function handleBack() {
-    if (advanceTimer.current) clearTimeout(advanceTimer.current)
     if (revertTimer.current) clearTimeout(revertTimer.current)
     setStepIndex((i) => Math.max(0, i - 1))
   }
 
-  // The user gesture autoplay needs — speaking step 0's intro directly
-  // inside this click handler (rather than leaving it to the stepIndex
-  // effect, which already ran once before this click with `started` still
-  // false) is what lets the very first utterance play without a browser
-  // autoplay-policy block.
-  function handleStart() {
+  function handleStart(fromStep = 0) {
     setStarted(true)
-    if (!voice.muted) voice.speak(introTextFor(step))
+    if (fromStep > 0) setStepIndex(fromStep)
+    voice.speak(introTextFor(steps[fromStep]))
   }
 
-  // Shared by the try/judgment wrong-answer auto-revert timeouts AND the
-  // voice "try again" command — a spoken "try again" just fires this early
-  // instead of waiting out REVERT_DELAY.
   function clearWrongState() {
     if (revertTimer.current) clearTimeout(revertTimer.current)
     if (step.kind === 'try') {
       setDisplayFen(step.fen)
       setLastMove(undefined)
+      setWrongSquare(null)
     } else if (step.kind === 'judgment') {
       setJudgmentChoice(null)
     }
     setAttemptState('idle')
   }
+
+  const hintTier = step.kind === 'try' || step.kind === 'judgment' ? Math.max(forcedHintTier ?? 0, hintTierFor(wrongAttempts)) : 0
 
   function handleMove(from: Key, to: Key) {
     if (step.kind !== 'try') return
@@ -278,27 +288,19 @@ export default function PieceLesson({
     if ((correctSquares as string[]).includes(to)) {
       setChosenCorrectSquare(to)
       if (step.requiresPromotionChoice) {
-        // Hold here — the move isn't "done" until a piece is actually
-        // chosen (chess.js itself would throw calling .move() without one;
-        // see applyPromotionMove's own comment). Show the pawn arriving so
-        // the drag still feels completed, then swap it for the chosen
-        // piece once picked.
         setDisplayFen(applyRawMove(step.fen, from, to))
         setAwaitingPromotion({ from, to, fen: step.fen })
         return
       }
-      // Castling moves a second piece (the rook) as a real side effect —
-      // applyRawMove only ever relocates the one piece it's told about, so
-      // it would leave the rook stuck on its original square. A real
-      // chess.js move resolves the rook's jump correctly; every other
-      // filterMode keeps the simpler display-only applyRawMove.
       setDisplayFen(step.filterMode === 'castling' ? applyCastlingMove(step.fen, from, to) : applyRawMove(step.fen, from, to))
       setAttemptState('correct')
-      advanceTimer.current = setTimeout(advanceStep, ADVANCE_DELAY)
+      recordResult(assistFromTier(hintTier))
       return
     }
 
+    // Not a correct answer: the attempt is shown for a moment, with its destination marked, then put back. (Only ever the learner's own try.)
     setDisplayFen(applyRawMove(step.fen, from, to))
+    setWrongSquare(to)
     setWrongKind(classifyWrongAttempt(step.fen, step.pieceSquare, to))
     setAttemptState('reverting')
     setWrongAttempts((n) => n + 1)
@@ -310,7 +312,7 @@ export default function PieceLesson({
     setDisplayFen(applyPromotionMove(awaitingPromotion.fen, awaitingPromotion.from, awaitingPromotion.to, piece))
     setAwaitingPromotion(null)
     setAttemptState('correct')
-    advanceTimer.current = setTimeout(advanceStep, ADVANCE_DELAY)
+    recordResult(assistFromTier(hintTier))
   }
 
   function handleJudgmentAnswer(index: number) {
@@ -318,7 +320,7 @@ export default function PieceLesson({
     setJudgmentChoice(index)
     if (index === step.correctOptionIndex) {
       setAttemptState('correct')
-      advanceTimer.current = setTimeout(advanceStep, ADVANCE_DELAY)
+      recordResult(assistFromTier(hintTier))
       return
     }
     setAttemptState('reverting')
@@ -327,136 +329,115 @@ export default function PieceLesson({
   }
 
   function handlePracticeAgain() {
+    voice.cancel()
+    clearStepResults(slug)
+    setResults({})
     setStepIndex(0)
     setAllDone(false)
     setShowModal(false)
   }
 
-  // 4 tiers now, not 3 (see feedbackCopy.ts): 0 = the question, 1 = a nudge,
-  // 2 = reveal the destination (unchanged from before, just renumbered),
-  // 3 = a full demonstration. Applies to both `try` and `judgment` steps —
-  // a real move attempt and a position-recognition guess are both "trying
-  // something and getting it wrong," just with different follow-through.
-  // Math.max, not a replacement — a manual Hint/Show Me request (forcedHintTier)
-  // never regresses the automatic wrongAttempts-driven tier, and a later wrong
-  // attempt still climbs normally even after a hint was already requested.
-  const hintTier =
-    step.kind === 'try' || step.kind === 'judgment' ? Math.max(forcedHintTier ?? 0, hintTierFor(wrongAttempts)) : 0
-  const showSquares = step.kind === 'try' && (step.revealSquaresFrom === 'start' || hintTier >= 2)
+  function startFreshTry() {
+    if (baseStep.kind !== 'try' || !baseStep.retry) return
+    if (revertTimer.current) clearTimeout(revertTimer.current)
+    const v = { ...baseStep, ...baseStep.retry } as PieceTryStep
+    setVariant(true)
+    setDisplayFen(v.fen)
+    setAttemptState('idle')
+    setWrongAttempts(0)
+    setLastMove(undefined)
+    setWrongSquare(null)
+    setWrongKind(null)
+    setAwaitingPromotion(null)
+    setChosenCorrectSquare(null)
+    setForcedHintTier(null)
+    voice.speak(v.prompt)
+  }
+
+  const showSquares = step.kind === 'try' && attemptState !== 'correct' && (step.revealSquaresFrom === 'start' || hintTier >= 2)
   const demonstrating = hintTier >= 3
 
+  // The task stays visible as a heading through hints and feedback (and after success); the body below it changes.
+  const heading = !allDone && (step.kind === 'try' || step.kind === 'judgment') ? step.prompt : undefined
   let promptLines: string[]
-  let stageLabel: string
   if (allDone) {
-    promptLines = [completionHeadline]
-    stageLabel = 'COMPLETE'
+    promptLines = [finalHeadline]
   } else if (step.kind === 'demo') {
     promptLines = step.text
-    stageLabel = step.stageLabel
   } else if (attemptState === 'correct' && step.kind === 'try') {
     const usedAlternate = !!step.alternateCorrectText && chosenCorrectSquare !== (correctSquares as string[])[0]
-    promptLines = [`✓ That's it! ${usedAlternate ? step.alternateCorrectText : step.correctText}`]
-    stageLabel = step.stageLabel
+    promptLines = [`✓ ${usedAlternate ? step.alternateCorrectText : step.correctText}`]
   } else if (attemptState === 'correct' && step.kind === 'judgment') {
     promptLines = [`✓ ${step.correctText}`]
-    stageLabel = step.stageLabel
   } else if (step.kind === 'try' || step.kind === 'judgment') {
     if (hintTier === 0) {
-      promptLines = [step.prompt]
+      promptLines = []
     } else if (hintTier === 1) {
-      // Only a `try` step has a real chess move to classify as illegal vs.
-      // legal-but-wrong-goal — a judgment step is a multiple-choice guess,
-      // no legality axis to speak of.
-      promptLines = [step.kind === 'try' && wrongKind ? `${wrongKindPrefix(wrongKind)} ${step.wrongText}` : step.wrongText]
+      const prefix = step.kind === 'try' && wrongKind ? wrongKindPrefix(wrongKind) : ''
+      promptLines = [
+        wrongAttempts > 0
+          ? prefix && !step.wrongText.startsWith(prefix.replace(/\.$/, ''))
+            ? `${prefix} ${step.wrongText}`
+            : step.wrongText
+          : (step.reminderText ?? 'Think about how this piece moves, then try again.'),
+      ]
     } else if (hintTier === 2) {
-      promptLines = ['Need a hint?', step.hintText]
+      promptLines = ['A hint:', step.hintText]
     } else {
       promptLines =
         step.kind === 'try'
           ? [DEMONSTRATION_INTRO, step.demonstrationText ?? demonstrationFallbackText(step.pieceSquare, (correctSquares as string[])[0])]
           : [DEMONSTRATION_INTRO, `${step.hintText} The answer is: ${step.options[step.correctOptionIndex]}.`]
     }
-    stageLabel = step.stageLabel
   } else {
     promptLines = []
-    stageLabel = ''
   }
 
-  const highlightSquares =
-    step.kind === 'demo' || step.kind === 'judgment'
-      ? (step.highlightSquares as Key[] | undefined)
-      : showSquares
-        ? (correctSquares as Key[])
-        : undefined
+  const markers = useMemo(() => {
+    if (allDone) return undefined
+    const out: { square: Key; kind: BoardMarkerKind }[] = []
+    for (const m of step.markers ?? []) out.push({ square: m.square as Key, kind: m.kind })
+    if (step.kind === 'try' && showSquares) {
+      const kind: BoardMarkerKind = step.filterMode === 'captures' ? 'capture' : 'forward'
+      for (const sq of correctSquares) if (!out.some((m) => m.square === sq)) out.push({ square: sq, kind })
+    }
+    if (step.kind === 'try' && wrongSquare) out.push({ square: wrongSquare, kind: 'blocked' })
+    return out.length ? out : undefined
+  }, [allDone, step, showSquares, correctSquares, wrongSquare])
+
+  const highlightSquares = step.kind === 'demo' || step.kind === 'judgment' ? (step.highlightSquares as Key[] | undefined) : undefined
   const hintArrow =
-    (step.kind === 'demo' || step.kind === 'judgment') && step.arrows?.[0]
-      ? (step.arrows[0] as Key[])
-      : demonstrating && step.kind === 'try'
-        ? ([step.pieceSquare, (correctSquares as string[])[0]] as Key[])
-        : undefined
+    (step.kind === 'demo' || step.kind === 'judgment') && step.arrows?.[0] ? (step.arrows[0] as Key[]) : demonstrating && step.kind === 'try' ? ([step.pieceSquare, (correctSquares as string[])[0]] as Key[]) : undefined
   const celebrating = allDone && !showModal
+  const orientation = step.orientation ?? (step.pieceColor === 'b' ? 'black' : 'white')
   const turnColor = step.pieceColor === 'w' ? 'white' : 'black'
-  const isReactionMoment = attemptState === 'correct' || allDone
-  const showBack = !allDone && stepIndex > 0 && attemptState !== 'correct'
-  // A `demo` step can always advance (matches its always-visible Next
-  // button); every other kind only once solved — `try`/`judgment` have no
-  // manual Next button at all (they auto-advance via advanceTimer), so this
-  // also doubles as "is voice allowed to skip the wait and advance now."
-  const canVoiceAdvance = step.kind === 'demo' || attemptState === 'correct'
+  const isPractice = step.kind === 'try' || step.kind === 'judgment'
+  const earlier = results[stepIndex]
+  const nextAvailable = !allDone && (step.kind === 'demo' || attemptState === 'correct' || (isPractice && earlier !== undefined))
+  const legendKinds = (['forward', 'capture', 'blocked'] as BoardMarkerKind[]).filter((k) => (markers ?? []).some((m) => m.kind === k && !(k === 'blocked' && step.kind === 'try' && m.square === wrongSquare)))
+  const hasRetry = baseStep.kind === 'try' && !!baseStep.retry && !variant
+  const showFreshTry = attemptState === 'correct' && hasRetry && results[stepIndex] !== undefined && !isIndependent(results[stepIndex])
 
-  const spokenText = promptLines.join('. ')
-  // "Voice: On" alone says narration is allowed, not what it's doing right
-  // now — null once a step is already solved/done, where neither "still
-  // talking" nor "waiting on you" is the right read. A plain demo step has
-  // no action pending (reading, then Next) — only try/judgment actually
-  // expect the learner to do something, so "Your turn" is reserved for
-  // those; a plain demo gets "Ready to continue" instead.
-  const expectingAction = step.kind === 'try' || step.kind === 'judgment'
-  const voiceStatus: 'speaking' | 'yourTurn' | 'readyToContinue' | null = voice.speaking
-    ? 'speaking'
-    : allDone || attemptState === 'correct'
-      ? null
-      : expectingAction
-        ? 'yourTurn'
-        : 'readyToContinue'
+  const spokenText = (promptLines.length ? promptLines.join('. ') : (heading ?? '')).replace(/^✓ /, '')
+  const voiceStatus: 'speaking' | null = voice.speaking ? 'speaking' : null
 
-  // Speaks the newly-revealed tier text the instant a Hint/Show Me request
-  // (click or voice) changes forcedHintTier — NOT on every render, and NOT
-  // when wrongAttempts alone drives the tier up, which is exactly what
-  // keeps this within "no autoplay, only a direct result of a request."
-  // Deliberately keyed only on forcedHintTier: this effect body is
-  // recreated fresh every render (closing over that render's own
-  // spokenText), React only ever INVOKES the one from the render where
-  // forcedHintTier actually changed, so the text spoken is always current.
   useEffect(() => {
     if (forcedHintTier === null) return
     voice.speak(spokenText)
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- see comment above; spokenText/voice intentionally excluded so this only fires on an actual Hint/Show Me request.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fires only on an actual Hint/Show me request.
   }, [forcedHintTier])
 
   function requestHint() {
     if (allDone) return
-    if (attemptState === 'correct') {
-      voice.speak('You already solved this — say or tap Next.')
-      return
-    }
-    if (step.kind !== 'try' && step.kind !== 'judgment') {
-      voice.speak("This step doesn't need a hint. Read it, then tap Next.")
-      return
-    }
-    setForcedHintTier((t) => Math.min((t ?? hintTierFor(wrongAttempts)) + 1, HINT_TIER_COUNT - 1))
+    if (attemptState === 'correct') return voice.speak('You already did this one. Choose Next when you are ready.')
+    if (!isPractice) return voice.speak("This step doesn't need a hint. Read it, then choose Next.")
+    setForcedHintTier((t) => Math.min((t ?? hintTier) + 1, HINT_TIER_COUNT - 1))
   }
 
   function requestShowMe() {
     if (allDone) return
-    if (attemptState === 'correct') {
-      voice.speak('You already solved this — say or tap Next.')
-      return
-    }
-    if (step.kind !== 'try' && step.kind !== 'judgment') {
-      voice.speak("This step doesn't need a demonstration. Read it, then tap Next.")
-      return
-    }
+    if (attemptState === 'correct') return voice.speak('You already did this one. Choose Next when you are ready.')
+    if (!isPractice) return voice.speak("This step doesn't need a demonstration. Read it, then choose Next.")
     setForcedHintTier(HINT_TIER_COUNT - 1)
   }
 
@@ -467,40 +448,31 @@ export default function PieceLesson({
   }
 
   function handleVoiceCommand(command: VoiceCommand | null) {
-    if (!command) {
-      voice.speak("I didn't catch that. Please try again or use the buttons.")
-      return
-    }
+    if (!command) return voice.speak("I didn't catch that. Please try again or use the buttons.")
     switch (command) {
       case 'repeat':
-        voice.speak(spokenText)
-        break
+        return voice.speak(spokenText)
       case 'hint':
       case 'explain':
-        requestHint()
-        break
+        return requestHint()
       case 'showMe':
-        requestShowMe()
-        break
+        return requestShowMe()
       case 'tryAgain':
-        requestTryAgain()
-        break
+        return requestTryAgain()
       case 'next':
-        if (canVoiceAdvance) {
-          if (advanceTimer.current) clearTimeout(advanceTimer.current)
-          advanceStep()
-        } else {
-          voice.speak('Finish this step first.')
-        }
-        break
+        if (nextAvailable) return advanceStep()
+        return voice.speak('Finish this step first.')
       case 'pause':
-        voice.pause()
-        break
+        return voice.pause()
       case 'resume':
-        voice.resume()
-        break
+        return voice.resume()
     }
   }
+
+  const modalRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (showModal) modalRef.current?.querySelector<HTMLElement>('[data-autofocus]')?.focus()
+  }, [showModal])
 
   return (
     <>
@@ -510,12 +482,17 @@ export default function PieceLesson({
             fen={displayFen}
             turnColor={turnColor}
             dests={started && step.kind === 'try' && !awaitingPromotion ? dests : new Map<Key, Key[]>()}
-            orientation={step.pieceColor === 'b' ? 'black' : 'white'}
+            orientation={orientation}
             viewOnly={!started || step.kind !== 'try' || attemptState !== 'idle' || allDone || !!awaitingPromotion}
             lastMove={lastMove}
             highlightSquares={allDone ? undefined : highlightSquares}
             highlightColor="green"
             hintArrow={allDone ? undefined : hintArrow}
+            markers={markers}
+            showDests={false}
+            fixedPieces={step.kind !== 'try'}
+            boardTheme={boardTheme}
+            emphasizeCoordinates
             onMove={handleMove}
           />
           {celebrating && (
@@ -526,21 +503,12 @@ export default function PieceLesson({
               <span className={styles.celebrateCheck}>✓</span>
             </div>
           )}
-          {/* The mandatory "which piece?" choice — chess.js itself has no
-              default here (see applyPromotionMove's comment), and all four
-              are equally legal, so the point is making the choice, not
-              judging it. */}
           {awaitingPromotion && (
             <div className={styles.promotionPicker}>
               <p className={styles.promotionPickerLabel}>Choose a piece:</p>
               <div className={styles.answerRow}>
                 {PROMOTION_CHOICES.map((choice) => (
-                  <button
-                    key={choice.value}
-                    type="button"
-                    className={styles.answerBtn}
-                    onClick={() => handlePromotionChoice(choice.value)}
-                  >
+                  <button key={choice.value} type="button" className={styles.answerBtn} onClick={() => handlePromotionChoice(choice.value)}>
                     <span aria-hidden="true">{step.pieceColor === 'w' ? choice.whiteGlyph : choice.blackGlyph}</span> {choice.label}
                   </button>
                 ))}
@@ -552,137 +520,199 @@ export default function PieceLesson({
 
       <div className={styles.panelCol}>
         {!started ? (
-          // One explicit click gates the whole lesson — see handleStart's
-          // own comment for why the speak() call has to live inside this
-          // click, not a later effect.
           <>
             <div className={styles.stepCounterRow}>
               <span className={styles.stepCounter}>{pieceName}</span>
             </div>
             <div className={styles.promptPlain}>
               <p className={styles.promptText}>Ready to begin?</p>
+              {canResume && (
+                <p className={styles.promptText} data-testid="lesson-resume-note">
+                  You stopped at step {resume!.step} of {resume!.total}.
+                </p>
+              )}
             </div>
             <div className={styles.actionsSpacer} />
             <div className={styles.actions}>
-              <button type="button" className={styles.actionBtn} onClick={handleStart}>
-                Start lesson →
+              {canResume && (
+                <button type="button" className={styles.actionBtn} onClick={() => handleStart(resume!.step - 1)} data-testid="lesson-continue">
+                  Continue from step {resume!.step}
+                </button>
+              )}
+              <button type="button" className={resume && resume.step > 1 ? styles.actionBtnGhost : styles.actionBtn} onClick={() => handleStart(0)} data-testid="lesson-start">
+                {resume && resume.step > 1 ? 'Start from the beginning' : 'Start lesson →'}
               </button>
             </div>
           </>
         ) : (
           <>
-        <div className={styles.stepCounterRow}>
-          <span className={styles.stepCounter}>{allDone ? 'Complete' : `${stepIndex + 1} of ${steps.length}`}</span>
-          {!allDone && stageLabel && <span className={styles.stageEyebrow}>{titleCase(stageLabel)}</span>}
-        </div>
-        <div className={styles.progressTrack}>
-          <div
-            className={styles.progressFill}
-            style={{ width: `${Math.round(((allDone ? steps.length : stepIndex + 1) / steps.length) * 100)}%` }}
-          />
-        </div>
+            <div className={styles.stepCounterRow}>
+              <span className={styles.stepCounter} data-testid="lesson-step-counter">
+                {allDone ? 'Complete' : `Step ${stepIndex + 1} of ${steps.length}`}
+              </span>
+              {!allDone && (
+                <span className={styles.stageEyebrow} data-testid="lesson-mode">
+                  {MODE_LABEL[step.kind]}
+                </span>
+              )}
+            </div>
+            <div className={styles.progressTrack} aria-hidden="true">
+              <div className={styles.progressFill} style={{ width: `${Math.round(((allDone ? steps.length : stepIndex + 1) / steps.length) * 100)}%` }} />
+            </div>
 
-        <div
-          className={
-            isReactionMoment
-              ? `${styles.promptCard} ${attemptState === 'correct' ? styles.promptCardCorrect : ''} ${
-                  allDone ? styles.promptCardDone : ''
-                }`
-              : styles.promptPlain
-          }
-        >
-          {promptLines.map((line, i) => (
-            <p key={i} className={styles.promptText}>
-              {line}
-            </p>
-          ))}
-        </div>
+            {heading && (
+              <p className={styles.stepHeadline} data-testid="lesson-headline">
+                {heading}
+              </p>
+            )}
 
-        {/* Answering lives right under the question, not in the fixed
-            footer below — same placement BoardLesson uses for yesNo, for
-            the same reason (answering and navigating are different
-            actions that happen to have shared a row before). */}
-        {!allDone && step.kind === 'judgment' && attemptState !== 'correct' && (
-          <div className={styles.answerRow}>
-            {step.options.map((option, i) => (
-              <button
-                key={option}
-                type="button"
-                className={`${styles.answerBtn} ${attemptState === 'reverting' && judgmentChoice === i ? styles.answerBtnWrong : ''}`}
-                onClick={() => handleJudgmentAnswer(i)}
-                disabled={attemptState === 'reverting'}
-              >
-                {option}
+            {promptLines.length > 0 && (
+            <div className={attemptState === 'correct' || allDone ? `${styles.promptCard} ${attemptState === 'correct' ? styles.promptCardCorrect : ''} ${allDone ? styles.promptCardDone : ''}` : styles.promptPlain} data-testid="lesson-prompt" aria-live="polite">
+              {promptLines.map((line, i) => (
+                <p key={i} className={styles.promptText}>
+                  {line}
+                </p>
+              ))}
+            </div>
+            )}
+
+            {!allDone && isPractice && attemptState === 'correct' && results[stepIndex] && (
+              <p className={styles.assistNote} data-testid="assist-note" data-assist={results[stepIndex]}>
+                {ASSIST_LABEL[results[stepIndex]]}
+              </p>
+            )}
+            {!allDone && isPractice && attemptState !== 'correct' && earlier !== undefined && (
+              <p className={styles.assistNote} data-testid="assist-earlier" data-assist={earlier}>
+                Earlier: {ASSIST_LABEL[earlier].toLowerCase()}. You can continue, or try this one again.
+              </p>
+            )}
+            {showFreshTry && (
+              <button type="button" className={styles.freshTry} onClick={startFreshTry} data-testid="fresh-try">
+                Try a fresh one on your own
               </button>
-            ))}
-          </div>
-        )}
+            )}
 
-        {!allDone && (
-          <VoiceControls
-            supported={voice.supported}
-            micSupported={voice.micSupported}
-            voiceOn={!voice.muted}
-            rate={voice.rate}
-            listening={voice.listening}
-            showHintControls={step.kind === 'try' || step.kind === 'judgment'}
-            onToggleVoice={voice.toggleMute}
-            onSetRate={voice.setSpeechRate}
-            onReplay={() => voice.speak(spokenText)}
-            onHint={requestHint}
-            onShowMe={requestShowMe}
-            onMicStart={() => voice.startPushToTalk(handleVoiceCommand)}
-            onMicEnd={voice.stopPushToTalk}
-          />
-        )}
+            {/* What each marker shape on the board means — never colour alone. */}
+            {!allDone && legendKinds.length > 0 && (
+              <ul className={styles.legend} data-testid="marker-legend" aria-label="What the markers mean">
+                {legendKinds.map((k) => (
+                  <li key={k}>{LEGEND[k]}</li>
+                ))}
+              </ul>
+            )}
 
-        {/* Right above Next, bottom-right — moved out of the control row
-            above, where it used to sit oddly wedged between buttons. */}
-        {!allDone && <VoiceStatusLine status={voiceStatus} />}
+            {!allDone && step.kind === 'judgment' && attemptState !== 'correct' && (
+              <div className={styles.answerRow}>
+                {step.options.map((option, i) => (
+                  <button key={option} type="button" className={`${styles.answerBtn} ${attemptState === 'reverting' && judgmentChoice === i ? styles.answerBtnWrong : ''}`} onClick={() => handleJudgmentAnswer(i)} disabled={attemptState === 'reverting'}>
+                    {option}
+                  </button>
+                ))}
+              </div>
+            )}
 
-        {/* Fixed footer — always in the same position for every step. */}
-        <div className={styles.actionsSpacer} />
-        <div className={styles.actions}>
-          <button
-            type="button"
-            className={`${styles.actionBtnGhost} ${!showBack ? styles.actionBtnHidden : ''}`}
-            onClick={handleBack}
-            disabled={!showBack}
-            tabIndex={showBack ? 0 : -1}
-          >
-            ← Back
-          </button>
-          {!allDone && step.kind === 'demo' && !voice.speaking && (
-            <button type="button" className={styles.actionBtn} onClick={advanceStep}>
-              {step.ctaLabel ?? 'Next →'}
-            </button>
-          )}
-          {allDone && (
-            <button type="button" className={styles.actionBtnGhost} onClick={handlePracticeAgain}>
-              Practice again
-            </button>
-          )}
-        </div>
+            {!allDone && (
+              <VoiceControls
+                layout="lesson"
+                supported={voice.supported}
+                micSupported={voice.micSupported}
+                voiceOn={!voice.muted}
+                rate={voice.rate}
+                listening={voice.listening}
+                micNotice={voice.micNotice}
+                showHintControls={isPractice}
+                helpLocked={isPractice && attemptState === 'correct'}
+                onToggleVoice={voice.toggleMute}
+                onSetRate={voice.setSpeechRate}
+                onReplay={() => voice.speak(spokenText)}
+                onHint={requestHint}
+                onShowMe={requestShowMe}
+                onMicStart={() => voice.startPushToTalk(handleVoiceCommand)}
+                onMicEnd={voice.stopPushToTalk}
+              />
+            )}
+
+            {!allDone && <VoiceStatusLine status={voiceStatus} />}
+
+            <div className={styles.actionsSpacer} />
+            {allDone ? (
+              <div className={styles.actions} data-testid="lesson-done-actions">
+                {nextCta && (
+                  <Link href={nextCta.href} className={styles.actionBtn} data-testid="lesson-next-lesson">
+                    {nextCta.label}
+                  </Link>
+                )}
+                <button type="button" className={styles.actionBtnGhost} onClick={handlePracticeAgain} data-testid="lesson-practice-again">
+                  Practice again
+                </button>
+                <Link href="/chess/learn/basics" className={styles.actionBtnGhost} data-testid="lesson-back-to-basics">
+                  Back to Chess Basics
+                </Link>
+              </div>
+            ) : (
+              <LessonNav
+                onBack={handleBack}
+                backAvailable={stepIndex > 0}
+                onNext={advanceStep}
+                nextAvailable={nextAvailable}
+                nextLabel={isLast ? 'Finish lesson' : step.kind === 'demo' ? (step.ctaLabel ?? 'Next →') : 'Next →'}
+                nextHelp="Finish this step to continue."
+              />
+            )}
           </>
         )}
       </div>
 
       {showModal && (
         <div className={styles.modalBackdrop} onClick={() => setShowModal(false)}>
-          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+          <div
+            ref={modalRef}
+            className={styles.modalCard}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="lesson-complete-title"
+            data-testid="lesson-complete-modal"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') setShowModal(false)
+              if (e.key === 'Tab') {
+                const f = [...(modalRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])') ?? [])]
+                if (!f.length) return
+                const first = f[0]
+                const last = f[f.length - 1]
+                if (e.shiftKey && document.activeElement === first) {
+                  e.preventDefault()
+                  last.focus()
+                } else if (!e.shiftKey && document.activeElement === last) {
+                  e.preventDefault()
+                  first.focus()
+                }
+              }
+            }}
+          >
             <p className={styles.modalTag}>✓ {pieceName} completed</p>
-            <p className={styles.modalHeading}>🎉 {completionHeadline}</p>
+            <p id="lesson-complete-title" className={styles.modalHeading}>
+              🎉 {finalHeadline}
+            </p>
             {(completionSummary ?? []).map((line, i) => (
               <p key={i} className={styles.modalBody}>
                 {line}
               </p>
             ))}
+            {describeSummary(summary) && (
+              <p className={styles.modalBody} data-testid="completion-assist-summary">
+                {describeSummary(summary)}
+              </p>
+            )}
             <div className={styles.modalActions}>
               {nextCta && (
-                <Link href={nextCta.href} className={styles.modalPrimary}>
+                <Link href={nextCta.href} className={styles.modalPrimary} data-autofocus data-testid="modal-next-lesson">
                   {nextCta.label}
                 </Link>
               )}
+              <button type="button" className={styles.modalSecondary} onClick={handlePracticeAgain} data-autofocus={nextCta ? undefined : true}>
+                Practice again
+              </button>
               <Link href="/chess/learn/basics" className={styles.modalSecondary}>
                 Back to Chess Basics
               </Link>

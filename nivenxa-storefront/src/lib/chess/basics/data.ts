@@ -95,6 +95,7 @@ import type { MoveFilterMode } from '@/app/chess/learn/_shared/moveTrainerLogic'
 import type { PieceLessonStep } from '@/app/chess/learn/_shared/PieceLesson'
 import type { BoardLessonStep } from '@/app/chess/learn/_shared/BoardLesson'
 import { allLightSquares, allDarkSquares } from '@/app/chess/learn/_shared/squareColors'
+import { START_PLACEMENT, type Placement } from '@/app/chess/learn/_shared/lessonPlacement'
 
 export interface BasicsTrainerConfig {
   fen: string
@@ -126,9 +127,23 @@ export interface BasicsLesson {
   miniGameFen?: string
   /** Natural-sounding completion line — e.g. "You learned how the chessboard works!" Falls back to a generic "You learned {name}!" when absent, which reads fine for some lesson names ("You learned Checkmate!") and awkwardly for others ("You learned The Chessboard!" / "You learned How Pawns Move!"), so this should be set for every lesson in practice. */
   completionHeadline?: string
+  /** Used instead of `completionHeadline` when the learner needed help on some practice steps, so the recap never claims more than was shown. */
+  completionAssistedHeadline?: string
+  /** Keep the board's file/rank labels visible on every step (every lesson after The Chessboard). */
+  alwaysShowCoordinates?: boolean
   completionSummary?: string[]
   /** A distinct, more conversational spoken paraphrase of the completion recap (BoardLesson only, for now) — falls back to reading completionHeadline + completionSummary verbatim when absent. A terse ALL-CAPS memory-phrase summary reads awkwardly spoken, which is exactly what this field exists to override. */
   completionSpokenText?: string
+}
+
+/** Pieces for a guided-setup step: place('R', ['a1', 'h1']) puts White rooks on a1/h1 AND the matching Black rooks on a8/h8. White pawns ('P') and lower-case (Black) letters are placed exactly where listed. */
+function place(letter: string, squares: string[]): Placement {
+  const out: Placement = {}
+  for (const sq of squares) out[sq] = letter
+  if (letter !== letter.toLowerCase() && letter !== 'P') {
+    for (const sq of squares) out[`${sq[0]}8`] = letter.toLowerCase()
+  }
+  return out
 }
 
 const EMPTY_FEN = '8/8/8/8/8/8/8/8 w - - 0 1'
@@ -143,15 +158,10 @@ export const BASICS: BasicsLesson[] = [
     summary: 'Discover the squares, coordinates, and the right way to face the board.',
     boardFen: EMPTY_FEN,
     completionHeadline: 'Chessboard Complete!',
-    // Consolidated from 20 to 16 steps (2026-09-30) on repeated feedback
-    // that a basic board-orientation lesson shouldn't feel like a 20-screen
-    // slog: merged the separate "one row"/"one column" demos into one,
-    // dropped the second (incorrectly-oriented) yes/no orientation check
-    // (one real judgement plus the earlier demo is enough), and cut the c6
-    // and h1 coordinate drills — e4 (taught, scaffolded) plus b7 (an
-    // independent "find it yourself" test right after) cover the same
-    // ground two fewer screens than e4+c6+b7+h1 did. See
-    // [[chess_learn_basics_section]] for the full before/after reasoning.
+    completionAssistedHeadline: 'Chessboard Complete — with a little help',
+    // Order of ideas: board -> rows/columns -> light/dark -> orientation -> files/ranks -> square addresses -> a short check that
+    // applies them. Coordinates are not mentioned before the lesson teaches them, so hints before that point are visual
+    // ("look at the bottom-left corner"), and square names appear in hints only from the Files part on.
     boardSteps: [
       // Part A — meet the board
       {
@@ -161,10 +171,6 @@ export const BASICS: BasicsLesson[] = [
         text: ['A chessboard has 64 squares.', 'There are 8 squares across and 8 squares down.'],
         spokenText: ["Let's explore the chessboard together.", 'It has sixty-four squares.', 'Eight rows and eight columns.'],
       },
-      // Split into two frames — the single step used to only ever highlight
-      // a row, even though its text taught both rows AND columns, so a
-      // column was never actually shown. Same "one highlight per idea"
-      // pattern as the square-address sequence below.
       {
         kind: 'demo',
         stageLabel: 'ROWS AND COLUMNS',
@@ -193,9 +199,9 @@ export const BASICS: BasicsLesson[] = [
         kind: 'demo',
         stageLabel: 'LIGHT AND DARK',
         headline: 'Chessboards come in many colours',
-        text: ["Choose a board colour you like. We'll use it for the rest of this lesson."],
+        text: ["Choose a board colour you like. We'll use it in every Chess Basics lesson.", 'Light and dark describe the shade of the squares, whatever colours you pick.'],
         colorPicker: true,
-        spokenText: ["Pick a board colour you like. We'll use it for the rest of this lesson."],
+        spokenText: ["Pick a board colour you like. We'll use it in every Chess Basics lesson. Light and dark describe the shade of the squares, whatever colours you pick."],
       },
       {
         kind: 'squareQuiz',
@@ -204,17 +210,25 @@ export const BASICS: BasicsLesson[] = [
         mode: 'any',
         correctSquares: allLightSquares(),
         prompt: 'Click any **LIGHT** square on the board.',
-        wrongText: "Not quite — that's a **DARK** square. Try a **LIGHT** one.",
-        hintText: 'Try a2, c2, e2, or g2.',
+        reminderText: 'Light squares are the paler ones. Look for a pale square.',
+        wrongText: "That's a **DARK** square. Look for a paler, **LIGHT** one.",
+        // Visual and plain: square names have not been taught yet.
+        hintText: 'Look at the bottom-left corner of the board. That corner square is dark, and the square just above it is light.',
+        demonstrationText: 'The highlighted pale square, just above the bottom-left corner, is a light square.',
         revealSquaresFrom: 'hint',
         correctText: 'Correct — **LIGHT**!',
         spokenPrompt: ['Now tap any light square.'],
         colorAwareSpokenFeedback: 'light',
-        // a1 (dark) + a2 (light) — a small, side-by-side pair showing both
-        // colors, instead of ringing all 32 light squares at the visual
-        // hint tier. a2 is the single square Show Me demonstrates.
         hintAreaSquares: ['a1', 'a2'],
         demonstrationSquare: 'a2',
+        retry: {
+          headline: 'Find another **LIGHT** square',
+          prompt: 'Click a different **LIGHT** square — this time on your own.',
+          spokenPrompt: ['Now find another light square, on your own.'],
+          hintText: 'Look at the bottom-right corner of the board. That corner square is light.',
+          hintAreaSquares: ['h1', 'h2'],
+          demonstrationSquare: 'h1',
+        },
       },
       {
         kind: 'squareQuiz',
@@ -223,14 +237,24 @@ export const BASICS: BasicsLesson[] = [
         mode: 'any',
         correctSquares: allDarkSquares(),
         prompt: 'Click any **DARK** square on the board.',
-        wrongText: "Not quite — that's a **LIGHT** square. Try a **DARK** one.",
-        hintText: 'Try a1, c1, e1, or g1.',
+        reminderText: 'Dark squares are the deeper-coloured ones. Look for a deep-coloured square.',
+        wrongText: "That's a **LIGHT** square. Look for a darker, **DARK** one.",
+        hintText: 'Look at the bottom-left corner of the board. That corner square is dark.',
+        demonstrationText: 'The highlighted square in the bottom-left corner is a dark square.',
         revealSquaresFrom: 'hint',
         correctText: 'Correct — **DARK**!',
         spokenPrompt: ['Now find a dark square.'],
         colorAwareSpokenFeedback: 'dark',
         hintAreaSquares: ['a1', 'a2'],
         demonstrationSquare: 'a1',
+        retry: {
+          headline: 'Find another **DARK** square',
+          prompt: 'Click a different **DARK** square — this time on your own.',
+          spokenPrompt: ['Now find another dark square, on your own.'],
+          hintText: 'Look at the bottom-right corner. The square just above it is dark.',
+          hintAreaSquares: ['h1', 'h2'],
+          demonstrationSquare: 'h2',
+        },
       },
       // Part C — board direction (real pieces, for a concrete "is this right" judgement)
       {
@@ -239,9 +263,9 @@ export const BASICS: BasicsLesson[] = [
         headline: 'Set the board correctly',
         fen: START_FEN,
         highlightSquares: ['h1'],
-        text: ['The square in your bottom-right corner should be **LIGHT**.'],
+        text: ['The corner nearest your right hand is **LIGHT**.', 'On this board, White sits at the bottom, and that is the highlighted bottom-right corner.'],
         rememberLine: 'LIGHT ON RIGHT →',
-        spokenText: ['The square in your bottom right corner should be light.'],
+        spokenText: ['The corner nearest your right hand is light.', 'On this board, White sits at the bottom, and that is the highlighted bottom right corner.'],
       },
       {
         kind: 'yesNo',
@@ -250,29 +274,22 @@ export const BASICS: BasicsLesson[] = [
         boardIsCorrect: true,
         prompt: 'Is this board the right way around?',
         correctText: 'Correct — **Light on Right**!',
-        wrongText: 'Not quite — remember: **Light on Right**.',
+        wrongText: 'Remember: **Light on Right**. The corner nearest your right hand is light.',
         spokenPrompt: 'Is this board facing the right way?',
-        // Explains the actual state, not just the rule — this lesson only
-        // ever shows the correctly-oriented board (the second, flipped
-        // yesNo was cut in an earlier round), so "wrong" here always means
-        // the learner answered No about a board that IS right.
-        spokenCorrectText: 'Look at the bottom-right corner. It is a light square, so this board is facing the right way.',
-        spokenWrongText: 'Actually, look again — the bottom-right corner is light, so this board is facing the right way.',
-        hintText: 'Hint: the bottom-right square should be light, not dark.',
+        spokenCorrectText: 'Look at the corner nearest your right hand. It is a light square, so this board is facing the right way.',
+        spokenWrongText: 'Actually, look again — the corner nearest your right hand is light, so this board is facing the right way.',
+        hintText: 'Look at the corner nearest your right hand. It should be light, not dark.',
       },
-      // Part D — files, ranks, and square names. Coordinate labels are
-      // emphasized (see Board.tsx's emphasizeCoordinates) for this whole
-      // part, since it's the last part of the lesson — nothing to "return to
-      // subtle" for within this lesson, only in lessons after it.
+      // Part D — files, ranks, and square names. The same words are used every time: a FILE is a COLUMN, a RANK is a ROW.
       {
         kind: 'demo',
         stageLabel: 'FILES',
         headline: 'Files',
         highlightSquares: ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'e8'],
-        text: ['Files go up and down ↕', 'They are named:  a · b · c · d · e · f · g · h'],
-        rememberLine: 'FILE = VERTICAL ↕',
+        text: ['A file is a column.', 'Files are named with letters:  a · b · c · d · e · f · g · h'],
+        rememberLine: 'FILE = COLUMN ↕',
         emphasizeCoordinates: true,
-        spokenText: ['Files go from top to bottom.', 'They are named a through h.'],
+        spokenText: ['A file is a column.', 'Files are named with the letters a through h.'],
       },
       {
         kind: 'squareQuiz',
@@ -281,6 +298,7 @@ export const BASICS: BasicsLesson[] = [
         mode: 'any',
         correctSquares: ['f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8'],
         prompt: 'Click anywhere on that column.',
+        reminderText: 'A file is a column, named with a letter along the bottom.',
         wrongText: 'Almost — the f-file is the 6th column from the left.',
         hintText: 'Files go a, b, c, d, e, f… count 6 in from the left edge.',
         revealSquaresFrom: 'hint',
@@ -288,16 +306,24 @@ export const BASICS: BasicsLesson[] = [
         emphasizeCoordinates: true,
         spokenPrompt: ['Now tap anywhere on the f-file.'],
         spokenCorrectText: 'Yes! Every square in this column belongs to the f-file.',
+        retry: {
+          headline: 'Find the c-file',
+          hintText: 'Files go a, b, c… count 3 in from the left edge.',
+          wrongText: 'Almost — the c-file is the 3rd column from the left.',
+          correctText: 'Correct — the c-file!',
+          correctSquares: ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'c8'],
+          spokenPrompt: ['Now tap anywhere on the c-file, on your own.'],
+        },
       },
       {
         kind: 'demo',
         stageLabel: 'RANKS',
         headline: 'Ranks',
         highlightSquares: ['a4', 'b4', 'c4', 'd4', 'e4', 'f4', 'g4', 'h4'],
-        text: ['Ranks go across ↔', 'They are numbered:  1 · 2 · 3 · 4 · 5 · 6 · 7 · 8'],
-        rememberLine: 'RANK = HORIZONTAL ↔',
+        text: ['A rank is a row.', 'Ranks are numbered:  1 · 2 · 3 · 4 · 5 · 6 · 7 · 8, starting from the row nearest you.'],
+        rememberLine: 'RANK = ROW ↔',
         emphasizeCoordinates: true,
-        spokenText: ['Ranks go from side to side.', 'They are numbered one through eight.'],
+        spokenText: ['A rank is a row.', 'Ranks are numbered one through eight, starting from the row nearest you.'],
       },
       {
         kind: 'squareQuiz',
@@ -306,6 +332,7 @@ export const BASICS: BasicsLesson[] = [
         mode: 'any',
         correctSquares: ['a6', 'b6', 'c6', 'd6', 'e6', 'f6', 'g6', 'h6'],
         prompt: 'Click anywhere on that row.',
+        reminderText: 'A rank is a row, numbered along the side of the board.',
         wrongText: 'Almost — rank 6 is the 6th row from the bottom.',
         hintText: 'Ranks are numbered 1 to 8, starting from the row closest to you.',
         revealSquaresFrom: 'hint',
@@ -313,45 +340,37 @@ export const BASICS: BasicsLesson[] = [
         emphasizeCoordinates: true,
         spokenPrompt: ['Now tap anywhere on rank six.'],
         spokenCorrectText: 'Exactly! Rank 6 goes from side to side.',
+        retry: {
+          headline: 'Find Rank 3',
+          hintText: 'Ranks are numbered 1 to 8, starting from the row closest to you. Count 3 up.',
+          wrongText: 'Almost — rank 3 is the 3rd row from the bottom.',
+          correctText: 'Correct — Rank 3!',
+          correctSquares: ['a3', 'b3', 'c3', 'd3', 'e3', 'f3', 'g3', 'h3'],
+          spokenPrompt: ['Now tap anywhere on rank three, on your own.'],
+        },
       },
-      // Square-address sequence, split into 3 frames (file alone -> rank
-      // alone -> just the intersection) instead of one step showing both
-      // full bands at once — on feedback that the file and rank lines read
-      // as equally prominent with nothing drawing the eye to where they
-      // actually meet. Each frame highlights only what its own line is
-      // about, so narration and the highlight it's describing always match
-      // exactly — "file e" is spoken while only the e-file is lit, etc.
+      // Square-address sequence: file alone -> rank alone -> the square where they meet.
       {
         kind: 'demo',
         stageLabel: 'SQUARE NAMES',
         headline: 'Every square has an address',
         highlightSquares: ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'e8'],
-        // Spelled out for a learner reading with sound muted too, not just
-        // a line that only lands when narrated — names the everyday word
-        // (column/row) alongside the chess term, matching how the earlier
-        // Rows/Columns step already introduced them.
-        text: ['First, find column e.', 'In chess, a column is called a file.'],
+        text: ['First, find the e-file: the column labelled e.', 'A file is a column.'],
         emphasizeCoordinates: true,
-        spokenText: ['Every square has an address.', 'First, find column e.', 'In chess, a column is called a file.'],
+        spokenText: ['Every square has an address.', 'First, find the e-file, the column labelled e.', 'A file is a column.'],
       },
       {
         kind: 'demo',
         stageLabel: 'SQUARE NAMES',
         highlightSquares: ['a4', 'b4', 'c4', 'd4', 'e4', 'f4', 'g4', 'h4'],
-        text: ['Next, find row 4.', 'In chess, a row is called a rank.'],
+        text: ['Next, find rank 4: the row labelled 4.', 'A rank is a row.'],
         emphasizeCoordinates: true,
-        spokenText: ['Next, find row 4.', 'In chess, a row is called a rank.'],
+        spokenText: ['Next, find rank four, the row labelled four.', 'A rank is a row.'],
       },
       {
         kind: 'demo',
         stageLabel: 'SQUARE NAMES',
-        // Just the one square now — not both bands — so e4 reads as
-        // distinct from the two full lines that led up to it.
         highlightSquares: ['e4'],
-        // Plain sentence first, for a learner reading with sound muted,
-        // then the formula spelled out. `rememberLine` deliberately
-        // repeats only the short form, matching the completion recap
-        // exactly.
         text: ['Where they meet is e4.', 'e (FILE ↕) + 4 (RANK ↔) = **e4**'],
         rememberLine: 'e + 4 = e4',
         emphasizeCoordinates: true,
@@ -364,16 +383,21 @@ export const BASICS: BasicsLesson[] = [
         mode: 'any',
         correctSquares: ['e4'],
         prompt: 'Click it on the board.',
+        reminderText: 'The letter is the file, the number is the rank.',
         wrongText: 'Almost — look at file e and rank 4.',
         hintText: 'Find the letter e at the bottom. Follow that column up to number 4.',
         revealSquaresFrom: 'hint',
         correctText: 'Correct — **e4**! (e = file, 4 = rank)',
         emphasizeCoordinates: true,
         spokenPrompt: ['Now tap e4.'],
-        // No static spokenCorrectText — BoardLesson.tsx's correctFeedbackFor
-        // generates this dynamically for any single-square target, framed
-        // by how much help was actually used (plain / followed-a-hint /
-        // Show-Me), rather than one fixed line regardless of assistance.
+        retry: {
+          headline: 'Find **d3**',
+          wrongText: 'Almost — look at file d and rank 3.',
+          hintText: 'Find the letter d at the bottom. Follow that column up to number 3.',
+          correctText: 'Correct — **d3**! (d = file, 3 = rank)',
+          correctSquares: ['d3'],
+          spokenPrompt: ['Now tap d3, on your own.'],
+        },
       },
       {
         kind: 'squareQuiz',
@@ -381,43 +405,73 @@ export const BASICS: BasicsLesson[] = [
         headline: 'Now find **b7**',
         mode: 'any',
         correctSquares: ['b7'],
-        prompt: 'Click it on the board — no hints this time.',
+        prompt: ['Click it on the board.', 'Try this yourself first — help is still here if you need it.'],
+        reminderText: 'The letter is the file, the number is the rank.',
         wrongText: 'Almost — look at file b and rank 7.',
         hintText: 'Find the letter b at the bottom. Follow that column up to number 7.',
         revealSquaresFrom: 'hint',
-        // "You found it yourself" dropped — it was shown regardless of
-        // whether a hint or Show Me was actually used first, which is an
-        // inaccurate claim exactly when assistance was needed. The spoken
-        // reaction (correctFeedbackFor) already frames this correctly by
-        // tier; this visible text just states the plain fact.
         correctText: 'Correct — **b7**!',
         emphasizeCoordinates: true,
-        spokenPrompt: ['Now find b7 on your own.'],
+        spokenPrompt: ['Now find b7. Try it on your own first; help is still here if you need it.'],
+        retry: {
+          headline: 'Now find **g2**',
+          wrongText: 'Almost — look at file g and rank 2.',
+          hintText: 'Find the letter g at the bottom. Follow that column up to number 2.',
+          correctText: 'Correct — **g2**!',
+          correctSquares: ['g2'],
+          spokenPrompt: ['Now find g2, on your own.'],
+        },
+      },
+      // Show what you learned — three short checks that APPLY the ideas to squares not shown before.
+      {
+        kind: 'yesNo',
+        stageLabel: 'SHOW WHAT YOU LEARNED',
+        headline: 'Quick check: the board direction',
+        boardIsCorrect: false,
+        prompt: 'Is this board the right way around?',
+        correctText: 'Right — the corner nearest your right hand is dark here, so this board is the wrong way round.',
+        wrongText: 'Look again at the corner nearest your right hand. Is it light?',
+        spokenPrompt: 'Is this board facing the right way?',
+        spokenCorrectText: 'Right. The corner nearest your right hand is dark here, so this board is the wrong way round.',
+        spokenWrongText: 'Look again at the corner nearest your right hand. Is it light?',
+        hintText: 'The corner nearest your right hand should be light.',
       },
       {
         kind: 'squareQuiz',
         stageLabel: 'SHOW WHAT YOU LEARNED',
-        headline: 'Show what you learned',
+        headline: 'Quick check: a square address',
         checkpointItems: ['Light and dark squares', 'Files: a-h', 'Ranks: 1-8', 'Square addresses: e4'],
-        mode: 'all',
-        correctSquares: ['a1', 'h8'],
-        prompt: '⭐ Find both corners of the board — a1 and h8.',
-        wrongText: 'Not quite. Try again.',
-        hintText: 'a1 is the near-left corner, h8 is the far corner.',
+        mode: 'any',
+        correctSquares: ['g3'],
+        prompt: '⭐ Find the square where file g meets rank 3.',
+        reminderText: 'The letter is the file, the number is the rank.',
+        wrongText: 'Find the letter g along the bottom, then follow that column up to number 3.',
+        hintText: 'Find the letter g at the bottom. Follow that column up to number 3.',
         revealSquaresFrom: 'hint',
-        correctText: 'Correct — you found both corners!',
+        correctText: 'Correct — **g3**!',
         emphasizeCoordinates: true,
-        spokenPrompt: ['Now find both corners of the board: a1 and h8.'],
+        spokenPrompt: ['Find the square where file g meets rank three.'],
+      },
+      {
+        kind: 'squareQuiz',
+        stageLabel: 'SHOW WHAT YOU LEARNED',
+        headline: 'Quick check: colour and rank',
+        mode: 'any',
+        correctSquares: ['a5', 'c5', 'e5', 'g5'],
+        prompt: '⭐ Click a **DARK** square on rank 5.',
+        reminderText: 'Rank 5 is a row. Dark squares are the deeper-coloured ones.',
+        wrongText: 'Find rank 5 first, the fifth row from the bottom, then pick a dark square on it.',
+        hintText: 'Rank 5 is the fifth row from the bottom. Pick a deep-coloured square on that row.',
+        revealSquaresFrom: 'hint',
+        correctText: 'Correct — a dark square on rank 5!',
+        emphasizeCoordinates: true,
+        spokenPrompt: ['Click a dark square on rank five.'],
       },
     ],
-    // Full sentences, not the ALL-CAPS memory phrases this used to be —
-    // those read fine on screen but awkwardly spoken aloud (symbols,
-    // arrows, no verb). completionSpokenText below is a further, more
-    // conversational paraphrase of this same list, not a literal read-out.
     completionSummary: [
-      'Light square on the right.',
-      'Files go up and down: a to h.',
-      'Ranks go side to side: 1 to 8.',
+      'The corner nearest your right hand is light.',
+      'A file is a column: a to h.',
+      'A rank is a row: 1 to 8.',
       'Name a square with its letter first, then number — like e4.',
     ],
     completionSpokenText: "Well done! You know your way around the board. Remember: letter first, then number. Let's meet the pieces next!",
@@ -425,30 +479,40 @@ export const BASICS: BasicsLesson[] = [
   {
     slug: 'meet-the-pieces',
     name: 'Meet Your Pieces',
-    description: 'White and Black have the same six piece types, and some pieces are stronger than others.',
+    description: 'White and Black have the same six piece types, and some pieces are worth more than others.',
     summary: 'Meet every piece and learn what makes each one special.',
     completionHeadline: 'You met every piece on the board!',
+    completionAssistedHeadline: 'You met every piece — with a little help',
     boardFen: START_FEN,
+    alwaysShowCoordinates: true,
     boardSteps: [
       {
         kind: 'demo',
         stageLabel: 'TWO TEAMS',
-        text: ['Two players play chess.', 'White has one team. Black has one team.', 'Both teams have the same pieces.'],
+        text: [
+          'Two players play chess.',
+          'White has one team. Black has one team.',
+          'Both teams have the same pieces, and matching pieces move alike — only the colour is different.',
+        ],
       },
       {
         kind: 'demo',
         stageLabel: 'STRENGTH',
-        text: ['Some pieces are stronger than others.', 'We measure that with points.'],
+        text: [
+          'Some pieces are worth more than others.',
+          'The values below are approximate. They help you compare pieces when deciding whether a trade is fair.',
+          'You do not win by collecting points. The main goal is to checkmate the king.',
+        ],
+        valueSummary: true,
       },
       {
         kind: 'demo',
         stageLabel: 'KING',
         highlightSquares: ['e1', 'e8'],
         text: [
-          'This is the king.',
+          'This is the king. Recognise it by the cross on top.',
           'White has one king, Black has one king.',
-          'They move the same way — only the colour is different.',
-          'The king has no point value. The king is the piece you must protect.',
+          'The king is priceless—you cannot trade it. Protect it from checkmate.',
         ],
       },
       {
@@ -457,8 +521,9 @@ export const BASICS: BasicsLesson[] = [
         mode: 'all',
         correctSquares: ['e1', 'e8'],
         prompt: 'Can you find both kings?',
-        wrongText: "Not quite — that's not a king.",
-        hintText: 'Kings start right next to the queens.',
+        reminderText: 'Look for the piece with a cross on top.',
+        wrongText: "That one isn't a king. A king has a cross on top.",
+        hintText: 'Kings start right next to the queens, and have a cross on top.',
         revealSquaresFrom: 'hint',
         correctText: 'You found both kings.',
       },
@@ -466,12 +531,7 @@ export const BASICS: BasicsLesson[] = [
         kind: 'demo',
         stageLabel: 'QUEEN',
         highlightSquares: ['d1', 'd8'],
-        text: [
-          'This is the queen.',
-          'White has one queen, Black has one queen.',
-          'They move the same way — only the colour is different.',
-          'Queen = 9 points. She is the strongest piece.',
-        ],
+        text: ['This is the queen. Recognise her by the crown.', 'White has one queen, Black has one queen.', 'Queen ≈ 9. She is the most valuable piece for trades.'],
       },
       {
         kind: 'squareQuiz',
@@ -479,8 +539,9 @@ export const BASICS: BasicsLesson[] = [
         mode: 'all',
         correctSquares: ['d1', 'd8'],
         prompt: 'Can you find both queens?',
-        wrongText: "Not quite — that's not a queen.",
-        hintText: 'Queens start right next to the kings.',
+        reminderText: 'Look for the piece with a crown.',
+        wrongText: "That one isn't a queen. A queen has a crown.",
+        hintText: 'Queens start right next to the kings, and wear a crown.',
         revealSquaresFrom: 'hint',
         correctText: 'You found both queens.',
       },
@@ -488,12 +549,7 @@ export const BASICS: BasicsLesson[] = [
         kind: 'demo',
         stageLabel: 'ROOK',
         highlightSquares: ['a1', 'h1', 'a8', 'h8'],
-        text: [
-          'These are rooks.',
-          'White and Black both have two rooks.',
-          'They move the same way — only the colour is different.',
-          'Rook = 5 points.',
-        ],
+        text: ['These are rooks. A rook looks like a tower with a castle-like top.', 'White and Black both have two rooks.', 'Rook ≈ 5.'],
       },
       {
         kind: 'squareQuiz',
@@ -501,8 +557,9 @@ export const BASICS: BasicsLesson[] = [
         mode: 'all',
         correctSquares: ['a1', 'h1', 'a8', 'h8'],
         prompt: 'Can you find all four rooks?',
-        wrongText: "Not quite — that's not a rook.",
-        hintText: 'Rooks start in the corners.',
+        reminderText: 'Look for the pieces shaped like towers.',
+        wrongText: "That one isn't a rook. A rook looks like a tower.",
+        hintText: 'Rooks start in the corners, and look like towers.',
         revealSquaresFrom: 'hint',
         correctText: 'You found all four rooks.',
       },
@@ -510,12 +567,7 @@ export const BASICS: BasicsLesson[] = [
         kind: 'demo',
         stageLabel: 'BISHOP',
         highlightSquares: ['c1', 'f1', 'c8', 'f8'],
-        text: [
-          'These are bishops.',
-          'White and Black both have two bishops.',
-          'They move the same way — only the colour is different.',
-          'Bishop = 3 points.',
-        ],
+        text: ['These are bishops. Recognise a bishop by its pointed top with a split in it.', 'White and Black both have two bishops.', 'Bishop ≈ 3.'],
       },
       {
         kind: 'squareQuiz',
@@ -523,8 +575,9 @@ export const BASICS: BasicsLesson[] = [
         mode: 'all',
         correctSquares: ['c1', 'f1', 'c8', 'f8'],
         prompt: 'Can you find all four bishops?',
-        wrongText: "Not quite — that's not a bishop.",
-        hintText: 'Bishops start next to the knights.',
+        reminderText: 'Look for the pieces with a pointed top and a split in it.',
+        wrongText: "That one isn't a bishop. A bishop has a split top.",
+        hintText: 'Bishops start next to the knights, and have a split top.',
         revealSquaresFrom: 'hint',
         correctText: 'You found all four bishops.',
       },
@@ -532,12 +585,7 @@ export const BASICS: BasicsLesson[] = [
         kind: 'demo',
         stageLabel: 'KNIGHT',
         highlightSquares: ['b1', 'g1', 'b8', 'g8'],
-        text: [
-          'These are knights.',
-          'White and Black both have two knights.',
-          'They move the same way — only the colour is different.',
-          'Knight = 3 points.',
-        ],
+        text: ['These are knights. Recognise a knight by its horse head.', 'White and Black both have two knights.', 'Knight ≈ 3.'],
       },
       {
         kind: 'squareQuiz',
@@ -545,8 +593,9 @@ export const BASICS: BasicsLesson[] = [
         mode: 'all',
         correctSquares: ['b1', 'g1', 'b8', 'g8'],
         prompt: 'Can you find all four knights?',
-        wrongText: "Not quite — that's not a knight.",
-        hintText: 'Knights start right next to the rooks.',
+        reminderText: 'Look for the pieces shaped like a horse head.',
+        wrongText: "That one isn't a knight. A knight has a horse head.",
+        hintText: 'Knights start right next to the rooks, and look like horses.',
         revealSquaresFrom: 'hint',
         correctText: 'You found all four knights.',
       },
@@ -554,12 +603,7 @@ export const BASICS: BasicsLesson[] = [
         kind: 'demo',
         stageLabel: 'PAWN',
         highlightSquares: ['a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2', 'a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7'],
-        text: [
-          'These are pawns.',
-          'White and Black both have eight pawns.',
-          'They move the same way — only the colour is different.',
-          'Pawn = 1 point. They are the weakest piece, but there are a lot of them.',
-        ],
+        text: ['These are pawns: the smallest pieces, with a round head.', 'White and Black both have eight pawns.', 'Pawn = 1. Each is worth the least, but there are a lot of them.'],
       },
       {
         kind: 'squareQuiz',
@@ -567,7 +611,8 @@ export const BASICS: BasicsLesson[] = [
         mode: 'all',
         correctSquares: ['e2', 'e7'],
         prompt: '⭐ Show what you learned — find the two pawns standing in front of the kings.',
-        wrongText: "Not quite — that's not the pawn in front of a king.",
+        reminderText: 'Find the kings first (the crosses), then look one square in front of each.',
+        wrongText: "That pawn isn't in front of a king. Find the king first, then the pawn right in front of it.",
         hintText: 'Look one square in front of each king.',
         revealSquaresFrom: 'hint',
         correctText: 'You found them.',
@@ -575,13 +620,13 @@ export const BASICS: BasicsLesson[] = [
       {
         kind: 'demo',
         stageLabel: 'REMEMBER',
-        text: ['Points help us compare pieces.', 'They do not decide who wins the game.'],
+        text: ['Approximate values: pawn 1, knight 3, bishop 3, rook 5, queen 9. The king is priceless.', 'They help us compare trades. You do not win by collecting points. The main goal is to checkmate the king.'],
       },
     ],
     completionSummary: [
-      'White and Black have the same pieces — king, queen, rooks, bishops, knights, and pawns.',
-      'Pawn = 1, Knight = 3, Bishop = 3, Rook = 5, Queen = 9. The king has no point value.',
-      'Points help compare pieces — they do not decide who wins.',
+      'White and Black have the same pieces — king, queen, rooks, bishops, knights and pawns.',
+      'Approximate values for comparing trades: pawn 1, knight 3, bishop 3, rook 5, queen 9. The king is priceless.',
+      'You do not win by collecting points. The main goal is to checkmate the king.',
     ],
   },
   {
@@ -589,9 +634,15 @@ export const BASICS: BasicsLesson[] = [
     name: 'Set Up the Board',
     description: 'Every piece has its own starting square.',
     summary: 'Learn where every piece belongs before the game begins.',
-    completionHeadline: 'You can set up the board yourself!',
+    completionHeadline: 'The board is set up!',
     boardFen: EMPTY_FEN,
+    alwaysShowCoordinates: true,
     boardSteps: [
+      {
+        kind: 'demo',
+        stageLabel: 'THE PLAN',
+        text: ['We will build the starting position one kind of piece at a time.', 'The order is: rooks, knights, bishops, queens, kings, then pawns.'],
+      },
       {
         kind: 'demo',
         stageLabel: 'ROOKS',
@@ -604,10 +655,12 @@ export const BASICS: BasicsLesson[] = [
         mode: 'all',
         correctSquares: ['a1', 'h1', 'a8', 'h8'],
         prompt: 'Click the four corners where the rooks belong.',
-        wrongText: "Not quite — that's not a corner.",
+        reminderText: 'Rooks start in the corners.',
+        wrongText: 'Rooks start in the four corners of the board.',
         hintText: 'The four corners of the board.',
         revealSquaresFrom: 'hint',
         correctText: 'Rooks in the corners.',
+        placePieces: place('R', ['a1', 'h1']),
       },
       {
         kind: 'demo',
@@ -621,10 +674,12 @@ export const BASICS: BasicsLesson[] = [
         mode: 'all',
         correctSquares: ['b1', 'g1', 'b8', 'g8'],
         prompt: 'Click where the four knights belong.',
-        wrongText: 'Not quite.',
+        reminderText: 'Knights stand right next to the rooks.',
+        wrongText: 'Knights start beside the rooks, on the back row.',
         hintText: 'Right next to the rooks.',
         revealSquaresFrom: 'hint',
         correctText: 'Knights next to the rooks.',
+        placePieces: place('N', ['b1', 'g1']),
       },
       {
         kind: 'demo',
@@ -638,20 +693,18 @@ export const BASICS: BasicsLesson[] = [
         mode: 'all',
         correctSquares: ['c1', 'f1', 'c8', 'f8'],
         prompt: 'Click where the four bishops belong.',
-        wrongText: 'Not quite.',
+        reminderText: 'Bishops stand right next to the knights.',
+        wrongText: 'Bishops start beside the knights, on the back row.',
         hintText: 'Right next to the knights.',
         revealSquaresFrom: 'hint',
         correctText: 'Bishops next to the knights.',
+        placePieces: place('B', ['c1', 'f1']),
       },
       {
         kind: 'demo',
         stageLabel: 'QUEEN',
         highlightSquares: ['d1', 'd8'],
-        text: [
-          'The queen starts on her own colour.',
-          'A white queen on a light square, a black queen on a dark square.',
-          'Simple memory: queen on her colour.',
-        ],
+        text: ['The queen starts on her own colour.', 'The white queen goes on a light square, the black queen on a dark square.', 'Simple memory: queen on her colour.'],
       },
       {
         kind: 'squareQuiz',
@@ -659,16 +712,18 @@ export const BASICS: BasicsLesson[] = [
         mode: 'all',
         correctSquares: ['d1', 'd8'],
         prompt: 'Click where both queens belong.',
-        wrongText: 'Not quite.',
-        hintText: 'One light square, one dark square, both on the same file.',
+        reminderText: 'Queen on her colour: white queen on a light square, black queen on a dark square.',
+        wrongText: 'Each queen starts on her own colour: the white queen on a light square, the black queen on a dark square.',
+        hintText: 'One light square, one dark square, both on the same file — right beside the bishops.',
         revealSquaresFrom: 'hint',
         correctText: 'Queen on her colour.',
+        placePieces: { d1: 'Q', d8: 'q' },
       },
       {
         kind: 'demo',
         stageLabel: 'KING',
         highlightSquares: ['e1', 'e8'],
-        text: ['The king stands right next to the queen.'],
+        text: ['The king stands right next to the queen.', 'Only the two kings are left on the back rank.'],
       },
       {
         kind: 'squareQuiz',
@@ -676,10 +731,12 @@ export const BASICS: BasicsLesson[] = [
         mode: 'all',
         correctSquares: ['e1', 'e8'],
         prompt: 'Click where both kings belong.',
-        wrongText: 'Not quite.',
+        reminderText: 'Each king stands beside its queen.',
+        wrongText: 'Each king starts right beside its queen on the back row.',
         hintText: 'Right next to the queen.',
         revealSquaresFrom: 'hint',
         correctText: 'Kings next to the queens.',
+        placePieces: { e1: 'K', e8: 'k' },
       },
       {
         kind: 'demo',
@@ -689,23 +746,46 @@ export const BASICS: BasicsLesson[] = [
       },
       {
         kind: 'squareQuiz',
-        stageLabel: 'SHOW WHAT YOU LEARNED',
+        stageLabel: 'YOUR TURN',
         mode: 'all',
         correctSquares: ['a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2'],
-        prompt: "⭐ Show what you learned — click White's whole row of pawns.",
-        wrongText: 'Not quite.',
+        prompt: "Click White's whole row of pawns.",
+        reminderText: "White's pawns fill the row just in front of the back rank.",
+        wrongText: "White's pawns fill the whole second row, just in front of the back row.",
         hintText: 'The whole second rank.',
         revealSquaresFrom: 'hint',
         correctText: 'The whole row of pawns.',
+        placePieces: place('P', ['a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2']),
+      },
+      {
+        kind: 'demo',
+        stageLabel: 'PAWNS',
+        highlightSquares: ['a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7'],
+        text: ["Black's pawns mirror them, on the seventh rank.", 'Now every piece is on its starting square.'],
+        placePieces: place('p', ['a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7']),
+      },
+      {
+        kind: 'setup',
+        stageLabel: 'SHOW WHAT YOU LEARNED',
+        headline: 'Now you build it',
+        prompt: ['Set up the whole board yourself.', 'Choose a piece from the tray, then choose its square. Choose Check my setup when you are done.'],
+        spokenPrompt: ['Now set up the whole board yourself. Choose a piece from the tray, then choose its square.'],
+        target: START_PLACEMENT,
+        correctText: 'That is exactly the starting position.',
+        reminderText: 'Remember the order: rooks, knights, bishops, queens, kings, then pawns. Queen on her colour.',
+        groupHints: {
+          r: 'Rooks go in the four corners.',
+          n: 'Knights go right next to the rooks.',
+          b: 'Bishops go right next to the knights.',
+          q: 'Queen on her colour: the white queen on the light d1, the black queen on the dark d8.',
+          k: 'Each king goes right next to its queen, on the e-file.',
+          p: 'Pawns fill the second rank for White and the seventh rank for Black.',
+        },
       },
       {
         kind: 'demo',
         stageLabel: 'WHO GOES FIRST',
-        fen: START_FEN,
-        text: [
-          'With the board set up, White always moves first.',
-          'Then the players alternate — one move each, taking turns, for the whole game.',
-        ],
+        text: ['With the board set up, White always moves first.', 'Then the players alternate — one move each, taking turns, for the whole game.'],
       },
       {
         kind: 'demo',
@@ -725,14 +805,16 @@ export const BASICS: BasicsLesson[] = [
     description: 'Pawns move forward, and capture diagonally.',
     summary: 'Move forward, capture diagonally, and reach the other side.',
     completionHeadline: 'You learned how pawns move!',
+    completionAssistedHeadline: 'You learned how pawns move — with a little help',
     steps: [
       {
         kind: 'demo',
         stageLabel: 'SEE IT MOVE',
         fen: 'k7/8/8/8/8/8/4P3/7K w - - 0 1',
         pieceColor: 'w',
-        highlightSquares: ['e3'],
-        text: ['Pawns move forward.', 'White pawns move up the board, one square at a time.'],
+        arrows: [['e2', 'e3']],
+        markers: [{ square: 'e3', kind: 'forward' }],
+        text: ["Pawns move forward, toward the opponent's side.", 'In this view, White moves up the board and Black moves down.'],
       },
       {
         kind: 'try',
@@ -743,29 +825,52 @@ export const BASICS: BasicsLesson[] = [
         filterMode: 'legal',
         onlyTo: ['e3'],
         prompt: 'Move the pawn forward one square.',
+        reminderText: 'A pawn moves straight ahead — up the board for White.',
         wrongText: 'Not quite. Pawns move straight ahead.',
         hintText: 'Move it one square forward, to e3.',
         revealSquaresFrom: 'hint',
         correctText: 'Pawns move straight ahead.',
+        retry: { fen: 'k7/8/8/8/8/8/2P5/7K w - - 0 1', pieceSquare: 'c2', onlyTo: ['c3'], hintText: 'Move it one square forward, to c3.' },
       },
       {
         kind: 'demo',
         stageLabel: "BLACK'S DIRECTION",
         fen: '4k3/4p3/8/8/8/8/8/6K1 b - - 0 1',
-        pieceColor: 'w',
-        highlightSquares: ['e6'],
+        pieceColor: 'b',
+        orientation: 'white',
         arrows: [['e7', 'e6']],
-        text: ['Black pawns move the other way.', 'White moves up the board — Black moves down it.'],
+        markers: [{ square: 'e6', kind: 'forward' }],
+        text: ["Black pawns move toward White's side.", 'In this view, White moves up the board and Black moves down it.'],
+      },
+      {
+        kind: 'try',
+        stageLabel: 'YOUR TURN',
+        fen: 'k7/4p3/8/8/8/8/8/6K1 b - - 0 1',
+        pieceSquare: 'e7',
+        pieceColor: 'b',
+        orientation: 'white',
+        filterMode: 'legal',
+        onlyTo: ['e6'],
+        prompt: 'This is a black pawn. Move it one square forward — that is down the board.',
+        reminderText: 'Black moves toward White: down the board in this view.',
+        wrongText: 'Not quite. A black pawn moves straight ahead, which is down the board.',
+        hintText: 'Move it one square forward, to e6.',
+        revealSquaresFrom: 'hint',
+        correctText: 'Black pawns also move straight ahead — down the board.',
+        retry: { fen: 'k7/3p4/8/8/8/8/8/6K1 b - - 0 1', pieceSquare: 'd7', onlyTo: ['d6'], hintText: 'Move it one square forward, to d6.' },
       },
       {
         kind: 'demo',
         stageLabel: 'ONE OR TWO',
         fen: 'k7/8/8/8/8/8/4P3/7K w - - 0 1',
         pieceColor: 'w',
-        highlightSquares: ['e3', 'e4'],
+        markers: [
+          { square: 'e3', kind: 'forward' },
+          { square: 'e4', kind: 'forward' },
+        ],
         text: [
-          'A pawn that has never moved may go one square or two.',
-          'You choose one step or two — you do not have to move two.',
+          'A pawn on its starting square may go one square or two, but only on that pawn\'s first move — and only if both squares ahead (e3 and e4) are empty.',
+          'You choose one step or two. You do not have to move two.',
         ],
       },
       {
@@ -776,10 +881,11 @@ export const BASICS: BasicsLesson[] = [
         pieceColor: 'w',
         filterMode: 'legal',
         prompt: 'Move the pawn — one square or two, your choice.',
+        reminderText: 'This pawn has not moved yet, so it has a choice.',
         wrongText: 'Not quite. Pawns move straight ahead.',
         hintText: 'Try e3 (one square) or e4 (two squares) — both are allowed from here.',
         revealSquaresFrom: 'hint',
-        correctText: "One square forward — and from its very first move, a pawn may also go two.",
+        correctText: 'One square forward — and from its very first move, a pawn may also go two.',
         alternateCorrectText: "Two squares forward! That's only allowed on a pawn's first move.",
       },
       {
@@ -787,8 +893,11 @@ export const BASICS: BasicsLesson[] = [
         stageLabel: 'BLOCKED',
         fen: 'k7/8/8/8/4p3/8/4P3/7K w - - 0 1',
         pieceColor: 'w',
-        highlightSquares: ['e4'],
-        text: ['If the second square ahead is blocked, only one step is available.', "A pawn can't jump over anything — even to capture."],
+        markers: [
+          { square: 'e3', kind: 'forward' },
+          { square: 'e4', kind: 'blocked' },
+        ],
+        text: ['If the second square ahead is occupied, only one step is available.', "A pawn can't jump over anything — even to capture."],
       },
       {
         kind: 'try',
@@ -797,7 +906,9 @@ export const BASICS: BasicsLesson[] = [
         pieceSquare: 'e2',
         pieceColor: 'w',
         filterMode: 'legal',
+        markers: [{ square: 'e4', kind: 'blocked' }],
         prompt: 'The square two ahead is blocked. Move the pawn.',
+        reminderText: 'Check which squares ahead are empty.',
         wrongText: 'Not quite. One square is still open.',
         hintText: 'Try e3 — the only square available.',
         revealSquaresFrom: 'hint',
@@ -808,10 +919,11 @@ export const BASICS: BasicsLesson[] = [
         stageLabel: 'BLOCKED BOTH WAYS',
         fen: 'k7/8/8/8/8/4p3/4P3/7K w - - 0 1',
         pieceColor: 'w',
-        highlightSquares: ['e3'],
+        markers: [{ square: 'e3', kind: 'blocked' }],
         prompt: 'Now the very next square is blocked too. Can the white pawn move forward at all?',
         options: ['Yes', 'No'],
         correctOptionIndex: 1,
+        reminderText: 'Look at the square directly in front of the pawn.',
         correctText: "No forward move at all — a pawn can't jump over the piece blocking it, even one square.",
         wrongText: 'Look again — the square right in front of the pawn is occupied.',
         hintText: "A pawn moving straight ahead can never jump a piece, friend or enemy — it simply can't go anywhere forward.",
@@ -821,29 +933,17 @@ export const BASICS: BasicsLesson[] = [
         stageLabel: 'AFTER THE FIRST MOVE',
         fen: 'k7/8/8/8/8/4P3/8/7K w - - 0 1',
         pieceColor: 'w',
-        highlightSquares: ['e4'],
+        markers: [{ square: 'e4', kind: 'forward' }],
         text: ["This pawn already made its first move — it's no longer on its starting square.", 'From here on, it can only ever move one square at a time.'],
-      },
-      {
-        kind: 'try',
-        stageLabel: 'TRY IT',
-        fen: 'k7/8/8/8/8/4P3/8/7K w - - 0 1',
-        pieceSquare: 'e3',
-        pieceColor: 'w',
-        filterMode: 'legal',
-        prompt: 'Move this pawn forward.',
-        wrongText: 'Not quite. This pawn already moved once.',
-        hintText: 'Only e4 — the two-square option is gone for good.',
-        revealSquaresFrom: 'hint',
-        correctText: 'Just one square — the two-square option only ever existed on its very first move.',
       },
       {
         kind: 'demo',
         stageLabel: 'CAPTURING',
         fen: 'k7/8/8/8/8/3p4/4P3/7K w - - 0 1',
         pieceColor: 'w',
-        highlightSquares: ['d3'],
-        text: ['Pawns capture in a different way.', 'They take one square diagonally.'],
+        arrows: [['e2', 'd3']],
+        markers: [{ square: 'd3', kind: 'capture' }],
+        text: ['Pawns capture in a different way.', 'A pawn captures one square diagonally forward — not straight ahead, and not backward.'],
       },
       {
         kind: 'try',
@@ -853,47 +953,92 @@ export const BASICS: BasicsLesson[] = [
         pieceColor: 'w',
         filterMode: 'captures',
         prompt: 'Capture the black pawn using a diagonal move.',
+        reminderText: 'A pawn captures one square diagonally forward.',
         wrongText: 'Not quite. Look for a diagonal move.',
-        hintText: 'Pawns capture one square diagonally — try d3.',
+        hintText: 'Pawns capture one square diagonally forward — try d3.',
         revealSquaresFrom: 'hint',
         correctText: 'Pawns capture diagonally, not straight ahead.',
+        retry: { fen: 'k7/8/8/8/8/4p3/3P4/7K w - - 0 1', pieceSquare: 'd2', hintText: 'Pawns capture one square diagonally forward — try e3.' },
       },
       {
         kind: 'demo',
         stageLabel: 'STRAIGHT AHEAD',
         fen: 'k7/8/8/8/8/4p3/4P3/7K w - - 0 1',
         pieceColor: 'w',
-        highlightSquares: ['e3'],
-        text: ['A pawn cannot capture a piece straight ahead.', 'It can only capture diagonally, like you just did.'],
+        markers: [{ square: 'e3', kind: 'blocked' }],
+        text: ['A pawn cannot capture a piece straight ahead.', 'An enemy piece directly in front simply blocks it. The pawn captures only diagonally, like you just did.'],
+      },
+      // Show what you learned — four short, different positions.
+      {
+        kind: 'try',
+        stageLabel: 'SHOW WHAT YOU LEARNED',
+        fen: 'k7/8/8/8/8/2P5/8/7K w - - 0 1',
+        pieceSquare: 'c3',
+        pieceColor: 'w',
+        filterMode: 'legal',
+        prompt: '⭐ Check 1 of 4: this pawn has already moved. Move it forward.',
+        reminderText: 'A pawn that has already moved goes one square at a time.',
+        wrongText: 'Not quite. This pawn already moved, so it goes one square at a time.',
+        hintText: 'Only c4 — the two-square option is gone for good.',
+        revealSquaresFrom: 'hint',
+        correctText: 'One square — the two-square option only exists on a pawn\'s very first move.',
       },
       {
         kind: 'try',
         stageLabel: 'SHOW WHAT YOU LEARNED',
-        fen: 'k7/8/8/3p1p2/4P3/8/8/6K1 w - - 0 1',
+        fen: 'k7/3p4/8/8/8/8/8/6K1 b - - 0 1',
+        pieceSquare: 'd7',
+        pieceColor: 'b',
+        orientation: 'white',
+        filterMode: 'legal',
+        prompt: '⭐ Check 2 of 4: move this black pawn. One square or two — your choice.',
+        reminderText: 'This black pawn has not moved yet, so it has a choice. Remember: Black moves down.',
+        wrongText: 'Not quite. A black pawn moves straight ahead — down the board.',
+        hintText: 'Try d6 (one square) or d5 (two squares) — both are allowed from here.',
+        revealSquaresFrom: 'hint',
+        correctText: 'Black pawns have the same first-move choice, going down the board.',
+        alternateCorrectText: 'Two squares down — allowed on a pawn\'s first move.',
+      },
+      {
+        kind: 'judgment',
+        stageLabel: 'SHOW WHAT YOU LEARNED',
+        fen: 'k7/8/8/8/8/6p1/6P1/7K w - - 0 1',
+        pieceColor: 'w',
+        prompt: '⭐ Check 3 of 4: can the white pawn on g2 move straight ahead?',
+        options: ['Yes', 'No'],
+        correctOptionIndex: 1,
+        reminderText: 'Look at the square directly in front of the pawn.',
+        correctText: 'No — the black pawn on g3 blocks it, and a pawn cannot capture straight ahead.',
+        wrongText: 'Look again — the square right in front of the pawn is occupied.',
+        hintText: 'A pawn never jumps over a piece, and never captures straight ahead.',
+      },
+      {
+        kind: 'try',
+        stageLabel: 'SHOW WHAT YOU LEARNED',
+        fen: 'k7/8/8/3ppp2/4P3/8/8/6K1 w - - 0 1',
         pieceSquare: 'e4',
         pieceColor: 'w',
         filterMode: 'captures',
-        prompt: '⭐ Show what you learned — capture a piece with your pawn.',
-        wrongText: 'Not quite. Remember, pawns only capture diagonally.',
+        prompt: '⭐ Check 4 of 4: capture a piece with your pawn.',
+        reminderText: 'A pawn captures one square diagonally forward.',
+        wrongText: 'Not quite. Remember, pawns only capture diagonally — never straight ahead.',
         hintText: 'Try one of the diagonal squares — d5 or f5.',
         revealSquaresFrom: 'hint',
-        correctText: "Pawns capture diagonally — and only move one square once they've left their starting rank.",
-        alternateCorrectText: "Yes, that works too! Either diagonal capture is correct here.",
+        correctText: 'Pawns capture diagonally — and the pawn straight ahead just blocks.',
+        alternateCorrectText: 'Yes, that works too! Either diagonal capture is correct here.',
       },
       {
         kind: 'demo',
         stageLabel: 'LOOKING AHEAD',
         fen: 'k7/8/8/3p1p2/4P3/8/8/6K1 w - - 0 1',
         pieceColor: 'w',
-        text: [
-          "There are two more special pawn moves you'll learn later: reaching the far end of the board (Pawn Promotion), and a special capture called En Passant.",
-        ],
+        text: ["There are two more special pawn moves for later lessons: reaching the far end of the board (Pawn Promotion), and a special capture called En Passant."],
       },
     ],
     completionSummary: [
-      'Pawns move forward — White up the board, Black down it.',
-      "On a pawn's first move, it may go one square or two; after that, only one.",
-      'Pawns capture diagonally, never straight ahead, and never jump over anything.',
+      'Pawns move forward toward the opponent — in this view White up the board, Black down it.',
+      "On a pawn's first move it may go one square or two (if both squares ahead are empty); after that, only one.",
+      'Pawns capture one square diagonally forward, never straight ahead, and never jump over anything.',
     ],
   },
   {

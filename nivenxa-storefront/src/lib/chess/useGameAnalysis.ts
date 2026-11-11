@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useStockfish } from './useStockfish'
 import { classifyMove } from './moveClassification'
 import { uciToSan, sanToUci } from './uci'
-import { evaluationToCp } from './engineEval'
+import { evaluationToCp, isCheckmatePosition, MATE_CP } from './engineEval'
 import type { NormalizedGame } from './analysisTypes'
 import type { QualityMoveEntry } from './types'
 
@@ -37,7 +37,7 @@ export interface UseGameAnalysisResult {
  * queries can never share one.
  */
 export function useGameAnalysis(game: NormalizedGame | null): UseGameAnalysisResult {
-  const { ready, error, getTopMoves, evaluatePosition } = useStockfish()
+  const { ready, error, getTopMoves, evaluateWithReply } = useStockfish()
   const [entries, setEntries] = useState<QualityMoveEntry[]>([])
   const [progress, setProgress] = useState(0)
   // Bumped whenever the pass should abandon its in-flight work — a new game
@@ -64,13 +64,13 @@ export function useGameAnalysis(game: NormalizedGame | null): UseGameAnalysisRes
         try {
           const [topMoves, evalAfterRaw] = await Promise.all([
             getTopMoves(move.fenBefore, 1, { movetime: ANALYSIS_MOVETIME }),
-            evaluatePosition(move.fenAfter, ANALYSIS_DEPTH),
+            evaluateWithReply(move.fenAfter, ANALYSIS_DEPTH),
           ])
           if (cancelled || generation !== generationRef.current) return
 
           const best = topMoves[0]
           const evalBeforeCp = best ? evaluationToCp(best.evaluation) : 0
-          const evalAfterCp = -evalAfterRaw
+          const evalAfterCp = isCheckmatePosition(move.fenAfter) ? MATE_CP : -evalAfterRaw.score // delivering mate is never a loss
           const cpLoss = Math.max(0, evalBeforeCp - evalAfterCp)
           const playedUci = sanToUci(move.fenBefore, move.san)
           const isEngineBest = !!best && !!playedUci && best.move === playedUci
@@ -91,6 +91,8 @@ export function useGameAnalysis(game: NormalizedGame | null): UseGameAnalysisRes
             evalAfterCp,
             cpLoss,
             classification,
+            replyUci: evalAfterRaw.bestMove,
+            pvUci: evalAfterRaw.pv?.slice(0, 10),
             explanation: null,
             explanationStatus: 'idle',
             explanationRevealed: false,
@@ -111,7 +113,7 @@ export function useGameAnalysis(game: NormalizedGame | null): UseGameAnalysisRes
     return () => {
       cancelled = true
     }
-  }, [game, ready, getTopMoves, evaluatePosition])
+  }, [game, ready, getTopMoves, evaluateWithReply])
 
   return { entries, progress, ready, error }
 }

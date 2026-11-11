@@ -1,4 +1,5 @@
 import type { MoveAnalysisEntry } from '@/lib/chess/types'
+import { cleanInsightText as clean } from '@/lib/chess/insightFeed'
 import styles from './ExplanationBody.module.scss'
 
 /**
@@ -15,7 +16,9 @@ import styles from './ExplanationBody.module.scss'
 // component is the single place both AI-explanation endpoints
 // (explain-move, explain-engine-purpose) ultimately render through, so one
 // label here covers both.
-function AiLabel() {
+function AiLabel({ source }: { source?: MoveAnalysisEntry['explanationSource'] }) {
+  if (source === 'evidence') return <p className={styles.aiLabel}>From the engine&apos;s analysis of this move</p>
+  if (source === 'facts') return <p className={styles.aiLabel}>A plain description of the move</p>
   return <p className={styles.aiLabel}>Explained by AI · may occasionally be wrong</p>
 }
 
@@ -23,22 +26,22 @@ export default function ExplanationBody({ entry }: { entry: MoveAnalysisEntry })
   if (!entry.headline) {
     return entry.explanation ? (
       <>
-        <p className={styles.calloutText}>{entry.explanation}</p>
-        <AiLabel />
+        <p className={styles.calloutText}>{clean(entry.explanation)}</p>
+        <AiLabel source={entry.explanationSource} />
       </>
     ) : null
   }
 
   return (
     <>
-      <p className={styles.calloutHeadline}>{entry.headline}</p>
-      {entry.explanation && <p className={styles.calloutText}>{entry.explanation}</p>}
+      <p className={styles.calloutHeadline}>{clean(entry.headline)}</p>
+      {entry.explanation && <p className={styles.calloutText}>{clean(entry.explanation)}</p>}
       {entry.bullets && entry.bullets.length > 0 && (
         <div className={styles.calloutSection}>
           <span className={styles.calloutSectionLabel}>{entry.kind === 'quality' ? 'Why it works' : 'Why it helps'}</span>
           <ul className={styles.calloutBullets}>
             {entry.bullets.map((b, i) => (
-              <li key={i}>{b}</li>
+              <li key={i}>{clean(b)}</li>
             ))}
           </ul>
         </div>
@@ -46,21 +49,21 @@ export default function ExplanationBody({ entry }: { entry: MoveAnalysisEntry })
       {entry.suggestion && (
         <div className={styles.calloutSection}>
           <span className={styles.calloutSectionLabel}>Better idea</span>
-          <p className={styles.calloutText}>{entry.suggestion}</p>
+          <p className={styles.calloutText}>{clean(entry.suggestion)}</p>
         </div>
       )}
       {entry.notice && (
         <p className={styles.calloutWatch}>
-          <strong>Watch:</strong> {entry.notice}
+          <strong>Watch:</strong> {clean(entry.notice)}
         </p>
       )}
       {entry.remember && (
         <div className={styles.calloutSection}>
           <span className={styles.calloutSectionLabel}>Remember</span>
-          <p className={styles.calloutText}>{entry.remember}</p>
+          <p className={styles.calloutText}>{clean(entry.remember)}</p>
         </div>
       )}
-      <AiLabel />
+      <AiLabel source={entry.explanationSource} />
     </>
   )
 }

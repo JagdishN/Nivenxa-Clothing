@@ -1,0 +1,660 @@
+[
+ {
+  "source": "real-weak-moves-study (captured with real Stockfish + the real model; SUBSTITUTE positions, not the reviewed games)",
+  "fenBefore": "r1bqkb1r/2pppppp/2n2n2/pp6/3P4/2P2NP1/PP1NPP1P/R1BQKB1R b KQkq - 1 5",
+  "san": "d5",
+  "ply": 9,
+  "historySan": [
+   "Nf6",
+   "g3",
+   "a5",
+   "c3",
+   "Nc6",
+   "d4",
+   "b5",
+   "Nbd2"
+  ],
+  "grade": "inaccuracy",
+  "pvUci": [
+   "e2e4",
+   "d5e4",
+   "f1b5",
+   "c8d7",
+   "f3g5",
+   "e4e3",
+   "f2e3",
+   "e7e6",
+   "e3e4",
+   "f8e7"
+  ],
+  "returned": {
+   "explanation": "...d5 grabs a share of the centre, which is a nice idea. But White can answer with e4! After dxe4, White has Bxb5, hitting the loose pawn there, and after Bd7 Ng5 e3 Black ends up a pawn behind. So this push lets White strike in the middle and pick up material. Guarding the b5 pawn first would keep things safer. Keep looking for central play — the instinct is good!",
+   "source": "model"
+  },
+  "validation": {
+   "kind": "model"
+  }
+ },
+ {
+  "source": "real-weak-moves-study (captured with real Stockfish + the real model; SUBSTITUTE positions, not the reviewed games)",
+  "fenBefore": "r1bqkb1r/2p1pppp/2n2n2/pp1p4/3P4/2P2NP1/PP1NPP1P/R1BQKB1R w KQkq - 0 6",
+  "san": "Qb3",
+  "ply": 10,
+  "historySan": [
+   "g3",
+   "a5",
+   "c3",
+   "Nc6",
+   "d4",
+   "b5",
+   "Nbd2",
+   "d5"
+  ],
+  "grade": "mistake",
+  "pvUci": [
+   "b5b4",
+   "f3e5",
+   "c6e5",
+   "d4e5",
+   "f6g4",
+   "d2f3",
+   "e7e6",
+   "h2h3",
+   "g4h6",
+   "c1h6"
+  ],
+  "returned": {
+   "explanation": "",
+   "source": "rejected",
+   "reason": "no-verified-downside"
+  },
+  "validation": {
+   "kind": "unavailable",
+   "reason": "no-model-text"
+  }
+ },
+ {
+  "source": "real-weak-moves-study (captured with real Stockfish + the real model; SUBSTITUTE positions, not the reviewed games)",
+  "fenBefore": "r1b1kb1r/2pqpppp/2n2n2/1p1p4/p2PP3/1QP2NP1/PP1N1P1P/R1B1KB1R w KQkq - 0 8",
+  "san": "e5",
+  "ply": 14,
+  "historySan": [
+   "d4",
+   "b5",
+   "Nbd2",
+   "d5",
+   "Qb3",
+   "Qd7",
+   "e4",
+   "a4"
+  ],
+  "grade": "blunder",
+  "pvUci": [
+   "a4b3",
+   "f1b5",
+   "f6g8",
+   "d2b3",
+   "e7e6",
+   "a2a4",
+   "h7h5",
+   "b3c5",
+   "f8c5",
+   "d4c5"
+  ],
+  "returned": {
+   "explanation": "Pushing e5 attacks the knight, but it leaves the white queen on b3 unguarded — Black plays **axb3**, and the pawn simply takes the queen. That's about seven points of material gone, and the pawn on e5 can also be taken by the knight (Nxe5). Before advancing a pawn, it helps to check whether any of your pieces is already being attacked. Keep looking after your queen — you'll spot these soon!",
+   "source": "model"
+  },
+  "validation": {
+   "kind": "model"
+  }
+ },
+ {
+  "source": "real-weak-moves-study (captured with real Stockfish + the real model; SUBSTITUTE positions, not the reviewed games)",
+  "fenBefore": "r1b1kb1r/2pqpppp/2n2n2/1p1pP3/p2P4/1QP2NP1/PP1N1P1P/R1B1KB1R b KQkq - 0 8",
+  "san": "Rb8",
+  "ply": 15,
+  "historySan": [
+   "b5",
+   "Nbd2",
+   "d5",
+   "Qb3",
+   "Qd7",
+   "e4",
+   "a4",
+   "e5"
+  ],
+  "grade": "blunder",
+  "pvUci": [
+   "b3c2",
+   "f6g4",
+   "f1d3",
+   "e7e6",
+   "e1g1",
+   "f7f5",
+   "f1e1",
+   "f8e7",
+   "b2b4",
+   "c8a6"
+  ],
+  "returned": {
+   "explanation": "",
+   "source": "rejected",
+   "reason": "no-verified-downside"
+  },
+  "validation": {
+   "kind": "unavailable",
+   "reason": "no-model-text"
+  }
+ },
+ {
+  "source": "real-weak-moves-study (captured with real Stockfish + the real model; SUBSTITUTE positions, not the reviewed games)",
+  "fenBefore": "1rb1kb1r/2pqpppp/2n2n2/1p1pP3/p2P4/1QP2NP1/PP1N1P1P/R1B1KB1R w KQk - 1 9",
+  "san": "h4",
+  "ply": 16,
+  "historySan": [
+   "Nbd2",
+   "d5",
+   "Qb3",
+   "Qd7",
+   "e4",
+   "a4",
+   "e5",
+   "Rb8"
+  ],
+  "grade": "blunder",
+  "pvUci": [
+   "a4b3",
+   "e5f6",
+   "e7f6",
+   "f1d3",
+   "d7e6",
+   "e1f1",
+   "b3a2",
+   "a1a2",
+   "f8d6"
+  ],
+  "returned": {
+   "explanation": "Pushing h4 gains space on the kingside, but it leaves the white queen on b3 unprotected from Black's pawn on a4. Black can simply play axb3 and win the queen for just a pawn — that's about 7 points of material gone, which is very hard to come back from. Before making a pawn move, it's a great habit to check each of your pieces: can anything capture it right now? Keep practising that check — you'll spot these quickly!",
+   "source": "model"
+  },
+  "validation": {
+   "kind": "model"
+  }
+ },
+ {
+  "source": "real-weak-moves-study (captured with real Stockfish + the real model; SUBSTITUTE positions, not the reviewed games)",
+  "fenBefore": "1rb1kb1r/2pqpppp/2n2n2/1p1pP3/p2P3P/1QP2NP1/PP1N1P2/R1B1KB1R b KQk - 0 9",
+  "san": "Na5",
+  "ply": 17,
+  "historySan": [
+   "d5",
+   "Qb3",
+   "Qd7",
+   "e4",
+   "a4",
+   "e5",
+   "Rb8",
+   "h4"
+  ],
+  "grade": "blunder",
+  "pvUci": [
+   "b3c2",
+   "f6g4",
+   "h4h5",
+   "c7c5",
+   "d4c5",
+   "a5c6",
+   "b2b4",
+   "f7f6",
+   "h1h4",
+   "g4e5"
+  ],
+  "returned": {
+   "explanation": "Moving the knight from c6 to a5 sends it to the edge, away from the centre. White answers with Qc2, stepping the queen to safety, and in the engine's line Black ends up a pawn behind after Ng4, h5, c5, dxc5, Nc6 — the knight has to come back to c6 anyway, and a pawn is gone. Knights are usually happier near the middle, where they guard more squares. Keep looking for moves that help your centre!",
+   "source": "model"
+  },
+  "validation": {
+   "kind": "model"
+  }
+ },
+ {
+  "source": "real-weak-moves-study (captured with real Stockfish + the real model; SUBSTITUTE positions, not the reviewed games)",
+  "fenBefore": "1rb1kb1r/2pqpppp/5n2/np1pP3/p2P3P/2P2NP1/PP1N1P2/R1BQKB1R b KQk - 2 10",
+  "san": "Kd8",
+  "ply": 19,
+  "historySan": [
+   "Qd7",
+   "e4",
+   "a4",
+   "e5",
+   "Rb8",
+   "h4",
+   "Na5",
+   "Qd1"
+  ],
+  "grade": "mistake",
+  "pvUci": [
+   "e5f6",
+   "e7f6",
+   "b2b4",
+   "d7e6",
+   "f1e2",
+   "a5c4",
+   "e1g1",
+   "f8d6",
+   "d2c4",
+   "b5c4"
+  ],
+  "returned": {
+   "explanation": "Moving the king to d8 leaves your knight on f6 unprotected. White can play exf6, and after exf6 your knight is simply gone — you end up about two points of material down. With the king on d8, the knight no longer has the usual helpers it needs. Keeping that knight defended, or moving it to safety first, would hold your material together. Keep looking for which of your pieces are guarded — that habit wins games!",
+   "source": "model"
+  },
+  "validation": {
+   "kind": "model"
+  }
+ },
+ {
+  "source": "real-weak-moves-study (captured with real Stockfish + the real model; SUBSTITUTE positions, not the reviewed games)",
+  "fenBefore": "1rbk1b1r/2pqpppp/5n2/np1pP3/p2P3P/2P2NP1/PP1N1P2/R1BQKB1R w KQ - 3 11",
+  "san": "Qc2",
+  "ply": 20,
+  "historySan": [
+   "e4",
+   "a4",
+   "e5",
+   "Rb8",
+   "h4",
+   "Na5",
+   "Qd1",
+   "Kd8"
+  ],
+  "grade": "mistake",
+  "pvUci": [
+   "f6g4",
+   "b2b4",
+   "a5c6",
+   "f1e2",
+   "f7f6",
+   "e1g1",
+   "f6e5",
+   "f3g5",
+   "d8e8"
+  ],
+  "returned": {
+   "explanation": "Qc2 steps the queen off the back rank and connects toward the queenside — but it leaves the e5-pawn under-defended. Black can play Ng4, and after b4 Nc6 Be2 f6 O-O that pawn falls, leaving White a pawn behind. The idea behind Qc2 isn't silly: the queen eyes the c-file and supports a queenside push. Just remember to count defenders of advanced pawns first. Keep going — you're thinking about piece activity!",
+   "source": "model"
+  },
+  "validation": {
+   "kind": "model"
+  }
+ },
+ {
+  "source": "real-weak-moves-study (captured with real Stockfish + the real model; SUBSTITUTE positions, not the reviewed games)",
+  "fenBefore": "1rbk1b1r/2pqpppp/5n2/np1pP3/p2P3P/2P2NP1/PPQN1P2/R1B1KB1R b KQ - 4 11",
+  "san": "Rb6",
+  "ply": 21,
+  "historySan": [
+   "a4",
+   "e5",
+   "Rb8",
+   "h4",
+   "Na5",
+   "Qd1",
+   "Kd8",
+   "Qc2"
+  ],
+  "grade": "mistake",
+  "pvUci": [
+   "b2b4",
+   "a5c4",
+   "e5f6",
+   "d7e6",
+   "f1e2",
+   "e7f6",
+   "d2c4",
+   "b5c4",
+   "e1g1",
+   "e6h3"
+  ],
+  "returned": {
+   "explanation": "Moving the rook to b6 looks active, but it lets White play **b4**. That pawn attacks the knight on a5, and the knight doesn't have a safe home — after Nc4, exf6, Qe6+, Be2, Black ends up a knight down, about 3 points behind. A good idea in positions like this is to keep your pieces defended and give the knight a safe square before lining up on the b-file. Keep looking for pawn attacks like this — spotting them…",
+   "source": "model"
+  },
+  "validation": {
+   "kind": "model"
+  }
+ },
+ {
+  "source": "real-weak-moves-study (captured with real Stockfish + the real model; SUBSTITUTE positions, not the reviewed games)",
+  "fenBefore": "2bk1b1r/2pqpppp/1r3n2/np1pP3/p2P3P/2P2NP1/PPQN1P2/R1B1KB1R w KQ - 5 12",
+  "san": "Bg2",
+  "ply": 22,
+  "historySan": [
+   "e5",
+   "Rb8",
+   "h4",
+   "Na5",
+   "Qd1",
+   "Kd8",
+   "Qc2",
+   "Rb6"
+  ],
+  "grade": "mistake",
+  "pvUci": [
+   "f6g4",
+   "f3g5",
+   "e7e6",
+   "g5h7",
+   "f8e7",
+   "b2b4",
+   "a5c4",
+   "d2c4",
+   "b5c4",
+   "g2h3"
+  ],
+  "returned": {
+   "explanation": "",
+   "source": "rejected",
+   "reason": "no-verified-downside"
+  },
+  "validation": {
+   "kind": "unavailable",
+   "reason": "no-model-text"
+  }
+ },
+ {
+  "source": "real-weak-moves-study (captured with real Stockfish + the real model; SUBSTITUTE positions, not the reviewed games)",
+  "fenBefore": "rn1qkb1r/1bp2pp1/1pn5/p6p/1PPpp3/7Q/P2NNPPP/R1B1KB1R w KQkq - 2 12",
+  "san": "bxa5",
+  "ply": 22,
+  "historySan": [
+   "Qc3",
+   "exd4",
+   "Qh3",
+   "a5",
+   "b4",
+   "h5",
+   "Ne2",
+   "Nec6"
+  ],
+  "grade": "inaccuracy",
+  "pvUci": [
+   "c6b4",
+   "e2f4",
+   "b4c2",
+   "e1d1",
+   "c2a1",
+   "f4d5",
+   "a8a5",
+   "c1b2",
+   "d8d7",
+   "h3d7"
+  ],
+  "returned": {
+   "explanation": "Taking the pawn with bxa5 grabs material, but it opens the b4-square. Black can answer Nb4! The knight then hops to c2 with check, and after Kd1 it snaps up the rook on a1 with Nxa1. That costs you a rook and a pawn — about five points behind. Your pawn on a5 can also be captured right away. A knight move like Nf4 is useful later, but the b4-square is the key thing to watch.",
+   "source": "model"
+  },
+  "validation": {
+   "kind": "model"
+  }
+ },
+ {
+  "source": "real-weak-moves-study (captured with real Stockfish + the real model; SUBSTITUTE positions, not the reviewed games)",
+  "fenBefore": "rnbqkb1r/2p2pp1/1pn5/P6p/2Pp4/4p2Q/P2NNPPP/R1B1KBR1 w Qkq - 0 14",
+  "san": "Qxc8",
+  "ply": 26,
+  "historySan": [
+   "b4",
+   "h5",
+   "Ne2",
+   "Nec6",
+   "bxa5",
+   "Bc8",
+   "Rg1",
+   "e3"
+  ],
+  "grade": "mistake",
+  "pvUci": [
+   "d8c8",
+   "f2e3",
+   "d4e3",
+   "d2e4",
+   "c8e6",
+   "e2c3",
+   "c6d4",
+   "a5b6",
+   "d4c2",
+   "e1d1"
+  ],
+  "returned": {
+   "explanation": "Taking the bishop on c8 looks tempting, but the square isn't safe. Black's queen on d8 sits right next to it and simply plays Qxc8, winning your queen. Trading a queen for a bishop leaves you about six points of material down — a big loss. Before capturing, it helps to check which enemy pieces are watching that square. Dealing with the pawn on e3 instead keeps your strong queen on the board. Keep going — you'll spot these soon!",
+   "source": "model"
+  },
+  "validation": {
+   "kind": "model"
+  }
+ },
+ {
+  "source": "real-weak-moves-study (captured with real Stockfish + the real model; SUBSTITUTE positions, not the reviewed games)",
+  "fenBefore": "r2k1b1r/2p2p2/1pn3p1/P3n2p/2Pp3P/3Np3/P2N1PP1/R1B1KBR1 b Q - 0 18",
+  "san": "exf2+",
+  "ply": 35,
+  "historySan": [
+   "Ne5",
+   "Qxd8+",
+   "Kxd8",
+   "Nf4",
+   "Nbc6",
+   "Nd3",
+   "g6",
+   "h4"
+  ],
+  "grade": "mistake",
+  "pvUci": [
+   "e1f2",
+   "a8a5",
+   "d3e5",
+   "c6e5",
+   "d2f3",
+   "e5g4",
+   "f2g3",
+   "d8c8",
+   "f1e2",
+   "f8c5"
+  ],
+  "returned": {
+   "explanation": "",
+   "source": "rejected",
+   "reason": "no-verified-downside"
+  },
+  "validation": {
+   "kind": "unavailable",
+   "reason": "no-model-text"
+  }
+ },
+ {
+  "source": "real-weak-moves-study (captured with real Stockfish + the real model; SUBSTITUTE positions, not the reviewed games)",
+  "fenBefore": "r1k2b1r/2p2p2/1pn3p1/P3n2p/2Pp3P/3N4/P2N2P1/R1B1KBR1 b - - 2 20",
+  "san": "bxa5",
+  "ply": 39,
+  "historySan": [
+   "Nbc6",
+   "Nd3",
+   "g6",
+   "h4",
+   "exf2+",
+   "Kxf2",
+   "Kc8",
+   "Ke1"
+  ],
+  "grade": "inaccuracy",
+  "pvUci": [
+   "d3e5",
+   "c6e5",
+   "d2f3",
+   "e5g4",
+   "e1d2",
+   "f8h6",
+   "d2d3",
+   "g4f2",
+   "d3c2",
+   "h6c1"
+  ],
+  "returned": {
+   "explanation": "",
+   "source": "rejected",
+   "reason": "no-verified-downside"
+  },
+  "validation": {
+   "kind": "unavailable",
+   "reason": "no-model-text"
+  }
+ },
+ {
+  "source": "real-weak-moves-study (captured with real Stockfish + the real model; SUBSTITUTE positions, not the reviewed games)",
+  "fenBefore": "r1bk3r/2n3p1/1qp1p1np/1p2Pp1P/p1pP4/P1P3P1/4KPB1/R1BRQ3 w - - 0 22",
+  "san": "Bxh6",
+  "ply": 42,
+  "historySan": [
+   "Nh4",
+   "Ra8",
+   "Ra1",
+   "Nc7",
+   "Qe1",
+   "Kd8",
+   "Ng6",
+   "Nxg6"
+  ],
+  "grade": "mistake",
+  "pvUci": [
+   "h8h6",
+   "h5g6",
+   "c8d7",
+   "f2f4",
+   "d7e8",
+   "e1f2",
+   "e8g6",
+   "g2f3",
+   "g6h5",
+   "f3h5"
+  ],
+  "returned": {
+   "explanation": "",
+   "source": "rejected",
+   "reason": "no-verified-downside"
+  },
+  "validation": {
+   "kind": "unavailable",
+   "reason": "no-model-text"
+  }
+ },
+ {
+  "source": "real-weak-moves-study (captured with real Stockfish + the real model; SUBSTITUTE positions, not the reviewed games)",
+  "fenBefore": "3qkb2/1r3pp1/p2pbnr1/2p1p2p/p1PnP1PN/BP1PQ2P/R2N1P2/3BK2R b K - 1 22",
+  "san": "Nxb3",
+  "ply": 43,
+  "historySan": [
+   "Be6",
+   "Nd2",
+   "bxa5",
+   "Ra2",
+   "Qd8",
+   "Nf1",
+   "a4",
+   "Nd2"
+  ],
+  "grade": "mistake",
+  "pvUci": [
+   "h4g6",
+   "f7g6",
+   "a3b2",
+   "h5g4",
+   "h3g4",
+   "e6g4",
+   "d1g4",
+   "f6g4",
+   "e3g3",
+   "d8a5"
+  ],
+  "returned": {
+   "explanation": "Grabbing the b3 pawn is tempting, but it leaves your rook on g6 unguarded. White can play Nxg6, and after fxg6 your rook is gone — you end up a pawn behind in material. Your knight on b3 can also be taken (Bxb3), so it isn't safe there either. Before capturing, it helps to check which of your own pieces a knight nearby might be eyeing. Keep looking for those knight jumps — you'll spot them soon!",
+   "source": "model"
+  },
+  "validation": {
+   "kind": "model"
+  }
+ },
+ {
+  "source": "real-weak-moves-study (captured with real Stockfish + the real model; SUBSTITUTE positions, not the reviewed games)",
+  "fenBefore": "rq2kb1r/pp1b1pp1/2p2n2/3pp2p/1QP2P1P/P3N1P1/1P2P3/RNB1KB1R w KQk - 0 16",
+  "san": "cxd5",
+  "ply": 30,
+  "historySan": [
+   "Qa4",
+   "Ra8",
+   "d3",
+   "Bd7",
+   "Qb4",
+   "Qb8",
+   "dxc4",
+   "e5"
+  ],
+  "grade": "blunder",
+  "pvUci": [
+   "f8b4",
+   "a3b4",
+   "e5f4",
+   "e3c4",
+   "f6d5",
+   "e2e4",
+   "b7b5",
+   "e4d5",
+   "b5c4",
+   "c1f4"
+  ],
+  "returned": {
+   "explanation": "Taking on d5 wins a pawn, but it opens the line from Black's bishop on f8 straight to your queen on b4. Black plays **Bxb4+**, and after axb4 you've given up your queen for just a bishop — about 7 points behind. Before grabbing a pawn, it's worth checking which enemy pieces are aiming at your queen. Moving the queen off that diagonal first would have kept her safe. Keep looking for those long bishop lines!",
+   "source": "model"
+  },
+  "validation": {
+   "kind": "model"
+  }
+ },
+ {
+  "source": "real-weak-moves-study (captured with real Stockfish + the real model; SUBSTITUTE positions, not the reviewed games)",
+  "fenBefore": "rq2kb1r/p2b1pp1/2p2n2/1p1Pp2p/1Q3P1P/P3N1P1/1P2P3/RNB1KB1R w KQk - 0 17",
+  "san": "fxe5",
+  "ply": 32,
+  "historySan": [
+   "d3",
+   "Bd7",
+   "Qb4",
+   "Qb8",
+   "dxc4",
+   "e5",
+   "cxd5",
+   "b5"
+  ],
+  "grade": "blunder",
+  "pvUci": [
+   "f8b4",
+   "a3b4",
+   "b8e5",
+   "f1g2",
+   "e5g3",
+   "e1f1",
+   "a8c8",
+   "a1a7",
+   "g3b8",
+   "a7d7"
+  ],
+  "returned": {
+   "explanation": "Taking on e5 grabs a pawn, but it leaves the diagonal open to your queen on b4. Black plays **Bxb4+**, the bishop from f8 capturing your queen with check. After axb4 you only win a bishop back, and Black's queen can then take on e5 and later on g3, leaving you about 7 points of material behind. Before capturing, it's always worth checking which of your pieces an enemy bishop can reach. Keep looking — you'll spot these soon!",
+   "source": "model"
+  },
+  "validation": {
+   "kind": "model"
+  }
+ }
+]

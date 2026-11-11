@@ -257,6 +257,20 @@ interface BaseMoveAnalysisEntry extends StructuredExplanation {
   /** Body paragraph at every depth — the whole explanation at 'plain' depth. */
   explanation: string | null
   explanationStatus: ExplanationStatus
+  /** Which game this entry belongs to (bumped on restart/new game): a late result can never land in another game's entry. */
+  session?: number
+  /** Measured separately, in ms: time waiting for the analysis engine, engine analysis itself, and the commentary request. */
+  timing?: { queueMs?: number; analysisMs?: number; commentaryQueueMs?: number; commentaryMs?: number }
+  /** The engine could not grade this move in time: the entry exists only so the panel can say so instead of loading forever. */
+  analysisUnavailable?: boolean
+  /** Where the shown explanation came from: the model (verified), the engine's own line (verified), or nothing trustworthy. */
+  explanationSource?: 'model' | 'evidence' | 'facts' | 'unavailable'
+  /** For a weak grade: the engine-verified downside in plain words. It is the collapsed summary, so it is never hidden behind Why?. */
+  downside?: string
+  /** Squares to highlight for this explanation (only ever drawn on the position it is about). */
+  highlights?: string[]
+  /** A strictly factual description of the move, shown SEPARATELY when no trustworthy explanation exists. It does not explain the grade. */
+  moveFact?: string
 }
 
 /** A graded move — player moves always; engine moves only at Expert/Master. */
@@ -268,6 +282,10 @@ export interface QualityMoveEntry extends BaseMoveAnalysisEntry {
   evalAfterCp: number
   cpLoss: number
   classification: MoveClassification
+  /** The opponent's best reply found by the SAME search that produced the grade (UCI). Evidence for explanations; never shown as-is. */
+  replyUci?: string
+  /** The opponent's principal variation (UCI) from the same search: the engine evidence for explanations. */
+  pvUci?: string[]
   /** Whether the stored `explanation` was generated with the best-move alternative revealed. */
   explanationRevealed: boolean
 }
@@ -294,10 +312,23 @@ export interface ExplainMoveRequestBody {
   depth?: ExplanationDepth
   /** SAN of the last few moves before this one — only used at 'rich'/'brief' depth, where the route builds a minimal, account-data-free prompt from fen/recentMovesSan/move/level alone (see src/lib/chess/aiExplainMove.ts) rather than this whole request body. */
   recentMovesSan?: string[]
+  /** Verified-facts inputs: the position AFTER the move, this move's index in the game and the game's own earlier moves (canonical, oldest first). */
+  fenAfter?: string
+  ply?: number
+  historySan?: string[]
+  /** The opponent's best reply from the grading search (UCI), validated for legality server-side. */
+  replyUci?: string
+  pvUci?: string[]
 }
 
 export interface ExplainMoveResponseBody extends StructuredExplanation {
   explanation: string
+  /** 'facts' = the generated text failed verification against the position, so a strictly factual sentence is shown instead. */
+  source?: 'model' | 'facts' | 'rejected'
+  /** Why a generated text was rejected (diagnostic only; present outside production builds). */
+  reason?: string
+  /** Development only: the rejected model text, returned so a failure can be saved as a regression fixture. */
+  rawText?: string
 }
 
 export interface ExplainEnginePurposeRequestBody {
@@ -305,10 +336,13 @@ export interface ExplainEnginePurposeRequestBody {
   move: string
   fenAfter: string
   depth?: ExplanationDepth
+  ply?: number
+  historySan?: string[]
 }
 
 export interface ExplainEnginePurposeResponseBody extends StructuredExplanation {
   explanation: string
+  source?: 'model' | 'facts'
 }
 
 // ─── Analysis game-level lessons ─────────────────────────────────────────────

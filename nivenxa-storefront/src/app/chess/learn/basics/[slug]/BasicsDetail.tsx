@@ -18,7 +18,8 @@ const MIN_WORKSPACE_HEIGHT = 380
 
 export default function BasicsDetail({ lesson }: { lesson: BasicsLesson }) {
   const next = getNextBasicsLesson(lesson.slug)
-  const nextCta = next ? { href: `/chess/learn/basics/${next.slug}`, label: `Next: ${next.name} →` } : undefined
+  // ?start=1: the learner already chose this lesson explicitly, so it begins at once (no second "Start lesson" click). A direct visit keeps the Start button, which is also the click narration needs.
+  const nextCta = next ? { href: `/chess/learn/basics/${next.slug}?start=1`, label: `Next lesson: ${next.name} →` } : undefined
 
   // A visit to the lesson page is "started" — a plain localStorage write,
   // not a setState call, so this is safe directly in the effect body.
@@ -77,6 +78,8 @@ export default function BasicsDetail({ lesson }: { lesson: BasicsLesson }) {
               fen: lesson.boardFen,
               lessonName: lesson.name,
               completionHeadline: lesson.completionHeadline,
+              completionAssistedHeadline: lesson.completionAssistedHeadline,
+              alwaysShowCoordinates: lesson.alwaysShowCoordinates,
               completionSummary: lesson.completionSummary,
               completionSpokenText: lesson.completionSpokenText,
             }}
@@ -89,6 +92,7 @@ export default function BasicsDetail({ lesson }: { lesson: BasicsLesson }) {
               steps: lesson.steps,
               pieceName: lesson.name,
               completionHeadline: lesson.completionHeadline ?? `You learned ${lesson.name}!`,
+              completionAssistedHeadline: lesson.completionAssistedHeadline,
               completionSummary: lesson.completionSummary,
             }}
             nextCta={nextCta}

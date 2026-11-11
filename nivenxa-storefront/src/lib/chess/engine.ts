@@ -204,17 +204,25 @@ export class StockfishEngine implements EngineProvider {
   }
 
   /** Centipawn evaluation for the side to move; mate scores collapse to ±100000. */
-  evaluatePosition(fen: string, depth = 15): Promise<number> {
+  async evaluatePosition(fen: string, depth = 15): Promise<number> {
+    return (await this.evaluateWithReply(fen, depth)).score
+  }
+
+  /** The same search, also returning the move it ends on (the side to move's best reply): no second search is made. */
+  evaluateWithReply(fen: string, depth = 15): Promise<{ score: number; bestMove?: string; pv?: string[] }> {
     const worker = this.assertReady()
 
-    return new Promise<number>((resolve) => {
+    return new Promise<{ score: number; bestMove?: string; pv?: string[] }>((resolve) => {
       let lastScore = 0
+      let lastPv: string[] | undefined
 
       const onMessage = (event: MessageEvent) => {
         const line = event.data
         if (typeof line !== 'string') return
 
         if (line.startsWith('info') && line.includes('score')) {
+          const pvM = line.match(/ pv (.+)$/)
+          if (pvM) lastPv = pvM[1].trim().split(/\s+/)
           const mateMatch = line.match(/score mate (-?\d+)/)
           const cpMatch = line.match(/score cp (-?\d+)/)
           if (mateMatch) {
@@ -225,7 +233,8 @@ export class StockfishEngine implements EngineProvider {
           }
         } else if (line.startsWith('bestmove')) {
           worker.removeEventListener('message', onMessage)
-          resolve(lastScore)
+          const mv = line.split(' ')[1]
+          resolve({ score: lastScore, bestMove: mv && mv !== '(none)' ? mv : undefined, pv: lastPv })
         }
       }
 

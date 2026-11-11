@@ -25,6 +25,7 @@ import GameJourney from './GameJourney'
 import ExplanationPanel from './ExplanationPanel'
 import PracticePrompt from './PracticePrompt'
 import GameSummary from './GameSummary'
+import { buildEvidence, buildMoveFacts, describeDownside, resolveExplanation } from '@/lib/chess/moveFacts'
 import styles from './Player.module.scss'
 
 const EMPTY_DESTS = new Map<Key, Key[]>()
@@ -90,6 +91,8 @@ export default function AnalysisPlayer({ isLoggedIn }: { isLoggedIn: boolean }) 
   const game = loaded?.game ?? null
   const { entries: gradedEntries, progress, ready: engineReady } = useGameAnalysis(game)
   const [entries, setEntries] = useState<QualityMoveEntry[]>([])
+  const entriesRef = useRef(entries)
+  entriesRef.current = entries
   useEffect(() => {
     setEntries((prev) => mergeEntries(prev, gradedEntries))
   }, [gradedEntries])
@@ -138,6 +141,12 @@ export default function AnalysisPlayer({ isLoggedIn }: { isLoggedIn: boolean }) 
           bestMove: entry.classification !== 'best' ? entry.bestMoveSan : undefined,
           tone: SKILL_TIERS[level].tone,
           depth: depthFor(level, true),
+          // Verified facts for the commentary: the position after the move and the game's own earlier moves, in order.
+          fenAfter: entry.fenAfter,
+          ply: entry.ply,
+          historySan: entriesRef.current.filter((e) => e.ply < entry.ply).sort((x, y) => x.ply - y.ply).map((e) => e.san),
+          replyUci: entry.replyUci,
+          pvUci: entry.pvUci,
         }
         const res = await fetch('/api/chess/explain-move', {
           method: 'POST',
@@ -145,10 +154,22 @@ export default function AnalysisPlayer({ isLoggedIn }: { isLoggedIn: boolean }) 
           body: JSON.stringify(body),
         })
         if (!res.ok) throw new Error('Request failed')
-        const data: ExplainMoveResponseBody = await res.json()
-        setEntries((prev) =>
-          prev.map((e) => (e.ply === entry.ply ? { ...e, ...data, explanationStatus: 'loaded', explanationRevealed: true } : e))
-        )
+        const raw: ExplainMoveResponseBody = await res.json()
+        // Vetted against this move's own positions before display; a failing text becomes a plain factual sentence.
+        const facts = buildMoveFacts({ fenBefore: entry.fenBefore, fenAfter: entry.fenAfter, san: entry.san, ply: entry.ply, historySan: body.historySan })
+        if (!facts) throw new Error('Move does not match its positions')
+        const ev = buildEvidence(facts, { grade: entry.classification, replyUci: entry.replyUci, pvUci: entry.pvUci, bestSan: entry.classification !== 'best' ? entry.bestMoveSan : undefined })
+        const r = resolveExplanation(raw.source === 'rejected' ? null : [raw.headline, raw.explanation, ...(raw.bullets ?? []), raw.suggestion, raw.notice], facts, ev)
+        const blank = { headline: undefined, bullets: undefined, suggestion: undefined, notice: undefined, remember: undefined }
+        const patch =
+          r.kind === 'model'
+            ? { ...raw, explanationSource: 'model' as const, downside: describeDownside(facts, ev) ?? undefined, highlights: ev.highlights, moveFact: undefined }
+            : r.kind === 'evidence'
+              ? { ...blank, explanation: r.text, explanationSource: 'evidence' as const, downside: r.text, highlights: ev.highlights, moveFact: undefined }
+              : r.kind === 'unavailable'
+                ? { ...blank, explanation: null, explanationSource: 'unavailable' as const, moveFact: r.fact }
+                : { ...blank, explanation: r.text, explanationSource: 'facts' as const, moveFact: undefined }
+        setEntries((prev) => prev.map((e) => (e.ply === entry.ply ? { ...e, ...patch, explanationStatus: 'loaded', explanationRevealed: true } : e)))
       } catch {
         setEntries((prev) => prev.map((e) => (e.ply === entry.ply ? { ...e, explanationStatus: 'error' } : e)))
       }

@@ -1,0 +1,134 @@
+// A real-button 8×8 board for placing/reading pieces. Piece art comes from chessground's own stylesheet
+// (the `cg-wrap` ancestor class on the root); everything about size and position is overridden here.
+.board {
+  display: grid !important;
+  grid-template-columns: repeat(8, 1fr);
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 0.4rem;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(31, 27, 58, 0.25);
+}
+
+.cell {
+  position: relative;
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  cursor: pointer;
+  min-width: 0;
+  min-height: 0;
+
+  &:disabled {
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: 4px solid #1f1b3a;
+    outline-offset: -4px;
+    box-shadow: inset 0 0 0 7px #ffd45e;
+    z-index: 2;
+  }
+}
+
+.board .pc {
+  position: absolute;
+  inset: 4%;
+  width: auto;
+  height: auto;
+  background-size: cover;
+  pointer-events: none;
+  transform: none;
+}
+
+.rankLabel,
+.fileLabel {
+  position: absolute;
+  font-size: 0.8rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #1f1b3a;
+  // A white outline on every side, so the label reads on a light square and on a dark one.
+  text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff, 0 0 4px #fff;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.rankLabel {
+  top: 3px;
+  left: 3px;
+}
+
+.fileLabel {
+  right: 3px;
+  bottom: 2px;
+}
+
+.small .rankLabel,
+.small .fileLabel {
+  display: none;
+}
+
+.wrong {
+  box-shadow: inset 0 0 0 5px #b3261e;
+}
+
+.hint {
+  box-shadow: inset 0 0 0 5px #e68f00;
+}
+
+.mark {
+  position: absolute;
+  right: 4px;
+  top: 2px;
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: #b3261e;
+  text-shadow: 0 0 3px #fff;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.markHint {
+  color: #8a5a00;
+  font-size: 0.8rem;
+}
+
+.framed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.sideLabel {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--chess-deep, #1f1b3a);
+}
+
+// Selected piece: thick blue ring + "◉". Pattern group: dashed purple + "!". Wrong: red ring + "✕". Hint: amber + "●". Shape differs, not just colour.
+.selected {
+  box-shadow: inset 0 0 0 6px #1b5fd1, inset 0 0 0 9px #fff;
+}
+
+.focus {
+  box-shadow: inset 0 0 0 5px #5b2e91;
+  outline: 3px dashed #fff;
+  outline-offset: -8px;
+}
+
+.markFocus {
+  color: #5b2e91;
+  font-size: 1rem;
+}
+
+.markSelected {
+  color: #1b5fd1;
+  font-size: 0.9rem;
+}
