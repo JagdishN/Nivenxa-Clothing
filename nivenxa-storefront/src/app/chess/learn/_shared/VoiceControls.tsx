@@ -1,4 +1,6 @@
 'use client'
+import { useEffect, useId, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { SpeechRate } from './useLessonVoice'
 import styles from './VoiceControls.module.scss'
 
@@ -40,6 +42,9 @@ export default function VoiceControls({
   onShowMe,
   onMicStart,
   onMicEnd,
+  layout,
+  micNotice,
+  helpLocked,
 }: {
   supported: boolean
   micSupported: boolean
@@ -58,7 +63,20 @@ export default function VoiceControls({
   onShowMe: () => void
   onMicStart: () => void
   onMicEnd: () => void
+  /** 'lesson' (Chess Basics): Replay/Hint/Show Me stay visible as large controls, and voice on/off, speed and the microphone live together in one "Lesson settings" group. Omitted: the original compact bar. */
+  layout?: 'lesson'
+  /** Plain-language reason the microphone could not be used (lesson layout only). */
+  micNotice?: string
+  /** Lesson layout: the step is finished, so Hint and Show me are switched off (they would not change a recorded result). */
+  helpLocked?: boolean
 }) {
+  if (layout === 'lesson') {
+    return (
+      <LessonBar
+        {...{ supported, micSupported, voiceOn, rate, listening, showHintControls, onToggleVoice, onSetRate, onReplay, onHint, onShowMe, onMicStart, onMicEnd, micNotice, helpLocked }}
+      />
+    )
+  }
   // No speechSynthesis at all in this browser — nothing here would work,
   // so the bar doesn't render rather than offering dead buttons. Every
   // lesson stays fully click-usable either way.
@@ -160,10 +178,166 @@ export default function VoiceControls({
  * switch, which read as an odd, unrelated button wedged into that row.
  */
 export function VoiceStatusLine({ status }: { status: 'speaking' | 'yourTurn' | 'readyToContinue' | null }) {
-  if (!status) return null
+  // Only an active narration is worth a status: an enabled Next button already says "ready", and the task itself says "your turn".
+  // Not a live region, so a screen reader is not told about it every time narration starts and stops.
+  if (status !== 'speaking') return null
+  return <p className={styles.voiceStatusFooter}>💬 Speaking…</p>
+}
+
+function LessonBar({
+  supported,
+  micSupported,
+  voiceOn,
+  rate,
+  listening,
+  showHintControls,
+  onToggleVoice,
+  onSetRate,
+  onReplay,
+  onHint,
+  onShowMe,
+  onMicStart,
+  onMicEnd,
+  micNotice,
+  helpLocked,
+}: {
+  supported: boolean
+  micSupported: boolean
+  voiceOn: boolean
+  rate: SpeechRate
+  listening: boolean
+  showHintControls: boolean
+  onToggleVoice: () => void
+  onSetRate: (rate: SpeechRate) => void
+  onReplay: () => void
+  onHint: () => void
+  onShowMe: () => void
+  onMicStart: () => void
+  onMicEnd: () => void
+  micNotice?: string
+  helpLocked?: boolean
+}) {
+  const [open, setOpen] = useState(false)
+  const panelId = useId()
+  const toggleRef = useRef<HTMLButtonElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
+
+  function closeSettings() {
+    setOpen(false)
+    // Focus goes back to the button that opened the dialog.
+    requestAnimationFrame(() => toggleRef.current?.focus())
+  }
+  // On open, focus moves into the dialog. Escape closes it; Tab stays inside while it is open.
+  useEffect(() => {
+    if (!open) return
+    dialogRef.current?.querySelector<HTMLElement>('button:not([disabled])')?.focus()
+  }, [open])
   return (
-    <p className={styles.voiceStatusFooter} aria-live="polite">
-      {status === 'speaking' ? '💬 Speaking…' : status === 'yourTurn' ? 'Your turn' : 'Ready to continue'}
-    </p>
+    <div className={styles.lessonBar} data-testid="lesson-controls">
+      <div className={styles.helpRow} role="group" aria-label="Lesson help">
+        {supported && (
+          <button type="button" className={styles.helpBtn} onClick={onReplay} data-testid="lesson-replay">
+            <span aria-hidden="true">🔁</span> Replay narration
+          </button>
+        )}
+        {showHintControls && (
+          <>
+            <button type="button" className={styles.helpBtn} onClick={() => !helpLocked && onHint()} aria-disabled={helpLocked || undefined} title={helpLocked ? 'This step is finished. Use Replay narration to hear the explanation again.' : undefined} data-testid="lesson-hint">
+              <span aria-hidden="true">💡</span> Hint
+            </button>
+            <button type="button" className={styles.helpBtn} onClick={() => !helpLocked && onShowMe()} aria-disabled={helpLocked || undefined} title={helpLocked ? 'This step is finished. Use Replay narration to hear the explanation again.' : undefined} data-testid="lesson-showme">
+              <span aria-hidden="true">👀</span> Show me
+            </button>
+          </>
+        )}
+        {supported && (
+          <button ref={toggleRef} type="button" className={`${styles.helpBtn} ${styles.settingsBtn}`} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? panelId : undefined} onClick={() => (open ? closeSettings() : setOpen(true))} data-testid="lesson-settings-toggle">
+            <span aria-hidden="true">⚙</span> Lesson settings
+          </button>
+        )}
+      </div>
+
+      {supported && open && createPortal(
+        <div className={styles.settingsBackdrop} onMouseDown={(e) => e.target === e.currentTarget && closeSettings()}>
+        <div
+          id={panelId}
+          ref={dialogRef}
+          className={styles.settingsPanel}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Lesson settings"
+          data-testid="lesson-settings"
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              e.stopPropagation()
+              closeSettings()
+            } else if (e.key === 'Tab') {
+              const f = [...(dialogRef.current?.querySelectorAll<HTMLElement>('button:not([disabled])') ?? [])]
+              if (!f.length) return
+              const first = f[0]
+              const last = f[f.length - 1]
+              if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault()
+                last.focus()
+              } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault()
+                first.focus()
+              }
+            }
+          }}
+        >
+          <div className={styles.settingsHead}>
+            <span className={styles.settingsTitle}>Lesson settings</span>
+            <button type="button" className={styles.settingsClose} onClick={closeSettings} data-testid="lesson-settings-close">
+              Close
+            </button>
+          </div>
+          <div className={styles.settingRow}>
+            <span className={styles.settingLabel}>Narration</span>
+            <button type="button" className={`${styles.voiceToggle} ${voiceOn ? styles.voiceToggleOn : ''} ${styles.large}`} onClick={onToggleVoice} aria-pressed={voiceOn}>
+              {voiceOn ? '🔊 Voice: On' : '🔇 Voice: Off'}
+            </button>
+            <div className={styles.rateToggle} role="group" aria-label="Narration speed">
+              <button type="button" className={`${styles.rateBtn} ${styles.large} ${rate === 'slow' ? styles.rateBtnActive : ''}`} aria-pressed={rate === 'slow'} onClick={() => onSetRate('slow')}>
+                Slow
+              </button>
+              <button type="button" className={`${styles.rateBtn} ${styles.large} ${rate === 'normal' ? styles.rateBtnActive : ''}`} aria-pressed={rate === 'normal'} onClick={() => onSetRate('normal')}>
+                Normal
+              </button>
+            </div>
+          </div>
+          <div className={styles.settingRow}>
+            <span className={styles.settingLabel}>Voice input</span>
+            <button
+              type="button"
+              className={`${styles.voiceBtn} ${styles.voiceBtnMic} ${styles.large} ${listening ? styles.voiceBtnListening : ''}`}
+              disabled={!micSupported}
+              onMouseDown={onMicStart}
+              onMouseUp={onMicEnd}
+              onMouseLeave={onMicEnd}
+              onTouchStart={onMicStart}
+              onTouchEnd={onMicEnd}
+              onTouchCancel={onMicEnd}
+              onKeyDown={(e) => (e.key === ' ' || e.key === 'Enter') && !e.repeat && onMicStart()}
+              onKeyUp={(e) => (e.key === ' ' || e.key === 'Enter') && onMicEnd()}
+            >
+              🎤 {listening ? 'Listening…' : 'Hold to talk'}
+            </button>
+            <p className={styles.settingNote}>
+              {micSupported
+                ? 'Optional. Hold the button and say “hint”, “show me”, “repeat” or “next”. Narration never turns the microphone on.'
+                : 'Voice commands are not supported in this browser. Everything works with the buttons.'}
+            </p>
+            {micNotice && (
+              <p className={styles.settingNote} role="status" data-testid="mic-notice">
+                {micNotice}
+              </p>
+            )}
+          </div>
+        </div>
+        </div>,
+        document.body
+      )}
+    </div>
   )
 }

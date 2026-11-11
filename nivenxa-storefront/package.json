@@ -12,6 +12,8 @@
     "lint": "eslint",
     "deploy": "next build && gh-pages -d out",
     "import-puzzles": "tsx scripts/import-puzzles.ts",
+    "audit-puzzles": "tsx scripts/audit-puzzles.ts",
+    "test:unit": "tsx --test tests/unit/*.test.ts",
     "apply-schema": "tsx scripts/apply-schema.ts",
     "apply-living-schema": "tsx scripts/apply-schema.ts supabase/living_schema.sql",
     "seed-living-demo": "tsx scripts/seed-living-demo.ts",

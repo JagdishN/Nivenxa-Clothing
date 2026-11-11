@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { buildMoveFacts, describeFacts, factsForPrompt, vetFields, type MoveFacts } from '@/lib/chess/moveFacts'
 import type { ExplainEnginePurposeRequestBody, ExplainEnginePurposeResponseBody } from '@/lib/chess/types'
 
 // Lazily constructed so a missing ANTHROPIC_API_KEY doesn't crash the route
@@ -14,11 +15,13 @@ function getClient(): Anthropic {
 const JARGON_RULE =
   'Never use engine jargon such as centipawns, eval, +0.42, positional concession, or theoretical line — describe the move in plain chess language instead.'
 
-function buildPrompt(body: ExplainEnginePurposeRequestBody): string {
+function buildPrompt(body: ExplainEnginePurposeRequestBody, facts: MoveFacts | null): string {
   const { fenBefore, move, fenAfter } = body
   const depth = body.depth ?? 'plain'
 
-  const context = `Position (FEN) before the move: ${fenBefore}
+  const context = facts
+    ? factsForPrompt(facts)
+    : `Position (FEN) before the move: ${fenBefore}
 Move played: ${move}
 Position (FEN) after the move: ${fenAfter}`
 
@@ -99,20 +102,26 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'AI explanation service is not configured' }, { status: 503 })
   }
 
+  // Verified facts: the move must be legal from fenBefore and land exactly on fenAfter, otherwise nothing is generated for it.
+  const facts = buildMoveFacts({ fenBefore: body.fenBefore, fenAfter: body.fenAfter, san: body.move, ply: body.ply, historySan: body.historySan })
+  if (!facts) return NextResponse.json({ error: 'The move does not match the positions given' }, { status: 422 })
+
   try {
     const response = await getClient().messages.create({
       model: 'claude-opus-5',
       max_tokens: 300,
       thinking: { type: 'adaptive' },
       output_config: { effort: 'low' },
-      messages: [{ role: 'user', content: buildPrompt(body) }],
+      messages: [{ role: 'user', content: buildPrompt(body, facts) }],
     })
 
     const textBlock = response.content.find((block): block is Anthropic.TextBlock => block.type === 'text')
     const raw = textBlock?.text.trim() ?? ''
     const depth = body.depth ?? 'plain'
     const result: ExplainEnginePurposeResponseBody = depth === 'plain' ? { explanation: raw } : parseStructured(raw)
-    return NextResponse.json(result)
+    // Checked against the verified facts before it leaves the server; a text that fails is replaced by a plain factual sentence.
+    const v = vetFields([result.headline, result.explanation, ...(result.bullets ?? []), result.notice], facts)
+    return NextResponse.json(v.ok ? { ...result, source: 'model' } : ({ explanation: describeFacts(facts), source: 'facts' } satisfies ExplainEnginePurposeResponseBody))
   } catch (err) {
     if (err instanceof Anthropic.AuthenticationError) {
       return NextResponse.json({ error: 'AI explanation service is not configured' }, { status: 503 })

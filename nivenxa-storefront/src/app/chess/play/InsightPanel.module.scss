@@ -1,0 +1,237 @@
+// Insight tab: one card about the latest move at the top (never scrolled out of view), history collapsed below.
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-height: 0;
+  flex: 1;
+}
+
+.back {
+  align-self: flex-start;
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--chess-purple);
+  background: rgba(91, 46, 145, 0.08);
+  border: none;
+  border-radius: 9999px;
+  padding: 0.35rem 0.8rem;
+  cursor: pointer;
+}
+
+.welcome {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.welcomeHeadline {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--chess-deep);
+}
+
+.welcomeText {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: rgba(31, 27, 58, 0.7);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(91, 46, 145, 0.2);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 18px rgba(91, 46, 145, 0.07);
+  flex-shrink: 0;
+}
+
+.tone_success { border-left: 4px solid var(--chess-success, #2f7d4f); }
+.tone_warning { border-left: 4px solid #c58a1b; }
+.tone_danger { border-left: 4px solid var(--chess-danger, #b3402f); }
+
+.heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.5rem;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(31, 27, 58, 0.6);
+  font-variant-numeric: tabular-nums;
+}
+
+.observation {
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--chess-deep);
+}
+
+// Reserved so the card does not jump between loading and loaded.
+.loading,
+.quiet,
+.error {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  min-height: 1.3rem;
+  color: rgba(31, 27, 58, 0.6);
+  font-style: italic;
+}
+
+.error {
+  color: var(--chess-danger, #b3402f);
+  font-style: normal;
+}
+
+.why,
+.show,
+.historyToggle {
+  align-self: flex-start;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 0;
+  min-height: 1.6rem;
+  background: none;
+  border: 0;
+  color: var(--chess-purple);
+  text-decoration: underline;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--chess-purple);
+    outline-offset: 2px;
+  }
+}
+
+.whyBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+
+
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-height: 0;
+  flex: 1;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0.2rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-height: 0;
+  margin: 0;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 0.7rem;
+  border: 1px solid rgba(91, 46, 145, 0.14);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.itemHead {
+  align-self: flex-start;
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(31, 27, 58, 0.55);
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  min-height: 1.4rem;
+
+  &:focus-visible {
+    outline: 2px solid var(--chess-purple);
+    outline-offset: 2px;
+  }
+}
+
+.itemObservation {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: rgba(31, 27, 58, 0.72);
+}
+
+// Verified check facts (from the position): shown at once, before any commentary arrives.
+.checkNote {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--chess-deep);
+  padding: 0.35rem 0.55rem;
+  border-radius: 0.55rem;
+  border-left: 4px solid var(--chess-danger, #b3543f);
+  background: rgba(179, 84, 63, 0.08);
+}
+
+.checkReplies {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: rgba(31, 27, 58, 0.85);
+  margin: 0 0 0.35rem;
+}
+
+// A confirmed grade: always a readable word, with the colour only as a reinforcement. Pending cards carry none of this.
+.grade {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 0.05rem 0.45rem;
+  border-radius: 9999px;
+  border: 1px solid currentColor;
+}
+.grade_success { color: var(--chess-success, #2f7d4f); }
+.grade_warning { color: #8a5d0c; }
+.grade_danger { color: var(--chess-danger, #b3402f); }
+
+.checkNote p { margin: 0; }
+
+.helpList {
+  list-style: none;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: rgba(31, 27, 58, 0.85);
+}
+
+.markRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem 0.6rem;
+  margin-top: 0.15rem;
+}

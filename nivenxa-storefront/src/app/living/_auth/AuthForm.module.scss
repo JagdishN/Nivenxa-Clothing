@@ -125,3 +125,21 @@
     text-decoration: underline;
   }
 }
+
+// A text-style action inside an alert (e.g. "Retry verification").
+.inlineAction {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}

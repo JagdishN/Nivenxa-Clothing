@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { seoMetadata } from '@/lib/seo'
 import { LEGAL_ENTITY, LEGAL_ENTITY_GRIEVANCE_SLA, LEGAL_ENTITY_NAME_AND_ADDRESS } from '@/lib/legalEntity'
 import SiteFooter from '@/components/global/SiteFooter'
+import PageShell from '@/components/global/PageShell'
 import styles from './Contact.module.scss'
 
 export const metadata = seoMetadata({
@@ -32,7 +33,7 @@ const PARENT_FOOTER_COLUMNS = [
 
 export default function ParentContactPage() {
   return (
-    <>
+    <PageShell footer={<SiteFooter columns={PARENT_FOOTER_COLUMNS} />}>
       <div className={styles.page}>
         <div className={styles.hero}>
           <p className={styles.eyebrow}>NIVENXA / CONTACT</p>
@@ -107,7 +108,6 @@ export default function ParentContactPage() {
           </div>
         </div>
       </div>
-      <SiteFooter columns={PARENT_FOOTER_COLUMNS} />
-    </>
+    </PageShell>
   )
 }

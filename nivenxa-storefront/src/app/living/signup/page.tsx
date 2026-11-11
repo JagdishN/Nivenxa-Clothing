@@ -5,7 +5,8 @@ import { setLivingError, setLivingNotice } from '@/lib/living/flash'
 import { createLivingServerClient } from '@/lib/living/supabaseServer'
 import { recordLivingConsent } from '@/lib/living/consentActions'
 import { LEGAL_ENTITY } from '@/lib/legalEntity'
-import SiteFooter from '@/components/global/SiteFooter'
+import AppFooter from '@/components/global/AppFooter/AppFooter'
+import PageShell from '@/components/global/PageShell'
 import OtpForm from '../_auth/OtpForm'
 import theme from '../LivingTheme.module.scss'
 import styles from '../_auth/AuthForm.module.scss'
@@ -13,16 +14,6 @@ import styles from '../_auth/AuthForm.module.scss'
 // See living/login/page.tsx — same reasoning.
 export const metadata: Metadata = { robots: { index: false, follow: true } }
 
-const LIVING_FOOTER_COLUMNS = [
-  {
-    title: 'Nivenxa Living',
-    links: [
-      { label: 'Privacy Policy', href: '/living/privacy' },
-      { label: 'Terms of Use', href: '/living/terms' },
-      { label: 'Contact', href: `mailto:${LEGAL_ENTITY.email}` },
-    ],
-  },
-]
 
 async function createApartment(formData: FormData) {
   'use server'
@@ -115,7 +106,7 @@ export default async function LivingSignupPage({ searchParams }: { searchParams:
       const flat = (pendingClaim as unknown as { flat: { flat_no: string } | null }).flat
       const apartment = (pendingClaim as unknown as { apartment: { name: string } | null }).apartment
       return (
-        <>
+        <PageShell footer={<AppFooter app="living" />}>
           <div className={styles.shell}>
             <h1 className={styles.title}>Request sent</h1>
             <p className={styles.subtitle}>
@@ -124,29 +115,27 @@ export default async function LivingSignupPage({ searchParams }: { searchParams:
             </p>
             <p className={styles.hint}>Nothing else to do here for now — you can close this page and check back later.</p>
           </div>
-          <SiteFooter columns={LIVING_FOOTER_COLUMNS} />
-        </>
+        </PageShell>
       )
     }
   }
 
   if (!user) {
     return (
-      <>
+      <PageShell footer={<AppFooter app="living" />}>
         <div className={styles.shell}>
           <h1 className={styles.title}>Create Apartment</h1>
           <p className={styles.subtitle}>Start with your email — you&rsquo;ll set up or join an Apartment next.</p>
           <OtpForm mode="signup" />
         </div>
-        <SiteFooter columns={LIVING_FOOTER_COLUMNS} />
-      </>
+      </PageShell>
     )
   }
 
   const activeTab = tab === 'join' ? 'join' : 'create'
 
   return (
-    <>
+    <PageShell footer={<AppFooter app="living" />}>
     <div className={styles.shell}>
       <h1 className={styles.title}>Set up your account</h1>
       <p className={styles.subtitle}>You&rsquo;re verified — now create a new Apartment, or join one you already know the code for.</p>
@@ -234,7 +223,6 @@ export default async function LivingSignupPage({ searchParams }: { searchParams:
         </form>
       )}
     </div>
-    <SiteFooter columns={LIVING_FOOTER_COLUMNS} />
-    </>
+    </PageShell>
   )
 }

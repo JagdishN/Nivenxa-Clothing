@@ -4,7 +4,8 @@ import { LEGAL_ENTITY } from '@/lib/legalEntity'
 import PolicyStats, { type PolicyStat } from '@/components/policy/PolicyStats'
 import PolicyAccordion from '@/components/policy/PolicyAccordion'
 import PolicyHelp from '@/components/policy/PolicyHelp'
-import SiteFooter from '@/components/global/SiteFooter'
+import AppFooter from '@/components/global/AppFooter/AppFooter'
+import PageShell from '@/components/global/PageShell'
 import styles from './LivingPrivacy.module.scss'
 
 export const metadata = {
@@ -18,20 +19,10 @@ const STATS: PolicyStat[] = [
   { icon: IconBan, value: 'Never', label: 'Sold or rented' },
 ]
 
-const LIVING_FOOTER_COLUMNS = [
-  {
-    title: 'Nivenxa Living',
-    links: [
-      { label: 'Privacy Policy', href: '/living/privacy' },
-      { label: 'Terms of Use', href: '/living/terms' },
-      { label: 'Contact', href: `mailto:${LEGAL_ENTITY.email}` },
-    ],
-  },
-]
 
 export default function LivingPrivacyPage() {
   return (
-    <>
+    <PageShell footer={<AppFooter app="living" />}>
       <div className={styles.page}>
         <div className={styles.hero}>
           <p className={styles.eyebrow}>NIVENXA LIVING / PRIVACY</p>
@@ -57,7 +48,6 @@ export default function LivingPrivacyPage() {
           mailtoHref={`mailto:${LEGAL_ENTITY.email}?subject=Nivenxa%20Living%20privacy%20request`}
         />
       </div>
-      <SiteFooter columns={LIVING_FOOTER_COLUMNS} />
-    </>
+    </PageShell>
   )
 }

@@ -21,6 +21,8 @@ const nextConfig: NextConfig = {
   turbopack: {
     resolveAlias: {
       'next-intl/config': './src/i18n/request.ts',
+      // Roster artwork is only built into a build that has the opponent feature (a normal build gets an empty stand-in).
+      '@bot-art': process.env.NEXT_PUBLIC_CHESS_AVATAR_PROTOTYPE === '1' ? './src/lib/chess/botArtReal.ts' : './src/lib/chess/botArtStub.ts',
     },
   },
   experimental: {

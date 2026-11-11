@@ -97,7 +97,7 @@
   padding: clamp(0.6rem, 1.3vw, 0.85rem) clamp(1.5rem, 6vw, 5rem) 0;
 
   &:last-child {
-    padding-bottom: clamp(4rem, 7vw, 6rem);
+    padding-bottom: v.$space-page-end;
   }
 }
 

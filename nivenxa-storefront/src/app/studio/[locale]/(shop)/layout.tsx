@@ -1,5 +1,6 @@
 import Navbar from '@/components/global/Navbar'
 import SiteFooter from '@/components/global/SiteFooter'
+import PageShell from '@/components/global/PageShell'
 import CookieConsentBanner from '@/components/global/CookieConsentBanner'
 import CartDrawerMount from '@/components/global/CartDrawer/CartDrawerMount'
 
@@ -47,9 +48,12 @@ export default async function ShopLayout({
 
   return (
     <>
-      <Navbar />
-      <main>{children}</main>
-      <SiteFooter columns={studioFooterColumns} socialLinks={studioSocialLinks} cookieSettingsLabel="Cookie settings" />
+      <PageShell
+        header={<Navbar />}
+        footer={<SiteFooter columns={studioFooterColumns} socialLinks={studioSocialLinks} cookieSettingsLabel="Cookie settings" />}
+      >
+        <main>{children}</main>
+      </PageShell>
       <CartDrawerMount />
       <CookieConsentBanner />
     </>

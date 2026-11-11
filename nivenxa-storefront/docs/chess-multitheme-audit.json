@@ -1,0 +1,326 @@
+{
+  "crushing": {
+    "total": 94,
+    "withMateTag": 0,
+    "mateTagVerified": 0,
+    "badExamples": []
+  },
+  "middlegame": {
+    "total": 133,
+    "withMateTag": 49,
+    "mateTagVerified": 49,
+    "badExamples": []
+  },
+  "pin": {
+    "total": 30,
+    "withMateTag": 4,
+    "mateTagVerified": 4,
+    "badExamples": []
+  },
+  "short": {
+    "total": 138,
+    "withMateTag": 51,
+    "mateTagVerified": 51,
+    "badExamples": []
+  },
+  "advantage": {
+    "total": 79,
+    "withMateTag": 0,
+    "mateTagVerified": 0,
+    "badExamples": []
+  },
+  "defensiveMove": {
+    "total": 4,
+    "withMateTag": 0,
+    "mateTagVerified": 0,
+    "badExamples": []
+  },
+  "deflection": {
+    "total": 27,
+    "withMateTag": 7,
+    "mateTagVerified": 7,
+    "badExamples": []
+  },
+  "endgame": {
+    "total": 111,
+    "withMateTag": 35,
+    "mateTagVerified": 35,
+    "badExamples": []
+  },
+  "long": {
+    "total": 69,
+    "withMateTag": 9,
+    "mateTagVerified": 9,
+    "badExamples": []
+  },
+  "discoveredAttack": {
+    "total": 28,
+    "withMateTag": 4,
+    "mateTagVerified": 4,
+    "badExamples": []
+  },
+  "discoveredCheck": {
+    "total": 23,
+    "withMateTag": 9,
+    "mateTagVerified": 9,
+    "badExamples": []
+  },
+  "exposedKing": {
+    "total": 16,
+    "withMateTag": 2,
+    "mateTagVerified": 2,
+    "badExamples": []
+  },
+  "fork": {
+    "total": 36,
+    "withMateTag": 4,
+    "mateTagVerified": 4,
+    "badExamples": []
+  },
+  "mate": {
+    "total": 85,
+    "withMateTag": 85,
+    "mateTagVerified": 85,
+    "badExamples": []
+  },
+  "mateIn3": {
+    "total": 9,
+    "withMateTag": 9,
+    "mateTagVerified": 9,
+    "badExamples": []
+  },
+  "hangingPiece": {
+    "total": 24,
+    "withMateTag": 9,
+    "mateTagVerified": 9,
+    "badExamples": []
+  },
+  "kingsideAttack": {
+    "total": 23,
+    "withMateTag": 12,
+    "mateTagVerified": 12,
+    "badExamples": []
+  },
+  "mateIn1": {
+    "total": 23,
+    "withMateTag": 23,
+    "mateTagVerified": 23,
+    "badExamples": []
+  },
+  "oneMove": {
+    "total": 23,
+    "withMateTag": 23,
+    "mateTagVerified": 23,
+    "badExamples": []
+  },
+  "interference": {
+    "total": 12,
+    "withMateTag": 2,
+    "mateTagVerified": 2,
+    "badExamples": []
+  },
+  "veryLong": {
+    "total": 28,
+    "withMateTag": 2,
+    "mateTagVerified": 2,
+    "badExamples": []
+  },
+  "opening": {
+    "total": 14,
+    "withMateTag": 1,
+    "mateTagVerified": 1,
+    "badExamples": []
+  },
+  "skewer": {
+    "total": 20,
+    "withMateTag": 0,
+    "mateTagVerified": 0,
+    "badExamples": []
+  },
+  "intermezzo": {
+    "total": 15,
+    "withMateTag": 0,
+    "mateTagVerified": 0,
+    "badExamples": []
+  },
+  "master": {
+    "total": 27,
+    "withMateTag": 5,
+    "mateTagVerified": 5,
+    "badExamples": []
+  },
+  "rookEndgame": {
+    "total": 9,
+    "withMateTag": 3,
+    "mateTagVerified": 3,
+    "badExamples": []
+  },
+  "advancedPawn": {
+    "total": 13,
+    "withMateTag": 4,
+    "mateTagVerified": 4,
+    "badExamples": []
+  },
+  "promotion": {
+    "total": 6,
+    "withMateTag": 4,
+    "mateTagVerified": 4,
+    "badExamples": []
+  },
+  "sacrifice": {
+    "total": 40,
+    "withMateTag": 18,
+    "mateTagVerified": 18,
+    "badExamples": []
+  },
+  "backRankMate": {
+    "total": 24,
+    "withMateTag": 24,
+    "mateTagVerified": 24,
+    "badExamples": []
+  },
+  "mateIn2": {
+    "total": 51,
+    "withMateTag": 51,
+    "mateTagVerified": 51,
+    "badExamples": []
+  },
+  "doubleBishopMate": {
+    "total": 1,
+    "withMateTag": 1,
+    "mateTagVerified": 1,
+    "badExamples": []
+  },
+  "castling": {
+    "total": 1,
+    "withMateTag": 1,
+    "mateTagVerified": 1,
+    "badExamples": []
+  },
+  "trappedPiece": {
+    "total": 13,
+    "withMateTag": 0,
+    "mateTagVerified": 0,
+    "badExamples": []
+  },
+  "knightEndgame": {
+    "total": 2,
+    "withMateTag": 0,
+    "mateTagVerified": 0,
+    "badExamples": []
+  },
+  "attraction": {
+    "total": 23,
+    "withMateTag": 9,
+    "mateTagVerified": 9,
+    "badExamples": []
+  },
+  "capturingDefender": {
+    "total": 13,
+    "withMateTag": 0,
+    "mateTagVerified": 0,
+    "badExamples": []
+  },
+  "pillsburysMate": {
+    "total": 2,
+    "withMateTag": 2,
+    "mateTagVerified": 2,
+    "badExamples": []
+  },
+  "operaMate": {
+    "total": 3,
+    "withMateTag": 3,
+    "mateTagVerified": 3,
+    "badExamples": []
+  },
+  "clearance": {
+    "total": 14,
+    "withMateTag": 3,
+    "mateTagVerified": 3,
+    "badExamples": []
+  },
+  "doubleCheck": {
+    "total": 13,
+    "withMateTag": 7,
+    "mateTagVerified": 7,
+    "badExamples": []
+  },
+  "quietMove": {
+    "total": 12,
+    "withMateTag": 0,
+    "mateTagVerified": 0,
+    "badExamples": []
+  },
+  "attackingF2F7": {
+    "total": 1,
+    "withMateTag": 1,
+    "mateTagVerified": 1,
+    "badExamples": []
+  },
+  "mateIn4": {
+    "total": 2,
+    "withMateTag": 2,
+    "mateTagVerified": 2,
+    "badExamples": []
+  },
+  "queenRookEndgame": {
+    "total": 2,
+    "withMateTag": 1,
+    "mateTagVerified": 1,
+    "badExamples": []
+  },
+  "bishopEndgame": {
+    "total": 3,
+    "withMateTag": 0,
+    "mateTagVerified": 0,
+    "badExamples": []
+  },
+  "enPassant": {
+    "total": 1,
+    "withMateTag": 0,
+    "mateTagVerified": 0,
+    "badExamples": []
+  },
+  "masterVsMaster": {
+    "total": 4,
+    "withMateTag": 1,
+    "mateTagVerified": 1,
+    "badExamples": []
+  },
+  "queensideAttack": {
+    "total": 2,
+    "withMateTag": 1,
+    "mateTagVerified": 1,
+    "badExamples": []
+  },
+  "epauletteMate": {
+    "total": 2,
+    "withMateTag": 2,
+    "mateTagVerified": 2,
+    "badExamples": []
+  },
+  "xRayAttack": {
+    "total": 1,
+    "withMateTag": 1,
+    "mateTagVerified": 1,
+    "badExamples": []
+  },
+  "queenEndgame": {
+    "total": 1,
+    "withMateTag": 0,
+    "mateTagVerified": 0,
+    "badExamples": []
+  },
+  "collinearMove": {
+    "total": 1,
+    "withMateTag": 0,
+    "mateTagVerified": 0,
+    "badExamples": []
+  },
+  "morphysMate": {
+    "total": 1,
+    "withMateTag": 1,
+    "mateTagVerified": 1,
+    "badExamples": []
+  }
+}

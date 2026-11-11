@@ -96,7 +96,7 @@
   gap: clamp(1.5rem, 3.5vw, 2.75rem);
   max-width: 1200px;
   margin: 0 auto;
-  padding: clamp(1.5rem, 3vw, 2.25rem) clamp(1.25rem, 5vw, 3rem) clamp(4rem, 7vw, 6rem);
+  padding: clamp(1.5rem, 3vw, 2.25rem) clamp(1.25rem, 5vw, 3rem) v.$space-page-end;
 
   @include v.max-lg {
     flex-direction: column;

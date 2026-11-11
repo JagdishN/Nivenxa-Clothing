@@ -130,3 +130,11 @@ $panel-width: 460px;
     width: min(92vw, 480px);
   }
 }
+
+// A short window or a high zoom level: let the page scroll instead of scrolling inside the panel.
+@media (max-height: 700px) {
+  .panelCol {
+    max-height: none;
+    overflow-y: visible;
+  }
+}

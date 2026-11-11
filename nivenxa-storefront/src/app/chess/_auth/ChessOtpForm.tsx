@@ -1,145 +1,95 @@
 'use client'
-import { useState, type FormEvent } from 'react'
+import { useCallback, useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createChessBrowserClient } from '@/lib/chess/chessSupabaseBrowser'
 import { hasChessConsent, recordChessConsent, type ChessAccountType } from '@/lib/chess/chessConsentActions'
+import OtpBoxes from '@/components/auth/OtpBoxes'
+import { OTP_LENGTH } from '@/lib/auth/otp'
+import { useEmailOtp } from '@/lib/auth/useEmailOtp'
 import styles from './ChessAuthForm.module.scss'
 
-type Step = 'consent' | 'contact' | 'code'
-
 /**
- * Shared by /chess/login and /chess/signup — same Supabase email-OTP
- * mechanism as Living's OtpForm (src/app/living/_auth/OtpForm.tsx), same
- * Supabase project, differing only in `shouldCreateUser` and where success
- * sends the player back to. Chess has no post-verify setup step beyond
- * consent (no apartment/membership equivalent) — a successful verify (and,
- * where needed, consent) goes straight to `redirectTo`.
- *
- * Consent ("Who is this account for?" + the matching required checkbox) is
- * required by the Privacy Policy (/chess/privacy#children) before an
- * account can be used at all:
- *  - New sign-ups see it FIRST, before the email field is even used to send
- *    a code — the brief's "before sending the sign-in email" requirement.
- *  - Returning users who verify successfully but have no consent row yet
- *    (every account that existed before this feature shipped) see the same
- *    step once, right after verifying, before being sent on to `redirectTo`.
+ * The Chess sign-in / sign-up form, shown inside the Chess auth drawer (ChessAuthDrawer). Same Supabase email-code
+ * mechanism as Living (shared hook: src/lib/auth/useEmailOtp.ts), differing in `shouldCreateUser` and in the consent
+ * step Chess's Privacy Policy requires:
+ *  - sign-up: "Who is this account for?" + agreement FIRST, before any code is sent;
+ *  - login: if the verified account has no consent row yet (accounts that predate the feature), the same step appears
+ *    once, right after verifying, before continuing.
+ * Success is only acted on after the server has confirmed the code; `onSuccess` then closes the drawer and the form
+ * navigates to `redirectTo` (already validated by the caller).
  */
-export default function ChessOtpForm({ mode, redirectTo }: { mode: 'login' | 'signup'; redirectTo: string }) {
+export default function ChessOtpForm({ mode, redirectTo, onSuccess }: { mode: 'login' | 'signup'; redirectTo: string; onSuccess?: () => void }) {
   const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [code, setCode] = useState('')
-  const [step, setStep] = useState<Step>(mode === 'signup' ? 'consent' : 'contact')
+  const [phase, setPhase] = useState<'consent' | 'otp'>(mode === 'signup' ? 'consent' : 'otp')
   const [accountType, setAccountType] = useState<ChessAccountType | ''>('')
   const [agreed, setAgreed] = useState(false)
-  const [pending, setPending] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [consentPending, setConsentPending] = useState(false)
+  const [consentError, setConsentError] = useState<string | null>(null)
+
+  const finish = useCallback(() => {
+    onSuccess?.()
+    router.push(redirectTo)
+    router.refresh()
+  }, [onSuccess, router, redirectTo])
+
+  const otp = useEmailOtp({
+    getClient: createChessBrowserClient,
+    shouldCreateUser: mode === 'signup',
+    notFoundMessage: "We couldn't find an account for that email. Try Sign Up instead.",
+    onVerified: async () => {
+      if (mode === 'signup') {
+        // accountType/agreed were collected in the consent step before the code was sent.
+        try {
+          await recordChessConsent(accountType as ChessAccountType)
+        } catch {
+          // Non-fatal: the account exists and is signed in; a missing row is asked for again at the next login.
+        }
+        finish()
+        return
+      }
+      // Login: only now do we know who this is, so only now can we check whether consent is still needed.
+      if (await hasChessConsent()) finish()
+      else setPhase('consent')
+    },
+  })
 
   function submitConsent(e: FormEvent) {
     e.preventDefault()
     if (!accountType || !agreed) return
+    setConsentError(null)
     if (mode === 'signup') {
-      setStep('contact')
+      setPhase('otp')
       return
     }
-    // Existing user, consenting after verify — record it now and continue.
-    setPending(true)
+    // Existing account, consenting after verifying — record it and continue.
+    setConsentPending(true)
     recordChessConsent(accountType)
-      .then(() => {
-        router.push(redirectTo)
-        router.refresh()
-      })
+      .then(finish)
       .catch(() => {
-        setPending(false)
-        setError('Something went wrong saving that — please try again.')
+        setConsentPending(false)
+        setConsentError('Something went wrong saving that — please try again.')
       })
   }
 
-  async function requestCode(e: FormEvent) {
-    e.preventDefault()
-    setError(null)
-    setPending(true)
-    const supabase = createChessBrowserClient()
-    const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: mode === 'signup' } })
-    setPending(false)
-    if (error) {
-      setError(
-        mode === 'login' && error.message.toLowerCase().includes('not found')
-          ? "We couldn't find an account for that — try Sign Up instead."
-          : error.message
-      )
-      return
-    }
-    setStep('code')
-  }
-
-  async function verifyCode(e: FormEvent) {
-    e.preventDefault()
-    setError(null)
-    setPending(true)
-    const supabase = createChessBrowserClient()
-    const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: code.trim(), type: 'email' })
-    if (error) {
-      setPending(false)
-      setError(error.message)
-      return
-    }
-
-    if (mode === 'signup') {
-      // accountType/agreed were already collected in the 'consent' step
-      // above, before the code was ever sent.
-      try {
-        await recordChessConsent(accountType as ChessAccountType)
-      } catch {
-        // Non-fatal — the account exists and is signed in either way; worst
-        // case this falls through to the "existing user missing consent"
-        // path next time they sign in, which asks again.
-      }
-      setPending(false)
-      router.push(redirectTo)
-      router.refresh()
-      return
-    }
-
-    // Login: only now do we know who they are, so only now can we check
-    // whether they still need to go through consent.
-    const alreadyConsented = await hasChessConsent()
-    setPending(false)
-    if (alreadyConsented) {
-      router.push(redirectTo)
-      router.refresh()
-      return
-    }
-    setStep('consent')
-  }
-
-  if (step === 'consent') {
+  if (phase === 'consent') {
     return (
       <form onSubmit={submitConsent}>
-        {error && <div className={styles.alert}>{error}</div>}
+        {consentError && (
+          <div className={styles.alert} role="alert">
+            {consentError}
+          </div>
+        )}
         <p className={styles.hint} style={{ marginBottom: '0.75rem' }}>
           Who is this account for?
         </p>
         <div className={styles.field}>
           <label className={styles.radioOption}>
-            <input
-              type="radio"
-              name="accountType"
-              value="adult"
-              checked={accountType === 'adult'}
-              onChange={() => setAccountType('adult')}
-              required
-            />
+            <input type="radio" name="accountType" value="adult" checked={accountType === 'adult'} onChange={() => setAccountType('adult')} required />
             Me — I&rsquo;m 18 or older
           </label>
           <label className={styles.radioOption}>
-            <input
-              type="radio"
-              name="accountType"
-              value="child"
-              checked={accountType === 'child'}
-              onChange={() => setAccountType('child')}
-            />
+            <input type="radio" name="accountType" value="child" checked={accountType === 'child'} onChange={() => setAccountType('child')} />
             My child — I&rsquo;m their parent or guardian
           </label>
         </div>
@@ -154,8 +104,7 @@ export default function ChessOtpForm({ mode, redirectTo }: { mode: 'login' | 'si
           <label className={styles.checkboxOption}>
             <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} required />
             <span>
-              I confirm I am 18 or older and agree to the <Link href="/chess/terms">Terms of Use</Link> and{' '}
-              <Link href="/chess/privacy">Privacy Policy</Link>.
+              I confirm I am 18 or older and agree to the <Link href="/chess/terms">Terms of Use</Link> and <Link href="/chess/privacy">Privacy Policy</Link>.
             </span>
           </label>
         )}
@@ -164,53 +113,92 @@ export default function ChessOtpForm({ mode, redirectTo }: { mode: 'login' | 'si
           <label className={styles.checkboxOption}>
             <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} required />
             <span>
-              I am this child&rsquo;s parent or legal guardian. I agree to the <Link href="/chess/terms">Terms of Use</Link> on their
-              behalf and consent to NIVENXA processing their data as described in the <Link href="/chess/privacy">Privacy Policy</Link>.
+              I am this child&rsquo;s parent or legal guardian. I agree to the <Link href="/chess/terms">Terms of Use</Link> on their behalf and consent to
+              NIVENXA processing their data as described in the <Link href="/chess/privacy">Privacy Policy</Link>.
             </span>
           </label>
         )}
 
-        <button type="submit" className={styles.button} disabled={pending || !accountType || !agreed}>
-          {pending ? 'Saving…' : 'Continue'}
+        <button type="submit" className={styles.button} disabled={consentPending || !accountType || !agreed}>
+          {consentPending ? 'Saving…' : 'Continue'}
         </button>
       </form>
     )
   }
 
-  if (step === 'code') {
+  const sending = otp.status === 'sending'
+  const verifying = otp.status === 'verifying' || otp.status === 'verified'
+
+  if (otp.step === 'code') {
     return (
-      <form onSubmit={verifyCode}>
-        {error && <div className={styles.alert}>{error}</div>}
+      <div>
         <p className={styles.hint} style={{ marginBottom: '1rem' }}>
-          We sent a code to {email}.
+          We sent a {OTP_LENGTH}-digit code to <strong>{otp.email.trim()}</strong>.
         </p>
         <div className={styles.field}>
-          <label className={styles.label} htmlFor="chess-otp-code">
-            6-digit code
+          <label className={styles.label} id="chess-otp-label">
+            {OTP_LENGTH}-digit code
           </label>
-          <input
-            id="chess-otp-code"
-            className={styles.input}
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            required
+          <OtpBoxes
+            className={styles.otpTheme}
+            value={otp.code}
+            onChange={otp.setCode}
+            disabled={verifying}
+            invalid={Boolean(otp.error)}
+            labelledBy="chess-otp-label"
+            describedBy="chess-otp-feedback"
           />
         </div>
-        <button type="submit" className={styles.button} disabled={pending}>
-          {pending ? 'Verifying…' : 'Verify & continue'}
-        </button>
-        <button type="button" className={styles.switchStep} onClick={() => setStep('contact')}>
-          ← Use a different email
-        </button>
-      </form>
+        <div id="chess-otp-feedback">
+          {verifying && (
+            <p className={styles.hint} role="status">
+              Verifying…
+            </p>
+          )}
+          {otp.error && (
+            <div className={styles.alert} role="alert">
+              {otp.error.message}
+              {otp.error.kind === 'network' && (
+                <>
+                  {' '}
+                  <button type="button" className={styles.inlineAction} onClick={() => void otp.retryVerification()} disabled={verifying}>
+                    Retry verification
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+          {otp.notice && !otp.error && (
+            <p className={styles.hint} role="status">
+              {otp.notice}
+            </p>
+          )}
+        </div>
+        <div className={styles.secondaryRow}>
+          <button type="button" className={styles.switchStep} onClick={() => void otp.resendCode()} disabled={verifying || sending || otp.cooldown > 0}>
+            {sending ? 'Sending…' : otp.cooldown > 0 ? `Resend code in ${otp.cooldown}s` : 'Resend code'}
+          </button>
+          <button type="button" className={styles.switchStep} onClick={otp.changeEmail} disabled={verifying}>
+            ← Change email
+          </button>
+        </div>
+      </div>
     )
   }
 
   return (
-    <form onSubmit={requestCode}>
-      {error && <div className={styles.alert}>{error}</div>}
+    <form
+      noValidate
+      onSubmit={(e) => {
+        e.preventDefault()
+        void otp.sendCode()
+      }}
+    >
+      {otp.error && (
+        <div className={styles.alert} role="alert" id="chess-otp-email-error">
+          {otp.error.message}
+        </div>
+      )}
       <div className={styles.field}>
         <label className={styles.label} htmlFor="chess-otp-email">
           Email address
@@ -219,14 +207,17 @@ export default function ChessOtpForm({ mode, redirectTo }: { mode: 'login' | 'si
           id="chess-otp-email"
           className={styles.input}
           type="email"
+          autoComplete="email"
           placeholder="you@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
+          value={otp.email}
+          onChange={(e) => otp.setEmail(e.target.value)}
+          disabled={sending}
+          aria-invalid={otp.error ? true : undefined}
+          aria-describedby={otp.error ? 'chess-otp-email-error' : undefined}
         />
       </div>
-      <button type="submit" className={styles.button} disabled={pending}>
-        {pending ? 'Sending…' : 'Send code'}
+      <button type="submit" className={styles.button} disabled={sending}>
+        {sending ? 'Sending…' : 'Send code'}
       </button>
     </form>
   )

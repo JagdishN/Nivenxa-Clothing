@@ -56,6 +56,11 @@ export default function PuzzleCatalogueGrid({ themes, level }: { themes: ThemeSu
         ))}
       </div>
 
+      <p className={styles.note}>
+        Ratings come from Lichess: the higher the number, the harder the puzzle was for real players to solve. Some puzzles belong to more than one topic, so topic counts
+        overlap.
+      </p>
+
       {filtered.length === 0 ? (
         <div className={styles.emptyState}>
           <p>No puzzle sets in this range yet — try a different difficulty.</p>

@@ -15,6 +15,7 @@ export interface UseStockfishResult {
   getMove: (fen: string, config?: EngineMoveConfig) => Promise<string>
   getTopMoves: (fen: string, multiPv: number, options?: EngineMoveOptions) => Promise<EngineTopMove[]>
   evaluatePosition: (fen: string, depth?: number) => Promise<number>
+  evaluateWithReply: (fen: string, depth?: number) => Promise<{ score: number; bestMove?: string; pv?: string[] }>
   stop: () => void
 }
 
@@ -68,9 +69,14 @@ export function useStockfish(): UseStockfishResult {
     return engineRef.current.evaluatePosition(fen, depth)
   }, [])
 
+  const evaluateWithReply = useCallback((fen: string, depth?: number) => {
+    if (!engineRef.current) return Promise.reject(new Error('Chess engine is not ready yet'))
+    return engineRef.current.evaluateWithReply(fen, depth)
+  }, [])
+
   const stop = useCallback(() => {
     engineRef.current?.stop()
   }, [])
 
-  return { ready, error, setSkillLevel, setContempt, getBestMove, getMove, getTopMoves, evaluatePosition, stop }
+  return { ready, error, setSkillLevel, setContempt, getBestMove, getMove, getTopMoves, evaluatePosition, evaluateWithReply, stop }
 }

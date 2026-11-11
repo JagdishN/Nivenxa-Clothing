@@ -217,10 +217,95 @@
   border-radius: 999px;
   text-decoration: none;
   composes: ctaButtonGradient from './ChessTheme.module.scss';
+  border: 0;
+  cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 
   &:hover {
     transform: translateY(-1px);
     box-shadow: 0 8px 20px rgba(91, 46, 145, 0.28);
+  }
+}
+
+// ─── Account menu (avatar + disclosure) ─────────────────────────────────
+.accountWrap {
+  position: relative;
+}
+
+.avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--chess-white-soft);
+  composes: ctaButtonGradient from './ChessTheme.module.scss';
+
+  &:focus-visible {
+    outline: 2px solid var(--chess-purple);
+    outline-offset: 2px;
+  }
+}
+
+.accountPanel {
+  position: fixed; // top/right are set from the button's rectangle (AccountMenu.tsx)
+  z-index: 60;
+  width: min(22rem, calc(100vw - 1.5rem));
+  padding: 0.75rem;
+  border-radius: 0.9rem;
+  background: var(--chess-white-soft);
+  border: 1px solid rgba(91, 46, 145, 0.22);
+  box-shadow: 0 14px 34px rgba(31, 27, 58, 0.2);
+  display: grid;
+  gap: 0.15rem;
+}
+
+.accountLabel {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(31, 27, 58, 0.65);
+}
+
+.accountEmail {
+  margin: 0 0 0.4rem;
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--chess-deep);
+  overflow-wrap: anywhere; // the full address, never truncated
+}
+
+.accountItem {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0 0.6rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: none;
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--chess-purple);
+  text-decoration: none;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(91, 46, 145, 0.08);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--chess-purple);
+    outline-offset: -2px;
   }
 }

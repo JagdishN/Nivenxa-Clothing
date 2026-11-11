@@ -4,7 +4,7 @@
   composes: pageBackground from '../ChessTheme.module.scss';
   min-height: 100vh;
   position: relative;
-  overflow: hidden;
+  overflow: clip; // not a scroll container, so the sticky Start Game button works while the page still clips sideways overflow
 }
 
 .layout {
@@ -15,7 +15,7 @@
   justify-content: center;
   max-width: 1250px;
   margin: 0 auto;
-  padding: clamp(0.7rem, 1.6vw, 1.1rem) clamp(1rem, 4vw, 2.5rem);
+  padding: 0.6rem clamp(1rem, 4vw, 2.5rem) 0.75rem;
 
   @include v.max-lg {
     text-align: center;
@@ -54,6 +54,44 @@
 .playColumn {
   width: fit-content;
   max-width: 100%;
+
+  // Board column width = the smallest of: a share of the width, and what the HEIGHT leaves after everything that must stay on
+  // screen with it (nav 72 + top row + both 64px player headers + board frame + paddings = --play-chrome). Never below 360px:
+  // on short windows / large browser zoom the page scrolls instead of shrinking the board past readability.
+  --play-chrome: 274px;
+  --col: min(92vw, 640px);
+
+  @include v.lg {
+    --col: max(360px, min(46vw, calc(100svh - var(--play-chrome)), 780px));
+  }
+}
+
+.topRow {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.9rem;
+  margin-bottom: 0.4rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid rgba(31, 27, 58, 0.1);
+
+  @include v.max-lg {
+    justify-content: center;
+  }
+
+  .heading {
+    margin: 0;
+  }
+
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 .metaRow {
@@ -121,9 +159,33 @@
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--chess-purple);
-  padding: 0 0.25rem;
-  margin-top: 0.1rem;
+  padding: 0.1rem 0.5rem;
+  margin: 0;
   flex-shrink: 0;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 9999px;
+}
+
+// Check: a filled badge with a "!" glyph and bold text, so it never relies on colour alone.
+.statusCheck {
+  background: var(--chess-danger, #b3543f);
+  color: #fff;
+  font-weight: 700;
+  padding: 0.2rem 0.7rem 0.2rem 0.3rem;
+}
+
+.checkMark {
+  display: inline-grid;
+  place-items: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--chess-danger, #b3543f);
+  font-weight: 800;
+  font-size: 0.8rem;
+  line-height: 1;
 }
 
 // ─── Dominant board column ─────────────────────────────────────────────────────
@@ -132,33 +194,10 @@
 .boardCol {
   flex: 0 1 auto;
   min-width: 0;
-  // ~54-56% board / 44-46% panel — the board is the dominant object; the
-  // panel shouldn't approach parity with it even when its own content
-  // (Master especially) is fairly light. Bumped ~5% from an earlier pass
-  // that measured out closer to 50/50.
-  width: min(50vw, 58vh, 700px);
+  width: var(--col);
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-
-  @include v.max-lg {
-    width: min(92vw, 64vh, 640px);
-  }
-
-  // Typical laptop/desktop widths (1280–1535px) were still governed by the
-  // narrower vh cap below, so the board stayed small even once the
-  // container itself had room — this gives it the same growth room a bit
-  // earlier. No px ceiling here — .panelCol below absorbs whatever width the
-  // board doesn't use (up to its own readability cap), so growing the board
-  // further no longer comes at the panel's expense the way a shared row
-  // budget would.
-  @include v.xl {
-    width: min(40vw, 60vh);
-  }
-
-  @include v.xxl {
-    width: min(42vw, 67vh);
-  }
 }
 
 .boardStack {
@@ -175,14 +214,20 @@
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  padding: 0.9rem 1rem;
+  // Never taller than the board column (opponent row + board frame + player row): content scrolls INSIDE the panel instead of
+  // growing the page, so expanding an explanation can never move or resize the board.
+  max-height: calc(var(--col) + 9rem);
+  align-self: flex-start; // as tall as its content (up to the cap above): no big empty area under a short insight
+  padding: 0.7rem 0.85rem;
   border-radius: 1.1rem;
   border: 1px solid rgba(91, 46, 145, 0.15);
   background: rgba(255, 255, 255, 0.5);
 
   @include v.max-lg {
     flex: 0 0 auto;
-    width: min(92vw, 64vh, 640px);
+    width: var(--col);
+    max-height: none;
+    align-self: center;
   }
 
   // A fixed vw-driven formula, not flex-grow — .playColumn is
@@ -203,7 +248,7 @@
 .panelDivider {
   height: 1px;
   background: rgba(31, 27, 58, 0.1);
-  margin: 0.75rem 0;
+  margin: 0.5rem 0;
   flex-shrink: 0;
 }
 
@@ -212,6 +257,8 @@
   flex-direction: column;
   min-height: 0;
   flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 // Reuses .segmentedOption/.segmentedOptionSelected (setup screen) for the
@@ -340,7 +387,6 @@
   display: flex;
   align-items: center;
   flex: 1;
-  min-height: 4.25rem;
 }
 
 // ─── Expert dashboard / Master live panel ──────────────────────────────────
@@ -555,14 +601,35 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 0.6rem;
+  flex-wrap: nowrap; // on desktop the chip shares the header's single line: it must never wrap below it and push the board down
+  gap: 0.2rem 0.6rem;
   padding: 0 0.25rem;
+
+  @media (max-width: 640px) {
+    flex-wrap: wrap;
+  }
+
+  // The turn/check chip sits at the far end of the active player's header, beside the board.
+  .statusBadge {
+    margin-left: auto;
+
+    @media (min-width: 641px) {
+      font-size: 0.8rem;
+      padding-inline: 0.25rem;
+    }
+  }
+  .statusCheck {
+    @media (min-width: 641px) {
+      padding-inline: 0.3rem 0.65rem;
+    }
+  }
 }
 
 .playerIdentity {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
+  min-width: 0; // lets a long caption shrink (ellipsis) instead of pushing the status chip to a new line
 }
 
 .playerName {
@@ -626,11 +693,28 @@
   display: flex;
   justify-content: flex-start;
   flex-wrap: wrap;
-  gap: 0.6rem;
+  gap: 0.45rem;
   flex-shrink: 0;
 
   @include v.max-lg {
     justify-content: center;
+  }
+}
+
+// Offer Draw / Resign: a quieter group under the main controls. Resign is tinted and always needs confirming.
+.controlsSecondary {
+  margin-top: 0.45rem;
+  margin-bottom: 0.15rem;
+}
+
+.actionBtnDanger {
+  border-color: rgba(179, 84, 63, 0.45);
+  color: var(--chess-danger, #b3543f);
+
+  &:hover:not(:disabled) {
+    border-color: var(--chess-danger, #b3543f);
+    color: var(--chess-danger, #b3543f);
+    background: rgba(179, 84, 63, 0.08);
   }
 }
 
@@ -641,7 +725,8 @@
   font-size: 0.76rem;
   font-weight: 600;
   letter-spacing: 0.03em;
-  padding: 0.55rem 1.15rem;
+  padding: 0.4rem 1rem;
+  min-height: 2.25rem; // 36px touch target
   border-radius: 9999px;
   border: 1px solid rgba(91, 46, 145, 0.25);
   background: rgba(255, 255, 255, 0.55);
@@ -687,7 +772,8 @@
   font-size: 0.9rem;
   font-weight: 700;
   letter-spacing: 0.05em;
-  padding: 0.55rem 0.9rem;
+  padding: 0.4rem 0.9rem;
+  min-height: 2.25rem;
   border-radius: 9999px;
   border: 1px solid rgba(91, 46, 145, 0.25);
   background: rgba(255, 255, 255, 0.55);
@@ -791,6 +877,7 @@
   font-weight: 600;
   letter-spacing: 0.02em;
   padding: 0.32rem 0.85rem;
+  min-height: 2.25rem;
   border-radius: 9999px;
   border: 1px solid rgba(31, 27, 58, 0.18);
   background: transparent;
@@ -947,7 +1034,7 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(31, 27, 58, 0.5);
-  margin: clamp(0.8rem, 1.4vw, 1rem) 0 0.5rem;
+  margin: clamp(0.55rem, 1vw, 0.8rem) 0 0.4rem;
   text-align: center;
 }
 
@@ -1136,7 +1223,11 @@
   composes: ctaButtonGradient from '../ChessTheme.module.scss';
   display: block;
   width: 100%;
-  margin-top: clamp(0.85rem, 1.6vw, 1.15rem);
+  margin-top: clamp(0.6rem, 1.2vw, 0.9rem);
+  position: sticky; // stays reachable at the bottom of the window while the setup is taller than the screen
+  bottom: 0.75rem;
+  z-index: 2;
+  box-shadow: 0 6px 18px rgba(31, 27, 58, 0.22);
   padding: 0.7rem 1.5rem;
   border: none;
   border-radius: 9999px;
@@ -1587,7 +1678,7 @@
   z-index: 1;
   max-width: 900px;
   margin: 0 auto;
-  padding: 0 clamp(1.25rem, 5vw, 3rem) clamp(4rem, 7vw, 6rem);
+  padding: 0 clamp(1.25rem, 5vw, 3rem) v.$space-page-end;
 }
 
 .reviewInner {
@@ -1700,4 +1791,99 @@
   font-family: var(--font-sans);
   font-size: 0.75rem;
   color: var(--chess-danger);
+}
+
+// ─── Game settings (Animations switch) ───────────────────────────────────────
+.settingsPop {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  z-index: 20;
+  width: 15rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(91, 46, 145, 0.18);
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(91, 46, 145, 0.18);
+}
+
+.settingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.settingLabel {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--chess-deep);
+}
+
+.settingNote {
+  margin-top: 0.4rem;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: rgba(31, 27, 58, 0.65);
+}
+
+.switchTrack {
+  position: relative;
+  flex: none;
+  width: 44px;
+  height: 26px;
+  border-radius: 9999px;
+  border: 1px solid rgba(91, 46, 145, 0.4);
+  background: rgba(31, 27, 58, 0.18);
+  cursor: pointer;
+  padding: 0;
+
+  &:focus-visible {
+    outline: 2px solid var(--chess-purple);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+}
+
+.switchOn {
+  background: var(--chess-purple);
+}
+
+.switchKnob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s ease;
+
+  .switchOn > & {
+    transform: translateX(18px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.resultHint {
+  margin: -0.45rem 0 0;
+  text-align: center;
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  color: rgba(31, 27, 58, 0.55);
+}
+
+.startGameBtn:disabled {
+  opacity: 0.6;
+  cursor: wait;
 }

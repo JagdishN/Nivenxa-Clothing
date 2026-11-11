@@ -1,20 +1,10 @@
 import { seoMetadata } from '@/lib/seo'
-import { LEGAL_ENTITY } from '@/lib/legalEntity'
-import SiteFooter from '@/components/global/SiteFooter'
+import AppFooter from '@/components/global/AppFooter/AppFooter'
+import PageShell from '@/components/global/PageShell'
 import ChessNav from './ChessNav'
+import ChessAuthProvider from './_auth/ChessAuthProvider'
 import ChessSessionTimeout from './ChessSessionTimeout'
 import theme from './ChessTheme.module.scss'
-
-const CHESS_FOOTER_COLUMNS = [
-  {
-    title: 'Nivenxa Chess',
-    links: [
-      { label: 'Terms of Use', href: '/chess/terms' },
-      { label: 'Privacy Policy', href: '/chess/privacy' },
-      { label: 'Contact', href: `mailto:${LEGAL_ENTITY.email}` },
-    ],
-  },
-]
 
 // THE BUG this fixed: nothing under /chess defined its own metadata before
 // this, so every chess route — not just the /chess landing page — silently
@@ -27,25 +17,34 @@ const CHESS_FOOTER_COLUMNS = [
 // chess/page.tsx (the exact /chess route) sets its own complete metadata,
 // including `path`, which fully overrides this at that one route.
 export const metadata = seoMetadata({
-  title: 'NIVENXA Chess — Play smarter. Every move explained.',
+  title: 'NIVENXA Chess — Play smarter. Learn why, not just what.',
   description:
-    'Chess that explains the reasoning behind every move. Adaptive engine, curated puzzles and plain-language coaching, from first game onward.',
+    'Chess that teaches as you play. An adaptive engine with plain-language coaching that steps back as you improve, plus curated puzzles with hints and explained solutions.',
 })
 
 export default function ChessLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className={theme.theme}>
-      <ChessNav />
-      <ChessSessionTimeout />
+    // PageShell keeps the footer at the viewport bottom on a short page and
+    // directly after the content on a long one. It stays a sibling AFTER the
+    // page content, never inside it: Play's own wrapper (Play.module.scss
+    // .page) is a fixed full-viewport board layout marked `data-full-viewport`,
+    // and keeping the footer outside means it can never be clipped by it or
+    // squeeze the board — it sits below the fold past the board, like any
+    // other page's footer.
+    <ChessAuthProvider>
+    <PageShell
+      className={theme.theme}
+      contentClassName={theme.shellContent}
+      header={
+        <>
+          <ChessNav />
+          <ChessSessionTimeout />
+        </>
+      }
+      footer={<AppFooter app="chess" />}
+    >
       {children}
-      {/* Rendered as a sibling AFTER children, never inside them — Play's
-          own page wrapper (Play.module.scss .page) is `min-height: 100vh;
-          overflow: hidden`, a fixed full-viewport board layout. Keeping the
-          footer outside that box means it can never be clipped by it or
-          squeeze the board to make room; it just sits below the fold,
-          reachable by scrolling past the board, exactly like any other
-          page's footer. Verified at 375/768/1280px on /chess/play. */}
-      <SiteFooter columns={CHESS_FOOTER_COLUMNS} />
-    </div>
+    </PageShell>
+    </ChessAuthProvider>
   )
 }

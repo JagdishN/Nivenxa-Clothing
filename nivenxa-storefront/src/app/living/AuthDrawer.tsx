@@ -1,19 +1,17 @@
 'use client'
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { EASE_OUT_EXPO } from '@/lib/motion'
 import { setLivingFlashClient } from '@/lib/living/flashClient'
 import { createLivingBrowserClient } from '@/lib/living/supabaseBrowser'
-import OtpInput from './_auth/OtpInput'
+import LivingOtpFlow from './_auth/LivingOtpFlow'
+import { useDrawerA11y } from '@/lib/auth/useDrawerA11y'
 import type { AuthDrawerMode } from './AuthDrawerProvider'
 import theme from './LivingTheme.module.scss'
 import styles from './AuthDrawer.module.scss'
 
-type Step = 'contact' | 'code' | 'choose' | 'create' | 'join'
-
-const RESEND_COOLDOWN_SECONDS = 30
-const MAX_RESENDS = 3
+type Step = 'auth' | 'choose' | 'create' | 'join'
 
 /**
  * The compact, in-place equivalent of the storefront's SignInDrawer — email
@@ -32,7 +30,7 @@ const MAX_RESENDS = 3
  * lives in AuthDrawerPanel, which mounts fresh each time the drawer opens
  * (rather than a reset effect fighting its own stale state on re-open).
  */
-export default function AuthDrawer({ mode, onClose }: { mode: AuthDrawerMode | null; onClose: () => void }) {
+export default function AuthDrawer({ mode, redirectTo, onClose }: { mode: AuthDrawerMode | null; redirectTo: string; onClose: () => void }) {
   return (
     <AnimatePresence>
       {mode !== null && (
@@ -50,16 +48,13 @@ export default function AuthDrawer({ mode, onClose }: { mode: AuthDrawerMode | n
             className={styles.drawer}
             role="dialog"
             aria-modal="true"
-            aria-label="Account"
+            aria-label="Account sign-in"
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ duration: 0.5, ease: EASE_OUT_EXPO }}
           >
-            <button className={styles.close} onClick={onClose} aria-label="Close">
-              ×
-            </button>
-            <AuthDrawerPanel mode={mode} onClose={onClose} />
+            <AuthDrawerPanel mode={mode} redirectTo={redirectTo} onClose={onClose} />
           </motion.aside>
         </>
       )}
@@ -67,16 +62,13 @@ export default function AuthDrawer({ mode, onClose }: { mode: AuthDrawerMode | n
   )
 }
 
-function AuthDrawerPanel({ mode, onClose }: { mode: AuthDrawerMode; onClose: () => void }) {
+function AuthDrawerPanel({ mode, redirectTo, onClose }: { mode: AuthDrawerMode; redirectTo: string; onClose: () => void }) {
   const router = useRouter()
-  const [step, setStep] = useState<Step>('contact')
-  const [email, setEmail] = useState('')
-  const [code, setCode] = useState('')
+  const panel = useRef<HTMLDivElement>(null)
+  useDrawerA11y(panel, onClose)
+  const [step, setStep] = useState<Step>('auth')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [resendCount, setResendCount] = useState(0)
-  const [cooldown, setCooldown] = useState(0)
-  const cooldownTimer = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Create-apartment fields
   const [name, setName] = useState('')
@@ -89,102 +81,19 @@ function AuthDrawerPanel({ mode, onClose }: { mode: AuthDrawerMode; onClose: () 
   const [joinCode, setJoinCode] = useState('')
   const [flatNo, setFlatNo] = useState('')
 
-  useEffect(() => {
-    function onEsc(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onEsc)
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.removeEventListener('keydown', onEsc)
-      document.body.style.overflow = ''
-      if (cooldownTimer.current) clearInterval(cooldownTimer.current)
-    }
-  }, [onClose])
-
-  function startCooldown() {
-    setCooldown(RESEND_COOLDOWN_SECONDS)
-    if (cooldownTimer.current) clearInterval(cooldownTimer.current)
-    cooldownTimer.current = setInterval(() => {
-      setCooldown((s) => {
-        if (s <= 1) {
-          if (cooldownTimer.current) clearInterval(cooldownTimer.current)
-          return 0
-        }
-        return s - 1
-      })
-    }, 1000)
-  }
-
-  async function requestCode(e: FormEvent) {
-    e.preventDefault()
-    setError(null)
-    setPending(true)
+  // Runs only after the server has confirmed the code. A member goes to where they were headed (already validated by
+  // the page that opened the drawer); a brand-new account chooses Create or Join first.
+  async function afterVerified() {
     const supabase = createLivingBrowserClient()
-    const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: mode === 'signup' } })
-    setPending(false)
-    if (error) {
-      setError(
-        mode === 'login' && error.message.toLowerCase().includes('not found')
-          ? "We couldn't find an account for that — try Sign Up instead."
-          : error.message
-      )
-      return
-    }
-    setResendCount(0)
-    startCooldown()
-    setStep('code')
-  }
-
-  async function resendCode() {
-    if (cooldown > 0 || resendCount >= MAX_RESENDS || pending) return
-    setError(null)
-    setPending(true)
-    const supabase = createLivingBrowserClient()
-    const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: mode === 'signup' } })
-    setPending(false)
-    if (error) {
-      setError(error.message)
-      return
-    }
-    setCode('')
-    setResendCount((n) => n + 1)
-    startCooldown()
-  }
-
-  async function verifyCode(e: FormEvent) {
-    e.preventDefault()
-    setError(null)
-    if (code.trim().length < 6) {
-      setError('Enter all 6 digits.')
-      return
-    }
-    setPending(true)
-    const supabase = createLivingBrowserClient()
-    const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: code.trim(), type: 'email' })
-    if (error) {
-      setPending(false)
-      const message = error.message.toLowerCase()
-      setError(
-        message.includes('expired') || message.includes('invalid')
-          ? 'That code is incorrect or has expired — check the digits or request a new one.'
-          : error.message
-      )
-      setCode('')
-      return
-    }
-
     const {
       data: { user },
     } = await supabase.auth.getUser()
     const { data: membership } = user
       ? await supabase.from('living_memberships').select('id').eq('user_id', user.id).maybeSingle()
       : { data: null }
-    setPending(false)
-
     if (membership) {
       onClose()
-      router.push('/living/home')
+      router.push(redirectTo)
       router.refresh()
     } else {
       setStep('choose')
@@ -237,74 +146,30 @@ function AuthDrawerPanel({ mode, onClose }: { mode: AuthDrawerMode; onClose: () 
   }
 
   return (
-    <>
-      {error && <div className={theme.alert}>{error}</div>}
+    <div ref={panel}>
+      <button type="button" className={styles.close} onClick={onClose} aria-label="Close">
+        ×
+      </button>
+      {error && (
+        <div className={theme.alert} role="alert">
+          {error}
+        </div>
+      )}
 
-      {(step === 'contact' || step === 'code') && (
+      {step === 'auth' && (
         <>
           <header className={styles.header}>
             <p className={styles.eyebrow}>Account</p>
-            <h2 className={styles.title}>{mode === 'login' ? 'Login' : 'Create Apartment'}</h2>
+            <h2 className={styles.title}>
+              {mode === 'login' ? 'Login' : 'Create Apartment'}
+            </h2>
             <p className={styles.subtitle}>
-              {mode === 'login' ? 'Enter the email registered with your apartment.' : "Start with your email — you'll set up or join an Apartment next."}
+              {mode === 'login'
+                ? "Enter your email address to sign in. We'll send you a verification code."
+                : "Enter your email address. We'll send you a verification code, then you can set up or join an Apartment."}
             </p>
           </header>
-
-          {step === 'contact' ? (
-            <form onSubmit={requestCode}>
-              <div className={theme.field}>
-                <label className={theme.label} htmlFor="drawer-email">
-                  Email address
-                </label>
-                <input
-                  id="drawer-email"
-                  className={theme.input}
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <button type="submit" className={theme.button} disabled={pending} style={{ width: '100%' }}>
-                {pending ? 'Sending…' : 'Send Verification Code'}
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={verifyCode}>
-              <p className={styles.hint}>We sent a code to {email}.</p>
-              <div className={theme.field}>
-                <label className={theme.label}>6-digit code</label>
-                <OtpInput value={code} onChange={setCode} />
-              </div>
-              <button type="submit" className={theme.button} disabled={pending} style={{ width: '100%' }}>
-                {pending ? 'Verifying…' : 'Verify & continue'}
-              </button>
-              <div className={styles.secondaryRow}>
-                {resendCount < MAX_RESENDS ? (
-                  <button type="button" className={styles.switchStep} onClick={resendCode} disabled={cooldown > 0 || pending}>
-                    {cooldown > 0 ? `Resend code (${cooldown}s)` : 'Resend code'}
-                  </button>
-                ) : (
-                  <span className={styles.hint}>Maximum resend attempts reached.</span>
-                )}
-                <button
-                  type="button"
-                  className={styles.switchStep}
-                  onClick={() => {
-                    if (cooldownTimer.current) clearInterval(cooldownTimer.current)
-                    setCooldown(0)
-                    setResendCount(0)
-                    setCode('')
-                    setError(null)
-                    setStep('contact')
-                  }}
-                >
-                  ← Use a different email
-                </button>
-              </div>
-            </form>
-          )}
+          <LivingOtpFlow shouldCreateUser={mode === 'signup'} onVerified={afterVerified} />
         </>
       )}
 
@@ -434,6 +299,6 @@ function AuthDrawerPanel({ mode, onClose }: { mode: AuthDrawerMode; onClose: () 
           </form>
         </>
       )}
-    </>
+    </div>
   )
 }

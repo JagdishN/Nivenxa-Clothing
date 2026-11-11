@@ -1,4 +1,5 @@
 import { getSupabase } from './supabase'
+import { PUZZLE_THEMES } from './puzzleThemes'
 
 export interface PuzzleRow {
   id: string
@@ -61,7 +62,7 @@ export function isBandAvailable(bands: ThemeBands, level: DifficultyLevel): bool
   return !!band && band.count >= MIN_BAND_PUZZLES
 }
 
-function computeBands(ratings: number[]): ThemeBands {
+export function computeBands(ratings: number[]): ThemeBands {
   const bands: ThemeBands = { beginner: null, intermediate: null, advanced: null }
   for (const level of Object.keys(RATING_BANDS) as Exclude<DifficultyLevel, 'all'>[]) {
     const { min, max } = RATING_BANDS[level]
@@ -73,100 +74,73 @@ function computeBands(ratings: number[]): ThemeBands {
   return bands
 }
 
-/** Curated theme set from the puzzle import script — see scripts/import-puzzles.ts. */
-export const PUZZLE_THEMES = [
-  'fork',
-  'pin',
-  'skewer',
-  'discoveredAttack',
-  'hangingPiece',
-  'backRankMate',
-  'endgame',
-  'mateIn1',
-  'mateIn2',
-  'doubleCheck',
-  'deflection',
-  'sacrifice',
-  'capturingDefender',
-  'intermezzo',
-  'clearance',
-  'attraction',
-  'interference',
-  'trappedPiece',
-] as const
-export type PuzzleTheme = (typeof PUZZLE_THEMES)[number]
+export { PUZZLE_THEMES, THEME_LABELS, type PuzzleTheme } from './puzzleThemes'
 
-export const THEME_LABELS: Record<string, string> = {
-  fork: 'Forks',
-  pin: 'Pins',
-  skewer: 'Skewers',
-  discoveredAttack: 'Discovered Attacks',
-  hangingPiece: 'Hanging Pieces',
-  backRankMate: 'Back-Rank Mates',
-  endgame: 'Endgames',
-  mateIn1: 'Mate in One',
-  mateIn2: 'Mate in Two',
-  doubleCheck: 'Double Checks',
-  deflection: 'Deflection',
-  sacrifice: 'Sacrifices',
-  capturingDefender: 'Removing the Defender',
-  intermezzo: 'In-Between Moves',
-  clearance: 'Clearance',
-  attraction: 'Decoys',
-  interference: 'Interference',
-  trappedPiece: 'Trapped Pieces',
-}
-
-/** One row per theme that actually has puzzles — themes with zero rows are omitted. */
-export async function getThemeSummaries(): Promise<ThemeSummary[]> {
-  const supabase = getSupabase()
-  const summaries: ThemeSummary[] = []
-
-  for (const theme of PUZZLE_THEMES) {
-    const { data, error } = await supabase.from('puzzles').select('rating').contains('themes', [theme])
-    if (error) {
-      console.error(`getThemeSummaries: failed to load "${theme}" —`, error.message)
-      continue
-    }
-    if (!data || data.length === 0) continue
-    const ratings = data.map((r) => r.rating as number)
-    summaries.push({
-      theme,
-      count: ratings.length,
-      minRating: Math.min(...ratings),
-      maxRating: Math.max(...ratings),
-      bands: computeBands(ratings),
-    })
-  }
-
-  return summaries
-}
-
-/** One theme's band availability — used by the per-theme page, which only needs this one theme's bands, not the whole catalogue's. */
-export async function getThemeBands(theme: string): Promise<ThemeBands> {
-  const supabase = getSupabase()
-  const { data, error } = await supabase.from('puzzles').select('rating').contains('themes', [theme])
-  if (error || !data) return { beginner: null, intermediate: null, advanced: null }
-  return computeBands(data.map((r) => r.rating as number))
-}
+/** Rows are fetched in pages of this size — Supabase caps a single response (default 1000 rows), so one unpaged select would silently truncate counts once the catalogue grows past it. */
+const PAGE_SIZE = 1000
 
 /**
- * Puzzles for one theme, ordered easiest-first (matches the import script's
- * low-to-high curation). `level` restricts to that rating band server-side —
- * the puzzle count the caller sees back (and therefore the "Puzzle X of N"
- * counter) is already the filtered count, not the whole theme's.
+ * One row per theme that actually has puzzles — themes with zero rows are omitted.
+ *
+ * One (paged) query for the whole catalogue, grouped here. This used to be
+ * one query per theme run back-to-back (18 sequential round trips), which is
+ * what made /chess/puzzles take seconds to answer. Throws on a database
+ * error instead of returning a partial list, so the page's error boundary
+ * can offer a retry rather than showing "No puzzles are available yet" for
+ * what is really a failed load.
  */
-export async function getPuzzlesByTheme(theme: string, level: DifficultyLevel = 'all'): Promise<PuzzleRow[]> {
+export async function getThemeSummaries(): Promise<ThemeSummary[]> {
   const supabase = getSupabase()
-  let query = supabase.from('puzzles').select('*').contains('themes', [theme])
-  if (level !== 'all') {
-    const { min, max } = RATING_BANDS[level]
-    query = query.gte('rating', min).lte('rating', max)
+  const byTheme = new Map<string, number[]>()
+
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from('puzzles')
+      .select('rating, themes')
+      .overlaps('themes', [...PUZZLE_THEMES])
+      .order('id')
+      .range(from, from + PAGE_SIZE - 1)
+    if (error) throw new Error(`getThemeSummaries: ${error.message}`)
+    for (const row of data ?? []) {
+      for (const theme of row.themes as string[]) {
+        if (!(PUZZLE_THEMES as readonly string[]).includes(theme)) continue
+        const list = byTheme.get(theme) ?? []
+        list.push(row.rating as number)
+        byTheme.set(theme, list)
+      }
+    }
+    if (!data || data.length < PAGE_SIZE) break
   }
-  const { data, error } = await query.order('rating', { ascending: true })
-  if (error) {
-    console.error(`getPuzzlesByTheme: failed to load "${theme}" —`, error.message)
-    return []
+
+  return PUZZLE_THEMES.flatMap((theme) => {
+    const ratings = byTheme.get(theme)
+    if (!ratings || ratings.length === 0) return []
+    return [{ theme, count: ratings.length, minRating: Math.min(...ratings), maxRating: Math.max(...ratings), bands: computeBands(ratings) }]
+  })
+}
+
+/** Every puzzle for one theme, easiest first. Throws on a database error (see getThemeSummaries). */
+export async function getThemePuzzles(theme: string): Promise<PuzzleRow[]> {
+  const supabase = getSupabase()
+  const rows: PuzzleRow[] = []
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from('puzzles')
+      .select('*')
+      .contains('themes', [theme])
+      .order('rating', { ascending: true })
+      .order('id')
+      .range(from, from + PAGE_SIZE - 1)
+    if (error) throw new Error(`getThemePuzzles("${theme}"): ${error.message}`)
+    rows.push(...((data ?? []) as PuzzleRow[]))
+    if (!data || data.length < PAGE_SIZE) break
   }
-  return (data ?? []) as PuzzleRow[]
+  return rows
+}
+
+/** Restrict an already-loaded, rating-sorted theme set to one band — the page loads the theme once and derives both its band availability and the filtered set from it. */
+export function filterByLevel(puzzles: PuzzleRow[], level: DifficultyLevel): PuzzleRow[] {
+  if (level === 'all') return puzzles
+  const { min, max } = RATING_BANDS[level]
+  return puzzles.filter((p) => p.rating >= min && p.rating <= max)
 }

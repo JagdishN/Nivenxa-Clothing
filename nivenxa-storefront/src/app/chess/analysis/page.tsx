@@ -1,15 +1,11 @@
 import Link from 'next/link'
 import { getChessSession } from '@/lib/chess/chessAuth'
-import { listMyGames } from '@/lib/chess/analysisActions'
 import NivenxaGamesCard from './NivenxaGamesCard'
 import CardIcon from './CardIcon'
 import styles from './Analysis.module.scss'
 
 export default async function ChessAnalysisPage() {
   const session = await getChessSession()
-  const hasNivenxaGames = session
-    ? (await listMyGames(session.userId)).some((g) => g.source === 'nivenxa-play')
-    : false
 
   return (
     <main className={styles.page}>
@@ -42,8 +38,12 @@ export default async function ChessAnalysisPage() {
           </div>
         </Link>
 
-        <NivenxaGamesCard session={session} hasGames={hasNivenxaGames} />
+        <NivenxaGamesCard session={session} />
       </div>
+
+      <p className={styles.savedLink}>
+        <Link href={session ? '/chess/activity/analyses' : `/chess/login?redirect=${encodeURIComponent('/chess/activity/analyses')}`}>View my saved analyses →</Link>
+      </p>
     </main>
   )
 }

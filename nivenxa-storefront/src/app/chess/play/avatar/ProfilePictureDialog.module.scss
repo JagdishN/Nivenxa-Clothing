@@ -1,0 +1,211 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(31, 27, 58, 0.55);
+}
+.dialog {
+  width: min(32rem, 100%);
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  padding: 1.25rem;
+  border-radius: 1.1rem;
+  background: #fff;
+  color: var(--chess-deep);
+  font-family: var(--font-sans);
+  box-shadow: 0 20px 60px rgba(31, 27, 58, 0.35);
+}
+.title {
+  margin: 0 0 0.25rem;
+  font-size: 1.15rem;
+}
+.limits {
+  margin: 0 0 0.9rem;
+  font-size: 0.8rem;
+  color: rgba(31, 27, 58, 0.7);
+}
+.row {
+  display: flex;
+  gap: 1.1rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.crop {
+  position: relative;
+  overflow: hidden;
+  border-radius: 50%; // the crop IS the circular result
+  background: #efe9f7;
+  touch-action: none;
+  cursor: grab;
+  &:focus-visible {
+    outline: 2px solid var(--chess-purple);
+    outline-offset: 3px;
+  }
+}
+.cropImg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: none;
+  user-select: none;
+  pointer-events: none;
+}
+.ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px rgba(91, 46, 145, 0.5);
+  pointer-events: none;
+}
+.empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  color: rgba(31, 27, 58, 0.55);
+}
+.side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 7rem;
+}
+.previewLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(31, 27, 58, 0.65);
+}
+.preview {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 1px solid rgba(91, 46, 145, 0.3);
+}
+.zoomLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.74rem;
+  width: 100%;
+}
+.file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.pick {
+  display: inline-block;
+  margin-top: 0.9rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 9999px;
+  border: 1px solid var(--chess-purple);
+  color: var(--chess-purple);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  &:focus-visible {
+    outline: 2px solid var(--chess-purple);
+    outline-offset: 2px;
+  }
+}
+.progress {
+  display: block;
+  width: 100%;
+  margin-top: 0.7rem;
+}
+.error {
+  min-height: 1.2rem;
+  margin: 0.6rem 0 0;
+  font-size: 0.8rem;
+  color: #a12c2c;
+}
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+.spacer {
+  flex: 1;
+}
+.save,
+.cancel,
+.remove {
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  min-height: 2.25rem;
+  padding: 0 1rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--chess-purple);
+    outline-offset: 2px;
+  }
+}
+.save {
+  border: 0;
+  background: var(--chess-purple);
+  color: #fff;
+}
+.cancel {
+  border: 1px solid rgba(91, 46, 145, 0.3);
+  background: none;
+  color: var(--chess-deep);
+}
+.remove {
+  border: 0;
+  background: none;
+  color: #a12c2c;
+  text-decoration: underline;
+  padding: 0;
+}
+.presets {
+  margin-top: 0.9rem;
+  font-size: 0.8rem;
+  summary {
+    cursor: pointer;
+    color: var(--chess-purple);
+  }
+}
+.presetRow {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.preset {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: none;
+  cursor: pointer;
+  overflow: hidden;
+  &:focus-visible {
+    outline: 2px solid var(--chess-purple);
+    outline-offset: 2px;
+  }
+}
+.presetOn {
+  border-color: var(--chess-purple);
+}
+.presetNote {
+  margin: 0.4rem 0 0;
+  font-size: 0.72rem;
+  color: rgba(31, 27, 58, 0.6);
+}

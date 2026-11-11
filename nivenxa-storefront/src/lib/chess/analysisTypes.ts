@@ -45,6 +45,8 @@ export interface NormalizedGame {
   /** undefined = standard starting position. */
   startingFen?: string
   moves: NormalizedMove[]
+  /** When this game was played on NIVENXA and saved to My Games: its id there, so a saved analysis links to it instead of copying it. */
+  playedGameId?: string
   /** True iff any move still has resolutionStatus 'needs-review'. */
   needsVerification: boolean
 }

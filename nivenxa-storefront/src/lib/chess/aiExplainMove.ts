@@ -21,7 +21,7 @@ Rules you must always follow, with no exceptions:
 - Assume the reader may be a child. Use simple, kind, encouraging language. Never sarcastic, never harsh.
 - Never ask the player a question. Never request, reference or speculate about any personal information about them. Never include a URL or link.
 - Keep it short: at most ${AI_EXPLANATION_MAX_WORDS.beginner} words for a "beginner" level request, and at most ${AI_EXPLANATION_MAX_WORDS['next-level']} words for a "next-level" request.
-- If the position or move you are given looks invalid or inconsistent, say so briefly instead of guessing.`
+- Describe only the move you are told to explain, by the side you are told played it, and only what is true in the positions given. Never comment on the quality or consistency of the input, and never mention a move list.`
 
 /**
  * The ONLY inputs that can ever reach Claude for a move explanation — this
@@ -35,6 +35,8 @@ export interface AiExplainMoveInput {
   recentMovesSan: string[]
   move: string
   level: AiExplanationLevel
+  /** Verified facts about the move (side, number, canonical history, both positions); replaces the bare FEN/move lines when present. */
+  factsText?: string
 }
 
 // "Recent" on purpose, not "all" — enough for plan/threat context without
@@ -43,9 +45,12 @@ const MAX_RECENT_MOVES = 5
 
 export function buildExplainMoveRequest(input: AiExplainMoveInput): Anthropic.MessageCreateParamsNonStreaming {
   const recent = input.recentMovesSan.slice(-MAX_RECENT_MOVES)
-  const userContent = `Position (FEN): ${input.fen}
+  const userContent = `${
+    input.factsText ??
+    `Position (FEN): ${input.fen}
 Recent moves (SAN, oldest first): ${recent.length > 0 ? recent.join(' ') : '(none — this is early in the game)'}
-Move to explain: ${input.move}
+Move to explain: ${input.move}`
+  }
 Explanation level: ${input.level}
 
 Explain this move for a ${input.level} player, following your instructions.`

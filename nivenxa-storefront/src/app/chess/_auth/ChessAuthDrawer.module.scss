@@ -1,0 +1,117 @@
+// Chess sign-in drawer. Colours come from the Chess theme tokens (--chess-*), applied by the drawer's root element.
+
+.root {
+  position: relative;
+  z-index: 1000;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 27, 58, 0.45);
+  animation: fadeIn 0.2s ease both;
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(26rem, 100vw); // full-width panel on a phone
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 2.5rem 1.75rem 2rem;
+  background: var(--chess-white-soft);
+  color: var(--chess-deep);
+  box-shadow: -10px 0 40px rgba(31, 27, 58, 0.25);
+  border-left: 3px solid var(--chess-gold);
+  animation: slideIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+.close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: 0;
+  border-radius: 50%;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  color: rgba(31, 27, 58, 0.7);
+
+  &:hover {
+    color: var(--chess-purple);
+    background: rgba(91, 46, 145, 0.08);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--chess-purple);
+    outline-offset: 2px;
+  }
+}
+
+.header {
+  padding-right: 2rem;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// Signed-out confirmation / failure notice.
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1.25rem;
+  transform: translateX(-50%);
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: min(32rem, calc(100vw - 2rem));
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: #1f1b3a;
+  color: #faf8fc;
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  box-shadow: 0 10px 30px rgba(31, 27, 58, 0.3);
+}
+
+.toastError {
+  background: #7a2d1e;
+}
+
+.toastClose {
+  background: none;
+  border: 0;
+  color: inherit;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  min-width: 2rem;
+  min-height: 2rem;
+}

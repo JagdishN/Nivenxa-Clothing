@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Chessground } from 'chessground'
 import type { Api } from 'chessground/api'
 import type { Color, Key } from 'chessground/types'
@@ -138,6 +138,96 @@ function buildBandShapes(squares: Key[], color: string): DrawShape[] {
   return shapes
 }
 
+/**
+ * Lesson markers with a distinct SHAPE per meaning (so the meaning never rests on colour alone): a solid dot where a
+ * piece may move, a target ring where it may capture, and a cross where it is blocked.
+ */
+export type BoardMarkerKind = 'forward' | 'capture' | 'blocked' | 'found' | 'wrong' | 'hint'
+
+function markerSvg(kind: BoardMarkerKind): string {
+  // Corner badges (top right) so they never cover the piece: a ✓ for found, a ✕ for a wrong choice, a ? for a hint. Shape and symbol, not only colour.
+  if (kind === 'found') return `<circle cx="80" cy="20" r="17" fill="#1b5e20" stroke="#fff" stroke-width="4"/><path d="M71 20l7 7 12-14" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>`
+  if (kind === 'wrong') return `<circle cx="80" cy="20" r="17" fill="#b3261e" stroke="#fff" stroke-width="4"/><path d="M72 12l16 16M88 12L72 28" stroke="#fff" stroke-width="6" stroke-linecap="round"/>`
+  if (kind === 'hint') return `<circle cx="80" cy="20" r="17" fill="#8a5a00" stroke="#fff" stroke-width="4"/><text x="80" y="28" text-anchor="middle" font-size="24" font-weight="900" fill="#fff" font-family="sans-serif">?</text>`
+  if (kind === 'forward') return `<circle cx="50" cy="50" r="19" fill="#15781b" stroke="#fff" stroke-width="4" opacity="0.92"/>`
+  if (kind === 'capture')
+    return `<g fill="none" stroke="#b3261e" stroke-width="7" opacity="0.95"><circle cx="50" cy="50" r="38"/><path d="M50 4v18M50 78v18M4 50h18M78 50h18" stroke-linecap="round"/></g>`
+  return `<g stroke="#5b2e91" stroke-width="9" stroke-linecap="round" opacity="0.9"><path d="M28 28L72 72M72 28L28 72"/></g>`
+}
+
+const PIECE_NAMES: Record<string, string> = { k: 'king', q: 'queen', r: 'rook', b: 'bishop', n: 'knight', p: 'pawn' }
+
+function pieceAt(fen: string): Map<string, string> {
+  const out = new Map<string, string>()
+  const rows = fen.split(' ')[0].split('/')
+  rows.forEach((row, i) => {
+    let file = 0
+    for (const ch of row) {
+      if (/\d/.test(ch)) file += Number(ch)
+      else {
+        out.set(`${'abcdefgh'[file]}${8 - i}`, `${ch === ch.toUpperCase() ? 'white' : 'black'} ${PIECE_NAMES[ch.toLowerCase()]}`)
+        file += 1
+      }
+    }
+  })
+  return out
+}
+
+/**
+ * A keyboard / screen-reader way to choose squares on a click-to-identify board (chessground's own squares are not
+ * focusable). 64 transparent buttons laid over the board with one tab stop (arrow keys move, Enter/Space chooses). They
+ * ignore the mouse (`pointer-events: none`), so pointer and touch behave exactly as before.
+ */
+function KeyboardSquares({ fen, orientation, onSelect }: { fen: string; orientation: Color; onSelect: (key: Key) => void }) {
+  const [current, setCurrent] = useState('e4')
+  const refs = useRef<Record<string, HTMLButtonElement | null>>({})
+  const pieces = pieceAt(fen)
+  const flip = orientation === 'black'
+  const squares: string[] = []
+  for (let r = 8; r >= 1; r--) for (const f of 'abcdefgh') squares.push(`${f}${r}`)
+  const move = (sq: string, df: number, dr: number) => {
+    const f = Math.min(7, Math.max(0, 'abcdefgh'.indexOf(sq[0]) + df))
+    const r = Math.min(8, Math.max(1, Number(sq[1]) + dr))
+    const next = `${'abcdefgh'[f]}${r}`
+    setCurrent(next)
+    refs.current[next]?.focus()
+  }
+  return (
+    <div role="group" aria-label="Board squares. Use the arrow keys to move around the board and Enter to choose a square." className={styles.kbLayer} data-testid="board-keyboard-squares">
+      {squares.map((sq) => {
+        const col = 'abcdefgh'.indexOf(sq[0])
+        const row = 8 - Number(sq[1])
+        const left = (flip ? 7 - col : col) * 12.5
+        const top = (flip ? 7 - row : row) * 12.5
+        return (
+          <button
+            key={sq}
+            ref={(el) => {
+              refs.current[sq] = el
+            }}
+            type="button"
+            tabIndex={sq === current ? 0 : -1}
+            className={styles.kbSquare}
+            style={{ left: `${left}%`, top: `${top}%` }}
+            aria-label={`${sq}, ${pieces.get(sq) ?? 'empty'}`}
+            onFocus={() => setCurrent(sq)}
+            onKeyDown={(e) => {
+              const dir = { ArrowLeft: [flip ? 1 : -1, 0], ArrowRight: [flip ? -1 : 1, 0], ArrowUp: [0, flip ? -1 : 1], ArrowDown: [0, flip ? 1 : -1] }[e.key]
+              if (dir) {
+                e.preventDefault()
+                move(sq, dir[0], dir[1])
+              } else if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                onSelect(sq as Key)
+              }
+            }}
+          />
+        )
+      })}
+    </div>
+  )
+}
+
 export interface BoardProps {
   fen: string
   turnColor: Color
@@ -186,6 +276,17 @@ export interface BoardProps {
   boardTheme?: 'cream' | 'green' | 'purple'
   /** Briefly pulses the current `highlightSquares` circles — a lightweight "you got it" animation for a just-found square, distinct from the static highlight itself. */
   pulseHighlights?: boolean
+  /** Squares marked with a shape-coded meaning (see BoardMarkerKind) — a lesson demonstrating where a piece can go, capture, or is blocked. */
+  markers?: { square: Key; kind: BoardMarkerKind }[]
+  /**
+   * Identification-style steps: the pieces are fixed. Nothing can be picked up, dragged, dropped or moved (so no stray drag
+   * image or off-board drop), while square clicks are still reported through `onSquareClick`.
+   */
+  fixedPieces?: boolean
+  /** Adds the keyboard / screen-reader square chooser (see KeyboardSquares). Only meaningful together with `onSquareClick`. */
+  keyboardSquares?: boolean
+  /** Chessground's own move dots/rings for the selected piece (default on). Lessons turn them off: they would mark an enemy piece straight ahead as a normal destination and give the answer away. */
+  showDests?: boolean
   onMove?: (from: Key, to: Key) => void
   /**
    * Fires when any square is clicked — used for click-to-identify quizzes
@@ -213,6 +314,10 @@ export default function Board({
   showCoordinates = true,
   boardTheme = 'cream',
   pulseHighlights = false,
+  markers,
+  fixedPieces = false,
+  keyboardSquares = false,
+  showDests = true,
   onMove = noop,
   onSquareClick,
 }: BoardProps) {
@@ -222,6 +327,10 @@ export default function Board({
   onMoveRef.current = onMove
   const onSquareClickRef = useRef(onSquareClick)
   onSquareClickRef.current = onSquareClick
+  const fixedPiecesRef = useRef(fixedPieces)
+  useEffect(() => {
+    fixedPiecesRef.current = fixedPieces
+  }, [fixedPieces])
 
   // Mount Chessground — it's a vanilla-TS UI, not a React component — and
   // remount whenever `orientation` flips. Chessground only attaches its
@@ -251,18 +360,26 @@ export default function Board({
       lastMove,
       viewOnly: false,
       animation: { enabled: true, duration: 200 },
+      draggable: { enabled: !fixedPieces },
       movable: {
         free: false,
-        color: turnColor,
-        dests,
-        showDests: true,
+        color: fixedPieces ? undefined : turnColor,
+        dests: fixedPieces ? new Map<Key, Key[]>() : dests,
+        showDests,
       },
+      // Tap/click-to-move (select a piece, then its destination) is always on, not just for boards with an
+      // onSquareClick quiz handler — without it a touch player could only drag, and dragging a piece with a
+      // finger on a phone is unreliable. Drag still works alongside it.
       selectable: {
-        enabled: !!onSquareClickRef.current,
+        enabled: true,
       },
       events: {
         move: (orig, dest) => onMoveRef.current(orig, dest),
-        select: (key) => onSquareClickRef.current?.(key),
+        // Chessground reports a selection at the moment the pointer goes DOWN. On a fixed-pieces board an answer must be a
+        // completed click or tap instead (see the pointer handlers below), so pressing on a piece and dragging away chooses nothing.
+        select: (key) => {
+          if (!fixedPiecesRef.current) onSquareClickRef.current?.(key)
+        },
       },
     })
     apiRef.current = api
@@ -275,6 +392,44 @@ export default function Board({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orientation])
 
+  // Fixed-pieces boards: a click or tap (pointer pressed and released within a few pixels) on a square is the answer.
+  useEffect(() => {
+    const el = elRef.current
+    if (!fixedPieces || !el) return
+    let down: { x: number; y: number } | null = null
+    const onDown = (e: PointerEvent) => {
+      down = { x: e.clientX, y: e.clientY }
+    }
+    const onUp = (e: PointerEvent) => {
+      if (!down) return
+      const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y)
+      down = null
+      if (moved > 10) return
+      const r = el.getBoundingClientRect()
+      const fx = (e.clientX - r.left) / r.width
+      const fy = (e.clientY - r.top) / r.height
+      if (fx < 0 || fx >= 1 || fy < 0 || fy >= 1) return
+      let col = Math.floor(fx * 8)
+      let row = Math.floor(fy * 8)
+      if (orientation === 'black') {
+        col = 7 - col
+        row = 7 - row
+      }
+      onSquareClickRef.current?.(`${'abcdefgh'[col]}${8 - row}` as Key)
+    }
+    const onCancel = () => {
+      down = null
+    }
+    el.addEventListener('pointerdown', onDown)
+    el.addEventListener('pointerup', onUp)
+    el.addEventListener('pointercancel', onCancel)
+    return () => {
+      el.removeEventListener('pointerdown', onDown)
+      el.removeEventListener('pointerup', onUp)
+      el.removeEventListener('pointercancel', onCancel)
+    }
+  }, [fixedPieces, orientation])
+
   // Sync position/state into the existing instance rather than remounting.
   useEffect(() => {
     apiRef.current?.set({
@@ -285,17 +440,19 @@ export default function Board({
       check,
       lastMove,
       animation: { enabled: true, duration: 200 },
+      draggable: { enabled: !fixedPieces },
       movable: {
         free: false,
-        color: turnColor,
-        dests,
-        showDests: true,
+        color: fixedPieces ? undefined : turnColor,
+        dests: fixedPieces ? new Map<Key, Key[]>() : dests,
+        showDests,
       },
       selectable: {
-        enabled: !!onSquareClick,
+        enabled: true,
       },
     })
     apiRef.current?.setShapes([
+      ...(markers ?? []).map((m) => ({ orig: m.square, customSvg: { html: markerSvg(m.kind) } })),
       ...(highlightSquares ?? []).map((orig) => ({ orig, brush: highlightColor })),
       ...(hintArrow ? [{ orig: hintArrow[0], dest: hintArrow[1], brush: 'yellow' as const }] : []),
       ...(extraArrows ?? []).map((a) => ({ orig: a.from, dest: a.to, brush: a.brush ?? 'yellow' })),
@@ -323,6 +480,9 @@ export default function Board({
     hintArrow,
     extraArrows,
     lineHighlights,
+    markers,
+    fixedPieces,
+    showDests,
     onSquareClick,
   ])
 
@@ -345,7 +505,10 @@ export default function Board({
         boardTheme === 'green' ? styles.board_themeGreen : boardTheme === 'purple' ? styles.board_themePurple : styles.board_themeCream
       }`}
     >
-      <div ref={elRef} className={styles.board} />
+      <div className={styles.stack}>
+        <div ref={elRef} className={styles.board} />
+        {keyboardSquares && onSquareClick && <KeyboardSquares fen={fen} orientation={orientation} onSelect={onSquareClick} />}
+      </div>
     </div>
   )
 }

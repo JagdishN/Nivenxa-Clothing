@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@bot-art": ["./src/lib/chess/botArtStub.ts"]
     }
   },
   "include": [

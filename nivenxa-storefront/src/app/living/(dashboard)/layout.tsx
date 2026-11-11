@@ -2,7 +2,10 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { requireMembership } from '@/lib/living/auth'
 import { createLivingServerClient } from '@/lib/living/supabaseServer'
+import { setLivingFlash, setLivingNotice } from '@/lib/living/flash'
 import AppNav from './AppNav'
+import PageShell from '@/components/global/PageShell'
+import AppFooter from '@/components/global/AppFooter/AppFooter'
 import SessionTimeout from './SessionTimeout'
 import theme from '../LivingTheme.module.scss'
 
@@ -17,7 +20,13 @@ export const metadata: Metadata = { robots: { index: false, follow: false } }
 async function signOutAction() {
   'use server'
   const supabase = await createLivingServerClient()
-  await supabase.auth.signOut()
+  const { error } = await supabase.auth.signOut()
+  if (error) {
+    // Still signed in: say so (a confirmation here would be false) and stay inside the app.
+    await setLivingFlash('error', "We couldn't sign you out. Check your connection and try again.")
+    redirect('/living/home')
+  }
+  await setLivingNotice("You've been signed out.")
   redirect('/living')
 }
 
@@ -25,16 +34,23 @@ export default async function LivingAppLayout({ children }: { children: React.Re
   const { userId, email, membership, apartment } = await requireMembership()
 
   return (
-    <>
-      <AppNav
-        role={membership.role}
-        apartmentName={apartment.name}
-        onSignOut={signOutAction}
-        userId={userId}
-        email={email}
-      />
-      <SessionTimeout onSignOut={signOutAction} />
+    // The slim footer sits after the page content in normal flow (and is hidden when printing).
+    <PageShell
+      header={
+        <>
+          <AppNav
+            role={membership.role}
+            apartmentName={apartment.name}
+            onSignOut={signOutAction}
+            userId={userId}
+            email={email}
+          />
+          <SessionTimeout onSignOut={signOutAction} />
+        </>
+      }
+      footer={<AppFooter app="living" wide />}
+    >
       <div className={theme.pageShell}>{children}</div>
-    </>
+    </PageShell>
   )
 }

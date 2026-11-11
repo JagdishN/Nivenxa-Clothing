@@ -1,43 +1,10 @@
-import type { Metadata } from 'next'
-import Link from 'next/link'
-import MyGamesList from './MyGamesList'
-import type { AnalysisGameFilter } from './MyGamesList'
-import styles from './MyGames.module.scss'
+import { redirect } from 'next/navigation'
 
-// Session-specific content, not generic enough to index — see
-// chess/analysis/import/page.tsx for the full reasoning.
-export const metadata: Metadata = { robots: { index: false, follow: true } }
-
-const VALID_FILTERS: AnalysisGameFilter[] = ['all', 'analyzed', 'not-analyzed']
-
-export default async function ChessAnalysisMyGamesPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ filter?: string }>
-}) {
-  const params = await searchParams
-  const initialFilter = VALID_FILTERS.includes(params.filter as AnalysisGameFilter)
-    ? (params.filter as AnalysisGameFilter)
-    : 'all'
-
-  return (
-    <main className={styles.page}>
-      <section className={styles.hero}>
-        <p className={styles.eyebrow}>NIVENXA CHESS · ANALYSIS</p>
-        <h1 className={styles.heading}>My Games</h1>
-      </section>
-
-      <nav className={styles.tabs} aria-label="Analysis sections">
-        <Link href="/chess/analysis" className={styles.tab}>
-          Analyze
-        </Link>
-        <span className={styles.tabActive}>My Games</span>
-        <Link href="/chess/analysis/my-puzzles" className={styles.tab}>
-          My Puzzles
-        </Link>
-      </nav>
-
-      <MyGamesList initialFilter={initialFilter} />
-    </main>
-  )
+// Old bookmark. "My Games" here was the list of SAVED ANALYSES, which now lives under My Activity → My Analyses
+// (My Activity → My Games is the games you played). The old filter values carry over.
+export default async function OldMyGames({ searchParams }: { searchParams: Promise<{ filter?: string }> }) {
+  const { filter } = await searchParams
+  const map: Record<string, string> = { analyzed: 'analysed', 'not-analyzed': 'not-analysed' }
+  const f = filter ? map[filter] : undefined
+  redirect(`/chess/activity/analyses${f ? `?filter=${f}` : ''}`)
 }

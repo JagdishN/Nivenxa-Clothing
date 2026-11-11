@@ -5,6 +5,7 @@ import { LEGAL_ENTITY } from '@/lib/legalEntity'
 import PolicyAccordion from '@/components/policy/PolicyAccordion'
 import PolicyHelp from '@/components/policy/PolicyHelp'
 import SiteFooter from '@/components/global/SiteFooter'
+import PageShell from '@/components/global/PageShell'
 import styles from './Privacy.module.scss'
 
 export const metadata = seoMetadata({
@@ -35,7 +36,7 @@ const PARENT_FOOTER_COLUMNS = [
 
 export default function ParentPrivacyPage() {
   return (
-    <>
+    <PageShell footer={<SiteFooter columns={PARENT_FOOTER_COLUMNS} />}>
       <div className={styles.page}>
         <div className={styles.hero}>
           <p className={styles.eyebrow}>NIVENXA / LEGAL</p>
@@ -59,7 +60,6 @@ export default function ParentPrivacyPage() {
           mailtoHref={`mailto:${LEGAL_ENTITY.email}?subject=Privacy%20request`}
         />
       </div>
-      <SiteFooter columns={PARENT_FOOTER_COLUMNS} />
-    </>
+    </PageShell>
   )
 }

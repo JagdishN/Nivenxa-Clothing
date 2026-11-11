@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Board from '@/components/chess/Board'
 import ExplanationBody from '@/components/chess/ExplanationBody'
@@ -20,11 +20,32 @@ import { TIME_CONTROLS, TIME_CONTROL_MODE_LIST, type TimeControlMode, type TimeC
 import { accuracyFromEntries, classificationTone, formatClassification } from '@/lib/chess/moveClassification'
 import { buildNormalizedGameFromPlaySession, type PlayResult } from '@/lib/chess/playToAnalysis'
 import { setActiveGame } from '@/lib/chess/analysisSession'
+import { saveFinishedGame } from '@/lib/chess/activityActions'
 import type { ColorChoice, MoveAnalysisEntry, QualityMoveEntry } from '@/lib/chess/types'
 import MovePairsTable from './MovePairsTable'
 import ExpertDashboard from './ExpertDashboard'
 import MasterLivePanel from './MasterLivePanel'
 import NivenxaNoticed from './NivenxaNoticed'
+import OpponentAvatar from './avatar/OpponentAvatar'
+import PlayerAvatar from './avatar/PlayerAvatar'
+import { useAvatarSettings } from './avatar/useAvatarSettings'
+import InsightPanel from './InsightPanel'
+import { localizeEntry } from '@/lib/chess/insightFeed'
+import { checkInfoFor, describeCheck, replyOptions } from '@/lib/chess/checkInfo'
+import { assistanceLabel } from '@/lib/chess/avatarReaction'
+import BotPicker from './avatar/BotPicker'
+import { BOT_STORAGE_KEY, INTRO_GAMES, botById, introRestricted, isBotId, resolveBot, introLabel } from '@/lib/chess/botRoster'
+import type { BotId } from '@/lib/chess/botRoster'
+import { MIN_PLAYER_MOVES_TO_END_EARLY, countsAsIntroGame } from '@/lib/chess/coachIntro'
+import { useChessSession } from '@/lib/chess/useChessSession'
+import { useCoachIntro } from '@/lib/chess/useCoachIntro'
+import type { Key } from 'chessground/types'
+import { remainingHoldMs, replyMinMs, testOverrideMs } from '@/lib/chess/replyPace'
+import { downloadEvidence, evidenceEnabled } from '@/lib/chess/reviewEvidence'
+import { positionKey } from '@/lib/chess/moveFacts'
+
+// TEST-ONLY: the Tivvi opponent avatar renders only in builds made with NEXT_PUBLIC_CHESS_AVATAR_PROTOTYPE=1 (not approved for deployment).
+const AVATAR_PROTOTYPE = process.env.NEXT_PUBLIC_CHESS_AVATAR_PROTOTYPE === '1'
 import styles from './Play.module.scss'
 
 const SETUP_STORAGE_KEY = 'nivenxa-chess-setup'
@@ -37,10 +58,6 @@ const DRAW_OFFER_MIN_PLIES = 20
 // Historical dests never correspond to the live position, so reviewing a
 // past move always shows an empty (non-interactive) set of legal moves.
 const EMPTY_DESTS = new Map()
-// Safety net for the "wait for the player's explanation" gate below — the
-// engine responds anyway if the explanation hasn't resolved by then, rather
-// than blocking the game indefinitely on a slow API call.
-const EXPLANATION_WAIT_TIMEOUT_MS = 4500
 
 interface StoredSetup {
   tier: SkillTier
@@ -134,15 +151,6 @@ function strengthHint(tier: SkillTier, n: number, totalSteps: number): string {
   return `Strength ${n} · A ${band} ${label} challenge`
 }
 
-/** The one-line summary a collapsed history row shows instead of the full explanation — just the verdict half of the headline ("e4 — Good opening move" -> "Good opening move"), since the move itself is already in the row's own header. */
-function collapsedSummary(entry: MoveAnalysisEntry): string {
-  if (entry.headline) {
-    const dashIndex = entry.headline.indexOf(' — ')
-    return dashIndex >= 0 ? entry.headline.slice(dashIndex + 3) : entry.headline
-  }
-  return entry.explanation ?? ''
-}
-
 function moveNumberLabel(ply: number, color: 'w' | 'b'): string {
   return `${Math.floor(ply / 2) + 1}${color === 'w' ? '.' : '...'}`
 }
@@ -179,7 +187,7 @@ export default function ChessPlayPage() {
     reset,
     undo,
   } = useChessGame()
-  const { ready, error, setSkillLevel, setContempt, getMove } = useStockfish()
+  const { ready, error, setSkillLevel, setContempt, getMove, stop: stopEngine } = useStockfish()
   // Dedicated instance for draw-offer evaluation — kept separate from the
   // gameplay engine and the analysis engine in useMoveAnalysis so it never
   // overlaps an in-flight `go` command on a shared Worker (same reasoning
@@ -195,6 +203,20 @@ export default function ChessPlayPage() {
   const [draftMode, setDraftMode] = useState<TimeControlMode>('rapid')
   const [draftPresetIndex, setDraftPresetIndex] = useState(0)
   const [draftStrength, setDraftStrength] = useState(() => defaultStrengthFor('beginner'))
+  // Opponent character: a saved CHOICE (cosmetic), separate from level, strength and assistance. The opponent actually used is
+  // resolved from it (the coach during the Beginner introduction). Changing it only affects the NEXT game.
+  const [botPref, setBotPref] = useState<BotId | null>(null)
+  const [activeBotId, setActiveBotId] = useState<BotId>('tivvi')
+  const [introGame, setIntroGame] = useState<number | null>(null) // 1..3 while the running game is a coach introduction game
+  const chessSession = useChessSession()
+  const intro = useCoachIntro(chessSession.signedIn, chessSession.checked, chessSession.userId, chessSession.epoch)
+  const introRecordedRef = useRef('')
+  // What the coach introduction did with the game that just ended (shown in its result), and a note about an abandoned one (shown in setup).
+  const [introOutcome, setIntroOutcome] = useState<{ counted: boolean; after: number; reason?: string } | null>(null)
+  const [introNotice, setIntroNotice] = useState('')
+  // The engine reply the player asked to see on the board for ONE move. It is drawn only on the position it belongs to.
+  const [marks, setMarks] = useState<{ ply: number; fen: string; from: Key; to: Key } | null>(null)
+  const draftBot = resolveBot(draftTier, intro.completed, botPref)
 
   // The config actually driving the game in progress.
   const [activeTierId, setActiveTierId] = useState<SkillTier>('beginner')
@@ -225,6 +247,10 @@ export default function ChessPlayPage() {
   // game (see moreMenuRef's click-outside effect below).
   const [moreMenuOpen, setMoreMenuOpen] = useState(false)
   const moreMenuRef = useRef<HTMLDivElement>(null)
+  // One canonical record per played game (My Activity → My Games): a fresh id per game, saved once when it ends.
+  const gameLocalIdRef = useRef('')
+  const gameStartedAtRef = useRef('')
+  const gameSavePromiseRef = useRef<Promise<string | null> | null>(null)
   // 'pending'/'declined' also drive a transient banner near the board;
   // 'declined' clears itself after a few seconds but declinedUntilPly keeps
   // gating the button so the offer can't just be spammed again immediately.
@@ -239,28 +265,24 @@ export default function ChessPlayPage() {
   const [selectedPly, setSelectedPly] = useState<number | null>(null)
   const [panelTab, setPanelTab] = useState<'insight' | 'moves'>('insight')
 
-  // Which non-latest Insight-feed entries the player has manually expanded
-  // (Beginner/Intermediate only) — the latest entry is always shown
-  // expanded regardless of this set, see the feed rendering below.
-  const [expandedHistoryPlies, setExpandedHistoryPlies] = useState<Set<number>>(new Set())
-  const toggleHistoryEntry = (ply: number) => {
-    setExpandedHistoryPlies((prev) => {
-      const next = new Set(prev)
-      if (next.has(ply)) next.delete(ply)
-      else next.add(ply)
-      return next
-    })
-  }
-
-  // The ply of the player's own move we're holding the engine's reply for,
-  // until its explanation resolves (loaded or errored) — see the effects
-  // below. Only ever set in live-explanation contexts; `null` means the
-  // engine is free to respond as soon as it's its turn, same as before.
-  const [awaitingExplanationForPly, setAwaitingExplanationForPly] = useState<number | null>(null)
-
   // The celebratory/announcement overlay shown once when a game ends —
   // dismissible, separate from the persistent result summary in the panel.
   const [showResultOverlay, setShowResultOverlay] = useState(false)
+  // Bumped for every new game; the opponent avatar uses it to drop anything in flight from the previous one.
+  const [gameKey, setGameKey] = useState(0)
+  // When the human's last move was accepted (performance.now()): the opponent's minimum reply time is measured from here.
+  const replyClockRef = useRef<number | null>(null)
+  // What the opponent's pending reply must still match when it is about to be applied.
+  const liveRef = useRef({ fen: '', gameKey: 0, over: false })
+  const minReplyMsRef = useRef(500)
+  const lastReplyAppliedRef = useRef<string>('')
+  // The last move played (either side), so the board keeps its highlight until the next move.
+  const [lastMove, setLastMove] = useState<Key[] | undefined>(undefined)
+  // Game settings (Animations switch). Persisted by useAvatarSettings; the OS reduced-motion preference always wins.
+  const avatarSettings = useAvatarSettings()
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const settingsRef = useRef<HTMLDivElement>(null)
+  const reviewSectionRef = useRef<HTMLElement>(null)
 
   const tierConfig = SKILL_TIERS[activeTierId]
   const explanationMode = resolveExplanationMode(activeTierId, activeMode)
@@ -272,6 +294,8 @@ export default function ChessPlayPage() {
     reset: resetAnalysis,
     popEntries,
   } = useMoveAnalysis(tierConfig, explanationMode)
+  const analyzeMoveRef = useRef(analyzeMove)
+  const makeMoveRef = useRef(makeMove)
 
   // Resignation/draw-agreement end the game before chess.js's own isGameOver
   // would ever be true, so the clock needs both signals to actually freeze —
@@ -285,6 +309,12 @@ export default function ChessPlayPage() {
   // Prefill the setup screen from a previous visit — doesn't skip the screen,
   // just saves a returning player from re-picking the same config.
   useEffect(() => {
+    try {
+      const b = localStorage.getItem(BOT_STORAGE_KEY)
+      if (isBotId(b)) setBotPref(b)
+    } catch {
+      // storage unavailable: the default opponent is used
+    }
     const stored = loadStoredSetup()
     if (stored) {
       setDraftTier(stored.tier)
@@ -297,6 +327,21 @@ export default function ChessPlayPage() {
     }
   }, [])
 
+  // Same for the game-settings popover (Escape also closes it).
+  useEffect(() => {
+    if (!settingsOpen) return
+    const outside = (e: MouseEvent) => {
+      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) setSettingsOpen(false)
+    }
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setSettingsOpen(false)
+    document.addEventListener('mousedown', outside)
+    document.addEventListener('keydown', esc)
+    return () => {
+      document.removeEventListener('mousedown', outside)
+      document.removeEventListener('keydown', esc)
+    }
+  }, [settingsOpen])
+
   // Closes the "•••" overflow menu on any click outside it — the standard
   // dismiss behavior for a small popover menu.
   useEffect(() => {
@@ -308,18 +353,29 @@ export default function ChessPlayPage() {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [moreMenuOpen])
 
-  const beginGame = (tier: SkillTier, color: ColorChoice, mode: TimeControlMode, presetIndex: number, strength: number) => {
+  const beginGame = (tier: SkillTier, color: ColorChoice, mode: TimeControlMode, presetIndex: number, strength: number, bot: BotId) => {
     const resolved = resolveColor(color)
     const resolvedMode = tier === 'beginner' ? null : mode
     const resolvedPreset = resolvedMode ? TIME_CONTROLS[resolvedMode].presets[presetIndex] ?? TIME_CONTROLS[resolvedMode].presets[0] : null
 
     setActiveTierId(tier)
+    const restricted = introRestricted(tier, intro.completed)
+    setActiveBotId(resolveBot(tier, intro.completed, bot))
+    setIntroGame(restricted ? Math.min(intro.completed + 1, 3) : null)
     setActiveColorChoice(color)
     setActiveMode(resolvedMode)
     setActivePreset(resolvedPreset)
     setActiveStrength(clampStrength(tier, strength))
+    replyClockRef.current = null
+    setLastMove(undefined)
+    setMarks(null)
+    setIntroOutcome(null)
+    setIntroNotice('')
     setHumanColor(resolved)
     setOrientation(resolved === 'w' ? 'white' : 'black')
+    gameLocalIdRef.current = crypto.randomUUID()
+    gameStartedAtRef.current = new Date().toISOString()
+    gameSavePromiseRef.current = null
     setSkillSet(false)
     setScreen('playing')
     setReviewOpen(false)
@@ -330,9 +386,8 @@ export default function ChessPlayPage() {
     setDeclinedUntilPly(null)
     setSelectedPly(null)
     setPanelTab('insight')
-    setAwaitingExplanationForPly(null)
     setShowResultOverlay(false)
-    setExpandedHistoryPlies(new Set())
+    setGameKey((k) => k + 1)
     reset()
     resetAnalysis()
     resetClock(resolvedPreset)
@@ -346,10 +401,12 @@ export default function ChessPlayPage() {
       presetIndex: draftPresetIndex,
       strength: draftStrength,
     })
-    beginGame(draftTier, draftColor, draftMode, draftPresetIndex, draftStrength)
+    beginGame(draftTier, draftColor, draftMode, draftPresetIndex, draftStrength, draftBot)
   }
 
   const handleNewGame = () => {
+    // Leaving a coach game that never finished: say plainly that it did not count (a finished game's result already said what happened).
+    if (introGame !== null && !showGameComplete) setIntroNotice("Your last coach game was not finished, so it did not count. A game counts when it ends, or when you resign after 10 of your own moves.")
     // Reopen full setup, prefilled with the game's current config.
     setDraftTier(activeTierId)
     setDraftColor(activeColorChoice)
@@ -371,16 +428,37 @@ export default function ChessPlayPage() {
   const handlePlayAgain = () => {
     const mode = activeMode ?? 'classical'
     const presetIndex = activeMode && activePreset ? TIME_CONTROLS[activeMode].presets.indexOf(activePreset) : 0
-    beginGame(activeTierId, activeColorChoice, mode, presetIndex, activeStrength)
+    beginGame(activeTierId, activeColorChoice, mode, presetIndex, activeStrength, activeBotId)
   }
 
-  const handleAnalyzeGame = () => {
+  const handleAnalyzeGame = async () => {
     let result: PlayResult = '1/2-1/2'
     if (outcome === 'player-win') result = humanColor === 'w' ? '1-0' : '0-1'
     else if (outcome === 'engine-win' || outcome === 'player-resigned') result = humanColor === 'w' ? '0-1' : '1-0'
     const game = buildNormalizedGameFromPlaySession(analysisEntries, humanColor, activeTierId, result)
+    const savedId = await gameSavePromiseRef.current?.catch(() => null)
+    if (savedId) game.playedGameId = savedId
     setActiveGame(game, 'analyze')
     router.push('/chess/analysis/player')
+  }
+
+  // The setup screen is long (opponent picker): starting a game must show the board from the top, not wherever Start Game was scrolled to.
+  useEffect(() => {
+    if (screen === 'playing') {
+      // On Chess pages the BODY is the scroller (not the window), so reset it directly as well.
+      window.scrollTo({ top: 0 })
+      document.body.scrollTop = 0
+      document.documentElement.scrollTop = 0
+    }
+  }, [screen, gameKey])
+
+  const chooseBot = (id: BotId) => {
+    setBotPref(id)
+    try {
+      localStorage.setItem(BOT_STORAGE_KEY, id)
+    } catch {
+      // storage unavailable: the choice still applies to the next game
+    }
   }
 
   const handleDraftTierChange = (tier: SkillTier) => {
@@ -393,10 +471,14 @@ export default function ChessPlayPage() {
   }
 
   const handleUndo = () => {
-    undo(2) // undoes the player's move and the engine's reply
-    popEntries(2) // ...and both of those moves were analyzed now
+    // While the opponent's reply is still pending only the player's own move exists to take back; the pending reply is cancelled
+    // by the engine effect's cleanup as soon as the position changes.
+    const count = turn !== humanColor ? 1 : 2
+    undo(count)
+    replyClockRef.current = null
+    setLastMove(undefined)
+    popEntries(Math.max(0, history.length - count)) // drop what belongs to the two undone plies (and their in-flight work); earlier moves keep theirs
     setSelectedPly(null) // the selected ply, if any, may no longer exist
-    setAwaitingExplanationForPly(null) // ditto for a pending explanation wait
   }
 
   const handleResignClick = () => {
@@ -466,6 +548,8 @@ export default function ChessPlayPage() {
     setReviewOpen((open) => {
       const opening = !open
       if (opening) {
+        setShowResultOverlay(false) // the review opens on the page behind the result card
+        window.setTimeout(() => reviewSectionRef.current?.scrollIntoView({ behavior: avatarSettings.reduced ? 'auto' : 'smooth', block: 'start' }), 0)
         for (const entry of analysisEntries) {
           if (entry.kind === 'quality' && entry.classification === 'best') continue
           requestExplanation(entry.ply, { tone: tierConfig.tone, revealBestMove: true })
@@ -484,83 +568,97 @@ export default function ChessPlayPage() {
     }
   }, [ready, screen, skillSet, activeTierId, activeStrength, setSkillLevel, setContempt])
 
-  // Whenever it becomes the engine's turn, let it respond — except in live
-  // explanation contexts, where awaitingExplanationForPly (set below) holds
-  // it back until the player's own move has been explained, so the engine's
-  // move/explanation doesn't appear before they've read their own feedback.
+  // Keep the values a pending reply must re-check at the moment it would be applied (updated after every render, so a timer
+  // that fires later always sees the CURRENT game, never the one it started in).
+  const endedNow = isGameOver || endReason !== null
+  useEffect(() => {
+    analyzeMoveRef.current = analyzeMove
+    makeMoveRef.current = makeMove
+    minReplyMsRef.current = replyMinMs(activeTierId, testOverrideMs())
+    liveRef.current = { fen, gameKey, over: endedNow }
+  })
+  // The engine search currently running (if any): a new search never starts until the previous one has finished, because the engine
+  // answers one `go` at a time and a late "bestmove" from an abandoned search would otherwise be taken for the new one's.
+  const searchRef = useRef<Promise<unknown> | null>(null)
+  const [pendingReply, setPendingReply] = useState(false)
+
+  // Whenever it becomes the engine's turn, it starts computing AT ONCE. The reply is applied when BOTH the computation is done and the
+  // reply pace's minimum time (counted from the human move being accepted) has passed: engine time counts toward the minimum, and a
+  // search that takes longer than the minimum is played when ready, with no extra delay. Nothing waits for commentary.
+  // Cancelled safely on undo, restart, new game, resignation, game end and leaving the page (this effect's cleanup); and the reply
+  // is re-validated against the live game and position right before it is applied, so a stale or resumed timer can never move.
   useEffect(() => {
     if (screen !== 'playing' || !ready || !skillSet || turn === humanColor || isGameOver || endReason !== null) return
-    if (awaitingExplanationForPly !== null) return
-
-    let cancelled = false
+    const token = { cancelled: false, timer: null as ReturnType<typeof setTimeout> | null, wake: null as (() => void) | null }
+    const startedFen = fen
+    const startedGame = gameKey
+    // Measured from the human move being accepted (the engine's own first move of a game: from now).
+    const acceptedAt = replyClockRef.current ?? performance.now()
     setEngineThinking(true)
+    setPendingReply(true)
 
-    getMove(fen, { movetime: tierConfig.movetime })
-      .then((uci) => {
-        if (cancelled) return
-        const { from, to, promotion } = parseUciMove(uci)
-        const result = makeMove(from, to, promotion)
-        if (result) analyzeMove(result, 'engine')
-      })
-      .catch(() => {
-        // Engine failed to produce a move — leave the position as-is.
-      })
-      .finally(() => {
-        if (!cancelled) setEngineThinking(false)
-      })
+    const run = async () => {
+      const previous = searchRef.current
+      if (previous) await previous.catch(() => undefined)
+      if (token.cancelled) return
+      const search = getMove(startedFen, { movetime: tierConfig.movetime })
+      searchRef.current = search
+      let uci: string
+      try {
+        uci = await search
+      } catch {
+        return // the engine failed to produce a move: leave the position as it is
+      } finally {
+        if (searchRef.current === search) searchRef.current = null
+      }
+      if (token.cancelled) return
+      const hold = remainingHoldMs(minReplyMsRef.current,performance.now() - acceptedAt)
+      if (hold > 0) {
+        await new Promise<void>((resolve) => {
+          token.wake = resolve
+          token.timer = setTimeout(resolve, hold)
+        })
+      }
+      if (token.cancelled) return
+      // Re-validate: the same game, the same position, still the engine's move, nothing ended, and this reply not already applied.
+      const live = liveRef.current
+      if (live.gameKey !== startedGame || live.fen !== startedFen || live.over) return
+      // Per accepted move (not per position): replaying the very same move after an undo must still get its reply.
+      const key = `${startedGame}|${startedFen}|${acceptedAt}`
+      if (lastReplyAppliedRef.current === key) return
+      const { from, to, promotion } = parseUciMove(uci)
+      const result = makeMoveRef.current(from, to, promotion)
+      if (!result) return
+      lastReplyAppliedRef.current = key
+      replyClockRef.current = null
+      setLastMove([from as Key, to as Key])
+      analyzeMoveRef.current(result, 'engine')
+    }
+    void run().finally(() => {
+      if (!token.cancelled) {
+        setEngineThinking(false)
+        setPendingReply(false)
+      }
+    })
 
     return () => {
-      cancelled = true
+      token.cancelled = true
+      if (token.timer) clearTimeout(token.timer)
+      token.wake?.()
+      // A search still running for an abandoned position is told to stop so the next one can start without waiting for it.
+      if (searchRef.current) stopEngine()
+      setEngineThinking(false)
+      setPendingReply(false)
     }
-  }, [
-    screen,
-    ready,
-    skillSet,
-    fen,
-    turn,
-    humanColor,
-    isGameOver,
-    endReason,
-    awaitingExplanationForPly,
-    getMove,
-    makeMove,
-    analyzeMove,
-    tierConfig.movetime,
-  ])
-
-  // Clears awaitingExplanationForPly once the entry it's watching either
-  // resolves (loaded/error) or was never going to be explained at all
-  // (idle forever — useMoveAnalysis's shouldAutoExplainLive decided to skip
-  // it, e.g. an unremarkable Intermediate move, or anything at Expert).
-  // Safe to key off "not loading": insertEntry's idle-insert and
-  // fetchExplanation's loading-patch happen synchronously in the same tick
-  // when an explanation IS wanted (React 18 batches them into one render),
-  // so idle only ever means "decided not to explain this one," never a
-  // fetch that's merely about to start.
-  useEffect(() => {
-    if (awaitingExplanationForPly === null) return
-    const entry = analysisEntries.find((e) => e.ply === awaitingExplanationForPly)
-    if (entry && entry.explanationStatus !== 'loading') {
-      setAwaitingExplanationForPly(null)
-    }
-  }, [awaitingExplanationForPly, analysisEntries])
-
-  // Safety net — don't hold up the game indefinitely on a slow explanation.
-  // The explanation itself isn't discarded; it'll still render once it
-  // arrives, this just stops blocking the engine's move on it.
-  useEffect(() => {
-    if (awaitingExplanationForPly === null) return
-    const timer = setTimeout(() => setAwaitingExplanationForPly(null), EXPLANATION_WAIT_TIMEOUT_MS)
-    return () => clearTimeout(timer)
-  }, [awaitingExplanationForPly])
+  }, [screen, ready, skillSet, fen, turn, humanColor, isGameOver, endReason, gameKey, getMove, stopEngine, tierConfig.movetime])
 
   const handlePlayerMove = (from: string, to: string) => {
-    const plyAboutToBePlayed = history.length
     const result = makeMove(from, to, 'q')
     if (result) {
+      replyClockRef.current = performance.now() // the opponent's minimum reply time starts now, when the move is accepted
+      setLastMove([from as Key, to as Key])
       setPlayerHasMoved(true)
       analyzeMove(result, 'player')
-      if (explanationMode === 'live') setAwaitingExplanationForPly(plyAboutToBePlayed)
     }
   }
 
@@ -570,18 +668,28 @@ export default function ChessPlayPage() {
   const reviewing = selectedPly !== null
   const reviewEntry = reviewing ? analysisEntries.find((e) => e.ply === selectedPly) : undefined
 
+  // Check is read from the position being SHOWN (live or a reviewed move), never from asynchronous commentary.
+  const shownFen = reviewEntry ? reviewEntry.fenAfter : fen
+  const activeMarks = marks && positionKey(shownFen) === positionKey(marks.fen) ? marks : null
+  const shownCheck = useMemo(() => checkInfoFor(shownFen), [shownFen])
+  const liveCheck = useMemo(() => checkInfoFor(fen), [fen])
+
   const boardLocked = !ready || turn !== humanColor || isGameOver || endReason !== null || reviewing
   const showGameComplete = screen === 'playing' && (isGameOver || endReason !== null)
 
+  // Opponent naming has to exist before the status line (TIVVI in avatar builds, "Nivenxa" otherwise).
+  const activeBot = botById(activeBotId)
+  const opponentName = AVATAR_PROTOTYPE ? activeBot.name : 'Nivenxa'
   let statusText: string
   if (error) statusText = `Engine error: ${error}`
   else if (!ready) statusText = 'Loading engine…'
-  else if (isCheckmate) statusText = turn === humanColor ? 'Checkmate — the engine wins' : 'Checkmate — you win'
+  else if (isCheckmate) statusText = turn === humanColor ? (AVATAR_PROTOTYPE ? `Checkmate — ${opponentName} wins` : 'Checkmate — the engine wins') : 'Checkmate — you win'
   else if (isStalemate) statusText = 'Stalemate — draw'
   else if (isDraw) statusText = 'Draw'
-  else if (engineThinking) statusText = 'Engine thinking…'
-  else if (isCheck) statusText = turn === humanColor ? 'Check — your move' : 'Check'
-  else statusText = turn === humanColor ? 'Your move' : "Engine's move"
+  else if (isCheck) statusText = turn === humanColor ? 'Check — your move' : AVATAR_PROTOTYPE ? `Check — ${opponentName} to move` : 'Check'
+  else if (engineThinking) statusText = AVATAR_PROTOTYPE ? `${opponentName} is thinking…` : 'Engine thinking…'
+  else statusText = turn === humanColor ? 'Your move' : AVATAR_PROTOTYPE ? `${opponentName}'s move` : "Engine's move"
+  const statusIsCheck = !error && ready && isCheck && !isCheckmate
 
   const engineColor: 'w' | 'b' = humanColor === 'w' ? 'b' : 'w'
   const orientationColor: 'w' | 'b' = orientation === 'white' ? 'w' : 'b'
@@ -602,21 +710,61 @@ export default function ChessPlayPage() {
     )
   }
 
-  const engineRow = (
+  // The one turn/check indicator lives in the header of the side whose turn it is, right beside the board (never across the panel).
+  // It is derived from the game state alone, so commentary can neither delay nor change it.
+  const statusHost: 'human' | 'engine' | null = showGameComplete ? null : !ready || error || turn === humanColor ? 'human' : 'engine'
+  const statusChip = (
+    <p
+      className={`${styles.statusBadge} ${statusIsCheck ? styles.statusCheck : ''}`}
+      data-testid="game-status"
+      data-check={statusIsCheck ? 'true' : undefined}
+      data-host={statusHost ?? undefined}
+    >
+      {statusIsCheck && <span className={styles.checkMark} aria-hidden="true">!</span>}
+      {statusText}
+    </p>
+  )
+
+  const renderEngineRow = () => (
     <div className={styles.playerRow}>
       <div className={styles.playerIdentity}>
-        <span className={styles.playerName}>Nivenxa · {colorLabel(engineColor)}</span>
+        {AVATAR_PROTOTYPE ? (
+          <OpponentAvatar
+            key={gameKey}
+            bot={activeBot}
+            tier={activeTierId}
+            mode={explanationMode}
+            humanColor={humanColor}
+            sideLabel={colorLabel(engineColor)}
+            history={history}
+            fen={fen}
+            entries={analysisEntries}
+            engineThinking={engineThinking}
+            gameComplete={showGameComplete}
+            outcome={outcome}
+            animate={avatarSettings.animate}
+            hidden={avatarSettings.hidden}
+          />
+        ) : (
+          <span className={styles.playerName}>Nivenxa · {colorLabel(engineColor)}</span>
+        )}
       </div>
       {renderClock(engineColor)}
+      {statusHost === 'engine' && statusChip}
     </div>
   )
 
   const humanRow = (
     <div className={styles.playerRow}>
       <div className={styles.playerIdentity}>
-        <span className={styles.playerName}>You · {colorLabel(humanColor)}</span>
+        {AVATAR_PROTOTYPE && !avatarSettings.hidden ? (
+          <PlayerAvatar>You · {colorLabel(humanColor)}</PlayerAvatar>
+        ) : (
+          <span className={styles.playerName}>You · {colorLabel(humanColor)}</span>
+        )}
       </div>
       {renderClock(humanColor)}
+      {statusHost === 'human' && statusChip}
     </div>
   )
 
@@ -637,6 +785,14 @@ export default function ChessPlayPage() {
     (e): e is QualityMoveEntry => e.kind === 'quality' && e.color === humanColor
   )
   const accuracy = accuracyFromEntries(playerQualityEntries)
+  // The summary counts COMPLETED ENGINE GRADES only (never commentary). If some of your moves have no grade yet (still being analysed,
+  // or the analysis was unavailable) the numbers are labelled provisional instead of being presented as final.
+  const humanMoveCount = Math.floor((history.length + (humanColor === 'w' ? 1 : 0)) / 2)
+  const gradedMoveCount = playerQualityEntries.length
+  const summaryProvisional = gradedMoveCount < humanMoveCount
+  // Still being reviewed, or the analysis gave up on some moves (then the summary is partial, and says so).
+  const failedMoveCount = analysisEntries.filter((e) => e.color === humanColor && e.analysisUnavailable).length
+  const summaryInProgress = humanMoveCount - gradedMoveCount - failedMoveCount > 0
   const bestCount = playerQualityEntries.filter((e) => e.classification === 'best').length
   const mistakeCount = playerQualityEntries.filter((e) => e.classification === 'mistake').length
   const blunderCount = playerQualityEntries.filter((e) => e.classification === 'blunder').length
@@ -658,23 +814,60 @@ export default function ChessPlayPage() {
   else if (isInsufficientMaterial) drawReasonText = 'Draw — insufficient material'
   else if (isDrawByFiftyMoves) drawReasonText = 'Draw — fifty-move rule'
 
+  // Save the finished game once (signed-in players only — a guest's call is refused by the server and ignored).
+  // Only the final record is written: no per-move or clock writes while the game is in progress.
+  useEffect(() => {
+    if (!showGameComplete || gameSavePromiseRef.current || !gameLocalIdRef.current || analysisEntries.length === 0) return
+    const result = outcome === 'draw' ? '1/2-1/2' : outcome === 'player-win' ? (humanColor === 'w' ? '1-0' : '0-1') : humanColor === 'w' ? '0-1' : '1-0'
+    gameSavePromiseRef.current = saveFinishedGame({
+      localId: gameLocalIdRef.current,
+      status: endReason === 'resigned' ? 'resigned' : 'completed',
+      playerColor: humanColor,
+      opponent: `Nivenxa · ${tierConfig.label}`,
+      tier: activeTierId,
+      timeControl: activePreset?.label ?? null,
+      result,
+      movesSan: [...analysisEntries].sort((a, b) => a.ply - b.ply).map((e) => e.san),
+      startedAt: gameStartedAtRef.current || new Date().toISOString(),
+    })
+      .then((r) => (r.ok ? r.id : null))
+      .catch(() => null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fires once per finished game (guarded by the ref); the values it reads are final at that moment
+  }, [showGameComplete])
+
+  // Coach introduction: a finished game counts ONCE (keyed by the game's own id). Restarted or abandoned games never get here, and
+  // ending early by resignation or agreement only counts after enough of the player's own moves.
+  useEffect(() => {
+    if (!showGameComplete || introGame === null || !gameLocalIdRef.current || introRecordedRef.current === gameLocalIdRef.current) return
+    const playerMoves = humanColor === 'w' ? Math.ceil(history.length / 2) : Math.floor(history.length / 2)
+    const endKind = endReason === 'resigned' ? 'resigned' : endReason === 'draw-agreed' ? 'draw-agreed' : isCheckmate ? 'checkmate' : isStalemate ? 'stalemate' : 'draw-rule'
+    introRecordedRef.current = gameLocalIdRef.current
+    if (countsAsIntroGame({ endKind, playerMoves })) {
+      intro.record(gameLocalIdRef.current)
+      setIntroOutcome({ counted: true, after: Math.min(INTRO_GAMES, intro.completed + 1) })
+    } else {
+      setIntroOutcome({ counted: false, after: intro.completed, reason: `This game did not count: you ended it before making ${MIN_PLAYER_MOVES_TO_END_EARLY} moves of your own. A finished game, or a resignation after ${MIN_PLAYER_MOVES_TO_END_EARLY} of your moves, counts.` })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fires once per finished game (guarded by the ref)
+  }, [showGameComplete])
+
   const terminationText = endReason === 'resigned' ? 'Resignation' : endReason === 'draw-agreed' ? 'Agreement' : isCheckmate ? 'Checkmate' : 'Draw'
 
   const resultCopy = (() => {
     switch (outcome) {
       case 'player-win':
         return {
-          headline: 'You won.',
+          headline: 'You win',
           sub: activeTierId === 'master' ? 'A difficult game, well played.' : 'Well played.',
-          detail: `You defeated Nivenxa on ${tierConfig.label}`,
+          detail: `You defeated ${opponentName} on ${tierConfig.label}`,
           celebrate: true,
         }
       case 'engine-win':
-        return { headline: 'Game over.', sub: 'Nivenxa wins.', detail: '', celebrate: false }
+        return { headline: `${opponentName} wins`, sub: 'Good effort. Want to review it together?', detail: '', celebrate: false }
       case 'player-resigned':
-        return { headline: 'You resigned.', sub: 'Nivenxa wins.', detail: '', celebrate: false }
+        return { headline: `${opponentName} wins`, sub: 'You resigned. Good effort. Want to review it together?', detail: '', celebrate: false }
       case 'draw':
-        return { headline: 'Draw.', sub: drawReasonText.replace(/^Draw( —)?\s*/, '') || 'Draw', detail: '', celebrate: false }
+        return { headline: 'Draw', sub: drawReasonText.replace(/^Draw( —)?\s*/, '') || 'Draw', detail: '', celebrate: false }
     }
   })()
 
@@ -699,8 +892,8 @@ export default function ChessPlayPage() {
       </p>
       <div className={styles.statGrid}>
         <div className={styles.statCell}>
-          <span className={styles.statValue}>{accuracy}%</span>
-          <span className={styles.statLabel}>Accuracy</span>
+          <span className={styles.statValue}>{gradedMoveCount === 0 ? '—' : `${accuracy}%`}</span>
+          <span className={styles.statLabel}>Your accuracy</span>
         </div>
         <div className={styles.statCell}>
           <span className={styles.statValue}>{bestCount}</span>
@@ -715,10 +908,33 @@ export default function ChessPlayPage() {
           <span className={styles.statLabel}>Blunders</span>
         </div>
       </div>
+      {introGame !== null && introOutcome && (
+        <p className={styles.resultHint} data-testid="intro-progress" data-counted={introOutcome.counted ? 'true' : 'false'} role="status">
+          {!introOutcome.counted
+            ? introOutcome.reason
+            : introOutcome.after >= INTRO_GAMES
+              ? 'Your coach introduction is complete. You can now choose any opponent.'
+              : `Coach introduction: game ${introOutcome.after} of ${INTRO_GAMES} complete.`}
+        </p>
+      )}
+      <p className={styles.resultHint} data-testid="result-owner">
+        These figures are for your moves only.
+      </p>
+      {summaryProvisional && (
+        <p className={styles.resultHint} data-testid="result-provisional" data-state={summaryInProgress ? 'in-progress' : 'partial'}>
+          {summaryInProgress
+            ? `Analysis in progress — ${gradedMoveCount} of ${humanMoveCount} moves reviewed.`
+            : `Partial summary — based on ${gradedMoveCount} of ${humanMoveCount} moves.`}
+        </p>
+      )}
       <NivenxaNoticed entries={playerQualityEntries} tone={tierConfig.tone} onAnalyze={handleAnalyzeGame} />
-      <button type="button" className={styles.resultPrimaryBtn} onClick={handleAnalyzeGame}>
-        Analyze Game →
+      {/* Two different jobs: notes right here (explanations of each move) vs the Analysis board with engine lines. */}
+      <button type="button" className={styles.resultPrimaryBtn} onClick={handleReviewGameToggle} aria-describedby="review-hint" data-testid="review-with-explanations">
+        {reviewOpen ? 'Hide review' : 'Review with explanations'}
       </button>
+      <p id="review-hint" className={styles.resultHint}>
+        Move-by-move notes on this page.
+      </p>
       <div className={styles.resultActions}>
         <button type="button" className={styles.controlBtn} onClick={handlePlayAgain}>
           Rematch
@@ -727,9 +943,12 @@ export default function ChessPlayPage() {
           New Game
         </button>
       </div>
-      <button type="button" className={styles.reviewLinkBtn} onClick={handleReviewGameToggle}>
-        {reviewOpen ? 'Hide Review' : 'Review Game'}
+      <button type="button" className={styles.reviewLinkBtn} onClick={handleAnalyzeGame} aria-describedby="analysis-hint">
+        Open full analysis →
       </button>
+      <p id="analysis-hint" className={styles.resultHint}>
+        The Analysis board, with engine lines.
+      </p>
     </>
   )
 
@@ -748,37 +967,18 @@ export default function ChessPlayPage() {
     if (!movePairs[i]) movePairs[i] = [undefined, undefined]
   }
 
-  // Intermediate is selective — silently-skipped moves (see
-  // shouldAutoExplainLive in skillTiers.ts) never leave 'idle', so they're
-  // filtered out here before the feed only shows what Nivenxa actually
-  // decided was worth flagging. Beginner still sees every move.
-  const feedSourceEntries =
-    activeTierId === 'intermediate' ? analysisEntries.filter((e) => e.explanationStatus !== 'idle') : analysisEntries
-  // Full history, not just the latest couple — older entries render
-  // collapsed to one line (see the feed rendering below), which is what
-  // keeps a long game's feed from dominating the panel instead of a hard cap.
-  const insightEntries = reviewing ? (reviewEntry ? [reviewEntry] : []) : feedSourceEntries
-  const latestInsightPly = feedSourceEntries[feedSourceEntries.length - 1]?.ply
-  // Whether the game has moves at all yet — distinguishes "hasn't started"
-  // (pre-first-move welcome) from "played moves, nothing notable lately"
-  // (Intermediate only) so the same welcome copy doesn't repeat oddly mid-game.
-  const midGameQuiet = activeTierId === 'intermediate' && insightEntries.length === 0 && analysisEntries.length > 0
-
-  // Shown in the Insight tab before any move has been analyzed yet — Beginner
-  // gets a concrete starting suggestion, everyone else (who reaches the live
-  // tab at all) gets a short standing objective instead of a lesson.
+  // Shown in the Insight tab before any move has been played — Beginner gets a concrete starting suggestion, everyone else
+  // (who reaches the live tab at all) gets a short standing objective instead of a lesson.
   const firstMoveGuidance =
     activeTierId === 'beginner'
       ? {
           headline: 'Your first move',
           body: 'Start by moving a centre pawn or developing a knight. Controlling the centre gives your pieces more space.',
         }
-      : midGameQuiet
-        ? { headline: 'All quiet', body: 'Nothing to flag right now — keep playing your plan.' }
-        : {
-            headline: 'Your move',
-            body: 'Control the centre, develop your pieces, and prepare your king for safety.',
-          }
+      : {
+          headline: 'Your move',
+          body: 'Control the centre, develop your pieces, and prepare your king for safety.',
+        }
 
   // Expert dashboard data — the most recent graded move of any color (drives
   // the eval, frozen at the last *completed* move) and the most recent
@@ -807,7 +1007,7 @@ export default function ChessPlayPage() {
   const resignHint = playerHasMoved ? undefined : "You can resign once you've made a move."
 
   return (
-    <main className={styles.page}>
+    <main className={styles.page} data-full-viewport>
       <section className={styles.layout}>
         {screen === 'setup' ? (
           <div className={styles.setupColumn}>
@@ -856,6 +1056,13 @@ export default function ChessPlayPage() {
                     ))}
                   </div>
                   <p className={styles.setupHint}>{strengthHint(draftTier, draftStrength, strengthSteps(draftTier))}</p>
+                </>
+              )}
+
+              {AVATAR_PROTOTYPE && (
+                <>
+                  <p className={styles.setupSectionTitle}>Opponent</p>
+                  <BotPicker notice={introNotice} tier={draftTier} completedIntro={intro.completed} selected={draftBot} onSelect={chooseBot} browserOnly={intro.browserOnly} signedIn={chessSession.signedIn} />
                 </>
               )}
 
@@ -919,27 +1126,37 @@ export default function ChessPlayPage() {
                 </>
               )}
 
-              <button type="button" className={styles.startGameBtn} onClick={handleStartGame}>
+              <button type="button" className={styles.startGameBtn} onClick={handleStartGame} disabled={AVATAR_PROTOTYPE && draftTier === 'beginner' && !intro.ready}>
                 Start Game
               </button>
             </div>
           </div>
         ) : (
           <div className={styles.playColumn}>
-            <h1 className={styles.heading}>Play</h1>
-            <div className={styles.setupDivider} />
-            <div className={styles.metaRow}>
-              <span className={styles.metaText}>
+            <div className={styles.topRow}>
+              <h1 className={styles.heading}>Play</h1>
+              {AVATAR_PROTOTYPE && introGame !== null && (
+                <span className={styles.metaText} data-testid="coach-intro-label">
+                  {introLabel(introGame - 1)}
+                </span>
+              )}
+              <span className={styles.metaText} data-testid="game-meta">
                 {tierConfig.label}
                 {strengthSteps(activeTierId) > 1 ? ` · Strength ${activeStrength}/${strengthSteps(activeTierId)}` : ''}
                 {activePreset ? ` · ${activePreset.label}` : ''}
+                {` · `}
+                <span data-testid="assistance-label">{assistanceLabel(explanationMode)}</span>
+              </span>
+              {/* Announced once when check starts or ends; "thinking" updates are not announced. */}
+              <span className={styles.srOnly} role="status">
+                {statusIsCheck ? statusText : ''}
               </span>
             </div>
 
             <div className={styles.playRow}>
               <div className={styles.boardCol}>
                 <div className={styles.boardStack}>
-                  {orientationColor === humanColor ? engineRow : humanRow}
+                  {orientationColor === humanColor ? renderEngineRow() : humanRow}
 
                   <div className={styles.boardOverlayWrap}>
                     <Board
@@ -956,7 +1173,9 @@ export default function ChessPlayPage() {
                       dests={reviewing ? EMPTY_DESTS : dests}
                       orientation={orientation}
                       viewOnly={boardLocked}
-                      check={!reviewing && isCheckmate ? (turn === 'w' ? 'white' : 'black') : false}
+                      lastMove={reviewEntry ? undefined : lastMove}
+                      extraArrows={activeMarks ? [{ from: activeMarks.from, to: activeMarks.to, brush: 'red' }] : undefined}
+                      check={shownCheck ? (shownCheck.side === 'w' ? 'white' : 'black') : false}
                       onMove={handlePlayerMove}
                     />
                     {showGameComplete && resultCopy.celebrate && (
@@ -964,10 +1183,9 @@ export default function ChessPlayPage() {
                     )}
                   </div>
 
-                  {orientationColor === humanColor ? humanRow : engineRow}
+                  {orientationColor === humanColor ? humanRow : renderEngineRow()}
                 </div>
 
-                {!showGameComplete && <p className={styles.statusBadge}>{statusText}</p>}
               </div>
 
               <div className={styles.panelCol}>
@@ -979,7 +1197,7 @@ export default function ChessPlayPage() {
                           type="button"
                           className={styles.controlBtn}
                           onClick={handleUndo}
-                          disabled={history.length === 0 || engineThinking}
+                          disabled={history.length === 0}
                         >
                           Undo
                         </button>
@@ -991,6 +1209,54 @@ export default function ChessPlayPage() {
                       >
                         Flip
                       </button>
+                      {AVATAR_PROTOTYPE && (
+                        <div className={styles.moreMenuWrap} ref={settingsRef}>
+                          <button
+                            type="button"
+                            className={styles.controlBtn}
+                            aria-expanded={settingsOpen}
+                            aria-haspopup="true"
+                            onClick={() => setSettingsOpen((o) => !o)}
+                            data-testid="game-settings"
+                          >
+                            Settings
+                          </button>
+                          {settingsOpen && (
+                            <div className={styles.settingsPop} role="group" aria-label="Game settings">
+                              <div className={styles.settingRow}>
+                                <span id="animations-label" className={styles.settingLabel}>
+                                  Animations
+                                </span>
+                                <button
+                                  type="button"
+                                  role="switch"
+                                  aria-checked={avatarSettings.animate}
+                                  aria-labelledby="animations-label"
+                                  aria-describedby="animations-note"
+                                  disabled={avatarSettings.reduced}
+                                  className={`${styles.switchTrack} ${avatarSettings.animate ? styles.switchOn : ''}`}
+                                  onClick={() => avatarSettings.setPref(!avatarSettings.pref)}
+                                  data-testid="animations-switch"
+                                >
+                                  <span className={styles.switchKnob} aria-hidden="true" />
+                                </button>
+                              </div>
+                              {evidenceEnabled() && (
+                                <button type="button" className={styles.controlBtn} onClick={downloadEvidence} data-testid="download-review-evidence">
+                                  Download review evidence (test builds)
+                                </button>
+                              )}
+                              <p id="animations-note" className={styles.settingNote}>
+                                {avatarSettings.reduced
+                                  ? 'Your device asks for reduced motion, so animations stay off.'
+                                  : activeBot.animated
+                                    ? `Moves ${opponentName}'s face. Expressions and captions stay either way.`
+                                    : `${opponentName} uses still artwork, so there is nothing to animate. Captions stay either way.`}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
                       <div className={styles.moreMenuWrap} ref={moreMenuRef}>
                         <button
                           type="button"
@@ -1018,13 +1284,12 @@ export default function ChessPlayPage() {
                         )}
                       </div>
                     </div>
-                    <div className={styles.panelDivider} />
                   </>
                 )}
 
                 {!showGameComplete && (
                   <>
-                    <div className={styles.controls}>
+                    <div className={`${styles.controls} ${styles.controlsSecondary}`} aria-label="Game actions" role="group">
                       {showOfferDraw && (
                         <button
                           type="button"
@@ -1038,7 +1303,7 @@ export default function ChessPlayPage() {
                       )}
                       <button
                         type="button"
-                        className={styles.actionBtn}
+                        className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
                         onClick={handleResignClick}
                         disabled={!playerHasMoved}
                         title={resignHint}
@@ -1047,8 +1312,8 @@ export default function ChessPlayPage() {
                       </button>
                     </div>
                     {drawOfferState === 'pending' && <p className={styles.drawBanner}>Draw offered…</p>}
-                    {drawOfferState === 'accepted' && <p className={styles.drawBanner}>Nivenxa accepts the draw.</p>}
-                    {drawOfferState === 'declined' && <p className={styles.drawBanner}>Nivenxa wants to keep playing.</p>}
+                    {drawOfferState === 'accepted' && <p className={styles.drawBanner}>{opponentName} accepts the draw.</p>}
+                    {drawOfferState === 'declined' && <p className={styles.drawBanner}>{opponentName} wants to keep playing.</p>}
                     <div className={styles.panelDivider} />
                   </>
                 )}
@@ -1100,81 +1365,43 @@ export default function ChessPlayPage() {
                       </div>
 
                       {panelTab === 'insight' ? (
-                        <>
-                          {reviewing && (
-                            <button type="button" className={styles.backToMovesBtn} onClick={handleBackToMoves}>
-                              ← Back to moves
-                            </button>
-                          )}
-                          <div className={styles.feed}>
-                            {insightEntries.length === 0 ? (
-                              <div className={styles.insightWelcome}>
-                                <p className={styles.insightWelcomeHeadline}>{firstMoveGuidance.headline}</p>
-                                <p className={styles.insightWelcomeText}>{firstMoveGuidance.body}</p>
-                              </div>
-                            ) : (
-                              insightEntries.map((entry) => {
-                                const isLatest = !reviewing && entry.ply === latestInsightPly
-                                const isExpanded = reviewing || isLatest || expandedHistoryPlies.has(entry.ply)
-                                const moverLine = (
-                                  <span className={styles.entryMover}>
-                                    <span className={styles.entryMoverName}>
-                                      {entry.color === humanColor ? 'You' : 'Nivenxa'}
-                                    </span>
-                                    {' · '}
-                                    <span className={styles.entryMoverNotation}>
-                                      {moveNumberLabel(entry.ply, entry.color)}
-                                      {entry.san}
-                                    </span>
-                                  </span>
-                                )
-
-                                return (
-                                  <div
-                                    key={entry.ply}
-                                    className={
-                                      entry.kind === 'quality'
-                                        ? `${styles.feedRow} ${styles[`feedRow_${classificationTone(entry.classification)}`]}`
-                                        : styles.feedPlain
-                                    }
-                                  >
-                                    {isLatest || reviewing ? (
-                                      <div className={styles.historyRowHeader}>{moverLine}</div>
-                                    ) : (
-                                      <button
-                                        type="button"
-                                        className={styles.historyRowHeader}
-                                        onClick={() => toggleHistoryEntry(entry.ply)}
-                                        aria-expanded={isExpanded}
-                                      >
-                                        <span className={styles.historyChevron} aria-hidden="true">
-                                          {isExpanded ? '▼' : '›'}
-                                        </span>
-                                        {moverLine}
-                                      </button>
-                                    )}
-
-                                    {entry.explanationStatus === 'idle' && (
-                                      <span className={styles.calloutLoading}>Waiting…</span>
-                                    )}
-                                    {entry.explanationStatus === 'loading' && (
-                                      <span className={styles.calloutLoading}>{entry.san} — thinking it through…</span>
-                                    )}
-                                    {entry.explanationStatus === 'loaded' &&
-                                      (isExpanded ? (
-                                        <ExplanationBody entry={entry} />
-                                      ) : (
-                                        <p className={styles.historySummary}>{collapsedSummary(entry)}</p>
-                                      ))}
-                                    {entry.explanationStatus === 'error' && (
-                                      <span className={styles.calloutError}>Explanation unavailable right now.</span>
-                                    )}
-                                  </div>
-                                )
-                              })
-                            )}
-                          </div>
-                        </>
+                        <InsightPanel
+                          key={gameKey}
+                          tier={activeTierId}
+                          check={
+                            !reviewing && liveCheck
+                              ? {
+                                  key: fen,
+                                  text: describeCheck(liveCheck, liveCheck.side === humanColor, opponentName),
+                                  options: liveCheck.side === humanColor ? replyOptions(liveCheck) : null,
+                                  checkmate: liveCheck.checkmate,
+                                }
+                              : null
+                          }
+                          entries={analysisEntries}
+                          history={history}
+                          humanColor={humanColor}
+                          opponentName={opponentName}
+                          welcome={firstMoveGuidance}
+                          reviewEntry={reviewing ? reviewEntry : undefined}
+                          onBackToMoves={handleBackToMoves}
+                          liveFen={fen}
+                          marked={activeMarks ? activeMarks.ply : null}
+                          onMark={(entry) => {
+                            const [from, to] = (entry.highlights ?? []) as Key[]
+                            if (!from || !to) return
+                            if (activeMarks?.ply === entry.ply) return setMarks(null) // drawn right now: hide it
+                            setMarks({ ply: entry.ply, fen: entry.fenAfter, from, to })
+                            if (positionKey(fen) !== positionKey(entry.fenAfter)) {
+                              setSelectedPly(entry.ply) // explicit review of that earlier position; the way back is the review's own control
+                              setPanelTab('insight')
+                            }
+                          }}
+                          onShowPosition={(entry) => {
+                            setSelectedPly(entry.ply)
+                            setPanelTab('insight')
+                          }}
+                        />
                       ) : (
                         <>
                           <p className={styles.panelTitle}>Moves</p>
@@ -1193,7 +1420,8 @@ export default function ChessPlayPage() {
                     </div>
                   ))}
 
-                {showGameComplete && <div className={styles.resultPanel}>{resultBody}</div>}
+                {/* One summary at a time: while the announcement is open it IS the summary; the panel shows the same content once it is dismissed. */}
+                {showGameComplete && !showResultOverlay && <div className={styles.resultPanel}>{resultBody}</div>}
               </div>
             </div>
 
@@ -1244,7 +1472,7 @@ export default function ChessPlayPage() {
                   </p>
                   <p className={styles.confirmModalText}>
                     {pendingConfirm === 'resign'
-                      ? 'The game will end and Nivenxa will win.'
+                      ? `The game will end and ${opponentName} will win.`
                       : "Your current game hasn't finished."}
                   </p>
                   <div className={styles.confirmModalActions}>
@@ -1267,14 +1495,14 @@ export default function ChessPlayPage() {
       </section>
 
       {screen === 'playing' && showGameComplete && reviewOpen && (
-        <section className={styles.review}>
+        <section className={styles.review} ref={reviewSectionRef}>
           <div className={styles.reviewInner}>
             <h2 className={styles.reviewTitle}>Game Review</h2>
             <ol className={styles.reviewList}>
               {analysisEntries.map((entry) => (
                 <li key={entry.ply} className={styles.reviewRow}>
                   <span className={styles.reviewPly}>{moveNumberLabel(entry.ply, entry.color)}</span>
-                  <span className={styles.reviewMover}>{entry.color === humanColor ? 'You' : 'Nivenxa'}</span>
+                  <span className={styles.reviewMover}>{entry.color === humanColor ? 'You' : opponentName}</span>
                   <span className={styles.reviewSan}>{entry.san}</span>
                   {entry.kind === 'quality' ? (
                     <span className={`${styles.reviewPill} ${styles[`pill_${classificationTone(entry.classification)}`]}`}>
@@ -1286,7 +1514,7 @@ export default function ChessPlayPage() {
                   {entry.explanationStatus === 'loading' && <span className={styles.reviewLoading}>Loading…</span>}
                   {entry.explanationStatus === 'loaded' && (
                     <div className={styles.reviewExplanation}>
-                      <ExplanationBody entry={entry} />
+                      <ExplanationBody entry={localizeEntry(entry, opponentName)} />
                     </div>
                   )}
                   {entry.explanationStatus === 'error' && (

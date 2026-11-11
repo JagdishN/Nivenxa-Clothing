@@ -85,3 +85,49 @@ export function getLessonStepProgress(slug: string, map: ProgressMap): { step: n
 export function getAllProgress(): ProgressMap {
   return load()
 }
+
+// ── Practice-step results (how each practice step was completed) ─────────────────────────────────────────────
+// Kept per browser, separately from the completion badge above, so "Completed with help" survives going Back,
+// a refresh, and resuming — and so a completion summary never claims more than was actually shown. Cleared by
+// "Practice again" (which deliberately leaves the lesson's completed badge alone).
+const RESULTS_KEY = 'nivenxa-chess-basics-results-v1'
+type ResultMap = Record<string, Record<string, string>>
+
+function loadResults(): ResultMap {
+  if (typeof window === 'undefined') return {}
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(RESULTS_KEY) ?? '{}')
+    return parsed && typeof parsed === 'object' ? (parsed as ResultMap) : {}
+  } catch {
+    return {}
+  }
+}
+
+export function loadStepResults(slug: string): Record<number, string> {
+  const out: Record<number, string> = {}
+  for (const [k, v] of Object.entries(loadResults()[slug] ?? {})) out[Number(k)] = v
+  return out
+}
+
+export function saveStepResult(slug: string, stepIndex: number, result: string): void {
+  try {
+    const all = loadResults()
+    all[slug] = { ...(all[slug] ?? {}), [stepIndex]: result }
+    window.localStorage.setItem(RESULTS_KEY, JSON.stringify(all))
+  } catch {
+    // Private browsing / storage disabled — results just won't persist.
+  }
+}
+
+export function clearStepResults(slug: string): void {
+  try {
+    const all = loadResults()
+    delete all[slug]
+    window.localStorage.setItem(RESULTS_KEY, JSON.stringify(all))
+  } catch {}
+}
+
+/** The saved position of an unfinished lesson (1-indexed step), or null — what "Continue" on the start screen resumes. */
+export function getResumeStep(slug: string): { step: number; total: number } | null {
+  return getLessonStepProgress(slug, load())
+}

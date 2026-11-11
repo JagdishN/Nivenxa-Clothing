@@ -3,6 +3,8 @@ import type { EngineProvider, EngineMoveConfig } from './engineProvider'
 import type { Persona, StyleWeight } from './personas'
 
 const WORKER_URL = '/stockfish/stockfish-18-lite-single.js'
+// How long the engine gets to answer the UCI handshake before start-up is reported as failed.
+const INIT_TIMEOUT_MS = 20000
 
 function goCommand(options: EngineMoveOptions): string {
   if (options.movetime) return `go movetime ${options.movetime}`
@@ -79,18 +81,24 @@ export class StockfishEngine implements EngineProvider {
       }
       this.worker = worker
 
+      const timeout = setTimeout(() => {
+        worker.removeEventListener('message', onMessage)
+        reject(new Error('The chess engine took too long to start. Please reload the page.'))
+      }, INIT_TIMEOUT_MS)
       const onMessage = (event: MessageEvent) => {
         const line = event.data
         if (typeof line !== 'string') return
         if (line.trim() === 'uciok') {
           worker.postMessage('isready')
         } else if (line.trim() === 'readyok') {
+          clearTimeout(timeout)
           worker.removeEventListener('message', onMessage)
           this.ready = true
           resolve()
         }
       }
       const onError = () => {
+        clearTimeout(timeout)
         reject(new Error('Stockfish worker failed to load (WASM may be unsupported or unreachable)'))
       }
 
@@ -196,17 +204,25 @@ export class StockfishEngine implements EngineProvider {
   }
 
   /** Centipawn evaluation for the side to move; mate scores collapse to ±100000. */
-  evaluatePosition(fen: string, depth = 15): Promise<number> {
+  async evaluatePosition(fen: string, depth = 15): Promise<number> {
+    return (await this.evaluateWithReply(fen, depth)).score
+  }
+
+  /** The same search, also returning the move it ends on (the side to move's best reply): no second search is made. */
+  evaluateWithReply(fen: string, depth = 15): Promise<{ score: number; bestMove?: string; pv?: string[] }> {
     const worker = this.assertReady()
 
-    return new Promise<number>((resolve) => {
+    return new Promise<{ score: number; bestMove?: string; pv?: string[] }>((resolve) => {
       let lastScore = 0
+      let lastPv: string[] | undefined
 
       const onMessage = (event: MessageEvent) => {
         const line = event.data
         if (typeof line !== 'string') return
 
         if (line.startsWith('info') && line.includes('score')) {
+          const pvM = line.match(/ pv (.+)$/)
+          if (pvM) lastPv = pvM[1].trim().split(/\s+/)
           const mateMatch = line.match(/score mate (-?\d+)/)
           const cpMatch = line.match(/score cp (-?\d+)/)
           if (mateMatch) {
@@ -217,7 +233,8 @@ export class StockfishEngine implements EngineProvider {
           }
         } else if (line.startsWith('bestmove')) {
           worker.removeEventListener('message', onMessage)
-          resolve(lastScore)
+          const mv = line.split(' ')[1]
+          resolve({ score: lastScore, bestMove: mv && mv !== '(none)' ? mv : undefined, pv: lastPv })
         }
       }
 

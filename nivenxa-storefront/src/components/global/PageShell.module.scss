@@ -1,0 +1,26 @@
+.shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+// Grows to fill leftover height, so the footer is pushed to the viewport
+// bottom on a short page. A block box on purpose — see PageShell.tsx.
+.content {
+  flex: 1 0 auto;
+  min-width: 0;
+}
+
+// Pages set their own `min-height: 100vh` for a full-height background; inside
+// the shell that would make every page at least a screen tall BEFORE the
+// footer, so it is neutralised here. `.content` fills the leftover height and
+// carries the app's background instead.
+.content > main:not([data-full-viewport]) {
+  min-height: 0;
+}
+
+.shell > footer,
+.shell > [data-footer-slot] {
+  flex: none;
+}

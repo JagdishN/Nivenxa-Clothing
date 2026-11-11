@@ -1,4 +1,17 @@
+import { Chess } from 'chess.js'
 import type { EngineEvaluation } from './types'
+
+/** The centipawn figure used for "mate" (see evaluationToCp). */
+export const MATE_CP = 100000
+
+/** True when the side to move in this position is checkmated (the move that led here delivered mate). */
+export function isCheckmatePosition(fen: string): boolean {
+  try {
+    return new Chess(fen).isCheckmate()
+  } catch {
+    return false
+  }
+}
 
 /** Normalizes a mate score to a large-but-finite centipawn figure so it still sorts/compares sensibly against real evaluations. */
 export function evaluationToCp(evaluation: EngineEvaluation): number {

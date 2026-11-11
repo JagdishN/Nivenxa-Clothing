@@ -1,43 +1,16 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getLivingSession } from '@/lib/living/auth'
-import { LEGAL_ENTITY } from '@/lib/legalEntity'
-import SiteFooter from '@/components/global/SiteFooter'
-import OtpForm from '../_auth/OtpForm'
-import styles from '../_auth/AuthForm.module.scss'
+import { safeLivingRedirectPath } from '@/lib/auth/safeRedirect'
 
-// Disallow would block crawling but still let the bare URL sit in results
-// with no content — noindex is the right instrument for an auth form.
-// follow: true since the page still links onward (back to /living).
+// Kept so existing links and bookmarks still work: a signed-in visitor goes straight on, everyone else lands on the
+// Living home page with the login drawer open. The destination is validated (same-app, signed-in pages only).
 export const metadata: Metadata = { robots: { index: false, follow: true } }
 
-const LIVING_FOOTER_COLUMNS = [
-  {
-    title: 'Nivenxa Living',
-    links: [
-      { label: 'Privacy Policy', href: '/living/privacy' },
-      { label: 'Terms of Use', href: '/living/terms' },
-      { label: 'Contact', href: `mailto:${LEGAL_ENTITY.email}` },
-    ],
-  },
-]
-
-export default async function LivingLoginPage() {
+export default async function LivingLoginRoute({ searchParams }: { searchParams: Promise<{ redirect?: string }> }) {
+  const { redirect: redirectParam } = await searchParams
+  const redirectTo = safeLivingRedirectPath(redirectParam)
   const session = await getLivingSession()
-  if (session) redirect('/living/home')
-
-  return (
-    <>
-      <div className={styles.shell}>
-        <h1 className={styles.title}>Login</h1>
-        <p className={styles.subtitle}>Enter the email registered with your apartment.</p>
-        <OtpForm mode="login" />
-        <p className={styles.footer}>
-          New to Nivenxa Living? <Link href="/living/signup">Create an Apartment</Link>
-        </p>
-      </div>
-      <SiteFooter columns={LIVING_FOOTER_COLUMNS} />
-    </>
-  )
+  if (session) redirect(redirectTo)
+  redirect(`/living?auth=login&redirect=${encodeURIComponent(redirectTo)}`)
 }

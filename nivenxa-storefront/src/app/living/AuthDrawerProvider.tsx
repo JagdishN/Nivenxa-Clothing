@@ -5,7 +5,7 @@ import AuthDrawer from './AuthDrawer'
 export type AuthDrawerMode = 'login' | 'signup'
 
 interface AuthDrawerContextValue {
-  open: (mode: AuthDrawerMode) => void
+  open: (mode: AuthDrawerMode, redirectTo?: string) => void
 }
 
 const AuthDrawerContext = createContext<AuthDrawerContextValue | null>(null)
@@ -25,13 +25,35 @@ export function useAuthDrawer(): AuthDrawerContextValue {
  * pattern, just lifted into context since the triggers here live in more
  * than one Server Component (LivingNav, the landing page's hero + closing CTA).
  */
-export default function AuthDrawerProvider({ children }: { children: React.ReactNode }) {
-  const [mode, setMode] = useState<AuthDrawerMode | null>(null)
+export default function AuthDrawerProvider({
+  children,
+  initialMode = null,
+  initialRedirect = '/living/home',
+}: {
+  children: React.ReactNode
+  /** Set by the landing page when it was reached through an old /living/login link: the drawer starts open. */
+  initialMode?: AuthDrawerMode | null
+  /** Where a successful sign-in goes (validated on the server; /living/home unless a safe destination was given). */
+  initialRedirect?: string
+}) {
+  const [state, setState] = useState<{ mode: AuthDrawerMode; redirectTo: string } | null>(initialMode ? { mode: initialMode, redirectTo: initialRedirect } : null)
+
+  // Closing only hides the drawer. If it was opened through ?auth=login, drop that from the address so a refresh
+  // doesn't reopen it — without navigating or re-rendering the landing page.
+  function close() {
+    setState(null)
+    const url = new URL(window.location.href)
+    if (url.searchParams.has('auth')) {
+      url.searchParams.delete('auth')
+      url.searchParams.delete('redirect')
+      window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
+    }
+  }
 
   return (
-    <AuthDrawerContext.Provider value={{ open: setMode }}>
+    <AuthDrawerContext.Provider value={{ open: (mode, redirectTo) => setState({ mode, redirectTo: redirectTo ?? '/living/home' }) }}>
       {children}
-      <AuthDrawer mode={mode} onClose={() => setMode(null)} />
+      <AuthDrawer mode={state?.mode ?? null} redirectTo={state?.redirectTo ?? '/living/home'} onClose={close} />
     </AuthDrawerContext.Provider>
   )
 }

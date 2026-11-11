@@ -159,3 +159,64 @@
   padding: 0.2rem 0.7rem;
   border-radius: 999px;
 }
+
+.assistNote {
+  composes: assistNote from './BoardLesson.module.scss';
+}
+
+.freshTry {
+  composes: freshTry from './BoardLesson.module.scss';
+}
+
+.stepHeadline {
+  composes: stepHeadline from './BoardLesson.module.scss';
+}
+
+// What the board markers mean — each one has its own shape, so this never depends on colour alone.
+.legend {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--chess-deep, #1f1b3a);
+  background: rgba(91, 46, 145, 0.06);
+  border-radius: 0.6rem;
+}
+
+.actionBtn,
+.actionBtnGhost {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+
+  &:focus-visible {
+    outline: 3px solid var(--chess-deep, #1f1b3a);
+    outline-offset: 2px;
+  }
+}
+
+.answerBtn {
+  min-height: 44px;
+
+  &:focus-visible {
+    outline: 3px solid var(--chess-deep, #1f1b3a);
+    outline-offset: 2px;
+  }
+}
+
+// The completion dialog must always be fully visible: above the site header, and scrollable on short screens.
+.modalBackdrop {
+  z-index: 2000;
+}
+
+.modalCard {
+  width: min(92vw, 420px);
+  max-height: calc(100vh - 3rem);
+  overflow-y: auto;
+}

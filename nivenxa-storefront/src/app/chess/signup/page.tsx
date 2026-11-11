@@ -1,31 +1,15 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getChessSession, safeChessRedirect } from '@/lib/chess/chessAuth'
-import ChessOtpForm from '../_auth/ChessOtpForm'
-import styles from '../_auth/ChessAuthForm.module.scss'
 
-// See chess/login/page.tsx — same reasoning.
+// Kept so existing links and bookmarks still work: signed-in visitors go straight on to their destination, everyone
+// else lands on the Chess home page with the signup drawer open. The destination is validated (same-site /chess paths only).
 export const metadata: Metadata = { robots: { index: false, follow: true } }
 
-export default async function ChessSignupPage({ searchParams }: { searchParams: Promise<{ redirect?: string }> }) {
+export default async function ChessAuthRoute({ searchParams }: { searchParams: Promise<{ redirect?: string }> }) {
   const { redirect: redirectParam } = await searchParams
   const redirectTo = safeChessRedirect(redirectParam)
-
   const session = await getChessSession()
   if (session) redirect(redirectTo)
-
-  return (
-    <main className={styles.page}>
-      <div className={styles.shell}>
-        <p className={styles.eyebrow}>NIVENXA CHESS</p>
-        <h1 className={styles.title}>Sign Up</h1>
-        <p className={styles.subtitle}>Create a Nivenxa account to save your games and pick up your analysis anywhere.</p>
-        <ChessOtpForm mode="signup" redirectTo={redirectTo} />
-        <p className={styles.footer}>
-          Already have an account? <Link href={`/chess/login?redirect=${encodeURIComponent(redirectTo)}`}>Log in</Link>
-        </p>
-      </div>
-    </main>
-  )
+  redirect(`/chess?auth=signup&redirect=${encodeURIComponent(redirectTo)}`)
 }

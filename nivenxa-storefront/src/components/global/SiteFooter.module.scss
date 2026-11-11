@@ -10,7 +10,10 @@
 .footer {
   background: rgba(255, 255, 255, 0.5);
   border-top: 1px solid rgba(0, 0, 0, 0.08);
-  margin-top: clamp(3rem, 6vw, 5rem);
+  // No margin-top: the separation above the footer is the page's own
+  // v.$space-page-end. A margin here showed the bare <body> colour as a band
+  // between the page's themed background and the footer, and stacked on top of
+  // the page padding.
   padding-block: clamp(2.5rem, 5vw, 3.5rem) clamp(1.5rem, 3vw, 2rem);
   padding-inline: var(--gutter);
 }
