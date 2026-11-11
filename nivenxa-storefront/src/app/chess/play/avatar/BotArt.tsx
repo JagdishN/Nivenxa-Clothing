@@ -9,7 +9,7 @@ let loading: Promise<ArtMap> | null = null
 /** The artwork module is fetched on first use (a separate chunk), so a page that never shows a character never downloads it. */
 function loadArt(): Promise<ArtMap> {
   if (loaded) return Promise.resolve(loaded)
-  loading ??= import('@bot-art').then((m) => (loaded = m.default as ArtMap))
+  loading ??= import('@/lib/chess/botArtReal').then((m) => (loaded = m.default as ArtMap))
   return loading
 }
 

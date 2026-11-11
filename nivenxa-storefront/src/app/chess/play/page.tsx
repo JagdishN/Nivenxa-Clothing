@@ -44,8 +44,8 @@ import { remainingHoldMs, replyMinMs, testOverrideMs } from '@/lib/chess/replyPa
 import { downloadEvidence, evidenceEnabled } from '@/lib/chess/reviewEvidence'
 import { positionKey } from '@/lib/chess/moveFacts'
 
-// TEST-ONLY: the Tivvi opponent avatar renders only in builds made with NEXT_PUBLIC_CHESS_AVATAR_PROTOTYPE=1 (not approved for deployment).
-const AVATAR_PROTOTYPE = process.env.NEXT_PUBLIC_CHESS_AVATAR_PROTOTYPE === '1'
+// The opponent bots (picker, names, avatars) are always on; they no longer depend on a build flag.
+const AVATAR_PROTOTYPE = true as boolean
 import styles from './Play.module.scss'
 
 const SETUP_STORAGE_KEY = 'nivenxa-chess-setup'
