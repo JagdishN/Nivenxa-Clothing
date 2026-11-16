@@ -2,12 +2,14 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getTournamentById } from '@/lib/chess/tournaments'
-import { todayInEventZone } from '@/lib/chess/tournamentFormat'
+import { formatLongDate, todayInEventZone } from '@/lib/chess/tournamentFormat'
 import { buildCardView } from '@/lib/chess/tournamentCard'
 import EventKeyInfo, { EventFacts } from '../EventKeyInfo'
 import { getPhotosForTournament } from '@/lib/chess/galleryPhotos'
+import { getPhotosForTournamentWithUploads } from '@/lib/chess/tournamentPhotos'
 import { RegisterAction } from '../TournamentListing'
 import TournamentResults from './TournamentResults'
+import GallerySection from '../GallerySection'
 import styles from '../Tournaments.module.scss'
 
 export const dynamic = 'force-dynamic'
@@ -22,13 +24,20 @@ export const dynamic = 'force-dynamic'
 // gallery still pass through.
 export const metadata: Metadata = { robots: { index: false, follow: true } }
 
-export default async function TournamentDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function TournamentDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ age?: string; div?: string }>
+}) {
   const { id } = await params
+  const { age, div } = await searchParams
   const tournament = await getTournamentById(id)
   if (!tournament) notFound()
 
   const isCompleted = tournament.lifecycleStatus === 'completed'
-  const photos = getPhotosForTournament(tournament.id)
+  const photos = await getPhotosForTournamentWithUploads(tournament.id, getPhotosForTournament(tournament.id))
 
   const isCancelled = tournament.cancelled === true
   const isOpenForEntry = !isCancelled && (tournament.lifecycleStatus === 'live' || tournament.lifecycleStatus === 'upcoming')
@@ -39,6 +48,25 @@ export default async function TournamentDetailPage({ params }: { params: Promise
         .map((c) => c.trim())
         .filter(Boolean)
     : []
+
+  // Up to 3 photos from this event, then a link into the full gallery at this event's own heading.
+  // With no photos yet, a plain link to the gallery so it is always reachable from here.
+  const photoPreview =
+    photos.length > 0 ? (
+      <GallerySection
+        photos={photos}
+        limit={3}
+        embedded
+        carryParams={['age', 'div']}
+        title="Photos from this tournament"
+        viewAllHref={`/chess/tournaments/gallery?from=${tournament.id}#event-${photos[0].dateKey}`}
+        viewAllLabel={photos.length > 3 ? `View all ${photos.length} photos →` : 'Open gallery →'}
+      />
+    ) : (
+      <Link href="/chess/tournaments/gallery" className={styles.gallerySlideViewAll}>
+        📷 Tournament Gallery →
+      </Link>
+    )
 
   return (
     <main className={styles.page}>
@@ -62,47 +90,57 @@ export default async function TournamentDetailPage({ params }: { params: Promise
           {isCompleted && <span className={styles.statusBadge}>Completed</span>}
           {isCancelled && <span className={styles.statusBadge}>Cancelled</span>}
         </div>
-        <p className={styles.detailOrganizer}>Organized by {tournament.organizer.name}</p>
+        <p className={styles.detailOrganizer}>
+          Organized by {tournament.organizer.name}
+          {isCompleted && <> · {formatLongDate(tournament.dates.startsAt, tournament.dates.endsAt)}</>}
+        </p>
 
-        {/* 2. WHEN and WHERE first, as labelled panels. 3. Registration status + one modest action. 4. The rest. */}
-        <EventKeyInfo tournament={tournament} />
+        {/* A finished event: what people came for first (results, then a few
+            photos), and the logistics (venue, fee, format) collapsed below. */}
+        {isCompleted ? (
+          <>
+            {tournament.results && tournament.results.length > 0 && <TournamentResults results={tournament.results} initialAge={age} initialDivision={div} />}
+            {photoPreview}
+            <p className={styles.fbLinkRow}>
+              How was your experience?{' '}
+              <Link href={`/chess/tournaments/${tournament.id}/feedback`} className={styles.fbLink}>
+                Share feedback &amp; suggestions →
+              </Link>
+            </p>
+            <details className={styles.eventDetails}>
+              <summary>Event details</summary>
+              <EventKeyInfo tournament={tournament} />
+              <EventFacts tournament={tournament} />
+            </details>
+          </>
+        ) : (
+          <>
+            {/* WHEN and WHERE first, as labelled panels, then registration status + one modest action, then the rest. */}
+            <EventKeyInfo tournament={tournament} />
 
-        {reg && (
-          <div className={styles.regRow}>
-            <p className={`${styles.regStatus} ${styles[`regStatus_${reg.registrationTone}`]}`}>{reg.registrationLabel}</p>
-            {reg.canRegister && <RegisterAction tournament={tournament} />}
-          </div>
+            {reg && (
+              <div className={styles.regRow}>
+                <p className={`${styles.regStatus} ${styles[`regStatus_${reg.registrationTone}`]}`}>{reg.registrationLabel}</p>
+                {reg.canRegister && <RegisterAction tournament={tournament} />}
+              </div>
+            )}
+
+            <EventFacts tournament={tournament} />
+
+            {categories.length > 0 && (
+              <div className={styles.cardCategories} aria-label="Categories">
+                {categories.map((c) => (
+                  <span key={c} className={styles.categoryPill}>
+                    {c}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {tournament.results && tournament.results.length > 0 && <TournamentResults results={tournament.results} initialAge={age} initialDivision={div} />}
+            {photoPreview}
+          </>
         )}
-
-        <EventFacts tournament={tournament} />
-
-        {!isCompleted && categories.length > 0 && (
-          <div className={styles.cardCategories} aria-label="Categories">
-            {categories.map((c) => (
-              <span key={c} className={styles.categoryPill}>
-                {c}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Links to this specific event's photos (grouped under its own
-            heading on the full gallery page) — only shown once photos for
-            this exact tournament actually exist. */}
-        {photos.length > 0 && (
-          <Link
-            href={`/chess/tournaments/gallery?from=${tournament.id}#event-${photos[0].dateKey}`}
-            className={styles.gallerySlideViewAll}
-          >
-            📷 View {photos.length} photo{photos.length === 1 ? '' : 's'} from this tournament →
-          </Link>
-        )}
-
-        {/* Results are the main reason a parent opens a completed
-            tournament's page — right below the compact event summary above,
-            not buried under category chips and a separate stats block.
-            Only renders once an admin has actually entered standings. */}
-        {tournament.results && tournament.results.length > 0 && <TournamentResults results={tournament.results} />}
 
         {/* Registration and payment are only relevant while a tournament is
             still open to enter — a completed/cancelled event has nothing

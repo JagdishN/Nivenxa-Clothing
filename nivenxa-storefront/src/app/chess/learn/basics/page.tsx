@@ -2,6 +2,14 @@ import Link from 'next/link'
 import { BASICS } from '@/lib/chess/basics/data'
 import BasicsGrid from './BasicsGrid'
 import styles from './BasicsList.module.scss'
+import { seoMetadata } from '@/lib/seo'
+
+export const metadata = seoMetadata({
+  title: 'Chess Basics — Learn the Board and Pieces | NIVENXA Chess',
+  description:
+    'Start chess from zero: the board, how each piece moves, check and checkmate, and a short game to finish. Lessons you can try as you learn.',
+  path: '/chess/learn/basics',
+})
 
 export default function ChessLearnBasicsPage() {
   return (

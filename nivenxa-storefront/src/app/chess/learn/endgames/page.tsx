@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ENDGAMES } from '@/lib/chess/endgames/data'
 import styles from './EndgamesList.module.scss'
+import { seoMetadata } from '@/lib/seo'
 
 // One icon per endgame, matching Tactics' own per-lesson icon pattern.
 const ENDGAME_ICON: Record<string, string> = {
@@ -15,6 +16,13 @@ const ENDGAME_ICON: Record<string, string> = {
   'avoid-stalemate': '⚠️',
   'rook-behind-the-pawn': '🗼',
 }
+
+export const metadata = seoMetadata({
+  title: 'Chess Endgames — Finish the Game and Win | NIVENXA Chess',
+  description:
+    'Learn how to finish a game and win: king and queen, king and rook, pawn races and passed pawns, with positions to play yourself.',
+  path: '/chess/learn/endgames',
+})
 
 export default function ChessLearnEndgamesPage() {
   return (

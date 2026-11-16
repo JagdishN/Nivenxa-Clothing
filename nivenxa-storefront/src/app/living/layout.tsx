@@ -15,17 +15,13 @@ const plexMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500'], var
 // same reasoning as the chess puzzle pages' own `force-dynamic`.
 export const dynamic = 'force-dynamic'
 
-// Kept at this layout level (not a page.tsx) — the existing, pre-established
-// scope for /living's metadata, covering the whole subtree. Lower-risk here
-// than the equivalent choice for /chess: almost everything else under
-// /living (dashboard, admin) is session-gated and force-dynamic, so a
-// shared canonical/og:url only meaningfully resolves for the one public
-// landing route a crawler or link preview can actually reach anyway.
+// Subtree-wide FALLBACK title/description only. It carries no canonical: a canonical shared by every page under /living
+// would point the login, signup and dashboard pages at the landing page. The landing page (living/page.tsx) sets the
+// canonical for /living itself.
 export const metadata = seoMetadata({
-  title: 'Nivenxa Living — Built for Standalone Apartments',
+  title: 'NIVENXA Living — Built for Standalone Apartments',
   description:
     'Maintenance, water billing, and collections for standalone apartment buildings — without hiring a society management company.',
-  path: '/living',
 })
 
 export default async function LivingLayout({ children }: { children: React.ReactNode }) {

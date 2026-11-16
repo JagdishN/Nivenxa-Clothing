@@ -65,6 +65,9 @@ export default async function AdminFeedbackDetailPage({ params }: { params: Prom
   const categoryLabel = FEEDBACK_CATEGORY_LABEL[item.category as keyof typeof FEEDBACK_CATEGORY_LABEL] ?? item.category
   const categoryEmoji = FEEDBACK_CATEGORY_EMOJI[item.category as keyof typeof FEEDBACK_CATEGORY_EMOJI] ?? '📋'
 
+  const ctx = item.context as { kind?: string; tournamentName?: string; tournamentDate?: string; topic?: string; experience?: string | null } | null
+  const tournamentCtx = ctx?.kind === 'tournament_feedback' ? ctx : null
+
   return (
     <main className={styles.page}>
       <div className={styles.headerRow}>
@@ -89,6 +92,19 @@ export default async function AdminFeedbackDetailPage({ params }: { params: Prom
               <p className={styles.detailField}>
                 <strong>Rating:</strong> {item.rating}
               </p>
+            )}
+            {tournamentCtx && (
+              <>
+                <p className={styles.detailField}>
+                  <strong>Tournament:</strong> {tournamentCtx.tournamentName} ({tournamentCtx.tournamentDate})
+                </p>
+                <p className={styles.detailField}>
+                  <strong>Topics:</strong> {tournamentCtx.topic ?? 'none chosen'}
+                </p>
+                <p className={styles.detailField}>
+                  <strong>Overall experience:</strong> {tournamentCtx.experience ?? 'not rated'}
+                </p>
+              </>
             )}
             <p className={styles.detailField}>
               <strong>Comment:</strong>

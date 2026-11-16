@@ -1,9 +1,16 @@
 import type { Metadata } from 'next'
+import { seoMetadata } from '@/lib/seo'
 import styles from './page.module.scss'
 
-export const metadata: Metadata = {
-  title: 'NIVENXA Studio — Coming Soon',
-  description: 'Premium Indian comfortwear, crafted with intention and rooted in Indian tradition. Coming soon.',
+// This holding page is identical in all 16 locales (it uses no translated text), so every locale names the English
+// URL as its canonical instead of presenting sixteen duplicates. When Studio gets genuinely translated pages, give
+// each locale its own canonical (and hreflang alternates) here.
+export function generateMetadata(): Metadata {
+  return seoMetadata({
+    title: 'NIVENXA Studio — Coming Soon',
+    description: 'NIVENXA Studio: premium Indian comfortwear, crafted with intention and rooted in Indian tradition. Coming soon.',
+    path: '/studio/en',
+  })
 }
 
 // Studio's landing page — a static holding splash, deliberately with no

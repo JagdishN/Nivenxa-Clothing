@@ -3,6 +3,14 @@ import { getChessSession } from '@/lib/chess/chessAuth'
 import NivenxaGamesCard from './NivenxaGamesCard'
 import CardIcon from './CardIcon'
 import styles from './Analysis.module.scss'
+import { seoMetadata } from '@/lib/seo'
+
+export const metadata = seoMetadata({
+  title: 'Chess Analysis Tools | NIVENXA Chess',
+  description:
+    "Review your chess games: import a game, analyse your own play, and study a player's games with engine help and plain-language notes.",
+  path: '/chess/analysis',
+})
 
 export default async function ChessAnalysisPage() {
   const session = await getChessSession()

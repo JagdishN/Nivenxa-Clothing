@@ -1,11 +1,19 @@
 import Link from 'next/link'
 import { RULES } from '@/lib/chess/rules/data'
 import styles from './RulesList.module.scss'
+import { seoMetadata } from '@/lib/seo'
 
 // One icon per group (illustrated rules vs clock/etiquette facts) — the
 // grouping itself is already thematic, so this is a fast, meaningful split
 // without a per-rule data field.
 const GROUP_ICON = { illustrated: '♟️', text: '⏱️' } as const
+
+export const metadata = seoMetadata({
+  title: 'Chess Rules — Castling, En Passant and Draws | NIVENXA Chess',
+  description:
+    'The important rules of chess explained simply: how the pieces move, castling, en passant, promotion, check, checkmate and draws.',
+  path: '/chess/learn/rules',
+})
 
 export default function ChessLearnRulesPage() {
   const illustrated = RULES.filter((r) => r.type === 'illustrated')

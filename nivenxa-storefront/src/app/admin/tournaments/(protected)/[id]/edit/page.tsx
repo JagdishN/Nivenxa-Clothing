@@ -5,7 +5,81 @@ import { getSupabaseAdmin } from '@/lib/chess/supabase'
 import type { TournamentRow } from '@/lib/chess/tournaments'
 import { requireAdminAuth } from '../../../_auth'
 import { uploadPaymentQr } from '../../../_qrUpload'
+import { listUploadedPhotos, PHOTO_BUCKET } from '@/lib/chess/tournamentPhotos'
+import { parseResults } from '@/lib/chess/tournamentResultsInput'
+import PhotoUploader from './PhotoUploader'
+import ResultsEditor from './ResultsEditor'
 import styles from '../../../AdminTournaments.module.scss'
+
+function refreshPublicPages(id: string) {
+  revalidatePath('/chess/tournaments')
+  revalidatePath('/chess/tournaments/archive')
+  revalidatePath('/chess/tournaments/gallery')
+  revalidatePath(`/chess/tournaments/${id}`)
+  revalidatePath(`/admin/tournaments/${id}/edit`)
+}
+
+async function saveResults(id: string, formData: FormData) {
+  'use server'
+  await requireAdminAuth()
+  const parsed = parseResults(String(formData.get('results_json') ?? '[]'))
+  if ('error' in parsed) redirect(`/admin/tournaments/${id}/edit?error=` + encodeURIComponent(parsed.error) + '#results')
+  const { error } = await getSupabaseAdmin()
+    .from('tournaments')
+    .update({ results: parsed.results.length ? parsed.results : null })
+    .eq('id', id)
+  if (error) redirect(`/admin/tournaments/${id}/edit?error=` + encodeURIComponent(`Could not save the results: ${error.message}`) + '#results')
+  refreshPublicPages(id)
+  redirect(`/admin/tournaments/${id}/edit?saved=results#results`)
+}
+
+async function deletePhoto(id: string, formData: FormData) {
+  'use server'
+  await requireAdminAuth()
+  const photoId = String(formData.get('photo_id') ?? '')
+  const supabase = getSupabaseAdmin()
+  const { data: row } = await supabase.from('tournament_photos').select('storage_path').eq('id', photoId).eq('tournament_id', id).maybeSingle()
+  if (row) {
+    await supabase.storage.from(PHOTO_BUCKET).remove([(row as { storage_path: string }).storage_path])
+    await supabase.from('tournament_photos').delete().eq('id', photoId).eq('tournament_id', id)
+  }
+  refreshPublicPages(id)
+  redirect(`/admin/tournaments/${id}/edit?saved=photos#photos`)
+}
+
+async function updatePhoto(id: string, formData: FormData) {
+  'use server'
+  await requireAdminAuth()
+  const photoId = String(formData.get('photo_id') ?? '')
+  const alt = String(formData.get('alt') ?? '').trim()
+  const caption = String(formData.get('caption') ?? '').trim()
+  await getSupabaseAdmin()
+    .from('tournament_photos')
+    .update({ alt: alt || 'Tournament photo', caption: caption || null })
+    .eq('id', photoId)
+    .eq('tournament_id', id)
+  refreshPublicPages(id)
+  redirect(`/admin/tournaments/${id}/edit?saved=photos#photos`)
+}
+
+async function movePhoto(id: string, formData: FormData) {
+  'use server'
+  await requireAdminAuth()
+  const photoId = String(formData.get('photo_id') ?? '')
+  const direction = String(formData.get('direction')) === 'up' ? -1 : 1
+  const photos = await listUploadedPhotos(id)
+  const index = photos.findIndex((p) => p.id === photoId)
+  const other = photos[index + direction]
+  if (index >= 0 && other) {
+    // Re-number the whole list so the swap is exact even when two photos share a sort_order.
+    const order = photos.map((p) => p.id)
+    ;[order[index], order[index + direction]] = [order[index + direction], order[index]]
+    const supabase = getSupabaseAdmin()
+    await Promise.all(order.map((pid, n) => supabase.from('tournament_photos').update({ sort_order: n + 1 }).eq('id', pid)))
+  }
+  refreshPublicPages(id)
+  redirect(`/admin/tournaments/${id}/edit?saved=photos#photos`)
+}
 
 async function updateTournament(id: string, formData: FormData) {
   'use server'
@@ -69,10 +143,10 @@ export default async function EditTournamentPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ error?: string }>
+  searchParams: Promise<{ error?: string; saved?: string }>
 }) {
   const { id } = await params
-  const { error: errorParam } = await searchParams
+  const { error: errorParam, saved } = await searchParams
 
   // Auth is enforced once, above, by (protected)/layout.tsx.
   const supabase = getSupabaseAdmin()
@@ -82,6 +156,11 @@ export default async function EditTournamentPage({
   const t = data as TournamentRow
 
   const boundUpdate = updateTournament.bind(null, id)
+  const boundResults = saveResults.bind(null, id)
+  const boundDelete = deletePhoto.bind(null, id)
+  const boundUpdatePhoto = updatePhoto.bind(null, id)
+  const boundMove = movePhoto.bind(null, id)
+  const photos = await listUploadedPhotos(id)
 
   return (
     <main className={styles.page}>
@@ -92,10 +171,24 @@ export default async function EditTournamentPage({
         </Link>
       </div>
 
+      <nav className={styles.headerRow} aria-label="Jump to section">
+        <a href="#results" className={styles.secondaryBtn}>
+          Jump to Results ↓
+        </a>
+        <a href="#photos" className={styles.secondaryBtn}>
+          Jump to Photos ↓
+        </a>
+      </nav>
+
       {errorParam && <p className={styles.error}>{errorParam}</p>}
+      {saved && (
+        <p className={styles.notice} role="status">
+          {saved === 'results' ? 'Results saved. They are now on the tournament page.' : 'Photos updated.'}
+        </p>
+      )}
 
       <section className={styles.section}>
-        <form action={boundUpdate} className={styles.form} autoComplete="off" encType="multipart/form-data">
+        <form action={boundUpdate} className={styles.form} autoComplete="off">
           <label className={styles.field}>
             Name *
             <input type="text" name="name" required defaultValue={t.name} className={styles.input} />
@@ -219,6 +312,75 @@ export default async function EditTournamentPage({
             Save changes
           </button>
         </form>
+      </section>
+
+      <section className={styles.section} id="results">
+        <h2 className={styles.subheading}>Results</h2>
+        <p className={styles.mutedNote}>Enter the final standings for each category, in finishing order. Saving replaces the results shown on the public tournament page.</p>
+        <form action={boundResults} className={styles.form}>
+          <ResultsEditor initial={t.results ?? []} />
+          <button type="submit" className={styles.primaryBtn}>
+            Save results
+          </button>
+        </form>
+      </section>
+
+      <section className={styles.section} id="photos">
+        <h2 className={styles.subheading}>Photos</h2>
+        <p className={styles.mutedNote}>
+          Photos are saved under this tournament&apos;s start date ({String(t.start_date).slice(0, 10)}) and appear in the public gallery and on its results page.
+        </p>
+        <PhotoUploader tournamentId={t.id} />
+        {photos.length === 0 ? (
+          <p className={styles.mutedNote}>No photos uploaded yet.</p>
+        ) : (
+          <ul className={styles.photoList}>
+            {photos.map((p, index) => (
+              <li key={p.id} className={styles.photoItem}>
+                {/* eslint-disable-next-line @next/next/no-img-element -- admin preview of an access-controlled route */}
+                <img src={`/api/chess/photos/${p.id}`} alt={p.alt} className={styles.photoThumb} />
+                <div className={styles.photoBody}>
+                  <form action={boundUpdatePhoto} className={styles.photoForm}>
+                    <input type="hidden" name="photo_id" value={p.id} />
+                    <label className={styles.field}>
+                      Description (for screen readers)
+                      <input type="text" name="alt" defaultValue={p.alt} className={styles.input} />
+                    </label>
+                    <label className={styles.field}>
+                      Caption (optional, shown with the photo)
+                      <input type="text" name="caption" defaultValue={p.caption ?? ''} className={styles.input} />
+                    </label>
+                    <button type="submit" className={styles.secondaryBtn}>
+                      Save text
+                    </button>
+                  </form>
+                  <div className={styles.photoActions}>
+                    <form action={boundMove}>
+                      <input type="hidden" name="photo_id" value={p.id} />
+                      <input type="hidden" name="direction" value="up" />
+                      <button type="submit" className={styles.secondaryBtn} disabled={index === 0} aria-label={`Move photo ${index + 1} earlier`}>
+                        ↑ Earlier
+                      </button>
+                    </form>
+                    <form action={boundMove}>
+                      <input type="hidden" name="photo_id" value={p.id} />
+                      <input type="hidden" name="direction" value="down" />
+                      <button type="submit" className={styles.secondaryBtn} disabled={index === photos.length - 1} aria-label={`Move photo ${index + 1} later`}>
+                        ↓ Later
+                      </button>
+                    </form>
+                    <form action={boundDelete}>
+                      <input type="hidden" name="photo_id" value={p.id} />
+                      <button type="submit" className={styles.dangerBtn}>
+                        Delete photo
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </main>
   )

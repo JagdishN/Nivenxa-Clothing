@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Playfair_Display, Inter, Noto_Sans } from 'next/font/google'
-import { SITE_URL } from '@/lib/seo'
+import { PARENT_META_DESCRIPTION, PARENT_META_TITLE, SITE_NAME, SITE_URL, isProductionDeploy } from '@/lib/seo'
 import './globals.css'
 import '@/styles/globals.scss'
 
@@ -35,9 +35,11 @@ const notoSans = Noto_Sans({
 // un-overridden routes would be actively wrong, not just imprecise.
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: 'NIVENXA — Independent ventures. Built with intention.',
-  description:
-    'NIVENXA Studio and NIVENXA Technologies — premium Indian comfortwear and software built with intention, from Hyderabad, India.',
+  title: PARENT_META_TITLE,
+  description: PARENT_META_DESCRIPTION,
+  applicationName: SITE_NAME,
+  // Previews and branch deploys must never be indexed (see isProductionDeploy); production emits no robots tag at all.
+  ...(isProductionDeploy() ? {} : { robots: { index: false, follow: false } }),
 }
 
 export const viewport: Viewport = {
@@ -48,7 +50,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html className={`${playfair.variable} ${inter.variable} ${notoSans.variable}`}>
+    <html lang="en" className={`${playfair.variable} ${inter.variable} ${notoSans.variable}`}>
       <body>{children}</body>
     </html>
   )

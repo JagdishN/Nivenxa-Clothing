@@ -16,7 +16,8 @@ const nextConfig: NextConfig = {
   // costs nothing there and removes a real overlap in dev.
   devIndicators: false,
   async redirects() {
-    return STUDIO_REDIRECTS
+    // /studio has no page of its own (404); the real entry point is /studio/en. One permanent hop, no chain.
+    return [{ source: '/studio', destination: '/studio/en', permanent: true }, ...STUDIO_REDIRECTS]
   },
   turbopack: {
     resolveAlias: {

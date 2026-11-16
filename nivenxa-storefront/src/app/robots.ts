@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next'
-import { SITE_URL } from '@/lib/seo'
+import { SITE_URL, isProductionDeploy } from '@/lib/seo'
 
 /**
  * Single Next.js App Router app (confirmed: no turbo.json, no root
@@ -28,6 +28,8 @@ import { SITE_URL } from '@/lib/seo'
  * find under /admin at all.
  */
 export default function robots(): MetadataRoute.Robots {
+  // Previews / branch deploys: ask crawlers to stay away entirely (production below stays fully open).
+  if (!isProductionDeploy()) return { rules: { userAgent: '*', disallow: '/' } }
   return {
     rules: {
       userAgent: '*',

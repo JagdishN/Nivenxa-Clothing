@@ -20,7 +20,7 @@ function blockContextMenu(event: MouseEvent) {
  * page.tsx), instead of this file hand-maintaining a second copy of it that
  * can drift out of sync with the archive/detail pages' title.
  */
-export default function GalleryGrid({ events, photos }: { events: GalleryEvent[]; photos: GalleryPhoto[] }) {
+export default function GalleryGrid({ events, photos, hideEventHeadings = false }: { events: GalleryEvent[]; photos: GalleryPhoto[]; hideEventHeadings?: boolean }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null)
 
   return (
@@ -41,9 +41,13 @@ export default function GalleryGrid({ events, photos }: { events: GalleryEvent[]
 
             return (
               <div key={event.dateKey} className={styles.galleryEventGroup}>
-                <h2 id={`event-${event.dateKey}`} className={styles.galleryEventHeading}>
-                  {event.label}
-                </h2>
+                {hideEventHeadings ? (
+                  <span id={`event-${event.dateKey}`} />
+                ) : (
+                  <h2 id={`event-${event.dateKey}`} className={styles.galleryEventHeading}>
+                    {event.label}
+                  </h2>
+                )}
                 <div className={styles.galleryGrid}>
                   {eventPhotos.map((photo) => {
                     const globalIndex = photos.indexOf(photo)

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { OPENING_CATEGORIES, OPENINGS, DIFFICULTY_LABEL, DIFFICULTY_EMOJI } from '@/lib/chess/openings/data'
 import styles from './OpeningsList.module.scss'
+import { seoMetadata } from '@/lib/seo'
 
 // One icon per category (not per opening) — visual polish to match Chess
 // Basics' card icons without a new per-opening data field. Reused by every
@@ -28,6 +29,13 @@ const CARD_NUMBER: Record<string, number> = (() => {
   }
   return map
 })()
+
+export const metadata = seoMetadata({
+  title: 'Chess Openings — Simple Ways to Start a Game | NIVENXA Chess',
+  description:
+    "Learn simple ways to start a chess game, from the Italian Game to the Queen's Gambit. Watch the moves, then try the opening yourself.",
+  path: '/chess/learn/openings',
+})
 
 export default function ChessLearnOpeningsPage() {
   return (

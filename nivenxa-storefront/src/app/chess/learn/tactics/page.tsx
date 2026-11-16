@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { TACTICS } from '@/lib/chess/tactics/data'
 import styles from './TacticsList.module.scss'
+import { seoMetadata } from '@/lib/seo'
 
 const GROUPS: { difficulty: 'start' | 'next' | 'later'; title: string }[] = [
   { difficulty: 'start', title: 'Start Here' },
@@ -48,6 +49,13 @@ const TACTIC_ICON: Record<string, string> = {
   interference: '🚧',
   'trapped-piece': '🕸️',
 }
+
+export const metadata = seoMetadata({
+  title: 'Chess Tactics — Forks, Pins and Skewers | NIVENXA Chess',
+  description:
+    'Learn how to spot strong and winning moves: forks, pins, skewers, back-rank mates and more, each with examples and puzzles to try.',
+  path: '/chess/learn/tactics',
+})
 
 export default function ChessLearnTacticsPage() {
   return (

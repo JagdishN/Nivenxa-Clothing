@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { TournamentCategoryResult } from '@/lib/chess/types'
 import { ordinal, parseCategoryLabel } from '@/lib/chess/tournamentFormat'
 import styles from '../Tournaments.module.scss'
@@ -17,7 +17,16 @@ const ROW_HEIGHT_REM = 2.6
  * awkwardly once there were seven. This splits the control into two levels:
  * pick the age group first, then the subdivision available within it.
  */
-export default function TournamentResults({ results }: { results: TournamentCategoryResult[] }) {
+export default function TournamentResults({
+  results,
+  initialAge,
+  initialDivision,
+}: {
+  results: TournamentCategoryResult[]
+  /** From the page's ?age= / ?div= (so Back from the gallery returns to the same category). Ignored when not a real category. */
+  initialAge?: string
+  initialDivision?: string
+}) {
   const ageGroups = useMemo(() => {
     const seen = new Set<string>()
     const groups: string[] = []
@@ -31,13 +40,24 @@ export default function TournamentResults({ results }: { results: TournamentCate
     return groups
   }, [results])
 
-  const [selectedAge, setSelectedAge] = useState(ageGroups[0])
+  const [selectedAge, setSelectedAge] = useState(initialAge && ageGroups.includes(initialAge) ? initialAge : ageGroups[0])
 
   const subdivisionsForAge = useMemo(
     () => results.filter((r) => parseCategoryLabel(r.category).ageGroup === selectedAge).map((r) => parseCategoryLabel(r.category).subdivision),
     [results, selectedAge]
   )
-  const [selectedSubdivision, setSelectedSubdivision] = useState(subdivisionsForAge[0])
+  const [selectedSubdivision, setSelectedSubdivision] = useState(
+    initialDivision && subdivisionsForAge.includes(initialDivision) ? initialDivision : subdivisionsForAge[0]
+  )
+
+  // Keep the chosen category in the address (?age=U11&div=Girls) so links to the gallery can carry it
+  // and the Back link brings the visitor to the same category. replaceState: no new history entry.
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('age', selectedAge)
+    url.searchParams.set('div', selectedSubdivision)
+    window.history.replaceState(null, '', url)
+  }, [selectedAge, selectedSubdivision])
 
   function handleSelectAge(age: string) {
     setSelectedAge(age)
@@ -62,7 +82,7 @@ export default function TournamentResults({ results }: { results: TournamentCate
 
   return (
     <div className={styles.detailSection}>
-      <h2 className={styles.detailSectionTitle}>Results</h2>
+      <h2 className={styles.detailSectionTitle}>Prize Winners</h2>
 
       <div className={styles.resultsTabs} role="tablist" aria-label="Age group">
         {ageGroups.map((age) => (
@@ -102,8 +122,15 @@ export default function TournamentResults({ results }: { results: TournamentCate
           (not just taken from the tournament-wide format string) since one
           category can genuinely run a different number of rounds than the
           rest — e.g. U14 Open at 4 rounds while everything else ran 5. */}
-      <p className={styles.resultsHeading}>
-        {active.category} — Prize Winners / {active.totalRounds} round{active.totalRounds === 1 ? '' : 's'}
+      <p className={styles.resultsHeading} aria-live="polite">
+        <span className={styles.resultsHeadingLabel}>Showing</span>
+        <span className={styles.resultsHeadingCategory}>
+          {selectedAge}
+          {selectedSubdivision && selectedSubdivision !== 'Open' ? ` · ${selectedSubdivision}` : selectedSubdivision === 'Open' && subdivisionsForAge.length > 1 ? ' · Open' : ''}
+        </span>
+        <span className={styles.resultsHeadingMeta}>
+          Prize winners · {active.totalRounds} round{active.totalRounds === 1 ? '' : 's'}
+        </span>
       </p>
 
       <div className={styles.resultsTableWrap} style={{ minHeight: `${maxStandings * ROW_HEIGHT_REM + ROW_HEIGHT_REM}rem` }}>

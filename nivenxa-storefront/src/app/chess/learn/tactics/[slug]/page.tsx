@@ -1,6 +1,19 @@
 import { notFound } from 'next/navigation'
 import { TACTICS, getTactic } from '@/lib/chess/tactics/data'
 import TacticDetail from './TacticDetail'
+import type { Metadata } from 'next'
+import { seoMetadata } from '@/lib/seo'
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const tactic = getTactic(slug)
+  if (!tactic) return {}
+  return seoMetadata({
+    title: `${tactic.name} — Chess Tactics | NIVENXA Chess`,
+    description: tactic.description,
+    path: `/chess/learn/tactics/${slug}`,
+  })
+}
 
 export function generateStaticParams() {
   return TACTICS.map((t) => ({ slug: t.slug }))

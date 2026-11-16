@@ -4,11 +4,13 @@ import PolicyAccordion from '@/components/policy/PolicyAccordion'
 import PolicyHelp from '@/components/policy/PolicyHelp'
 import { LEGAL_ENTITY } from '@/lib/legalEntity'
 import styles from './ChessTerms.module.scss'
+import { seoMetadata } from '@/lib/seo'
 
-export const metadata = {
-  title: 'Terms of Use | Nivenxa Chess',
-  description: 'Simple rules for a good game — the agreement behind every Nivenxa Chess account.',
-}
+export const metadata = seoMetadata({
+  title: 'Terms of Use | NIVENXA Chess',
+  description: 'Simple rules for a good game — the agreement behind every NIVENXA Chess account.',
+  path: '/chess/terms',
+})
 
 export default function ChessTermsPage() {
   return (
