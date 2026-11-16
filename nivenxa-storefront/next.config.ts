@@ -17,7 +17,21 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   async redirects() {
     // /studio has no page of its own (404); the real entry point is /studio/en. One permanent hop, no chain.
-    return [{ source: '/studio', destination: '/studio/en', permanent: true }, ...STUDIO_REDIRECTS]
+    return [
+      { source: '/studio', destination: '/studio/en', permanent: true },
+      ...STUDIO_REDIRECTS,
+      // Short, shareable links for NIVENXA's 2nd Chess Tournament (temporary redirects: the target may change later).
+      {
+        source: '/chess/2/gallery',
+        destination: '/chess/tournaments/gallery?from=80a9c1e5-ef75-438f-b822-c951a1b501c6#event-2026-11-15',
+        permanent: false,
+      },
+      {
+        source: '/chess/2/feedback',
+        destination: '/chess/tournaments/80a9c1e5-ef75-438f-b822-c951a1b501c6/feedback',
+        permanent: false,
+      },
+    ]
   },
   turbopack: {
     resolveAlias: {
