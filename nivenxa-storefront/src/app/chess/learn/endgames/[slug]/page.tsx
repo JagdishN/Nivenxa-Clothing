@@ -1,6 +1,19 @@
 import { notFound } from 'next/navigation'
 import { ENDGAMES, getEndgame } from '@/lib/chess/endgames/data'
 import EndgameDetail from './EndgameDetail'
+import type { Metadata } from 'next'
+import { seoMetadata } from '@/lib/seo'
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const endgame = getEndgame(slug)
+  if (!endgame) return {}
+  return seoMetadata({
+    title: `${endgame.name} — Chess Endgames | NIVENXA Chess`,
+    description: endgame.description,
+    path: `/chess/learn/endgames/${slug}`,
+  })
+}
 
 export function generateStaticParams() {
   return ENDGAMES.map((e) => ({ slug: e.slug }))

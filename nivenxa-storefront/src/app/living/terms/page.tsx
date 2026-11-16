@@ -6,11 +6,13 @@ import PolicyHelp from '@/components/policy/PolicyHelp'
 import AppFooter from '@/components/global/AppFooter/AppFooter'
 import PageShell from '@/components/global/PageShell'
 import styles from './LivingTerms.module.scss'
+import { seoMetadata } from '@/lib/seo'
 
-export const metadata = {
-  title: 'Terms of Use | Nivenxa Living',
-  description: 'Clear responsibilities for every apartment — the agreement behind every Nivenxa Living account.',
-}
+export const metadata = seoMetadata({
+  title: 'Terms of Use | NIVENXA Living',
+  description: 'Clear responsibilities for every apartment — the agreement behind every NIVENXA Living account.',
+  path: '/living/terms',
+})
 
 
 export default function LivingTermsPage() {

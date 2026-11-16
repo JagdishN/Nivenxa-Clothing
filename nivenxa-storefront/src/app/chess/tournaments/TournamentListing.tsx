@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import type { ChessTournament, TournamentGroup } from '@/lib/chess/types'
 import EventKeyInfo, { EventFacts } from './EventKeyInfo'
+import { formatLongDate } from '@/lib/chess/tournamentFormat'
 import { buildWhatsAppRegisterLink } from './registerLink'
 import styles from './Tournaments.module.scss'
 
@@ -153,11 +154,20 @@ function TournamentCard({ tournament }: { tournament: ChessTournament }) {
           <h3 className={styles.cardTitle}>{tournament.title}</h3>
           {isCompleted && <span className={styles.statusBadge}>Completed</span>}
         </div>
-        <p className={styles.cardOrganizer}>Organized by {tournament.organizer.name}</p>
+        {isCompleted ? (
+          // A finished event stays compact: name, date, status and one link. Venue, fee and format live on its page.
+          <p className={styles.cardOrganizer}>{formatLongDate(tournament.dates.startsAt, tournament.dates.endsAt)}</p>
+        ) : (
+          <p className={styles.cardOrganizer}>Organized by {tournament.organizer.name}</p>
+        )}
       </div>
 
-      <EventKeyInfo tournament={tournament} compact />
-      <EventFacts tournament={tournament} />
+      {!isCompleted && (
+        <>
+          <EventKeyInfo tournament={tournament} compact />
+          <EventFacts tournament={tournament} />
+        </>
+      )}
 
       {/* Age/skill categories — secondary context for choosing between
           events on this listing. Dropped for a completed tournament: its
@@ -181,11 +191,9 @@ function TournamentCard({ tournament }: { tournament: ChessTournament }) {
         return (
           <div className={styles.cardActions}>
             <Link href={`/chess/tournaments/${tournament.id}`} className={styles.viewDetailsBtn}>
-              {/* "View Results" only once there's something to view — a
-                  completed tournament with no results entered yet still
-                  says "View Details" rather than promising standings that
-                  aren't there. */}
-              {isCompleted && tournament.results && tournament.results.length > 0 ? 'View Results' : 'View Details'}
+              {/* "Prize Winners" only once there are some entered — a completed tournament without them says
+                  "View Details & Photos" rather than promising winners that aren't there. */}
+              {isCompleted ? (tournament.results && tournament.results.length > 0 ? 'View Prize Winners & Photos' : 'View Details & Photos') : 'View Details'}
             </Link>
             {isOpenForEntry && <RegisterAction tournament={tournament} />}
             {isOpenForEntry && <PaymentInfo tournament={tournament} />}

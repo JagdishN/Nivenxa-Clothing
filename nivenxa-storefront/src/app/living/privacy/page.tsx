@@ -7,11 +7,13 @@ import PolicyHelp from '@/components/policy/PolicyHelp'
 import AppFooter from '@/components/global/AppFooter/AppFooter'
 import PageShell from '@/components/global/PageShell'
 import styles from './LivingPrivacy.module.scss'
+import { seoMetadata } from '@/lib/seo'
 
-export const metadata = {
-  title: 'Privacy Policy | Nivenxa Living',
-  description: 'How Nivenxa Living handles apartment, resident and billing data.',
-}
+export const metadata = seoMetadata({
+  title: 'Privacy Policy | NIVENXA Living',
+  description: 'How NIVENXA Living handles apartment, resident and billing data.',
+  path: '/living/privacy',
+})
 
 const STATS: PolicyStat[] = [
   { icon: IconHomeLock, value: 'Private', label: 'Each apartment sees only its own data' },

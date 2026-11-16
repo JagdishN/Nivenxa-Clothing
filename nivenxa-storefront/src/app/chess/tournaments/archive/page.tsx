@@ -2,8 +2,16 @@ import Link from 'next/link'
 import { getNivenxaArchiveTournaments } from '@/lib/chess/tournaments'
 import TournamentListing from '../TournamentListing'
 import styles from '../Tournaments.module.scss'
+import { seoMetadata } from '@/lib/seo'
 
 export const dynamic = 'force-dynamic'
+
+export const metadata = seoMetadata({
+  title: 'Past Chess Tournaments | NIVENXA Chess',
+  description:
+    'Past NIVENXA chess tournaments, with prize winners and photos from each event.',
+  path: '/chess/tournaments/archive',
+})
 
 export default async function TournamentArchivePage() {
   const groups = await getNivenxaArchiveTournaments()

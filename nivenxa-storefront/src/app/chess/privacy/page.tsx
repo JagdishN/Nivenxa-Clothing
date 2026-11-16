@@ -5,11 +5,13 @@ import PolicyStats, { type PolicyStat } from '@/components/policy/PolicyStats'
 import PolicyAccordion from '@/components/policy/PolicyAccordion'
 import PolicyHelp from '@/components/policy/PolicyHelp'
 import styles from './ChessPrivacy.module.scss'
+import { seoMetadata } from '@/lib/seo'
 
-export const metadata = {
-  title: 'Privacy Policy | Nivenxa Chess',
-  description: "What Nivenxa Chess collects, how it's used, and how we protect young players.",
-}
+export const metadata = seoMetadata({
+  title: 'Privacy Policy | NIVENXA Chess',
+  description: "What NIVENXA Chess collects, how it's used, and how we protect young players.",
+  path: '/chess/privacy',
+})
 
 const STATS: PolicyStat[] = [
   { icon: IconMail, value: 'Email only', label: 'All we ask to sign in' },

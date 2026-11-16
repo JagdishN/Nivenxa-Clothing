@@ -55,26 +55,15 @@ export function DetailSkeleton() {
       <section className={styles.detailWrap} role="status" aria-live="polite">
         <span className={styles.srOnly}>Loading tournament details…</span>
         <span className={`${styles.skelLine} ${styles.skel}`} aria-hidden="true" style={{ width: '60%', height: '2.2rem' }} />
+        <span className={`${styles.skelLine} ${styles.skel}`} aria-hidden="true" style={{ width: '45%' }} />
+        <span className={`${styles.skelLine} ${styles.skel}`} aria-hidden="true" style={{ width: '30%', height: '2.75rem' }} />
+        <span className={`${styles.skelLine} ${styles.skel}`} aria-hidden="true" style={{ width: '100%', height: '11rem' }} />
         <div className={styles.keyInfo} aria-hidden="true">
           <span className={`${styles.skelPanel} ${styles.skel}`} />
           <span className={`${styles.skelPanel} ${styles.skel}`} />
+          <span className={`${styles.skelPanel} ${styles.skel}`} />
         </div>
-        <span className={`${styles.skelLine} ${styles.skel}`} aria-hidden="true" style={{ width: '40%' }} />
       </section>
-    </main>
-  )
-}
-
-export function GallerySkeleton() {
-  return (
-    <main className={styles.page} aria-busy="true">
-      <div className={styles.backBar}>
-        <Link href="/chess/tournaments" className={styles.backLink}>← Back to Tournaments</Link>
-      </div>
-      <section className={styles.hero}>
-        <h1 className={styles.heading}>Moments from our tournaments.</h1>
-      </section>
-      <Blocks label="Loading photos…" count={1} />
     </main>
   )
 }

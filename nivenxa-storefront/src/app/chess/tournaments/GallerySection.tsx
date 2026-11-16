@@ -2,6 +2,7 @@
 
 import { useState, type CSSProperties, type MouseEvent } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { photoUrl, type GalleryPhoto } from '@/lib/chess/galleryPhotos'
 import PhotoLightbox from './PhotoLightbox'
 import styles from './Tournaments.module.scss'
@@ -13,20 +14,48 @@ function blockContextMenu(event: MouseEvent) {
   event.preventDefault()
 }
 
-/** The Tournaments page's own preview slide — always capped at 5 photos. Click any photo to see it uncropped; "View all" in the header goes to the full /chess/tournaments/gallery grid. */
-export default function GallerySection({ photos }: { photos: GalleryPhoto[] }) {
-  const preview = photos.slice(0, 5)
+/** A short preview strip (5 photos by default; 3 on a tournament's page). Click any photo to see it uncropped and use Prev/Next to browse EVERY photo in `photos`, not just the thumbnails shown; "View all" in the header goes to the full /chess/tournaments/gallery grid. */
+export default function GallerySection({
+  photos,
+  limit = 5,
+  title = 'Tournament Gallery',
+  viewAllHref = '/chess/tournaments/gallery',
+  viewAllLabel = 'View all →',
+  embedded = false,
+  carryParams = [],
+}: {
+  photos: GalleryPhoto[]
+  /** How many photos to preview (the rest are behind the link). */
+  limit?: number
+  title?: string
+  viewAllHref?: string
+  viewAllLabel?: string
+  /** True when sitting inside another page's own column (the tournament detail page), so it drops its own max-width and side padding. */
+  embedded?: boolean
+  /** Query parameters of the CURRENT page to copy onto the "view all" link (e.g. the selected results category). */
+  carryParams?: string[]
+}) {
+  const current = useSearchParams()
+  const [path, query = ''] = viewAllHref.split('#')[0].split('?')
+  const hash = viewAllHref.includes('#') ? `#${viewAllHref.split('#')[1]}` : ''
+  const qs = new URLSearchParams(query)
+  for (const key of carryParams) {
+    const value = current.get(key)
+    if (value) qs.set(key, value)
+  }
+  const href = `${path}${qs.toString() ? `?${qs.toString()}` : ''}${hash}`
+  const preview = photos.slice(0, limit)
   const [openIndex, setOpenIndex] = useState<number | null>(null)
 
   return (
-    <section className={styles.gallerySection} aria-labelledby="gallery-heading">
+    <section className={`${styles.gallerySection} ${embedded ? styles.gallerySectionEmbedded : ''}`} aria-labelledby="gallery-heading">
       <div className={styles.galleryHeaderRow}>
-        <h2 id="gallery-heading" className={styles.groupTitle}>
-          Tournament Gallery
+        <h2 id="gallery-heading" className={embedded ? styles.detailSectionTitle : styles.groupTitle}>
+          {title}
         </h2>
         {preview.length > 0 && (
-          <Link href="/chess/tournaments/gallery" className={styles.gallerySlideViewAll}>
-            View all →
+          <Link href={href} className={styles.gallerySlideViewAll}>
+            {viewAllLabel}
           </Link>
         )}
       </div>
@@ -64,7 +93,7 @@ export default function GallerySection({ photos }: { photos: GalleryPhoto[] }) {
         </div>
       )}
 
-      <PhotoLightbox photos={preview} openIndex={openIndex} onClose={() => setOpenIndex(null)} onNavigate={setOpenIndex} />
+      <PhotoLightbox photos={photos} openIndex={openIndex} onClose={() => setOpenIndex(null)} onNavigate={setOpenIndex} />
     </section>
   )
 }

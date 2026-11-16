@@ -1,14 +1,23 @@
 import Link from 'next/link'
 import { getPublicTournaments } from '@/lib/chess/tournaments'
-import { galleryPhotos } from '@/lib/chess/galleryPhotos'
+import { getAllGalleryData } from '@/lib/chess/tournamentPhotos'
 import TournamentListing from '../TournamentListing'
 import GallerySection from '../GallerySection'
 import styles from '../Tournaments.module.scss'
+import { seoMetadata } from '@/lib/seo'
 
 export const dynamic = 'force-dynamic' // always reflect the latest admin-verified tournaments, not a build-time snapshot
 
+export const metadata = seoMetadata({
+  title: 'Chess Tournaments in Hyderabad | NIVENXA Chess',
+  description:
+    'Upcoming NIVENXA chess tournaments: dates, venue, entry fee, prizes and how to register, plus photos from our events.',
+  path: '/chess/tournaments',
+})
+
 export default async function TournamentsPage() {
   const groups = await getPublicTournaments()
+  const { photos: galleryPhotos } = await getAllGalleryData()
   const hasTournaments = groups.some((group) => group.tournaments.length > 0)
 
   return (

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import styles from './Learn.module.scss'
+import { seoMetadata } from '@/lib/seo'
 
 const CATEGORIES = [
   {
@@ -34,6 +35,13 @@ const CATEGORIES = [
   },
 ]
 
+export const metadata = seoMetadata({
+  title: 'Learn Chess — Lessons for Beginners | NIVENXA Chess',
+  description:
+    'Learn chess with short lessons, clear examples and moves you can try: basics, openings, tactics, endgames and rules.',
+  path: '/chess/learn',
+})
+
 export default function ChessLearnPage() {
   return (
     <main className={styles.page}>
@@ -61,6 +69,15 @@ export default function ChessLearnPage() {
             <p className={styles.categoryFlow}>{category.flow}</p>
           </Link>
         ))}
+      </div>
+
+      <div className={styles.recommendStrip}>
+        <p className={styles.recommendHeading}>
+          Curious where chess comes from?{' '}
+          <Link href="/chess/learn-more" className={styles.recommendLink}>
+            The story of chess →
+          </Link>
+        </p>
       </div>
     </main>
   )

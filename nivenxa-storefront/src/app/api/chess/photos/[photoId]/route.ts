@@ -1,6 +1,10 @@
 import { readFile } from 'node:fs/promises'
 import type { NextRequest } from 'next/server'
 import { GALLERY_PHOTO_FILES } from '@/lib/chess/galleryPhotoFiles'
+import { getSupabaseAdmin } from '@/lib/chess/supabase'
+import { PHOTO_BUCKET } from '@/lib/chess/tournamentPhotos'
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 // Needs real filesystem access (readFile) — not available on the Edge
 // runtime.
@@ -23,7 +27,8 @@ export const runtime = 'nodejs'
 export async function GET(request: NextRequest, { params }: { params: Promise<{ photoId: string }> }) {
   const { photoId } = await params
   const filePath = GALLERY_PHOTO_FILES[photoId]
-  if (!filePath) return new Response('Not found', { status: 404 })
+  // Not a code-listed photo: an admin-uploaded one, stored (already watermarked) in the private bucket and looked up by its id.
+  if (!filePath && !UUID.test(photoId)) return new Response('Not found', { status: 404 })
 
   // Block another site embedding this URL directly (hotlinking) while still
   // allowing direct navigation (no referer at all, e.g. opening the URL in
@@ -41,7 +46,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   let buffer: Buffer
   try {
-    buffer = await readFile(filePath)
+    if (filePath) {
+      buffer = await readFile(filePath)
+    } else {
+      const supabase = getSupabaseAdmin()
+      const { data: row } = await supabase.from('tournament_photos').select('storage_path').eq('id', photoId).maybeSingle()
+      if (!row) return new Response('Not found', { status: 404 })
+      const { data: blob, error } = await supabase.storage.from(PHOTO_BUCKET).download((row as { storage_path: string }).storage_path)
+      if (error || !blob) return new Response('Not found', { status: 404 })
+      buffer = Buffer.from(await blob.arrayBuffer())
+    }
   } catch {
     return new Response('Not found', { status: 404 })
   }
@@ -51,7 +65,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       'Content-Type': 'image/webp',
       // Immutable — a replaced photo gets a new id (see galleryPhotos.ts)
       // rather than overwriting one in place, so a year-long cache is safe.
-      'Cache-Control': 'public, max-age=31536000, immutable',
+      // Admin-uploaded photos can be deleted, so they are cached for a day instead of a year.
+      'Cache-Control': filePath ? 'public, max-age=31536000, immutable' : 'public, max-age=86400',
       // Renders inline in the page, never triggers a "Save As" download prompt.
       'Content-Disposition': 'inline',
       'Cross-Origin-Resource-Policy': 'same-site',

@@ -164,6 +164,34 @@ $gold-soft: #FFE39A;
   padding: 0 clamp(1rem, 4vw, 3rem);
 }
 
+// Collapsed "Event details" block on a completed tournament's page.
+.eventDetails {
+  margin-top: 1.5rem;
+  padding: 0.9rem 1.1rem;
+  border: 1px solid rgba($purple, 0.14);
+  border-radius: 1rem;
+  background: rgba(#fff, 0.6);
+
+  summary {
+    cursor: pointer;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: $purple;
+  }
+
+  &[open] summary {
+    margin-bottom: 1rem;
+  }
+}
+
+// Inside the tournament detail page's own column: no second max-width or side padding.
+.gallerySectionEmbedded {
+  max-width: none;
+  margin: 1.5rem 0 0;
+  padding: 0;
+}
+
 // One row, name on the left and the way to see more on the right — the
 // previous layout stacked an eyebrow label and a heading as two separate
 // flex items pushed to opposite ends, which read as two unrelated pieces of
@@ -336,6 +364,9 @@ $gold-soft: #FFE39A;
   max-width: 1100px;
   overflow: auto;
   display: flex;
+  // Lets a touch screen scroll the zoomed photo and pinch it natively.
+  touch-action: pan-x pan-y pinch-zoom;
+  -webkit-overflow-scrolling: touch;
 }
 
 .lightboxImage {
@@ -360,79 +391,62 @@ $gold-soft: #FFE39A;
   cursor: zoom-out;
 }
 
-.lightboxClose {
+// Solid white controls with dark icons (not translucent-on-dark): readable on any photo, and
+// at least 3.5rem (56px) square so they are easy to hit with a thumb.
+%lightboxControl {
   position: absolute;
-  top: clamp(0.75rem, 2vw, 1.5rem);
-  right: clamp(0.75rem, 2vw, 1.5rem);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 3rem;
-  height: 3rem;
+  width: 3.5rem;
+  height: 3.5rem;
   border-radius: 999px;
-  border: 1.5px solid rgba($white, 0.55);
-  background: rgba($white, 0.16);
-  box-shadow: 0 2px 10px rgba($deep, 0.35);
-  color: $white;
-  font-size: 1.3rem;
+  border: 2px solid $white;
+  background: rgba($white, 0.95);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  color: $deep;
+  line-height: 1;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  touch-action: manipulation;
+  transition: background 0.2s ease, transform 0.2s ease;
 
   &:hover {
-    background: rgba($white, 0.3);
-    border-color: rgba($white, 0.8);
-    transform: scale(1.06);
+    background: $white;
   }
+
+  &:focus-visible {
+    outline: 3px solid $gold;
+    outline-offset: 3px;
+  }
+}
+
+.lightboxClose {
+  @extend %lightboxControl;
+  top: clamp(0.75rem, 2vw, 1.5rem);
+  right: clamp(0.75rem, 2vw, 1.5rem);
+  font-size: 1.5rem;
+  font-weight: 700;
 }
 
 .lightboxZoom {
-  position: absolute;
+  @extend %lightboxControl;
   top: clamp(0.75rem, 2vw, 1.5rem);
   left: clamp(0.75rem, 2vw, 1.5rem);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 999px;
-  border: 1.5px solid rgba($white, 0.55);
-  background: rgba($white, 0.16);
-  box-shadow: 0 2px 10px rgba($deep, 0.35);
-  color: $white;
-  font-size: 1.5rem;
-  line-height: 1;
-  cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-
-  &:hover {
-    background: rgba($white, 0.3);
-    border-color: rgba($white, 0.8);
-    transform: scale(1.06);
-  }
+  font-size: 2rem;
+  font-weight: 700;
 }
 
 .lightboxNav {
-  position: absolute;
+  @extend %lightboxControl;
   top: 50%;
   transform: translateY(-50%);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 3.25rem;
-  height: 3.25rem;
-  border-radius: 999px;
-  border: 1.5px solid rgba($white, 0.55);
-  background: rgba($white, 0.16);
-  box-shadow: 0 2px 10px rgba($deep, 0.35);
-  color: $white;
-  font-size: 1.9rem;
-  line-height: 1;
-  cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  width: 3.75rem;
+  height: 3.75rem;
+  font-size: 2.4rem;
+  font-weight: 700;
+  padding-bottom: 0.2rem;
 
   &:hover {
-    background: rgba($white, 0.3);
-    border-color: rgba($white, 0.8);
     transform: translateY(-50%) scale(1.06);
   }
 }
@@ -445,18 +459,39 @@ $gold-soft: #FFE39A;
   right: clamp(0.5rem, 3vw, 1.5rem);
 }
 
+// "Photo 3 of 7", top centre, solid and large.
+.lightboxCounter {
+  position: absolute;
+  top: clamp(0.9rem, 2vw, 1.65rem);
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 0.55rem 1.1rem;
+  border-radius: 999px;
+  background: $white;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  color: $deep;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: default;
+}
+
 .lightboxCaption {
   position: absolute;
   bottom: clamp(0.75rem, 3vw, 1.5rem);
   left: 50%;
   transform: translateX(-50%);
   max-width: 90%;
-  padding: 0.5rem 1rem;
+  margin: 0;
+  padding: 0.6rem 1.1rem;
   border-radius: 999px;
-  background: rgba($white, 0.1);
+  background: rgba($deep, 0.9);
+  border: 1px solid rgba($white, 0.5);
   color: $white;
   font-family: var(--font-sans);
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   text-align: center;
   cursor: default;
 }
@@ -844,21 +879,22 @@ $gold-soft: #FFE39A;
 .resultsTab {
   display: inline-flex;
   align-items: center;
-  min-height: 2.1rem;
-  padding: 0 0.85rem;
+  justify-content: center;
+  min-height: 2.75rem;
+  min-width: 3.5rem;
+  padding: 0 1.2rem;
   border-radius: 999px;
-  border: 1px solid rgba($purple, 0.2);
-  background: rgba($white, 0.6);
-  color: rgba($deep, 0.65);
+  border: 2px solid rgba($purple, 0.35);
+  background: rgba($white, 0.8);
+  color: $deep;
   font-family: var(--font-sans);
-  font-size: 0.76rem;
+  font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
   transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
 
   &:hover {
-    border-color: rgba($purple, 0.4);
-    color: $deep;
+    border-color: $purple;
   }
 }
 
@@ -873,41 +909,69 @@ $gold-soft: #FFE39A;
   }
 }
 
-// Visually secondary to the age-group row above it — smaller, no pill fill
-// even when active (an underline instead), since this is a sub-choice
-// within whichever age group is already selected, not an equal-weight
-// second set of tabs.
+// Same comfortable size as the age row, but squarer and tinted rather than
+// filled, so it still reads as the sub-choice inside the selected age group.
 .resultsSubTab {
   display: inline-flex;
   align-items: center;
-  min-height: 1.8rem;
-  padding: 0 0.1rem;
-  border: none;
-  border-bottom: 2px solid transparent;
-  background: none;
-  color: rgba($deep, 0.55);
+  justify-content: center;
+  min-height: 2.5rem;
+  min-width: 4.5rem;
+  padding: 0 1rem;
+  border-radius: 0.6rem;
+  border: 2px solid rgba($purple, 0.25);
+  background: transparent;
+  color: $deep;
   font-family: var(--font-sans);
-  font-size: 0.74rem;
+  font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
-  transition: color 0.2s ease, border-color 0.2s ease;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 
   &:hover {
-    color: $deep;
+    border-color: $purple;
   }
 }
 
 .resultsSubTabActive {
-  border-bottom-color: $purple;
-  color: $purple;
+  border-color: $purple;
+  background: $purple;
+  color: $white;
+  font-weight: 800;
+
+  &:hover {
+    border-color: $purple;
+  }
 }
 
+// The category being shown, stated outright above the table.
 .resultsHeading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.75rem;
+  margin: 0.6rem 0 0;
   font-family: var(--font-sans);
-  font-size: 0.85rem;
-  font-weight: 800;
   color: $deep;
-  margin: 0.2rem 0 0;
+}
+
+.resultsHeadingLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.resultsHeadingCategory {
+  font-family: var(--font-serif, inherit);
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.resultsHeadingMeta {
+  font-size: 0.85rem;
+  opacity: 0.7;
 }
 
 // Reserves room for the longest category's standings (see
@@ -1260,4 +1324,538 @@ $gold-soft: #FFE39A;
 .skelLine {
   height: 1.2rem;
   border-radius: 0.5rem;
+}
+
+// Divider label between the selected tournament's photos and the others on the gallery page.
+.galleryMoreLabel {
+  margin: 1.5rem 0 0.25rem;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+// ─── Tournament feedback page and the modest link to it ──────────────────
+.fbLinkRow {
+  margin: 1.1rem 0 0;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  color: $deep;
+}
+
+.fbLink {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 800;
+  color: $purple;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+
+  &:hover {
+    color: $purple-light;
+  }
+}
+
+.fbForm {
+  display: grid;
+  gap: 1.1rem;
+  margin-top: 0;
+  font-family: var(--font-sans);
+  color: $deep;
+}
+
+.fbRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem;
+}
+
+.fbField,
+.fbFieldset {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+  min-width: 0;
+
+  > span,
+  legend {
+    padding: 0;
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  em {
+    font-style: normal;
+    font-weight: 500;
+    opacity: 0.65;
+  }
+}
+
+.fbInput {
+  width: 100%;
+  min-height: 2.9rem;
+  padding: 0.6rem 0.85rem;
+  border: 1.5px solid rgba($purple, 0.3);
+  border-radius: 0.7rem;
+  background: #fff;
+  color: $deep;
+  font: inherit;
+
+  &[readonly] {
+    background: rgba($purple, 0.06);
+    color: rgba($deep, 0.8);
+  }
+
+  &:focus-visible {
+    outline: 3px solid rgba($gold, 0.7);
+    outline-offset: 1px;
+    border-color: $purple;
+  }
+}
+
+textarea.fbInput {
+  resize: vertical;
+}
+
+.fbChoices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.fbChoice {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  border: 2px solid rgba($purple, 0.3);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &:focus-within {
+    outline: 3px solid rgba($gold, 0.8);
+    outline-offset: 2px;
+  }
+}
+
+.fbChoiceOn {
+  border-color: $purple;
+  background: $purple;
+  color: $white;
+}
+
+.fbClear {
+  justify-self: start;
+  padding: 0;
+  border: none;
+  background: none;
+  color: $purple;
+  font: inherit;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.fbHint {
+  justify-self: end;
+  opacity: 0.6;
+}
+
+.fbHoney {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.fbError {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border-radius: 0.7rem;
+  background: #fde8e8;
+  color: #8a1c1c;
+  font-weight: 600;
+}
+
+.fbSubmit {
+  justify-self: start;
+  min-height: 3rem;
+  padding: 0 1.8rem;
+  border: none;
+  border-radius: 999px;
+  background: $purple;
+  color: $white;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+
+  &:focus-visible {
+    outline: 3px solid $gold;
+    outline-offset: 3px;
+  }
+}
+
+.fbDone {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  border: 1px solid rgba($purple, 0.2);
+  border-radius: 1rem;
+  background: rgba(#fff, 0.7);
+}
+
+// Compact read-only event summary on the feedback page (name + date), instead of disabled-looking inputs.
+.fbSummary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.1rem 0.75rem;
+  padding: 0.5rem 0.85rem;
+  border-left: 4px solid $gold;
+  border-radius: 0.5rem;
+  background: rgba($purple, 0.06);
+}
+
+.fbSummaryName {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.fbSummaryDate {
+  margin: 0;
+  font-size: 0.88rem;
+  opacity: 0.75;
+}
+
+.fbPrivacy {
+  margin: 0;
+  font-size: 0.82rem;
+  opacity: 0.7;
+}
+
+// ─── Feedback form: quiet role cards, hero knight rating, topic checklist ─
+// Borders are only strengthened on selection or focus; the knight rating is the visual centrepiece.
+%fbPick {
+  position: relative;
+  color: $deep;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &:focus-within {
+    outline: 3px solid rgba($gold, 0.9);
+    outline-offset: 2px;
+  }
+}
+
+// Role: a quiet horizontal chip, a little figure and a label.
+.fbRoleGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+
+  @media (max-width: 640px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.fbRoleCard {
+  @extend %fbPick;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 3.6rem;
+  padding: 0.3rem 0.7rem 0.3rem 0.4rem;
+  border: 1.5px solid rgba($purple, 0.18);
+  border-radius: 0.9rem;
+  background: #fff;
+
+  &:hover {
+    border-color: rgba($purple, 0.55);
+    background: rgba($purple, 0.04);
+  }
+}
+
+.fbRoleArt {
+  flex: 0 0 3.3rem;
+  width: 3.3rem;
+}
+
+// Experience: five separate, clearly bounded options on a soft stage.
+.fbKnightRow {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.4rem;
+  padding: 0.5rem;
+  border-radius: 1.2rem;
+  
+}
+
+.fbKnight {
+  @extend %fbPick;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.2rem;
+  padding: 0.55rem 0.1rem 0.5rem;
+  border: 1.5px solid rgba($purple, 0.2);
+  border-radius: 1rem;
+  background: #fff;
+  text-align: center;
+
+  &:hover {
+    border-color: rgba($purple, 0.6);
+    box-shadow: 0 4px 12px rgba($purple, 0.14);
+  }
+}
+
+.fbKnightArt,
+.fbRoleArt {
+  img {
+    filter: contrast(1.07) saturate(1.12) drop-shadow(0 1px 1.5px rgba($purple, 0.28));
+  }
+}
+
+.fbKnightArt {
+  display: block;
+  width: clamp(3.4rem, 13vw, 5.8rem);
+  transition: transform 0.2s ease;
+
+  .fbKnight:hover & {
+    transform: translateY(-2px);
+  }
+}
+
+// Selected: purple surround, a check, and (for knights) a brief lift.
+.fbCardOn {
+  border-color: $purple;
+  background: rgba($purple, 0.1);
+  box-shadow: 0 0 0 3px rgba($purple, 0.18);
+
+  .fbCardLabel {
+    color: $purple;
+    font-weight: 800;
+  }
+
+  &::after {
+    content: '✓';
+    position: absolute;
+    top: -0.45rem;
+    right: -0.35rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 50%;
+    background: $purple;
+    color: $white;
+    font-size: 0.8rem;
+    font-weight: 900;
+    line-height: 1;
+    box-shadow: 0 2px 6px rgba($deep, 0.3);
+  }
+}
+
+.fbKnight.fbCardOn,
+.fbRoleCard.fbCardOn {
+  // Selected = purple outline + lavender fill + check badge. Hover (white fill, lighter outline, lift) is deliberately different.
+  border-color: $purple;
+  background: #ebe4f8;
+
+  .fbKnightArt {
+    transform: translateY(-3px);
+    animation: fbKnightNod 0.45s ease-out;
+  }
+}
+
+@keyframes fbKnightNod {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  35% {
+    transform: translateY(-6px) rotate(-5deg);
+  }
+  70% {
+    transform: translateY(-2px) rotate(2deg);
+  }
+  100% {
+    transform: translateY(-3px) rotate(0deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fbKnight.fbCardOn .fbKnightArt {
+    animation: none;
+  }
+
+  .fbKnightArt {
+    transition: none;
+  }
+}
+
+.fbCardLabel {
+  font-size: 0.9rem;
+  font-weight: 800;
+  line-height: 1.2;
+
+  @media (max-width: 420px) {
+    font-size: 0.72rem;
+  }
+}
+
+// Topics: compact cards with a small illustration, a title, one supporting line and a corner checkbox. The whole card is the target.
+.fbTopicList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.6rem;
+}
+
+.fbTopic {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 4.1rem;
+  padding: 0.55rem 2.6rem 0.55rem 0.6rem;
+  border: 1.5px solid rgba($purple, 0.2);
+  border-radius: 0.9rem;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &:hover {
+    border-color: rgba($purple, 0.6);
+  }
+
+  &:focus-within {
+    outline: 3px solid rgba($gold, 0.85);
+    outline-offset: 2px;
+  }
+}
+
+.fbTopicOn {
+  border-color: $purple;
+  background: #ebe4f8;
+}
+
+.fbTick {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 2px solid rgba($purple, 0.55);
+  border-radius: 0.38rem;
+  background: #fff;
+  color: $white;
+  font-size: 0.9rem;
+  font-weight: 900;
+  line-height: 1;
+
+  .fbTopicOn & {
+    background: $purple;
+    border-color: $purple;
+  }
+}
+
+.fbTopicIcon {
+  display: block;
+  flex: 0 0 2.6rem;
+  width: 2.6rem;
+  height: 2.6rem;
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+}
+
+.fbTopicText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 0.1rem;
+}
+
+.fbTopicTitle {
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.fbTopicHint {
+  font-size: 0.8rem;
+  line-height: 1.3;
+  opacity: 0.7;
+}
+
+// Feedback page header: smaller than a tournament title, so the questions start higher.
+.fbTitle {
+  margin: 0;
+  font-family: var(--font-serif, inherit);
+  font-size: clamp(1.6rem, 4vw, 2.1rem);
+  line-height: 1.15;
+}
+
+.fbIntro {
+  margin: 0.3rem 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  color: $deep;
+  opacity: 0.75;
+}
+
+// The written feedback: guidance stays visible, the box starts small and grows as the visitor types.
+.fbGuide {
+  font-size: 0.85rem;
+  line-height: 1.4;
+  opacity: 0.75;
+}
+
+textarea.fbText {
+  min-height: 5.2rem;
+  max-height: 20rem;
+  overflow-y: auto;
+  resize: none;
+  line-height: 1.5;
+  transition: height 0.12s ease;
 }

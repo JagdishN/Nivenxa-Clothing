@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useCallback, useState, type MouseEvent } from 'react'
+import { useEffect, useCallback, useRef, useState, type MouseEvent } from 'react'
 import { photoUrl, type GalleryPhoto } from '@/lib/chess/galleryPhotos'
 import styles from './Tournaments.module.scss'
 
@@ -43,10 +43,55 @@ export default function PhotoLightbox({
     setZoomed(false)
   }
 
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const closeRef = useRef<HTMLButtonElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const isOpen = openIndex !== null
+
+  // Focus: move into the dialog when it opens (on Close, the safest control) and hand it back to
+  // whatever opened it (the thumbnail) when it closes.
+  useEffect(() => {
+    if (!isOpen) return
+    const opener = document.activeElement as HTMLElement | null
+    closeRef.current?.focus()
+    return () => opener?.focus?.()
+  }, [isOpen])
+
+  // When zoomed, start in the middle of the enlarged photo rather than its top-left corner.
+  useEffect(() => {
+    const box = scrollRef.current
+    if (!box) return
+    if (zoomed) {
+      box.scrollLeft = (box.scrollWidth - box.clientWidth) / 2
+      box.scrollTop = (box.scrollHeight - box.clientHeight) / 2
+    } else {
+      box.scrollLeft = 0
+      box.scrollTop = 0
+    }
+  }, [zoomed, openIndex])
+
   useEffect(() => {
     if (openIndex === null) return
 
     function handleKey(event: KeyboardEvent) {
+      if (event.key === 'Tab' && dialogRef.current) {
+        // Keep Tab / Shift+Tab inside the dialog.
+        const items = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('button:not([disabled])'))
+        if (items.length === 0) return
+        const first = items[0]
+        const last = items[items.length - 1]
+        const active = document.activeElement
+        if (!dialogRef.current.contains(active)) {
+          event.preventDefault()
+          first.focus()
+        } else if (event.shiftKey && active === first) {
+          event.preventDefault()
+          last.focus()
+        } else if (!event.shiftKey && active === last) {
+          event.preventDefault()
+          first.focus()
+        }
+      }
       if (event.key === 'Escape') close()
       if (event.key === 'ArrowRight') onNavigate((openIndex! + 1) % photos.length)
       if (event.key === 'ArrowLeft') onNavigate((openIndex! - 1 + photos.length) % photos.length)
@@ -64,6 +109,7 @@ export default function PhotoLightbox({
 
   return (
     <div
+      ref={dialogRef}
       className={styles.lightboxBackdrop}
       role="dialog"
       aria-modal="true"
@@ -71,7 +117,7 @@ export default function PhotoLightbox({
       onClick={close}
       onContextMenu={blockContextMenu}
     >
-      <button type="button" className={styles.lightboxClose} onClick={close} aria-label="Close">
+      <button ref={closeRef} type="button" className={styles.lightboxClose} onClick={close} aria-label="Close photo viewer">
         ✕
       </button>
 
@@ -101,7 +147,7 @@ export default function PhotoLightbox({
         </button>
       )}
 
-      <div className={styles.lightboxImageScroll} onClick={(e) => e.stopPropagation()}>
+      <div ref={scrollRef} className={styles.lightboxImageScroll} onClick={(e) => e.stopPropagation()}>
         <div
           className={`${styles.lightboxImage} ${zoomed ? styles.lightboxImageZoomed : ''}`}
           style={{ backgroundImage: `url(${photoUrl(photo.photoId)})` }}
@@ -123,11 +169,15 @@ export default function PhotoLightbox({
         </button>
       )}
 
-      {(photo.caption || photos.length > 1) && (
+      {photos.length > 1 && (
+        <p className={styles.lightboxCounter} onClick={(e) => e.stopPropagation()} aria-live="polite">
+          Photo {openIndex + 1} of {photos.length}
+        </p>
+      )}
+
+      {photo.caption && (
         <p className={styles.lightboxCaption} onClick={(e) => e.stopPropagation()}>
           {photo.caption}
-          {photo.caption && photos.length > 1 && ' — '}
-          {photos.length > 1 && `${openIndex + 1} / ${photos.length}`}
         </p>
       )}
     </div>

@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { seoMetadata } from '@/lib/seo'
 import { getLivingSession } from '@/lib/living/auth'
 import { safeLivingRedirectPath } from '@/lib/auth/safeRedirect'
 import AppFooter from '@/components/global/AppFooter/AppFooter'
@@ -7,6 +8,13 @@ import AuthTrigger from './AuthTrigger'
 import LivingNav from './LivingNav'
 import styles from './Landing.module.scss'
 
+// The canonical for /living itself. /living?auth=login and ?redirect=... open the same landing page, so they all name this URL.
+export const metadata = seoMetadata({
+  title: 'NIVENXA Living — Built for Standalone Apartments',
+  description:
+    'NIVENXA Living is an app for maintenance, water billing and collections in standalone apartment buildings — without hiring a society management company.',
+  path: '/living',
+})
 
 const CORE_FLOW = [
   { label: 'Maintenance calculation' },

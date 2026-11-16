@@ -130,7 +130,7 @@ export default async function AdminTournamentsPage({
           to force a remount did NOT fix this — it's the browser's own
           autofill layer, not stale React/DOM state.
         */}
-        <form action={addTournament} className={styles.form} autoComplete="off" encType="multipart/form-data">
+        <form action={addTournament} className={styles.form} autoComplete="off">
           <label className={styles.field}>
             Name *
             <input type="text" name="name" required className={styles.input} />

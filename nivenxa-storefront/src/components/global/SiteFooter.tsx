@@ -31,6 +31,8 @@ export interface SiteFooterProps {
    * prop handed down from a Server Component, which isn't possible.
    */
   cookieSettingsLabel?: string
+  /** Skip the trailing shared "NIVENXA" product column. The parent home page passes its own Brands / Apps columns instead, so the same four links are not listed twice. */
+  hideProductColumn?: boolean
 }
 
 // Every real, currently-reachable NIVENXA product — shown on every app's
@@ -51,7 +53,7 @@ const NIVENXA_LINKS: SiteFooterLink[] = [
  * product list stays fixed here since it's the same regardless of which
  * app renders it.
  */
-export default function SiteFooter({ columns, socialLinks, cookieSettingsLabel }: SiteFooterProps) {
+export default function SiteFooter({ columns, socialLinks, cookieSettingsLabel, hideProductColumn }: SiteFooterProps) {
   const year = new Date().getFullYear()
   return (
     <footer className={styles.footer}>
@@ -125,6 +127,7 @@ export default function SiteFooter({ columns, socialLinks, cookieSettingsLabel }
           </div>
         ))}
 
+        {!hideProductColumn && (
         <div className={styles.column}>
           <p className={styles.columnTitle}>NIVENXA</p>
           <ul className={styles.links}>
@@ -137,6 +140,7 @@ export default function SiteFooter({ columns, socialLinks, cookieSettingsLabel }
             ))}
           </ul>
         </div>
+        )}
       </div>
 
       <div className={styles.bottom}>
